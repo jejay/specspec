@@ -9,3 +9,7 @@ Note that this concept deliberately has no opinions about things like functional
 
 # Git+Tool Managed Directory of SpecDAG Node Markdown Files
 The canonical project root level _specspec directly and only holds the node files. Each markdown file with yaml frontmatter is one node in the graph. The file name contains an identifier and a non-binding english summary that serves discovery. The yaml frontmatter holds the type (manifesto/requirement/implementation) and the graph position/dependencies identified via the identifier. The main markdown contains the binding text with little headlines and structure. It has to be discussed if enumerations are allowed/sensible or should rather become children itself. The manifest node can hold global meta info like a spec format version.
+
+The files are not meant to be manually changed, instead a pipx-able/uvx-able python commandline tool manages all changed to the specification spectrum graph. The tool also offers a git hook to check the consistency and shield against corrupting manual edits.
+
+A visual studio code extension displays the graph and allows visually guided editing. This is the recommended way for the user to edit the specification spectrum graph. The visual studio visual specification spectrum graph editor also works together with visual studios git integration. One can see deltas between workspace and last commit or visualize graphical diffs between different commits. 
