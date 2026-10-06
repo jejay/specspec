@@ -1,9 +1,8 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portfolio experiment · Gantt</title><link rel="stylesheet" href="styles.css"><script defer src="model.js"></script><script defer src="app.js"></script></head>
-<body><main><p class="eyebrow">SPECSPEC WORKED EXAMPLE · STAGE 01</p><h1>Portfolio experiment</h1>
-<p>A local calendar prototype. Accounts, shared storage, and owner-capacity leveling are <strong>not implemented</strong>.</p>
-<section id="projects" aria-label="Portfolio summaries"></section>
-<div class="scroll"><section id="chart" aria-label="Gantt timeline"></section></div>
-<h2>Task dates</h2><table><thead><tr><th>Task / project</th><th>Owner</th><th>Start</th><th>Finish</th><th>Progress</th></tr></thead><tbody id="tasks"></tbody></table>
-<p class="note">Monday–Friday workdays; no holidays. Progress means unweighted task completion, not effort or confidence.</p></main></body></html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Personal planning experiment</title><link rel="stylesheet" href="styles.css"><script defer src="model.js"></script><script defer src="app.js"></script></head>
+<body><main><p class="eyebrow">SPECSPEC WORKED EXAMPLE · STAGE 02</p><h1 id="plan-title">Personal plan</h1><p>Choose every date yourself. Weekends count; one task never reschedules another.</p>
+<p id="message" role="status" aria-live="polite"></p><div class="scroll"><section id="chart" aria-label="Gantt timeline"></section></div>
+<h2>Task dates</h2><table><thead><tr><th>Task</th><th>Start</th><th>Finish</th><th>Days</th><th>Priority</th><th>Edit</th></tr></thead><tbody id="tasks"></tbody></table>
+<section class="panel"><h2>Edit a task</h2><form id="editor"><input id="task-id" type="hidden"><label>Name<input id="name" required maxlength="120"></label><label>Start<input id="start" type="date" required min="2000-01-01" max="2100-12-31"></label><label>Finish<input id="end" type="date" required min="2000-01-01" max="2100-12-31"></label><label>Priority<select id="priority"><option>low</option><option selected>normal</option><option>high</option></select></label><button type="submit">Save task</button><button id="new" type="button">New task</button><button id="delete" type="button">Delete task</button></form></section>
+<section class="panel"><h2>Keep a portable file</h2><p>Version-one JSON. Invalid imports never replace the current plan. Browser storage is not a backup.</p><label>Plan JSON<textarea id="json" rows="7" spellcheck="false"></textarea></label><button id="export">Export JSON</button><button id="import">Apply JSON</button><button id="reset">Reset demo / replace stored data</button></section>
+</main></body></html>

@@ -61,3 +61,11 @@ impact, with no live dependents left on withdrawn parents. The replacement graph
 is committed before rewriting the prototype. At this spec-only commit, the code
 still implements stage 01; the next commit will realize stage 02. That temporary
 boundary is explicit rather than a fabricated implementation claim.
+
+**AI (simulated, prototype report):** The personal app now lets you add/edit/delete
+manual ranges and priorities, including weekends, with browser-local autosave and
+JSON import/export. The earlier scheduler/portfolio code has been replaced, but its
+Git revision remains runnable. Seven actual Node model tests and syntax checks
+passed. Corrupt saved data is left untouched until reset. I exported the real demo
+as `history/personal-v1.json` for a later compatibility exercise. Real-browser
+interaction and storage failure paths are still unverified at this stage.

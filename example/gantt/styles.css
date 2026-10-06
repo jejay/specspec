@@ -8,4 +8,6 @@ h1 { margin: 8px 0; } .eyebrow { font-size: 12px; letter-spacing: .14em; color: 
 .label { flex: 0 0 240px; padding: 10px; } .tick { flex: 0 0 32px; font-size: 10px; text-align: center; }
 .track { flex: 1; height: 42px; position: relative; background: repeating-linear-gradient(90deg, transparent 0 31px, #e1e8eb 31px 32px); }
 .bar { position: absolute; top: 9px; height: 24px; background: #267e85; border-radius: 4px; color: #fff; font-size: 11px; padding: 4px; }
+.panel { padding: 18px; margin-top: 18px; background: #fff; border: 1px solid #d8e2e6; border-radius: 8px; }
+label { display: inline-flex; flex-direction: column; gap: 6px; margin: 0 12px 12px 0; } input, select, textarea, button { font: inherit; padding: 8px; border: 1px solid #b6cbd2; border-radius: 4px; } textarea { width: min(100%, 760px); } label:has(textarea) { display: flex; } button { cursor: pointer; background: #eef7f8; } button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid #307fbb; } .high { background: #a94d29; } .low { background: #64777f; } #message { min-height: 24px; color: #744226; }
 table { border-collapse: collapse; width: 100%; background: white; } th, td { padding: 10px; text-align: left; border-bottom: 1px solid #d8e2e6; } .note { color: #526e7a; font-size: 13px; }

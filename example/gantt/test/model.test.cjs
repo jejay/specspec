@@ -1,29 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const m = require('../model.js');
-const task = (id, duration = 1, dependsOn = []) => ({ id, duration, dependsOn, progress: 0, project: 'Test', title: id, owner: 'Sam' });
-test('demo forecasts every task and both projects', () => {
-  const rows = m.forecast(m.demo.start, m.demo.tasks);
-  assert.equal(rows.length, 5); assert.equal(m.rollups(rows).length, 2);
-  assert.equal(rows.find(t => t.id === 'design').start, '2026-04-08');
-});
-test('Friday successors and durations skip weekends', () => {
-  const rows = m.forecast('2026-04-10', [task('a'), task('b', 2, ['a'])]);
-  assert.equal(rows[1].start, '2026-04-13'); assert.equal(rows[1].end, '2026-04-14');
-});
-test('task order does not change dependency dates', () => {
-  assert.equal(m.forecast('2026-04-06', [task('b', 1, ['a']), task('a')])[0].start, '2026-04-07');
-});
-test('cycles and missing prerequisites fail', () => {
-  assert.throws(() => m.forecast('2026-04-06', [task('a', 1, ['b']), task('b', 1, ['a'])]), /cycle/);
-  assert.throws(() => m.forecast('2026-04-06', [task('a', 1, ['missing'])]), /Missing/);
-});
-test('malformed dates, duplicate IDs, durations and progress fail', () => {
-  assert.throws(() => m.day('2026-02-30'), /Invalid/);
-  assert.throws(() => m.forecast('2026-04-06', [task('a'), task('a')]), /duplicate/);
-  assert.throws(() => m.forecast('2026-04-06', [task('a', 0)]), /Invalid/);
-  assert.throws(() => m.forecast('2026-04-06', [{...task('a'), progress: 101}]), /Progress/);
-});
-test('project rollups are unweighted means and latest finishes', () => {
-  assert.deepEqual(m.rollups([{project:'P',end:'2026-04-10',progress:100},{project:'P',end:'2026-04-14',progress:0}]), [{project:'P',finish:'2026-04-14',progress:50,count:2}]);
-});
+const data = () => structuredClone(m.demo);
+test('manual plan and JSON round-trip are stable', () => { const p = m.validate(data()); assert.deepEqual(m.validate(JSON.parse(JSON.stringify(p))), p); });
+test('weekends and same-day tasks count inclusively', () => { assert.equal(m.span(m.demo.tasks[0]), 2); assert.equal(m.span({start:'2026-04-04',end:'2026-04-04'}), 1); });
+test('editing one task cannot shift another', () => { const raw=data(), before=structuredClone(raw.tasks[1]); raw.tasks[0].end='2026-04-08'; assert.deepEqual(m.validate(raw).tasks[1],before); });
+test('bad calendar dates and reversed ranges are rejected', () => { assert.throws(()=>m.day('2026-02-30')); const raw=data();raw.tasks[0].end='2026-04-03';assert.throws(()=>m.validate(raw),/precede/); });
+test('unknown versions and duplicate IDs are rejected', () => { assert.throws(()=>m.validate({...data(),version:2}),/version-one/);const raw=data();raw.tasks.push(raw.tasks[0]);assert.throws(()=>m.validate(raw),/duplicate/); });
+test('invalid priority, huge horizons and malformed names are rejected', () => { const raw=data();raw.tasks[0].priority='urgent';assert.throws(()=>m.validate(raw),/priority/);raw.tasks[0].priority='high';raw.tasks[0].start='2000-01-01';assert.throws(()=>m.validate(raw),/730/); assert.throws(()=>m.validate({...data(),title:''}),/title/); });
+test('validation does not mutate input and text is kept literally', () => { const raw=data();raw.title='<img src=x onerror=alert(1)>';const before=JSON.stringify(raw);const p=m.validate(raw);assert.equal(p.title,raw.title);assert.equal(JSON.stringify(raw),before); });

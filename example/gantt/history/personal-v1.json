@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "title": "Our home renovation",
+  "tasks": [
+    {
+      "id": "clear",
+      "title": "Clear the room (weekend)",
+      "start": "2026-04-04",
+      "end": "2026-04-05",
+      "priority": "high"
+    },
+    {
+      "id": "paint",
+      "title": "Paint the walls",
+      "start": "2026-04-08",
+      "end": "2026-04-12",
+      "priority": "normal"
+    },
+    {
+      "id": "shelves",
+      "title": "Install shelves",
+      "start": "2026-04-18",
+      "end": "2026-04-19",
+      "priority": "low"
+    }
+  ]
+}

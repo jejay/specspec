@@ -22,7 +22,7 @@ From this folder the installed `specspec` discovers the nearest graph. Open this
 folder in VS Code to browse this project's graph, rather than the parent graph.
 Do not run `init` again or edit canonical frontmatter by hand.
 
-## Stage 01: first hypothesis
+## Current stage 02: manual personal planning
 
 Open `index.html` in a modern browser, or run from this folder:
 
@@ -32,7 +32,12 @@ python -m http.server 8000 --bind 127.0.0.1
 node --test test/*.test.cjs
 ```
 
-The read-only local portfolio/calendar prototype implements weekday dependency
-forecasts, named-owner display, task progress, and project finish/progress rollups.
-Six model tests and JS syntax checks passed. Real-browser checks are not yet claimed.
-Shared accounts, hosted storage, and resource leveling remain **unimplemented**.
+The editable local personal app uses manually entered inclusive start/end dates,
+weekends, and priorities. Valid edits autosave locally; failures are surfaced and
+corrupt stored bytes stay protected until reset. Import/export uses version-one JSON.
+Seven model tests and JS syntax checks passed; real-browser checks are not yet claimed.
+
+Redirect one withdrew 13 of 17 live nodes and replaced the portfolio/team/service/
+scheduler branch. Its original code remains in Git (`gantt: 01 implement ...`), not
+in a misleading current "legacy" runtime. `history/personal-v1.json` is a real demo
+export. No approval metadata or nested Git repository was introduced.
