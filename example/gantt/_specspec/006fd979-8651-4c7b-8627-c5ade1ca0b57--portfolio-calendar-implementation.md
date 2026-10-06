@@ -9,7 +9,8 @@ sources:
   symbol: forecast and rollups
 - path: test/model.test.cjs
   symbol: six prototype model tests
-managed_hash: 94e98e88b08a0637a668abae3d909604878bb2343ed17d82c9749f5067b814c7
+managed_hash: 0895200a42916e31f3ec58bb070299af5ea383ec007de9963a9216a78ce63508
+retired: true
 ---
 # Implement the local portfolio forecast experiment
 

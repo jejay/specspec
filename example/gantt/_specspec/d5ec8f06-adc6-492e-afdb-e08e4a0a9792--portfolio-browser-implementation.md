@@ -15,7 +15,8 @@ sources:
   symbol: scrolling chart
 - path: package.json
   symbol: dependency-free test command
-managed_hash: 2c403298f3332801634884d6c043ed5476fd00fc58360c2e95967aeaec1e850a
+managed_hash: 05c3643adc2be567cdf3c5293475c0337054c7b8a83eaef2a2a1d39487590fa1
+retired: true
 ---
 # Show the read-only portfolio in a local browser
 

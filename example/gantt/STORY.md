@@ -35,3 +35,29 @@ weekday prerequisite forecasts, named-owner display, and simple completion/finis
 rollups. Six actual model tests passed. There are no shared accounts or resource
 constraints, and I haven't claimed a real-browser test yet. The SpecSpec implementation
 nodes link the source and state those limits.
+
+## 02 — Redirect one: not a business tool after all
+
+**User (simulated):** Stop. Seeing the prototype makes me realize I described the
+wrong audience. This is for my own home renovation. Replace the portfolio/team/cloud
+plan, not just its labels. I choose the dates myself, including weekends. No
+prerequisites or rescheduling. Give me priorities, local autosave, and a JSON file
+I can keep. I don't want accounts or a scheduling service.
+
+**AI (simulated):** That reverses the product scope and date model. I checked impact
+before changing the graph: the obsolete branch is **13 of the 17 live nodes**,
+including its two implementation explanations. I'll retire that complete branch,
+not delete the evidence or rewrite the original intention to claim you always
+wanted a personal app. The broad manifesto, readable timeline, safe input, and
+revisable-choice intentions survive. New intentions describe manual dates, weekends,
+priorities, and local ownership. Separate conclusions choose inclusive date ranges,
+browser storage, and a version-one JSON schema.
+
+**User (simulated):** Yes, the manual version is the useful next experiment. Storage
+can be browser-local, but don't pretend it is a backup or synchronized workspace.
+
+**AI (simulated):** The managed retirement was one guarded batch after reading
+impact, with no live dependents left on withdrawn parents. The replacement graph
+is committed before rewriting the prototype. At this spec-only commit, the code
+still implements stage 01; the next commit will realize stage 02. That temporary
+boundary is explicit rather than a fabricated implementation claim.

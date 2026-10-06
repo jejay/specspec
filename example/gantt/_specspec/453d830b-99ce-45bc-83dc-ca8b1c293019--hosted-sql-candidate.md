@@ -4,7 +4,8 @@ type: requirement
 parents:
 - b199d1c4-4599-4aeb-a7b6-570047f83da8
 - ed1f7c3f-a566-4089-82b6-4df470a0d72a
-managed_hash: 3690cf1edd25cd4b589a4ae9c296c33d7eaca56a7bc9620d26e91b8bd39fc14f
+managed_hash: a89d85e1fabb4ef8056f2921e64df8d1f50037cb4863be9601e8555e33b1610c
+retired: true
 ---
 # Consider a hosted relational service
 

@@ -3,7 +3,8 @@ id: 3c141122-2f7a-41c1-bee7-7d8b35d1e5fd
 type: requirement
 parents:
 - 13fc8d97-495d-48c3-bb80-753307c737f7
-managed_hash: aa7b27e29907dca99afed0fef3070b773de5da40efabe6d1f0076a31e790ddc6
+managed_hash: baee62d1653d8e64b5fb6a23e625090fbbcb26a3dee5876791cefc29429a91cc
+retired: true
 ---
 # Avoid double-booking automatically
 

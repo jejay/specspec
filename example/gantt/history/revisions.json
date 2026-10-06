@@ -7,6 +7,31 @@
     "live_before": 0,
     "withdrawn_ids": [],
     "spec_live_count": 15,
-    "spec_commit": "3ba86c0d89585a4928440369f48a9c0c94f8dd29"
+    "spec_commit": "3ba86c0d89585a4928440369f48a9c0c94f8dd29",
+    "implementation_commit": "8ac56760b9c90f389c0eee919fde7b708a08bf8f",
+    "implementation_fingerprint": "86c95461cf0ea5d239a95390a1d09aaa38d7b7a75f6041e08abeb1e3cf940672"
+  },
+  {
+    "key": "02",
+    "label": "Personal manual-date planner",
+    "predecessor_commit": "8ac56760b9c90f389c0eee919fde7b708a08bf8f",
+    "spec_fingerprint": "f12ad7a2c825fdd73544b99707a55483f2080db3c90401fe4a71809dad3f874c",
+    "live_before": 17,
+    "withdrawn_ids": [
+      "ac3d8b1d-980e-4c16-be96-ed1a61f02972",
+      "7fd262ae-3014-4e6e-a812-92bed9926e3b",
+      "aa4e41fe-22f4-464a-8295-ba7dd1fef7f5",
+      "3c141122-2f7a-41c1-bee7-7d8b35d1e5fd",
+      "071327f3-0409-4816-8a5f-2d5156221968",
+      "b199d1c4-4599-4aeb-a7b6-570047f83da8",
+      "6ba58c02-317a-4a35-aacd-706360dda225",
+      "beb1f8f3-aafe-4f77-83fb-9d1ffc9b3baa",
+      "453d830b-99ce-45bc-83dc-ca8b1c293019",
+      "a8a584cd-1ed6-4b4d-a944-c56979f57632",
+      "c8c5bfbf-76ef-4fcd-bfe8-7977a2324cb6",
+      "006fd979-8651-4c7b-8627-c5ade1ca0b57",
+      "d5ec8f06-adc6-492e-afdb-e08e4a0a9792"
+    ],
+    "spec_live_count": 14
   }
 ]
