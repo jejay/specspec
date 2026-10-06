@@ -24,6 +24,15 @@ Do not run `init` again or edit canonical frontmatter by hand.
 
 ## Stage 01: first hypothesis
 
-A local portfolio/calendar prototype is next. Shared accounts, hosted storage, and
-resource leveling are design candidates, **not implemented services**. Its first
-scope is seeing whether calendar forecasts and portfolio rollups are useful.
+Open `index.html` in a modern browser, or run from this folder:
+
+```sh
+python -m http.server 8000 --bind 127.0.0.1
+# Visit http://127.0.0.1:8000
+node --test test/*.test.cjs
+```
+
+The read-only local portfolio/calendar prototype implements weekday dependency
+forecasts, named-owner display, task progress, and project finish/progress rollups.
+Six model tests and JS syntax checks passed. Real-browser checks are not yet claimed.
+Shared accounts, hosted storage, and resource leveling remain **unimplemented**.

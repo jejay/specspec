@@ -6,6 +6,7 @@
     "spec_fingerprint": "ae782eb2d2aa9a23f52038cd0b0d277732afe3123c33d18083cf4fe45aebb173",
     "live_before": 0,
     "withdrawn_ids": [],
-    "spec_live_count": 15
+    "spec_live_count": 15,
+    "spec_commit": "3ba86c0d89585a4928440369f48a9c0c94f8dd29"
   }
 ]

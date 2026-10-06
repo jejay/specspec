@@ -29,3 +29,9 @@ manifesto is about understandable, revisable planning, not a fixed market or sta
 I read each new node's ancestor context. Inputs must be validated and task names
 rendered as text. Implementation records will distinguish delivered behavior from
 future candidates; passing tests will not turn choices into permanent decisions.
+
+**AI (simulated, prototype report):** The first runnable local view has two projects,
+weekday prerequisite forecasts, named-owner display, and simple completion/finish
+rollups. Six actual model tests passed. There are no shared accounts or resource
+constraints, and I haven't claimed a real-browser test yet. The SpecSpec implementation
+nodes link the source and state those limits.
