@@ -1,8 +1,45 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Personal planning experiment</title><link rel="stylesheet" href="styles.css"><script defer src="model.js"></script><script defer src="app.js"></script></head>
-<body><main><p class="eyebrow">SPECSPEC WORKED EXAMPLE · STAGE 02</p><h1 id="plan-title">Personal plan</h1><p>Choose every date yourself. Weekends count; one task never reschedules another.</p>
-<p id="message" role="status" aria-live="polite"></p><div class="scroll"><section id="chart" aria-label="Gantt timeline"></section></div>
-<h2>Task dates</h2><table><thead><tr><th>Task</th><th>Start</th><th>Finish</th><th>Days</th><th>Priority</th><th>Edit</th></tr></thead><tbody id="tasks"></tbody></table>
-<section class="panel"><h2>Edit a task</h2><form id="editor"><input id="task-id" type="hidden"><label>Name<input id="name" required maxlength="120"></label><label>Start<input id="start" type="date" required min="2000-01-01" max="2100-12-31"></label><label>Finish<input id="end" type="date" required min="2000-01-01" max="2100-12-31"></label><label>Priority<select id="priority"><option>low</option><option selected>normal</option><option>high</option></select></label><button type="submit">Save task</button><button id="new" type="button">New task</button><button id="delete" type="button">Delete task</button></form></section>
-<section class="panel"><h2>Keep a portable file</h2><p>Version-one JSON. Invalid imports never replace the current plan. Browser storage is not a backup.</p><label>Plan JSON<textarea id="json" rows="7" spellcheck="false"></textarea></label><button id="export">Export JSON</button><button id="import">Apply JSON</button><button id="reset">Reset demo / replace stored data</button></section>
-</main></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A local workshop Gantt planner, developed with a revisable SpecSpec graph.">
+  <title>Workshop · a SpecSpec planning example</title>
+  <link rel="stylesheet" href="styles.css"><script defer src="model.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+  <header class="hero"><div><p class="eyebrow">SPECSPEC WORKED EXAMPLE / THIRD DIRECTION</p><h1 id="plan-title">Workshop planner</h1><p>Make a plan. Keep a baseline. See what changes.</p></div><span class="local-pill">Local by design · no accounts</span></header>
+  <main>
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+    <p id="storage-status" class="storage-status" role="status">This browser only. Export a file for backup.</p>
+    <section class="plan-strip panel" aria-labelledby="plan-heading"><h2 id="plan-heading" class="sr-only">Plan settings</h2>
+      <form id="plan-form"><label>Plan name<input id="plan-name" required maxlength="120"></label><label>Project start<input id="plan-start" type="date" required min="2000-01-01" max="2100-12-31"></label><button type="submit">Update plan</button></form>
+      <div class="baseline-actions"><button id="capture-baseline" class="primary">Capture baseline</button><button id="clear-baseline">Clear baseline</button><p id="baseline-status">No baseline yet. Capture the saved plan before trying a change.</p></div>
+    </section>
+    <div class="workspace">
+      <section class="panel task-panel" aria-labelledby="editor-heading"><div class="section-heading"><h2 id="editor-heading">Task details</h2><button id="new-task" class="subtle">+ New task</button></div>
+        <p id="task-identity" class="muted"></p>
+        <form id="task-form"><input id="task-id" type="hidden">
+          <label>Task name<input id="task-name" required maxlength="120" placeholder="What needs to happen?"></label>
+          <div class="field-pair"><label>Duration (workdays)<input id="task-duration" type="number" min="1" max="60" step="1" required></label><label>Earliest start (optional)<input id="task-earliest" type="date" min="2000-01-01" max="2100-12-31"></label></div>
+          <fieldset><legend>After these tasks finish</legend><div id="prerequisites"></div></fieldset>
+          <p class="hint">Forecast = latest prerequisite finish, project start, or earliest bound. Weekends move to Monday.</p>
+          <div class="actions"><button type="submit" class="primary">Save task</button><button id="delete-task" type="button" class="danger">Remove task</button></div>
+        </form>
+        <p class="hint">Changes above stay a draft until saved. Baseline capture includes only saved tasks.</p>
+      </section>
+      <section class="panel schedule-panel" aria-labelledby="schedule-heading"><div class="section-heading"><div><h2 id="schedule-heading">Workshop timeline</h2><p id="schedule-summary" class="muted"></p></div><div class="legend"><span><i class="current-key"></i>Current</span><span><i class="baseline-key"></i>Baseline</span><span><i class="weekend-key"></i>Weekend</span></div></div>
+        <div id="timeline-scroll" class="timeline-scroll" tabindex="0" aria-label="Scrollable Gantt timeline"><div id="timeline"></div></div>
+        <p class="hint">Monday–Friday workdays. No holidays, partial days, or resource leveling. Deltas below count <strong>calendar days</strong>.</p>
+        <div class="table-scroll"><table><caption class="sr-only">Current and baseline task forecasts; choose a task to edit</caption><thead><tr><th scope="col">Task</th><th scope="col">Start</th><th scope="col">Finish</th><th scope="col">Baseline finish</th><th scope="col">Change</th></tr></thead><tbody id="task-table"></tbody></table></div>
+      </section>
+    </div>
+    <section class="panel files-panel" aria-labelledby="files-heading"><div class="section-heading"><div><h2 id="files-heading">Your plan, in a file</h2><p class="muted">Version 2 includes the baseline. Version 1 needs a clearly explained conversion.</p></div><button id="export-plan">Export JSON</button></div>
+      <div class="file-controls"><label class="file-picker">Open a JSON file<input id="import-file" type="file" accept=".json,application/json"></label><button id="preview-saved" hidden>Preview protected saved data</button><button id="backup-saved" hidden>Download protected original bytes</button></div>
+      <form id="import-form"><label>Or paste plan JSON<textarea id="import-json" rows="4" spellcheck="false" placeholder="Paste a v1 or v2 plan, then preview it"></textarea></label><button type="submit">Preview import</button></form>
+      <div id="import-preview" class="import-preview" hidden><h3>Review before replacing the plan</h3><p id="import-summary"></p><ul id="import-warnings"></ul><div class="actions"><button id="apply-import" class="primary">Apply this preview</button><button id="cancel-import">Cancel preview</button></div></div>
+      <button id="reset-demo" class="subtle">Reset demo / explicitly replace stored data</button>
+    </section>
+    <footer>An educational prototype, not an optimal scheduler or a backup service. Its <a href="STORY.md">simulated conversation</a> and independent <code>_specspec/</code> graph record two major changes of direction. No runtime API, CDN, or remote scripts.</footer>
+  </main>
+</body>
+</html>

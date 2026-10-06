@@ -104,3 +104,33 @@ API/CDN. The graph has practical chart/task/date bounds, not production guarante
 intentions separately from those choices, and committed this second replacement
 before rewriting code. This checkpoint still runs the stage-02 app. The next
 implementation must add real unit and browser evidence, with remaining risks stated.
+
+**AI (simulated, final implementation report):** The local workshop app is runnable
+without a build or runtime API. Tasks, durations, earliest bounds, prerequisites,
+explicit baseline capture/replacement/clear, current/baseline bars, and a text date
+table work. Imported markup stays literal text. A baseline-only task remains visible
+when removed from the current plan. Export includes the baseline; v1 conversion is
+previewed with warnings, never silently applied to stored personal data.
+
+Twenty actual model tests passed, including forty seeded DAGs against an independent
+reference, weekend/DST/leap boundaries, bounded deep graphs, malformed data, baseline
+immutability, safe deletion, and the original v1 export. A real installed Windows
+Chromium run passed forecast changes, baseline retention, native caret through a
+narrow-screen redraw, rejected cyclic drafts/cancelled navigation, literal text,
+actual file upload/download, preview/cancel/conversion, reload, protected corrupt/v1
+storage, and session-only operation when storage is denied. It also launched directly
+from a local file. Desktop and narrow screenshots were captured and inspected.
+Inspection exposed a mobile grid min-width overflow; the fix and browser regression
+keep scrolling inside the chart/table. The request assertion was corrected to allow
+Chromium's inline data-URL date icons, which do not contact an external service.
+
+This is prototype evidence, not exhaustive manual/accessibility/platform/security/
+performance certification. No holidays, resource optimizer, accounts, or cloud were
+smuggled back into the app. The graph contains 44 nodes, evenly divided between live
+and retained withdrawn explanations. Review remains proportionate to this small,
+revisable experiment; there is no invented per-node approval ceremony.
+
+**AI (simulated, Git boundary):** This implementation is committed after its spec.
+The following audit records its real hash once it exists and verifies all three
+spec/code pairs and both large withdrawals against Git blobs. Recording a future
+commit's hash inside itself would be fiction, so the ledger is completed afterward.
