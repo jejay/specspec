@@ -8,7 +8,7 @@
   let colorMode = restored.colorMode === 'type' ? 'type' : 'distance';
   let dirty = false, pending = false, creating = false, formFingerprint, formParents = [];
   let layoutFrame, layout, layoutKey, cameraScene;
-  let drawnEdges = [];
+  let drawnEdges = [], hoveredNode, hoverPoint;
   const cameraAPI = window.SpecSpecCamera;
   const cameras = Object.fromEntries(Object.entries(restored.cameras || {})
     .map(([key, value]) => [key, cameraAPI.validTransform(value)]).filter(([, value]) => value));
@@ -18,6 +18,7 @@
       if (cameraScene) cameras[cameraScene] = value;
       $('zoom-level').textContent = `${Math.round(value.k * 100)}%`;
       updateEdgeAppearance(value.k);
+      syncHover();
       if (finished && state) saveDraft();
     }, onFrame: () => frameAll(),
   });
@@ -68,6 +69,56 @@
     for (const id of state?.diff?.source_affected || []) if (!kinds.has(id)) kinds.set(id, 'source-changed');
     return kinds;
   }
+
+  function cardIdAt(target) {
+    const card = target?.closest?.('.card');
+    return card?.parentElement === $('cards') ? card.dataset.nodeId : undefined;
+  }
+
+  function updateEdgeHighlights() {
+    const plain = [], highlighted = [];
+    for (const pair of drawnEdges) {
+      const incident = hoveredNode !== undefined && pair.route.edge.includes(hoveredNode);
+      pair.path.classList.toggle('incident-highlight', incident);
+      pair.head.classList.toggle('incident-highlight', incident);
+      (incident ? highlighted : plain).push(pair);
+    }
+    // Existing pairs only: highlight crossings without touching geometry/forms.
+    const fragment = document.createDocumentFragment();
+    for (const { path, head } of [...plain, ...highlighted]) fragment.append(path, head);
+    $('edges').append(fragment);
+  }
+
+  function setHoveredNode(id) {
+    if (id === hoveredNode) return;
+    hoveredNode = id; updateEdgeHighlights();
+  }
+
+  function clearHover() { hoverPoint = undefined; setHoveredNode(undefined); }
+
+  function syncHover() {
+    if (hoverPoint && typeof document.elementFromPoint === 'function') {
+      setHoveredNode(cardIdAt(document.elementFromPoint(hoverPoint.x, hoverPoint.y)));
+    } else if (hoveredNode !== undefined && ![...$('cards').children].some(card => card.dataset.nodeId === hoveredNode)) {
+      setHoveredNode(undefined);
+    }
+  }
+
+  function trackHover(event) {
+    if (event.pointerType === 'touch') { clearHover(); return; }
+    hoverPoint = { x: event.clientX, y: event.clientY };
+    setHoveredNode(cardIdAt(event.target));
+  }
+  for (const event of ['pointerover', 'pointermove']) $('viewport').addEventListener(event, trackHover);
+  $('viewport').addEventListener('pointerout', event => {
+    if (event.pointerType === 'touch' || !(event.relatedTarget instanceof Element) || !$('viewport').contains(event.relatedTarget)) {
+      clearHover(); return;
+    }
+    hoverPoint = { x: event.clientX, y: event.clientY };
+    setHoveredNode(cardIdAt(event.relatedTarget));
+  });
+  for (const event of ['pointerleave', 'pointercancel']) $('viewport').addEventListener(event, clearHover);
+  window.addEventListener('blur', clearHover);
 
   function neighbors() {
     if (creating) return { parents: formParents.filter(id => graph.nodes.has(id)), children: [] };
@@ -210,6 +261,7 @@
       if (box.x !== oldFocus.x || box.y !== oldFocus.y) camera.set({ ...current,
         x: current.x + (oldFocus.x - box.x) * current.k, y: current.y + (oldFocus.y - box.y) * current.k });
     }
+    syncHover();
   }
 
   function drawEdges(routes, width, height) {
@@ -226,6 +278,7 @@
       return { route, path, head };
     });
     updateEdgeAppearance(camera.value().k);
+    updateEdgeHighlights();
   }
 
   function updateEdgeAppearance(scale) {

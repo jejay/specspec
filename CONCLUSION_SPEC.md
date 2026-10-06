@@ -170,6 +170,12 @@ Connect right to left card boundaries with d3-shape Bézier curves, without circ
 
 Camera-compensate stroke width to a 1.6-screen-pixel floor and arrow length to a 6-pixel floor, retaining normal world sizes at higher magnification. These are current implementation constants, not user-prescribed pixel requirements. Compensate Git dash lengths too. Keep a short straight departure and a smooth horizontal settling approach long enough for the largest supported low-zoom head. Trim the stroked line at its filled head base to prevent tip protrusion. Camera changes only update edge appearance, never node layout, forms, or canonical metadata. Test painted-stroke clearance and tangent/head joins in the actual browser at minimum zoom, not only endpoint counts. Python remains the validation/mutation authority.
 
+### Connection hover
+
+Hovering a node emphasizes its displayed immediate incoming/outgoing curve/head pairs in both overview and focused views, including historical and draft links. Delegate hover-capable pointer transitions through the viewport so moving between controls inside one card does not flicker. Keep hovered identity/last pointer position only in transient memory; reconcile against the actual hit-tested card after redraw or camera movement and clear on exit, blur, cancellation, or touch.
+
+Toggle the existing SVG pair's emphasis class, mix its Git-colored ink with theme foreground for contrast, and paint incident pairs last. Restore paint/order on exit. Do not change paths, stroke/head dimensions, dashes, world positions, camera, native form DOM, or persisted drafts/fingerprints. SVG remains non-interactive. Hover emits no host or mutation messages. Verify exact edge membership, unchanged geometry/DOM identity, form interactions, and actual computed paint at normal/minimum zoom.
+
 ### Spatial camera
 
 Use d3-zoom to transform cards and SVG together inside a clipped viewport. Allow unconstrained panning and bounded 12–250% magnification; layout and metrics never depend on the camera. Middle-drag/background drag pans, wheel/pinch zooms at the pointer, and buttons/keyboard actions offer framing and actual-size recovery. Preserve separate overview and per-node focus cameras across back/refresh. Do not refit on window resize; explicit framing only changes the camera.

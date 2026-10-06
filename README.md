@@ -114,6 +114,8 @@ The editor is a **left-to-right node canvas**. Dagre derives positions from rela
 
 Curved connections run directly from right to left card boundaries, without round endpoint dots. They retain a minimum visible stroke thickness when zoomed out. Arrowheads join a smooth, tangent-aligned approach; the line stops at the head base instead of sticking through its tip. Expanded cards distribute attachments over their height rather than bunching links near the title.
 
+**Hover a node** to highlight its immediate incoming and outgoing curves and arrowheads without selecting it. This also works over expanded form controls, in historical views, and on unsaved draft links. The temporary emphasis preserves Git hues/dashes and existing geometry, and clears when you leave the node.
+
 **Navigate:** middle-button drag or drag the background to pan; wheel / pinch to zoom around the pointer. Use **− / +**, **100%**, **Frame graph** and **Frame node** to recover your view. With the canvas focused, arrow keys pan, `+` / `-` zoom, `1` restores actual size, and `Home` / `F` frames the graph. Native form scrolling, text selection, and editing retain their normal behavior. Cameras survive refresh and back navigation; no positions or camera preferences are written into `_specspec`.
 
 Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** switches between shortest distance to the manifesto (default) and existing node types, with a legend. Neither is an acceptance score.

@@ -95,6 +95,21 @@ than ranks 1–5 under the preceding heuristic. This is observed improvement, no
 universal density guarantee or a review score. Ranking respects every parent and
 remains distinct from shortest-hop context. All relationships remain rendered.
 
+## Node-hover connection emphasis
+
+The [readable-arrow intention](../_specspec/e3494686-5da4-40f5-a622-f823c2e0c9b2--readable-relationship-arrows.md)
+now asks that hovering a node also highlights its immediate incoming and outgoing
+curves and arrowheads, without requiring selection. A separate [transient incident-emphasis conclusion](../_specspec/1ba7e336-cdc2-46a9-8118-4b8f9e92057b--transient-incident-connection-emphasis.md)
+chooses delegated pointer events, theme-aware contrast, and SVG pair ordering.
+
+This applies to compact and expanded cards, including form controls, historical
+relationships, and unsaved draft links. Highlighting keeps Git hues/dashes and
+existing geometry; leaving restores normal paint. Hover is not saved in metadata,
+drafts, or camera preferences, and sends no host/CLI messages. Redraw and camera
+changes reconcile the actual card under the last pointer rather than keeping a
+stale highlight. Tests cover direct membership, paired heads, native drafts/caret,
+leave/blur/touch, revision/draft views, and computed browser paint at minimum zoom.
+
 ## Entry points
 
 | What to inspect | Node |
@@ -197,7 +212,8 @@ colors, ranks, and counts remain presentation state, not canonical metadata.
 `npm --prefix vscode test` covers host/DOM/model regressions. `npm --prefix vscode
 run test:host` drives installed VS Code through a loopback Chromium debugger with
 a disposable profile, requiring Node 22+. It checks approval-free controls,
-withdrawn labels, both fill modes, canvas geometry, pan/zoom, drafts, native gestures,
+withdrawn labels, both fill modes, connection-hover paint, canvas geometry, pan/zoom,
+drafts, native gestures,
 and resized curve clearance. Only this isolated automated host disables trust.
 Screenshots can be saved with `SPECSPEC_SCREENSHOT_DIR`. Full manual mutation and
 revision-picker workflows and remote CI remain separate verification boundaries.

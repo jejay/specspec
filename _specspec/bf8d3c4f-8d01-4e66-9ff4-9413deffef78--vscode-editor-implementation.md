@@ -3,6 +3,7 @@ id: bf8d3c4f-8d01-4e66-9ff4-9413deffef78
 type: implementation
 parents:
 - 10ef1cdc-62a6-4212-8387-704d3cbbeeb4
+- 1ba7e336-cdc2-46a9-8118-4b8f9e92057b
 - 1f2e42c3-331f-4c1c-adc7-897f9bf2e004
 - 2b6a0e4e-f07f-4932-b58b-40348d4c3ac1
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
@@ -15,6 +16,8 @@ parents:
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
 sources:
 - path: docs/node-canvas.md
+- path: tests/test_migration.py
+  symbol: versioned backend compatibility
 - path: vscode/.vscodeignore
 - path: vscode/LICENSE
 - path: vscode/media/graph-camera.js
@@ -29,6 +32,8 @@ sources:
   symbol: metrics
 - path: vscode/media/graph.css
 - path: vscode/media/graph.js
+- path: vscode/media/graph.js
+  symbol: legacyWorkspace and withdrawal presentation
 - path: vscode/package-lock.json
 - path: vscode/package.json
 - path: vscode/scripts/build-webview.cjs
@@ -36,6 +41,8 @@ sources:
   symbol: invoke
 - path: vscode/src/extension.ts
   symbol: GraphPanel
+- path: vscode/src/extension.ts
+  symbol: GraphPanel.handleMessage migration and withdrawal guards
 - path: vscode/src/graph-vendor.js
 - path: vscode/src/project.ts
   symbol: findProjectRoot
@@ -49,13 +56,15 @@ sources:
 - path: vscode/test/graph-model.test.cjs
 - path: vscode/test/graph.test.cjs
 - path: vscode/test/project.test.cjs
-- path: vscode/src/extension.ts
-  symbol: GraphPanel.handleMessage migration and withdrawal guards
 - path: vscode/media/graph.js
-  symbol: legacyWorkspace and withdrawal presentation
-- path: tests/test_migration.py
-  symbol: versioned backend compatibility
-managed_hash: 9cbb047f727c4397eb4c2f8be7f4fb6b983abcd399341fa53becd34408d33834
+  symbol: trackHover, syncHover, updateEdgeHighlights
+- path: vscode/media/graph.css
+  symbol: incident-highlight contrast and Git ink
+- path: vscode/test/graph.test.cjs
+  symbol: hover membership, native forms, lifecycle and revision regressions
+- path: vscode/test-host/ui.cjs
+  symbol: checkHover computed paint and unchanged geometry
+managed_hash: 000c2be126473815568f524810897c58e7ef17215b6d08ba081afb13a0059fcf
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
@@ -119,14 +128,14 @@ A local VSIX build has been checked to include the offline assets and both proje
 and dependency licenses, excluding node_modules and build/test sources.
 The library rationale documents revisable choices, not a confidence score or individual approval stage.
 
-Verification includes TypeScript compilation, 70 bridge/activation/DOM/model tests,
+Verification includes TypeScript compilation, 77 bridge/activation/DOM/model tests,
 68 Python tests, Ruff, and warnings-as-errors graph validation. Regression fixtures
 cover shallow branches sharing deep sinks, earliest ranks versus shortest hops,
 historical rank isolation, extreme bends, scaled width/head floors, dash patterns,
 full-height attachments, circle-free joins, and existing draft/trust/history/text
 safety. The supported camera limit is checked against settling/head clearance.
 
-Installed VS Code/Chromium on Windows has rendered the current 48-node graph and
+Installed VS Code/Chromium on Windows has rendered the current 49-node graph and
 verified each live node's earliest allowed rank and compact vertical origin
 neighborhood, including all seven immediate manifesto children in rank one. It has checked actual screen strength at 12 percent
 zoom, head-base/tangent joins, no circles, sampled painted-stroke boundaries for
@@ -159,9 +168,38 @@ cards show a separate label, independent of added/changed/source-change badges.
 DOM/host tests cover absent approval controls, guarded retire/restore, removed
 accept messages, legacy read-only forms, explicit/cancelled/stale migration,
 historical/trust restrictions, dirty-draft preservation, and API-one rejection.
-The real Windows VS Code/Chromium check passed on 48 nodes with approval-free
+The real Windows VS Code/Chromium check passed on 49 nodes with approval-free
 controls, withdrawal labels, both palettes, and the existing geometry/navigation
 regressions. Removed links can share/reverse columns as historical overlays;
 only target relationships impose LR ranks. All curves, including those old links,
 were checked for tangent joins and sampled painted-stroke/content clearance.
 Screenshots of overview/focus/root and other navigation cases were inspected.
+
+## Transient incident-connection hover
+
+Delegated pointerover/move/out events on the viewport resolve the containing card
+by full node ID. Entering controls inside the same expanded card does not flicker
+or disturb native editing. A transient hovered ID and pointer position never enter
+canonical data, persisted drafts/cameras, selection, or host/CLI messages. Exit,
+window blur, pointer cancellation, and touch clear emphasis. Redraw and camera
+changes use elementFromPoint to reconcile the actual card under a stationary
+pointer rather than carrying stale hover into another view.
+
+updateEdgeHighlights toggles incident-highlight on each existing curve/head pair
+whose parent or child matches the hovered ID. It raises those SVG pairs above
+other connections and restores original ordering on exit. CSS mixes each existing
+Git ink with theme foreground and uses full opacity, preserving hue/classes and
+camera-compensated dashes. It changes no path, stroke/head dimension, glow, hit
+area, layout, camera, form DOM, caret, or fingerprint. SVG remains non-interactive.
+Overview, focused expanded cards, read-only history, removed links, and unsaved
+draft links share this display-only behavior.
+
+Seven new DOM regressions verify exact direct membership and paired heads,
+unchanged geometry/DOM identity/preferences/messages, native drafts/caret,
+transitions/exit/blur/cancel/touch, historical added/removed styling, isolated and
+linked drafts, refresh/hit reconciliation, and disappearing cards/navigation.
+The installed Windows VS Code/Chromium check passed with 49 nodes, checking actual
+computed curve/head paint and restored SVG order in overview, over a focused
+textarea, and at minimum zoom. Hover leaves width/dash/path/head geometry and
+world/camera unchanged; existing painted-stroke clearance checks still passed.
+Hover overview/focus/minimum-zoom screenshots were captured and inspected.

@@ -56,6 +56,12 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 - **Native forms** retain text editing, selection, scrolling, resize, keyboard
   controls, drafts, and original stale-context fingerprints. Camera gestures are
   excluded from settings controls. Navigation alone sends no mutation commands.
+- **Connection hover** temporarily emphasizes both SVG pieces of each immediate
+  incoming/outgoing relationship. Theme-aware ink mixing and pair ordering improve
+  contrast without enlarging strokes/heads or changing routes, Git hue/dashes, or
+  layout. Delegated pointer transitions include expanded form controls; hit tests
+  reconcile redraw/camera changes, and exit/blur/touch clears emphasis. No host
+  messages, canonical data, or persisted hover preferences are involved.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
   layout positions, magnification, colors, or derived scores enter `_specspec`.
 

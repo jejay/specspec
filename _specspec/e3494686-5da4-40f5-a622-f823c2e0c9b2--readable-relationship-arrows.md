@@ -4,7 +4,7 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: 52a27fe471c315802f341edd6a66c2eca48b38c6cdabf0c0cfb1b5ac4b72aa8c
+managed_hash: 5facbab34b785d21dc3620a91ac9a11d8b85ba36361fa15b74179af901598a80
 ---
 # Draw clearly connected and directional relationship arrows
 
@@ -19,6 +19,12 @@ when zooming out. Do not decorate endpoints with round connector circles. Arrowh
 must continue the approaching line naturally, including strongly curved links,
 without an abrupt directional kink or a stroke protruding through the arrow tip.
 
-Origin: the user's initial arrow correction, Blender-like editor request, and
+Hovering a node also highlights all its displayed incoming and outgoing connection
+curves and arrowheads, so users can trace its immediate relationships without
+selecting or editing it. Apply this in overview and focused neighborhoods, including
+expanded cards. Leaving the node removes the temporary emphasis. Preserve clear
+direction and distinguish Git relationship changes while highlighting.
+
+Origin: the user's node-hover request and initial arrow correction, Blender-like editor request, and
 subsequent minimum-strength/no-circles/arrow-transition feedback in this conversation.
 Screenshots illustrate defects, not a required algorithm, pixel size, or library.

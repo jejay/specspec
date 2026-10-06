@@ -91,6 +91,44 @@ exports.checkUI = async function checkUI(port) {
     assert.ok(await evaluate(`document.querySelector('[data-retired="true"] .retired-badge') !== null`), 'Withdrawal is labeled independently of Git newness.');
     const positions = () => evaluate(`JSON.stringify([...document.querySelectorAll('#cards .card')].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.width, c.offsetHeight]))`);
     const camera = () => evaluate(`(() => { const d=document.getElementById('viewport').dataset; return { x:Number(d.cameraX),y:Number(d.cameraY),k:Number(d.scale) }; })()`);
+    async function checkHover(id, selector, image) {
+      const paint = () => evaluate(`(() => {
+        const paths=[...document.querySelectorAll('#edges .link')],heads=[...document.querySelectorAll('#edges .arrow-head')];
+        return paths.map(p=>{const h=heads.find(h=>h.dataset.parent===p.dataset.parent&&h.dataset.child===p.dataset.child);
+          return {parent:p.dataset.parent,child:p.dataset.child,key:JSON.stringify([p.dataset.parent,p.dataset.child]),
+            stroke:getComputedStyle(p).stroke,fill:getComputedStyle(h).fill,width:getComputedStyle(p).strokeWidth,
+            dash:getComputedStyle(p).strokeDasharray,d:p.getAttribute('d'),head:h.getAttribute('d'),
+            highlighted:p.classList.contains('incident-highlight'),headHighlighted:h.classList.contains('incident-highlight')};});
+      })()`);
+      await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
+      const before=await paint(), world=await positions(), transform=await camera();
+      await evaluate(`window.__hoverPaths=[...document.querySelectorAll('#edges path')]`);
+      await evaluate(`(() => {
+        const card=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});
+        const target=${JSON.stringify(selector)}?card.querySelector(${JSON.stringify(selector)}):card;
+        const r=target.getBoundingClientRect(),v=document.getElementById('viewport').getBoundingClientRect();
+        const x=(Math.max(r.left,v.left)+Math.min(r.right,v.right))/2,y=(Math.max(r.top,v.top)+Math.min(r.bottom,v.bottom))/2;
+        if(!(x>v.left&&x<v.right&&y>v.top&&y<v.bottom)) throw new Error('Hover target is outside the clipped viewport.');
+        target.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse',clientX:x,clientY:y}));
+      })()`);
+      const after=await paint(), byKey=new Map(after.map(p=>[p.key,p]));
+      let incident=0;
+      for(const old of before) {
+        const p=byKey.get(old.key),related=old.parent===id||old.child===id;
+        assert.equal(p.highlighted,related);assert.equal(p.headHighlighted,related);
+        for(const key of ['width','dash','d','head']) assert.equal(p[key],old[key]);
+        if(related) {incident++;assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);}
+        else {assert.equal(p.stroke,old.stroke);assert.equal(p.fill,old.fill);}
+      }
+      assert.ok(incident>0);
+      assert.ok(after.slice(-incident).every(p=>p.highlighted),'Incident SVG pairs must paint last.');
+      assert.equal(await positions(),world);assert.deepEqual(await camera(),transform);
+      assert.ok(await evaluate(`window.__hoverPaths.every(p=>p.isConnected)`));
+      if(image) await screenshot(image);
+      await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
+      assert.deepEqual(await paint(),before,'Exiting hover restores computed paint and SVG order.');
+      await evaluate(`delete window.__hoverPaths`);
+    }
     const initialPositions = await positions();
     assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link:not(.removed)')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`), 'Target relationships progress LR; removed references are overlays and may share or reverse columns.');
     assert.ok(await evaluate(`getComputedStyle(document.getElementById('viewport')).overflow === 'clip'`));
@@ -163,6 +201,12 @@ exports.checkUI = async function checkUI(port) {
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300); await screenshot('origin-overview');
     const overviewCamera = await camera();
+    const hoverNode = await evaluate(`(() => {
+      const paths=[...document.querySelectorAll('#edges .link')];
+      return [...document.querySelectorAll('#cards .card.requirement')].find(c=>paths.some(p=>p.dataset.parent===c.dataset.nodeId)&&paths.some(p=>p.dataset.child===c.dataset.nodeId))?.dataset.nodeId;
+    })()`);
+    assert.ok(hoverNode);
+    await checkHover(hoverNode, undefined, 'hover-overview');
     // Test the smallest camera scale, not just normal-sized nodes. Strokes and
     // arrow direction remain visible; the world and paths' DOM identities stay.
     const pathCount=await evaluate(`document.querySelectorAll('#edges .link').length`);
@@ -177,6 +221,7 @@ exports.checkUI = async function checkUI(port) {
     assert.equal(await positions(),initialPositions);
     assert.deepEqual(await curveCollisions(), [], 'Zoom compensation must not make strokes cut through node content.');
     await screenshot('origin-minimum-zoom');
+    await checkHover(hoverNode, undefined, 'hover-minimum-zoom');
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300);
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
@@ -200,6 +245,7 @@ exports.checkUI = async function checkUI(port) {
     assert.deepEqual(await curveCollisions(), [], 'Focused curves must not cross the form or neighbors.');
     assert.ok(await arrowJoins(), 'Focused connections must settle before the head.');
     await screenshot('origin-focused');
+    await checkHover(branch, '#body', 'hover-focused');
     // Resize the real textarea; verify links move with intrinsic (unscaled) bounds.
     await evaluate(`document.getElementById('body').style.height = '540px'`);
     await delay(250);
@@ -252,7 +298,7 @@ exports.checkUI = async function checkUI(port) {
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; approval-free controls, withdrawal labels, distance/type colors, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; incident curve/head hover with unchanged geometry, approval-free controls, withdrawal labels, distance/type colors, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

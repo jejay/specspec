@@ -36,6 +36,161 @@ function fixture(t, options = {}) {
   } };
 }
 
+function hoverFixture(t) {
+  const f = fixture(t);
+  const grand = { ...child, id: 'grand', parents: ['child'], body: '# Grand\n' };
+  const sibling = { ...child, id: 'sibling', body: '# Sibling\n' };
+  f.snapshot = { ...f.snapshot, nodes: [root, child, grand, sibling], edges: [['root', 'child'], ['child', 'grand'], ['root', 'sibling']] };
+  f.send({ type: 'snapshot', snapshot: f.snapshot, diagnostics: [], readonly: false });
+  f.card = id => f.dom.window.document.querySelector(`[data-node-id="${id}"]`);
+  return f;
+}
+
+function hoverEvent(dom, target, type = 'pointerover', relatedTarget = null, pointerType = 'mouse') {
+  const event = new dom.window.MouseEvent(type, { bubbles: true, cancelable: true, relatedTarget, clientX: 120, clientY: 180 });
+  Object.defineProperty(event, 'pointerType', { value: pointerType });
+  target.dispatchEvent(event);
+  return event;
+}
+
+function highlightedEdges($) {
+  return [...$('edges').querySelectorAll('.link.incident-highlight')].map(p => `${p.dataset.parent}>${p.dataset.child}`).sort();
+}
+
+function assertPairedHighlights($) {
+  const paths = [...$('edges').querySelectorAll('.link')], heads = [...$('edges').querySelectorAll('.arrow-head')];
+  for (const path of paths) {
+    const head = heads.find(h => h.dataset.parent === path.dataset.parent && h.dataset.child === path.dataset.child);
+    assert.equal(head.classList.contains('incident-highlight'), path.classList.contains('incident-highlight'));
+  }
+}
+
+test('hover emphasizes only direct incoming/outgoing curves and heads without mutation or geometry changes', t => {
+  const { dom, $, card, messages, saved } = hoverFixture(t);
+  const original = [...$('edges').children], geometry = original.map(p => [p.getAttribute('d'), p.style.strokeWidth, p.style.strokeDasharray]);
+  const positions = [...$('cards').children].map(c => [c.style.left, c.style.top]);
+  const preferences = saved(), count = messages.length, transform = $('graph').style.transform;
+  hoverEvent(dom, card('child').querySelector('strong'));
+  assert.deepEqual(highlightedEdges($), ['child>grand', 'root>child']);
+  assertPairedHighlights($);
+  assert.ok([...$('edges').children].slice(-4).every(p => p.classList.contains('incident-highlight')), 'Both incident pairs are raised above other curves.');
+  assert.ok(original.every(p => p.isConnected));
+  assert.deepEqual(original.map(p => [p.getAttribute('d'), p.style.strokeWidth, p.style.strokeDasharray]), geometry);
+  assert.deepEqual([...$('cards').children].map(c => [c.style.left, c.style.top]), positions);
+  assert.equal($('graph').style.transform, transform);
+  assert.equal(saved(), preferences);
+  assert.equal(messages.length, count);
+  hoverEvent(dom, card('child'), 'pointerout', $('viewport'));
+  assert.deepEqual(highlightedEdges($), []);
+  assert.deepEqual([...$('edges').children], original, 'Leaving restores original SVG ordering and identity.');
+});
+
+test('hovering inside an expanded form does not flicker or disturb native drafts and caret', t => {
+  const { dom, $, card, saved, messages } = hoverFixture(t);
+  card('child').click();
+  const body = $('body'); body.value = '# Unsaved'; body.dispatchEvent(new dom.window.Event('input'));
+  body.focus(); body.setSelectionRange(2, 5, 'backward');
+  const draft = saved(), count = messages.length;
+  hoverEvent(dom, card('child'));
+  hoverEvent(dom, card('child'), 'pointerout', body);
+  hoverEvent(dom, body);
+  hoverEvent(dom, body, 'pointerout', $('save'));
+  assert.deepEqual(highlightedEdges($), ['child>grand', 'root>child']);
+  assertPairedHighlights($);
+  assert.equal(saved(), draft);
+  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(messages.length, count);
+  assert.equal(dom.window.document.activeElement, body);
+  assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
+  assert.equal(hoverEvent(dom, body, 'pointermove').defaultPrevented, false);
+});
+
+test('moving between cards replaces emphasis and exit/blur/cancel/touch clear transient hover', t => {
+  const { dom, $, card } = hoverFixture(t);
+  hoverEvent(dom, card('child'));
+  hoverEvent(dom, card('child'), 'pointerout', card('grand'));
+  assert.deepEqual(highlightedEdges($), ['child>grand']);
+  hoverEvent(dom, card('grand'));
+  hoverEvent(dom, card('grand'), 'pointerout', null);
+  assert.deepEqual(highlightedEdges($), []);
+  for (const event of ['pointerleave', 'pointercancel']) {
+    hoverEvent(dom, card('child'));
+    $('viewport').dispatchEvent(new dom.window.Event(event));
+    assert.deepEqual(highlightedEdges($), []);
+  }
+  hoverEvent(dom, card('child'));
+  dom.window.dispatchEvent(new dom.window.Event('blur'));
+  assert.deepEqual(highlightedEdges($), []);
+  hoverEvent(dom, card('child'));
+  hoverEvent(dom, card('child'), 'pointerover', null, 'touch');
+  assert.deepEqual(highlightedEdges($), []);
+});
+
+test('read-only historical and added/removed links keep their Git classes/dashes while highlighted', t => {
+  const { dom, $, card, snapshot, send, messages } = hoverFixture(t);
+  const target = { ...snapshot, nodes: [root, { ...child, parents: ['root', 'sibling'] }, snapshot.nodes[3]], edges: [['root', 'child'], ['root', 'sibling'], ['sibling', 'child']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: true, diff: {
+    base: snapshot, target, changes: [{ id: 'grand', kind: 'removed' }], added_edges: [['sibling', 'child']], removed_edges: [['child', 'grand']], base_ref: 'old', target_ref: 'new',
+  } });
+  const count = messages.length, removed = $('edges').querySelector('.link.removed');
+  const dash = removed.style.strokeDasharray, width = removed.style.strokeWidth;
+  hoverEvent(dom, card('child'));
+  assert.deepEqual(highlightedEdges($), ['child>grand', 'root>child', 'sibling>child']);
+  assertPairedHighlights($);
+  assert.ok($('edges').querySelector('.link.added.incident-highlight'));
+  assert.ok($('edges').querySelector('.arrow-head.removed.incident-highlight'));
+  assert.equal(removed.style.strokeDasharray, dash);
+  assert.equal(removed.style.strokeWidth, width);
+  assert.equal(messages.length, count);
+  hoverEvent(dom, card('grand'));
+  assert.deepEqual(highlightedEdges($), ['child>grand']);
+});
+
+test('unsaved draft cards highlight their draft links and an isolated draft highlights nothing', t => {
+  const { dom, $, card, messages } = hoverFixture(t);
+  $('new').click();
+  assert.equal($('edges').children.length, 0);
+  hoverEvent(dom, card('__draft__'));
+  assert.deepEqual(highlightedEdges($), []);
+  $('parent-candidate').value = 'root'; $('parent-candidate').dispatchEvent(new dom.window.Event('change')); $('add-parent').click();
+  const paths = [...$('edges').children], count = messages.length;
+  hoverEvent(dom, $('body'));
+  assert.deepEqual(highlightedEdges($), ['root>__draft__']);
+  assertPairedHighlights($);
+  assert.ok(paths.every(p => p.classList.contains('draft')));
+  hoverEvent(dom, card('root'));
+  assert.ok(paths.every(p => p.isConnected));
+  assert.equal(messages.length, count);
+});
+
+test('refresh reconciles hovered identity and camera movement rechecks the stationary pointer', t => {
+  const { dom, $, card, snapshot, send } = hoverFixture(t);
+  let hit = 'child';
+  dom.window.document.elementFromPoint = (x, y) => { assert.deepEqual([x, y], [120, 180]); return hit ? card(hit) : $('viewport'); };
+  hoverEvent(dom, card('child'));
+  const target = { ...snapshot, fingerprint: 'new', nodes: snapshot.nodes.map(n => n.id === 'child' ? { ...n, parents: ['root', 'sibling'] } : n), edges: [...snapshot.edges, ['sibling', 'child']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  assert.deepEqual(highlightedEdges($), ['child>grand', 'root>child', 'sibling>child']);
+  hit = 'sibling';
+  $('viewport').dispatchEvent(new dom.window.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -100, clientX: 300, clientY: 200 }));
+  assert.deepEqual(highlightedEdges($), ['root>sibling', 'sibling>child']);
+  hit = undefined;
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  assert.deepEqual(highlightedEdges($), []);
+});
+
+test('navigation and disappearing cards cannot retain a stale incident highlight', t => {
+  const { dom, $, card, snapshot, send } = hoverFixture(t);
+  hoverEvent(dom, card('sibling'));
+  card('child').click();
+  assert.deepEqual(highlightedEdges($), []);
+  $('back').click();
+  assert.deepEqual(highlightedEdges($), []);
+  hoverEvent(dom, card('grand'));
+  send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [root, child], edges: [['root', 'child']] }, diagnostics: [], readonly: false });
+  assert.deepEqual(highlightedEdges($), []);
+});
+
 test('nodes are editable without approval states or an acceptance action', t => {
   const { dom, $, saved } = fixture(t);
   assert.equal($('accept'), null);
