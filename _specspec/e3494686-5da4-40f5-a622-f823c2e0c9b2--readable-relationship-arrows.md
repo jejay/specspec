@@ -5,7 +5,7 @@ status: accepted
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: 6096c31d3d43f4b2692464de9a292c9ab5bc35bc0e8ffdafff6e41e5bc33115f
+managed_hash: e83ad09be9281ce1b82676f0fa4d8fb89e85b04378071d84a6489d24b1204c4e
 ---
 # Draw clearly connected and directional relationship arrows
 
@@ -15,6 +15,11 @@ Maintain readability when parents occupy different distances from the root.
 Prefer smooth curved connections, as in a spatial node editor, over angular
 orthogonal links; the chosen routing mechanism must still make endpoints clear.
 
-Origin: the user's initial arrow correction and subsequent Blender-like editor
-request in this conversation. Screenshots illustrate defects, not a required
-routing algorithm; spline and library choices remain separate conclusions.
+Connections retain a minimum visible stroke strength even as nodes become smaller
+when zooming out. Do not decorate endpoints with round connector circles. Arrowheads
+must continue the approaching line naturally, including strongly curved links,
+without an abrupt directional kink or a stroke protruding through the arrow tip.
+
+Origin: the user's initial arrow correction, Blender-like editor request, and
+subsequent minimum-strength/no-circles/arrow-transition feedback in this conversation.
+Screenshots illustrate defects, not a required algorithm, pixel size, or library.

@@ -89,20 +89,53 @@ exports.checkUI = async function checkUI(port) {
     const initialPositions = await positions();
     assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`));
     assert.ok(await evaluate(`getComputedStyle(document.getElementById('viewport')).overflow === 'clip'`));
+    assert.ok(await evaluate(`(() => {
+      const cards=[...document.querySelectorAll('#cards .card:not(.removed)')],edges=[...document.querySelectorAll('#edges .link:not(.removed)')];
+      const ranks=new Map(),columns=[...new Set(cards.map(c=>parseFloat(c.style.left)))].sort((a,b)=>a-b);
+      for(let round=0;round<cards.length;round++) for(const c of cards) {
+        if(ranks.has(c.dataset.nodeId)) continue;
+        const parents=edges.filter(p=>p.dataset.child===c.dataset.nodeId).map(p=>p.dataset.parent);
+        if(parents.every(id=>ranks.has(id))) ranks.set(c.dataset.nodeId,parents.length?1+Math.max(...parents.map(id=>ranks.get(id))):0);
+      }
+      return cards.every(c=>columns.indexOf(parseFloat(c.style.left))===ranks.get(c.dataset.nodeId));
+    })()`), 'Each live node belongs in its earliest parent-permitted rank, not a shared-sink-biased column.');
+    assert.ok(await evaluate(`(() => {
+      const cards=[...document.querySelectorAll('#cards .card:not(.removed)')],root=cards.find(c=>c.classList.contains('manifesto'));
+      const links=[...document.querySelectorAll('#edges .link:not(.removed)')];
+      const children=cards.filter(c=>{const incoming=links.filter(p=>p.dataset.child===c.dataset.nodeId);return incoming.length===1&&incoming[0].dataset.parent===root.dataset.nodeId;});
+      if(!children.length) return true;
+      const low=Math.min(...children.map(c=>parseFloat(c.style.top))),high=Math.max(...children.map(c=>parseFloat(c.style.top)+c.offsetHeight));
+      return high-low<=2*children.reduce((sum,c)=>sum+c.offsetHeight,0);
+    })()`), 'Immediate origin branches must be compact vertically, not stretched to distant shared sinks.');
+    const arrowJoins = () => evaluate(`(() => {
+      if(document.querySelector('#edges circle, #edges marker')) return false;
+      return [...document.querySelectorAll('#edges .link')].every(p=>{
+        const head=[...document.querySelectorAll('#edges .arrow-head')].find(h=>h.dataset.parent===p.dataset.parent&&h.dataset.child===p.dataset.child);
+        const n=head.getAttribute('d').match(/-?\\d+(?:\\.\\d+)?/g).map(Number),length=p.getTotalLength();
+        const end=p.getPointAtLength(length),lead=p.getPointAtLength(length-1);
+        const scale=Math.hypot(p.getScreenCTM().a,p.getScreenCTM().b);
+        return Math.abs(end.x-n[0])<0.1 && Math.abs(end.y-n[3])<0.1 && Math.abs(lead.y-end.y)<0.1 && lead.x<end.x
+          && parseFloat(getComputedStyle(p).strokeWidth)*scale>=1.59 && (n[2]-n[0])*scale>=5.99;
+      });
+    })()`);
+    assert.ok(await arrowJoins(), 'Line ends must join the head base tangentially, with minimum screen strength.');
     const curveCollisions = () => evaluate(`(() => {
       const boxes=[...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,x:parseFloat(c.style.left),y:parseFloat(c.style.top),w:c.offsetWidth,h:c.offsetHeight}));
       const collisions=[];
       for(const path of document.querySelectorAll('#edges .link')) {
         const length=path.getTotalLength();
         for(let d=2;d<length;d+=8) {
-          const p=path.getPointAtLength(d),box=boxes.find(b=>p.x>b.x+1&&p.x<b.x+b.w-1&&p.y>b.y+1&&p.y<b.y+b.h-1);
+          const p=path.getPointAtLength(d),before=path.getPointAtLength(d-1),after=path.getPointAtLength(Math.min(length,d+1));
+          const dx=after.x-before.x,dy=after.y-before.y,norm=Math.hypot(dx,dy)||1,half=parseFloat(getComputedStyle(path).strokeWidth)/2;
+          const samples=[p,{x:p.x-dy/norm*half,y:p.y+dx/norm*half},{x:p.x+dy/norm*half,y:p.y-dx/norm*half}];
+          const box=boxes.find(b=>samples.some(q=>q.x>b.x+1&&q.x<b.x+b.w-1&&q.y>b.y+1&&q.y<b.y+b.h-1));
           if(box) {collisions.push({parent:path.dataset.parent,child:path.dataset.child,through:box.id});break;}
         }
       }
       return collisions;
     })()`);
     assert.deepEqual(await curveCollisions(), [], 'Curves must not cross node content.');
-    await screenshot('canvas-initial');
+    await screenshot('origin-initial');
     // Actual browser event handling; no special production test commands.
     const beforeZoom = await camera();
     await evaluate(`(() => { const v=document.getElementById('viewport'),r=v.getBoundingClientRect(); v.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-100,clientX:r.left+300,clientY:r.top+200})); })()`);
@@ -123,8 +156,24 @@ exports.checkUI = async function checkUI(port) {
     assert.deepEqual(await camera(), panned);
     await evaluate(`document.querySelector('.canvas-shell').style.width=''`);
     await evaluate(`document.getElementById('frame-all').click()`);
-    await delay(300); await screenshot('canvas-overview');
+    await delay(300); await screenshot('origin-overview');
     const overviewCamera = await camera();
+    // Test the smallest camera scale, not just normal-sized nodes. Strokes and
+    // arrow direction remain visible; the world and paths' DOM identities stay.
+    const pathCount=await evaluate(`document.querySelectorAll('#edges .link').length`);
+    await evaluate(`window.__testEdgeIdentity=[...document.querySelectorAll('#edges .link')]`);
+    await evaluate(`(() => { const v=document.getElementById('viewport'),r=v.getBoundingClientRect(); v.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:6000,clientX:r.left+r.width/2,clientY:r.top+r.height/2})); })()`);
+    await delay(350);
+    assert.ok(Math.abs((await camera()).k-0.12)<0.0001);
+    assert.ok(await arrowJoins(), 'Low-zoom arrows must still join correctly and keep their screen-pixel floor.');
+    assert.equal(await evaluate(`document.querySelectorAll('#edges .link').length`),pathCount);
+    assert.ok(await evaluate(`window.__testEdgeIdentity.every(p=>p.isConnected)`));
+    await evaluate(`delete window.__testEdgeIdentity`);
+    assert.equal(await positions(),initialPositions);
+    assert.deepEqual(await curveCollisions(), [], 'Zoom compensation must not make strokes cut through node content.');
+    await screenshot('origin-minimum-zoom');
+    await evaluate(`document.getElementById('frame-all').click()`);
+    await delay(300);
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.ok(await evaluate(`document.querySelector('#cards .expanded').contains(document.getElementById('editor'))`));
     assert.equal(await evaluate(`document.querySelectorAll('aside').length`), 0);
@@ -144,34 +193,59 @@ exports.checkUI = async function checkUI(port) {
     await evaluate(`document.getElementById('body').dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-120}))`);
     assert.deepEqual(await camera(), beforeFormWheel);
     assert.deepEqual(await curveCollisions(), [], 'Focused curves must not cross the form or neighbors.');
-    await screenshot('canvas-focused');
+    assert.ok(await arrowJoins(), 'Focused connections must settle before the head.');
+    await screenshot('origin-focused');
     // Resize the real textarea; verify links move with intrinsic (unscaled) bounds.
     await evaluate(`document.getElementById('body').style.height = '540px'`);
     await delay(250);
     const geometry = await evaluate(`(() => {
       const boxes = [...document.querySelectorAll('#cards .card')].map(card => ({ id:card.dataset.nodeId, x:parseFloat(card.style.left), y:parseFloat(card.style.top), w:card.offsetWidth, h:card.offsetHeight }));
-      return [...document.querySelectorAll('#edges .link')].map(path => { const p=path.getPointAtLength(0), q=path.getPointAtLength(path.getTotalLength()); return { start:{x:p.x,y:p.y}, end:{x:q.x,y:q.y}, from:boxes.find(b=>b.id===path.dataset.parent), to:boxes.find(b=>b.id===path.dataset.child) }; });
+      return [...document.querySelectorAll('#edges .link')].map(path => {
+        const p=path.getPointAtLength(0),head=[...document.querySelectorAll('#edges .arrow-head')].find(h=>h.dataset.parent===path.dataset.parent&&h.dataset.child===path.dataset.child);
+        const n=head.getAttribute('d').match(/-?\\d+(?:\\.\\d+)?/g).map(Number);
+        return { start:{x:p.x,y:p.y}, end:{x:n[2],y:n[3]}, from:boxes.find(b=>b.id===path.dataset.parent), to:boxes.find(b=>b.id===path.dataset.child) };
+      });
     })()`);
     assert.ok(geometry.length);
     for (const route of geometry) {
       assert.ok(Math.abs(route.start.x - route.from.x - route.from.w - 3) < 1);
-      assert.ok(Math.abs(route.end.x - route.to.x + 9) < 1);
+      assert.ok(Math.abs(route.end.x - route.to.x + 3) < 1);
       assert.ok(route.start.y > route.from.y && route.start.y < route.from.y + route.from.h);
       assert.ok(route.end.y > route.to.y && route.end.y < route.to.y + route.to.h);
     }
+    assert.ok(await arrowJoins(), 'Resized-form arrows must preserve tangent joins.');
+    assert.deepEqual(await curveCollisions(), [], 'Resized-form routes must still avoid content.');
+    await screenshot('origin-resized-form');
+    // Also inspect a genuine multiple-parent/depth neighborhood; its skipped-rank
+    // curves are a stronger fixture than the manifesto's mostly adjacent links.
+    await evaluate(`document.getElementById('back').click()`);
+    const multipleParent = await evaluate(`(() => {
+      const cards=[...document.querySelectorAll('#cards .card')],links=[...document.querySelectorAll('#edges .link')];
+      return cards.filter(c=>c.classList.contains('requirement')).map(c=>({id:c.dataset.nodeId,parents:links.filter(p=>p.dataset.child===c.dataset.nodeId).map(p=>cards.find(b=>b.dataset.nodeId===p.dataset.parent))}))
+        .filter(c=>c.parents.length>=2&&new Set(c.parents.map(p=>p.dataset.distance)).size>=2).sort((a,b)=>b.parents.length-a.parents.length)[0]?.id;
+    })()`);
+    assert.ok(multipleParent,'Use an actual multiple-depth parent neighborhood.');
+    await evaluate(`document.querySelector('[data-node-id="' + ${JSON.stringify(multipleParent)} + '"]').click()`);
+    await evaluate(`document.getElementById('frame-all').click()`);
+    await delay(300);
+    assert.ok(await arrowJoins());
+    assert.deepEqual(await curveCollisions(), [], 'Multiple-depth parent connections must clear intrinsic form/card bounds.');
+    await screenshot('origin-multiple-parents');
     await evaluate(`document.getElementById('back').click()`);
     assert.equal(await evaluate(`document.querySelectorAll('#cards .card').length`), total);
-    assert.deepEqual(await camera(), overviewCamera);
+    const restoredCamera = await camera();
+    for(const key of ['x','y','k']) assert.ok(Math.abs(restoredCamera[key]-overviewCamera[key])<0.01);
     await evaluate(`document.getElementById('color-mode').value='distance'; document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Shortest path')`));
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
     assert.equal(await evaluate(`document.getElementById('parent-add-controls').hidden`), true);
     await evaluate(`document.getElementById('frame-all').click()`);
-    await delay(300); await screenshot('canvas-root-neighborhood');
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; LR layout, viewport invariance, pan/zoom anchoring, focus/back cameras, native form gestures, colors and resized curve endpoints.`);
+    await delay(300); await screenshot('origin-root-neighborhood');
+    assert.ok(await arrowJoins());
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
-    try { await screenshot('canvas-failure'); } catch { /* Keep the original failure. */ }
+    try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;
   } finally { clients.forEach(client => client.close()); }
 };

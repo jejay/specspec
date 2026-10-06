@@ -393,6 +393,41 @@ test('camera recovery controls have keyboard equivalents and clamp zoom limits',
   assert.ok(Number($('viewport').dataset.scale) > 0.12);
 });
 
+test('connections retain screen strength and arrow joins at minimum zoom without endpoint circles', t => {
+  const { dom, $, messages } = fixture(t);
+  const world = [...$('cards').children].map(card => [card.style.left, card.style.top]);
+  const paths = [...$('edges').querySelectorAll('.link')];
+  for (let n = 0; n < 60; n++) $('zoom-out').click();
+  const k = Number($('viewport').dataset.scale);
+  assert.equal(k, 0.12);
+  assert.equal($('edges').querySelectorAll('circle, marker').length, 0);
+  assert.deepEqual([...$('edges').querySelectorAll('.link')], paths, 'Zoom must not recreate the connections.');
+  for (const path of paths) {
+    assert.ok(parseFloat(path.style.strokeWidth) * k >= model.MIN_STROKE_PIXELS - 1e-9);
+    const head = $('edges').querySelector(`.arrow-head[data-child="${path.dataset.child}"]`);
+    assert.ok(head);
+    const coordinates = head.getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number);
+    assert.ok((coordinates[2] - coordinates[0]) * k >= model.MIN_ARROW_PIXELS - 1e-9);
+    assert.ok(path.getAttribute('d').endsWith(`L${coordinates[0]},${coordinates[3]}`));
+  }
+  assert.deepEqual([...$('cards').children].map(card => [card.style.left, card.style.top]), world);
+  assert.ok(messages.every(message => ['ready', 'rendered'].includes(message.type)));
+  dom.window.document.querySelector('.card.requirement').click();
+  assert.equal($('edges').querySelectorAll('circle').length, 0);
+});
+
+test('historical dash patterns remain visible when zoomed out', t => {
+  const { dom, snapshot, send, $ } = fixture(t);
+  send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [root], edges: [] }, diagnostics: [], readonly: true, diff: {
+    base: snapshot, removed_edges: snapshot.edges, added_edges: [], changes: [{ id: 'child', kind: 'removed' }], base_ref: 'old', target_ref: 'new',
+  } });
+  for (let n = 0; n < 60; n++) $('zoom-out').click();
+  const k = Number($('viewport').dataset.scale), removed = $('edges').querySelector('.link.removed');
+  const dash = removed.style.strokeDasharray.split(' ').map(Number);
+  assert.deepEqual(dash.map(length => length * k), [6, 5]);
+  assert.ok($('edges').querySelector('.arrow-head.removed'));
+});
+
 test('project text cannot inject markup or scripts into node cards', t => {
   const { dom, snapshot, send } = fixture(t);
   const attack = '<img src=x onerror="globalThis.injected=true">';

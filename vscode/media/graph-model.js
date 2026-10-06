@@ -91,21 +91,52 @@
     return Number.isInteger(distance) ? DEPTH_COLORS[distance % DEPTH_COLORS.length] : '#929baa';
   }
 
+  function layoutBackbone(nodes, edges) {
+    const parents = new Map([...nodes.keys()].map(id => [id, []]));
+    const children = new Map([...nodes.keys()].map(id => [id, []]));
+    for (const { edge: [a, b] } of edges) { parents.get(b).push(a); children.get(a).push(b); }
+    const remaining = new Map([...parents].map(([id, list]) => [id, list.length]));
+    const queue = [...nodes.keys()].filter(id => !remaining.get(id)).sort(compare), ranks = new Map();
+    queue.forEach(id => ranks.set(id, 0));
+    for (let index = 0; index < queue.length; index++) {
+      const id = queue[index];
+      for (const child of children.get(id)) {
+        ranks.set(child, Math.max(ranks.get(child) || 0, ranks.get(id) + 1));
+        remaining.set(child, remaining.get(child) - 1);
+        if (!remaining.get(child)) queue.push(child);
+      }
+    }
+    // Defensive cyclic data still goes through Dagre's display-only cycle breaker.
+    if (queue.length !== nodes.size) return edges;
+    const chosen = new Map([...parents].filter(([, list]) => list.length).map(([id, list]) =>
+      [id, list.filter(parent => ranks.get(parent) === ranks.get(id) - 1).sort(compare)[0]]));
+    // This is a placement forest only. ALL records remain rendered and canonical
+    // parents never change. A deepest parent preserves each all-parent rank.
+    return edges.filter(({ edge: [a, b] }) => chosen.get(b) === a);
+  }
+
   // Only graph structure and intrinsic node sizes enter this function. No viewport.
-  function layoutGraph(nodes, records, sizes = new Map()) {
+  function layoutGraph(nodes, records, sizes = new Map(), primary = {}) {
     const engine = new vendor.dagre.graphlib.Graph({ multigraph: true });
-    engine.setGraph({ rankdir: 'LR', ranksep: 160, nodesep: 56, edgesep: 24,
-      marginx: 80, marginy: 80, acyclicer: 'greedy', ranker: 'network-simplex' });
+    // Longest-path normally anchors at sinks. Reverse input + RL instead gives
+    // earliest SOURCE ranks: rank(node) = 1 + max(rank(parent)). Visible flow is LR.
+    engine.setGraph({ rankdir: 'RL', ranksep: 128, nodesep: 36, edgesep: 16,
+      marginx: 80, marginy: 80, acyclicer: 'greedy', ranker: 'longest-path' });
     engine.setDefaultEdgeLabel(() => ({}));
     for (const id of [...nodes.keys()].sort(compare)) {
       const size = sizes.get(id);
       engine.setNode(id, { width: size?.width || CARD_WIDTH, height: size?.height || CARD_HEIGHT });
     }
+    const primaryIds = primary.ids || new Set(nodes.keys());
+    const primaryEdges = primary.edges || new Set(records.filter(item => item.kind !== 'removed').map(item => edgeKey(item.edge)));
     const edges = records.filter(({ edge: [a, b] }) => nodes.has(a) && nodes.has(b))
       .slice().sort((a, b) => compare(edgeKey(a.edge), edgeKey(b.edge)));
-    for (const { edge: [a, b], kind } of edges) {
-      // Removed relations can make an overlay cyclic. This is display, not validation.
-      engine.setEdge(a, b, { weight: kind === 'removed' ? 1 : 8 }, edgeKey([a, b]));
+    // Old references into surviving nodes cannot shift live ranks. A compact
+    // rank-preserving backbone also prevents shared sinks from stretching the
+    // origin vertically; omitted placement edges are still routed below.
+    const constraints = edges.filter(item => primaryEdges.has(edgeKey(item.edge)) || !primaryIds.has(item.edge[1]));
+    for (const { edge: [a, b] } of layoutBackbone(nodes, constraints)) {
+      engine.setEdge(b, a, { weight: 8 }, edgeKey([a, b]));
     }
     if (nodes.size) vendor.dagre.layout(engine);
     const positions = new Map(), guides = new Map();
@@ -113,13 +144,15 @@
       const box = engine.node(id);
       positions.set(id, { x: box.x - box.width / 2, y: box.y - box.height / 2, width: box.width, height: box.height });
     }
-    for (const edge of engine.edges()) guides.set(edge.name, engine.edge(edge).points);
+    for (const edge of engine.edges()) guides.set(edge.name, [...engine.edge(edge).points].reverse());
     return { positions, guides, width: engine.graph().width || 480, height: engine.graph().height || 320 };
   }
 
+  const EDGE_LEAD = 64, MIN_STROKE_PIXELS = 1.6, MIN_ARROW_PIXELS = 6;
+
   function routeEdges(positions, records, guides = new Map()) {
     const edges = records.filter(({ edge: [a, b] }) => positions.has(a) && positions.has(b));
-    const incoming = new Map(), outgoing = new Map();
+    const incoming = new Map(), outgoing = new Map(), boxes = [...positions.values()];
     for (const item of edges) {
       const [a, b] = item.edge;
       if (!outgoing.has(a)) outgoing.set(a, []);
@@ -130,37 +163,76 @@
     incoming.forEach(list => list.sort((a, b) => positions.get(a.edge[0]).y - positions.get(b.edge[0]).y || compare(a.edge[0], b.edge[0])));
     const curve = vendor.line().x(point => point.x).y(point => point.y).curve(vendor.curveBumpX);
     const reverseCurve = vendor.line().x(point => point.x).y(point => point.y).curve(vendor.curveBasis);
-    const port = (box, list, item) => box.y + 32 + Math.min(64, box.height - 48) * (list.indexOf(item) + 1) / (list.length + 1);
+    // Include the full intrinsic height: header-only ports make an expanded form
+    // impose huge artificial bends even when Dagre has aligned node centers.
+    const port = (box, list, item) => box.y + 16 + Math.max(0, box.height - 32) * (list.indexOf(item) + 1) / (list.length + 1);
+    const column = box => boxes.filter(other => Math.abs(other.x + other.width / 2 - box.x - box.width / 2) < 1);
     return edges.map((item, index) => {
       const [a, b] = item.edge, from = positions.get(a), to = positions.get(b);
       const start = { x: from.x + from.width + 3, y: port(from, outgoing.get(a), item) };
-      const end = { x: to.x - 9, y: port(to, incoming.get(b), item) };
+      const end = { x: to.x - 3, y: port(to, incoming.get(b), item) };
+      // Smooth to this horizontal settling point, not into a tight bend beneath
+      // the arrowhead. It covers even the largest head at the camera's 12% limit.
+      const settle = { x: end.x - EDGE_LEAD, y: end.y };
       const guide = guides.get(edgeKey(item.edge)) || [];
-      let points;
-      if (end.x > start.x) {
-        // Dagre's dummy waypoints reserve a lane THROUGH each skipped rank. Keep
-        // that lane flat across the full card-width band before smoothing the gaps.
-        const corridor = guide.slice(1, -1).flatMap(point => {
-          const column = [...positions.values()].filter(box => box.x < point.x && box.x + box.width > point.x);
-          if (!column.length) return [];
-          const left = Math.min(...column.map(box => box.x)) - 18;
-          const right = Math.max(...column.map(box => box.x + box.width)) + 18;
-          return [{ x: left, y: point.y }, { x: right, y: point.y }];
-        }).filter(point => point.x > start.x && point.x < end.x);
-        points = [start, ...corridor, end];
+      let points, curved;
+      const launch = { x: start.x + 16, y: start.y };
+      if (settle.x > launch.x) {
+        // Keep reserved lanes flat across the full width of skipped columns.
+        let corridor = guide.slice(1, -1).flatMap(point => {
+          const band = boxes.filter(box => box.x < point.x && box.x + box.width > point.x);
+          if (!band.length) return [];
+          return [{ x: Math.min(...band.map(box => box.x)) - 18, y: point.y },
+            { x: Math.max(...band.map(box => box.x + box.width)) + 18, y: point.y }];
+        }).filter(point => point.x > launch.x && point.x < settle.x);
+        if (!guide.length) {
+          // Non-backbone/overlaid relations still cross every skipped column.
+          // Choose the nearest clear row gap, with an outer lane as fallback;
+          // unrelated dependency links must not stretch the placement forest.
+          const crossed = boxes.filter(box => box.x > launch.x && box.x + box.width < settle.x);
+          const bands = new Map(crossed.map(box => [box.x + box.width / 2, column(box)]));
+          corridor = [...bands].sort(([a], [b]) => a - b).flatMap(([center, band]) => {
+            const left = Math.min(...band.map(box => box.x)) - 18;
+            const right = Math.max(...band.map(box => box.x + box.width)) + 18;
+            if (left <= launch.x || right >= settle.x) return [];
+            const desired = start.y + (end.y - start.y) * (center - launch.x) / (settle.x - launch.x);
+            const ordered = band.slice().sort((a, b) => a.y - b.y);
+            const candidates = [ordered[0].y - 24, Math.max(...ordered.map(box => box.y + box.height)) + 24];
+            for (let i = 1; i < ordered.length; i++) {
+              const low = ordered[i - 1].y + ordered[i - 1].height + 18, high = ordered[i].y - 18;
+              if (low <= high) candidates.push(Math.max(low, Math.min(high, desired)));
+            }
+            const lane = candidates.sort((a, b) => Math.abs(a - desired) - Math.abs(b - desired) || a - b)[0];
+            return [{ x: left, y: lane }, { x: right, y: lane }];
+          });
+        }
+        points = [start, launch, ...corridor, settle]; curved = curve(points);
       } else {
-        // Historical reverse links loop around the world, retaining their direction.
-        const lane = Math.min(...[...positions.values()].map(box => box.y)) - 36 - (index % 4) * 8;
-        const column = box => [...positions.values()].filter(other => Math.abs(other.x + other.width / 2 - box.x - box.width / 2) < 1);
-        const departure = Math.max(...column(from).map(box => box.x + box.width)) + 48;
-        const arrival = Math.min(...column(to).map(box => box.x)) - 48;
+        // Historical reverse links loop around the world, retaining direction.
+        const lane = Math.min(...boxes.map(box => box.y)) - 40 - (index % 4) * 8;
+        const departure = Math.max(...column(from).map(box => box.x + box.width)) + 64;
+        const arrival = Math.min(...column(to).map(box => box.x)) - 96;
         points = [start, { x: departure, y: start.y }, { x: departure, y: lane },
-          { x: arrival, y: lane }, { x: arrival, y: end.y }, end];
+          { x: arrival, y: lane }, { x: arrival, y: end.y }, { x: settle.x - 16, y: end.y }, settle];
+        curved = reverseCurve(points);
       }
-      return { ...item, start, end, points, d: (end.x > start.x ? curve : reverseCurve)(points) };
+      return { ...item, start, end, points: [...points, end], curved, d: `${curved}L${end.x},${end.y}` };
     });
   }
 
+  function edgeAppearance(route, scale = 1) {
+    const k = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    const strokeWidth = Math.max(1.7, MIN_STROKE_PIXELS / k);
+    const length = Math.max(10, MIN_ARROW_PIXELS / k), half = length * 0.4;
+    const base = { x: route.end.x - length, y: route.end.y };
+    // The line stops at the filled head's base, never poking through its tip.
+    return { strokeWidth, base, length,
+      dashScale: Math.max(1, 1 / k),
+      d: `${route.curved}L${base.x},${base.y}`,
+      head: `M${base.x},${base.y - half}L${route.end.x},${route.end.y}L${base.x},${base.y + half}Z` };
+  }
+
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, STATUS_COLORS, DEPTH_COLORS,
-    displayGraph, focusIds, renderMatches, metrics, color, layoutGraph, routeEdges };
+    EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS,
+    displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
 });

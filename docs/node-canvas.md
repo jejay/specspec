@@ -24,12 +24,30 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 ## Separation of responsibilities
 
 - **Python** validates schemas, lifecycle, links, fingerprints, and writes.
-- **Dagre** lays out stable ordered IDs/relations in LR mode. Its inputs contain
-  intrinsic card sizes, spacing, and graph relationships; no viewport size.
-- **D3 shape** creates smooth right-to-left socket connections. Long edges retain
-  flat reserved lanes across skipped card-width bands before curving through gaps.
-  Direct links use horizontally tangent Béziers. Old reverse relationships use
-  an outer loop; a revision union is a presentation graph, not a valid canonical DAG.
+- **Dagre** produces a left-to-right presentation from stable ordered IDs,
+  intrinsic sizes, and relationships; no viewport size. Reversed input and its
+  RL longest-path ranker produce **earliest source ranks**, rather than drawing
+  shallow branches toward a shared sink. Compute ranks from **all parents**, then
+  place a deterministic deepest-parent backbone to prevent vertical stretching by
+  common sinks. All relationships are still drawn; the backbone is not canonical
+  or a preferred/approved dependency. Each node follows its deepest parent;
+  this is deliberately not the shortest-hop context metric. Target edges rank
+  the overview/current focus; base edges rank a removed selected node's context.
+  Extra revision references into primary nodes are overlays, not rank constraints.
+- **D3 shape** connects parent right boundaries to child left boundaries, without
+  circles. Long edges retain flat reserved lanes across skipped card-width bands.
+  Attachments span intrinsic card heights instead of a narrow title band. A short
+  horizontal departure prevents steep thickened curves from brushing the source;
+  a tangent-aligned settling approach precedes the arrow. The line ends at its
+  filled head's base, not through the tip. Forward non-backbone links choose the
+  nearest clear gaps across skipped columns, remaining flat through each column;
+  outer corridors are fallback lanes. Reverse historical links use an outer loop.
+- **Edge appearance** compensates for camera scale: minimum stroke strength is
+  1.6 CSS screen pixels, minimum head length is 6, and Git dash lengths remain
+  visible. The fixed world-space settling approach accommodates the largest head
+  at the current 12% camera limit. These are implementation choices, not canonical
+  node metadata or fixed user pixel requirements. No edge/form DOM is recreated
+  and no layout or mutation runs during zoom.
 - **D3 zoom** applies one transform to cards and SVG. The viewport clips overflow;
   panning is unconstrained and scale is 12–250%. Wheel/pinch anchoring and drag
   event handling come from the library. Framing/zoom buttons animate except under
@@ -39,6 +57,21 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   excluded from settings controls. Navigation alone sends no mutation commands.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
   layout positions, magnification, colors, or derived scores enter `_specspec`.
+
+## Why change the initial heuristic?
+
+On the preceding 42-node snapshot, network-simplex placed the six immediate
+manifesto children in ranks **4, 5, 3, 5, 1, 5**. Shared downstream nodes shortened
+their connections by pulling early intentions rightward. Reversed longest-path
+ranking places those six in rank **1** without changing a canonical edge. On that
+same snapshot, mean visual rank fell from 5.95 to 4.48. This is evidence of fixing
+the observed bias, not a universal density/optimality score or a stored taxonomy.
+Earliest ranks alone still left the root's six direct neighbors vertically spread
+by sink alignment. On the same later 45-node snapshot, a rank-preserving placement
+backbone reduced their world-space span from 3792 to 1030, and total layout height
+from 3952 to 2092. The final graph also includes this separately proposed packing
+choice. Neither comparison deletes a relationship or constitutes a universal
+layout-quality guarantee.
 
 ## Build, licenses, and packaging
 
@@ -51,15 +84,21 @@ There are no CDN/runtime network requests, `eval`, or executable project Markdow
 
 ## Verification and boundaries
 
-Node tests cover left-to-right constraints, deterministic ordering, skipped-rank
-routing, historical overlays, pointer-anchored zoom, zoom bounds, viewport-size
-invariance, independent cameras, native-control exclusions, keyboard navigation,
-form caret preservation, and the earlier editor/bridge/trust regressions.
+Node tests cover left-to-right/earliest-root constraints, shallow branches feeding
+shared deep sinks, vertical origin concentration with full relationship membership,
+deterministic ordering, skipped-rank routing, historical rank
+isolation, strong bends, head-base tangent joins, screen-strength floors, dash
+visibility, pointer-anchored zoom, zoom bounds, viewport invariance, independent
+cameras, native-control exclusions, keyboard navigation, caret preservation, and
+the earlier editor/bridge/trust regressions.
 
 `npm --prefix vscode run test:host` opens installed VS Code in a disposable profile.
 Chromium checks the real graph, focuses nodes, pans/zooms, narrows the canvas,
-resizes a textarea, samples curves for card/content intersections, checks side-port
-endpoints, restores the overview camera, and switches semantic colors. Optional
+resizes a textarea, samples centerlines and stroke-normal boundaries for content
+intersections, verifies actual earliest ranks and vertical origin concentration,
+checks tangent/head joins and screen
+strength at 12% zoom, confirms circle-free endpoints, visits a real multiple-depth
+parent neighborhood, restores the overview camera, and switches semantic colors. Optional
 `SPECSPEC_SCREENSHOT_DIR` captures screenshots of overview and focused views. The
 agent inspected these on Windows; this does not replace full human editing/review
 or revision-picker verification. Only this isolated automated test disables trust.

@@ -31,11 +31,8 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #zoom-reset { min-width: 62px; font-variant-numeric: tabular-nums; }
 .canvas-help { position: absolute; bottom: 12px; right: 14px; margin: 0; font-size: 11px; color: var(--vscode-descriptionForeground); pointer-events: none; }
 @media (max-width: 1450px) { .canvas-help { display: none; } }
-.socket { fill: var(--vscode-editor-background); stroke: var(--edge-normal); stroke-width: 2px; }
-.socket.added { stroke: var(--edge-added); }
-.socket.removed { stroke: var(--edge-removed); }
-.socket.draft { stroke: var(--edge-draft); }
-.link { fill: none; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+/* World-space widths/dashes are camera-compensated in graph.js. No endpoint dots. */
+.link { fill: none; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: butt; }
 .link.normal { stroke: var(--edge-normal); opacity: .8; }
 .link.added { stroke: var(--edge-added); }
 .link.removed { stroke: var(--edge-removed); stroke-dasharray: 6 5; }

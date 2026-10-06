@@ -63,6 +63,40 @@ implementation links both new proposals. The current graph has 42 nodes; that is
 not a fixed requirement. [Library research/rationale](node-canvas.md) is noncanonical
 implementation context, not an additional source of approval.
 
+## Origin density and connection correction
+
+The user's follow-up changes the intended outcome, not approval of an algorithm:
+
+- Accepted: [concentrate development near the manifesto](../_specspec/cbcde9ec-5c0b-480e-9401-cf50a4bfeb96--manifesto-centered-graph-density.md).
+- The accepted [arrow intention](../_specspec/e3494686-5da4-40f5-a622-f823c2e0c9b2--readable-relationship-arrows.md)
+  now asks for minimum visible strength when zooming out, no round endpoint
+  connectors, and natural curved-to-arrow transitions.
+- Proposed: [root-anchored earliest ranks](../_specspec/4254f33d-ce29-4e33-830e-28a8edd2a51c--root-anchored-earliest-ranks.md),
+  keeping each node in the earliest column allowed by all parents rather than
+  pulling shallow intentions toward common downstream sinks.
+- Proposed: [compact rank-preserving placement](../_specspec/c2ed5444-b7b2-4c2a-901c-ab1ba64e5e54--compact-rank-backbone-placement.md),
+  preventing vertical stretching by common sinks without deleting, downgrading,
+  or approving any multi-parent relationship.
+- Proposed: [scale-stable tangent arrows](../_specspec/10ef1cdc-62a6-4212-8387-704d3cbbeeb4--scale-stable-tangent-arrow-connections.md),
+  with camera-compensated line/head dimensions, full-height attachments, and a
+  clear tangent-aligned head join.
+
+These nodes and the arrow amendment were managed through guarded CLI mutations
+before implementation of each correction. The editor links all three new conclusions;
+existing Dagre/D3 reuse and native-form safety remain proposed technical context.
+The graph currently has 46 nodes. The old 42-node snapshot's six immediate root
+children now occupy rank one instead of ranks 1–5 under the earlier heuristic.
+Ranking still respects deeper parents; shortest-hop badges retain their separate
+meaning. The [design note](node-canvas.md#why-change-the-initial-heuristic) records
+this comparison, not a universal graph-density guarantee.
+
+Windows VS Code checks passed for the current graph's earliest ranks, compact
+vertical origin neighborhood, complete relationship membership, stroke/head
+screen-strength floors at minimum zoom, no circles, tangent joins, multiple-depth
+parents, and painted-stroke clearance after textarea resizing. Screenshots were
+captured and inspected. Passing these checks does not accept the proposals or
+replace full manual mutation/revision-picker review.
+
 ## Entry points
 
 | What to inspect | Node |
@@ -185,6 +219,6 @@ Historical comparisons remain read-only.
 real webview interactions in the installed VS Code with a disposable profile and
 loopback Chromium debugger (Node 22+). Focus/back navigation, color modes, root
 controls, viewport-size invariance, cursor-anchored zoom, panning, curve/content
-clearance, and resized side-port endpoints have passed on Windows. Screenshots were
+clearance, and resized side-boundary endpoints have passed on Windows. Screenshots were
 captured and visually inspected in the ignored local state directory. Full manual
 mutation and revision-picker interaction checks remain outstanding.

@@ -8,6 +8,7 @@
   let colorMode = restored.colorMode === 'distance' ? 'distance' : 'status';
   let dirty = false, pending = false, creating = false, formFingerprint, formParents = [];
   let layoutFrame, layout, layoutKey, cameraScene;
+  let drawnEdges = [];
   const cameraAPI = window.SpecSpecCamera;
   const cameras = Object.fromEntries(Object.entries(restored.cameras || {})
     .map(([key, value]) => [key, cameraAPI.validTransform(value)]).filter(([, value]) => value));
@@ -16,6 +17,7 @@
     onChange: (value, finished) => {
       if (cameraScene) cameras[cameraScene] = value;
       $('zoom-level').textContent = `${Math.round(value.k * 100)}%`;
+      updateEdgeAppearance(value.k);
       if (finished && state) saveDraft();
     }, onFrame: () => frameAll(),
   });
@@ -168,9 +170,18 @@
     }
     const edges = (creating && view === 'focus' ? neighbors().parents.map(id => ({ edge: [id, focalId], kind: 'draft' })) : graph.edges)
       .filter(({ edge: [a, b] }) => visible.has(a) && visible.has(b));
-    const key = JSON.stringify([[...sizes].sort(([a], [b]) => a.localeCompare(b)), edges]);
+    // Overview/current focus ranks follow the target; a removed selected node
+    // follows its base context. Extra revision links remain visible but don't
+    // push surviving ranks toward a sink or make the ranking graph cyclic.
+    const revision = view === 'focus' && !creating && !currentNode() && state.diff ? state.diff.base : state.snapshot;
+    const primary = { ids: new Set(revision.nodes.map(node => node.id)), edges: new Set(revision.edges.map(edge => JSON.stringify(edge))) };
+    if (creating && view === 'focus') {
+      primary.ids.add(focalId); edges.forEach(item => primary.edges.add(JSON.stringify(item.edge)));
+    }
+    const key = JSON.stringify([[...sizes].sort(([a], [b]) => a.localeCompare(b)), edges,
+      [...primary.ids].sort(), [...primary.edges].sort()]);
     const oldFocus = cameraScene === sceneKey() ? layout?.positions.get(focalId) : undefined;
-    if (key !== layoutKey) { layout = model.layoutGraph(visible, edges, sizes); layoutKey = key; }
+    if (key !== layoutKey) { layout = model.layoutGraph(visible, edges, sizes, primary); layoutKey = key; }
     $('graph').style.width = `${layout.width}px`; $('graph').style.height = `${layout.height}px`;
     for (const card of $('cards').children) {
       const box = layout.positions.get(card.dataset.nodeId);
@@ -196,29 +207,26 @@
   function drawEdges(routes, width, height) {
     const svg = $('edges'), ns = 'http://www.w3.org/2000/svg';
     svg.replaceChildren(); svg.setAttribute('width', width); svg.setAttribute('height', height);
-    const defs = document.createElementNS(ns, 'defs');
-    for (const kind of ['normal', 'added', 'removed', 'draft']) {
-      const marker = document.createElementNS(ns, 'marker');
-      marker.setAttribute('id', `arrow-${kind}`); marker.setAttribute('viewBox', '0 0 10 10');
-      marker.setAttribute('refX', '10'); marker.setAttribute('refY', '5');
-      marker.setAttribute('markerWidth', '10'); marker.setAttribute('markerHeight', '10');
-      marker.setAttribute('markerUnits', 'userSpaceOnUse'); marker.setAttribute('orient', 'auto');
-      const triangle = document.createElementNS(ns, 'path');
-      triangle.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z'); triangle.setAttribute('class', `arrow-head ${kind}`);
-      marker.append(triangle); defs.append(marker);
-    }
-    svg.append(defs);
-    for (const route of routes) {
-      const path = document.createElementNS(ns, 'path');
-      path.setAttribute('d', route.d); path.setAttribute('class', `link ${route.kind || 'normal'}`);
-      path.setAttribute('marker-end', `url(#arrow-${route.kind || 'normal'})`);
-      path.dataset.parent = route.edge[0]; path.dataset.child = route.edge[1];
-      svg.append(path);
-      for (const point of [route.start, { x: route.end.x + 6, y: route.end.y }]) {
-        const socket = document.createElementNS(ns, 'circle');
-        socket.setAttribute('cx', point.x); socket.setAttribute('cy', point.y); socket.setAttribute('r', '3.5');
-        socket.setAttribute('class', `socket ${route.kind || 'normal'}`); svg.append(socket);
+    drawnEdges = routes.map(route => {
+      const path = document.createElementNS(ns, 'path'), head = document.createElementNS(ns, 'path');
+      path.setAttribute('class', `link ${route.kind || 'normal'}`);
+      head.setAttribute('class', `arrow-head ${route.kind || 'normal'}`);
+      for (const element of [path, head]) {
+        element.dataset.parent = route.edge[0]; element.dataset.child = route.edge[1];
       }
+      svg.append(path, head);
+      return { route, path, head };
+    });
+    updateEdgeAppearance(camera.value().k);
+  }
+
+  function updateEdgeAppearance(scale) {
+    for (const { route, path, head } of drawnEdges) {
+      const appearance = model.edgeAppearance(route, scale);
+      path.setAttribute('d', appearance.d); head.setAttribute('d', appearance.head);
+      path.style.strokeWidth = appearance.strokeWidth;
+      const dash = route.kind === 'removed' ? [6, 5] : route.kind === 'draft' ? [3, 4] : undefined;
+      if (dash) path.style.strokeDasharray = dash.map(value => value * appearance.dashScale).join(' ');
     }
   }
 
