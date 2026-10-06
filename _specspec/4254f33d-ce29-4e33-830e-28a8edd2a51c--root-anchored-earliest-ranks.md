@@ -1,11 +1,10 @@
 ---
 id: 4254f33d-ce29-4e33-830e-28a8edd2a51c
 type: requirement
-status: proposed
 parents:
 - cbcde9ec-5c0b-480e-9401-cf50a4bfeb96
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-managed_hash: 0d442dab680f53514b93f9d0a0dd65aa32ed0adcd51dc2a3b2efd9b78c0ad8cc
+managed_hash: cdfc443791da73e334e20242292c4e67b5dd245dea29938d57ab7ea41158459e
 ---
 # Anchor layered ranks at the origin rather than shared sinks
 

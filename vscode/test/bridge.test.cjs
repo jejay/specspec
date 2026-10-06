@@ -17,7 +17,7 @@ test('CLI bridge preserves argv and sends bodies through stdin', async t => {
   const { directory, file } = fixture(t, `
     let input = ''; process.stdin.on('data', chunk => input += chunk);
     process.stdin.on('end', () => console.log(JSON.stringify({
-      api_version: 1, ok: true, result: { args: process.argv.slice(2), input }, diagnostics: []
+      api_version: 2, ok: true, result: { args: process.argv.slice(2), input }, diagnostics: []
     })));
   `);
   const result = await invoke(process.execPath, [file], directory, ['update', 'id', '--json'], '# Body\n');
@@ -27,7 +27,7 @@ test('CLI bridge preserves argv and sends bodies through stdin', async t => {
 
 test('validation diagnostics become actionable errors', async t => {
   const { directory, file } = fixture(t, `
-    console.log(JSON.stringify({ api_version: 1, ok: false, result: null,
+    console.log(JSON.stringify({ api_version: 2, ok: false, result: null,
       diagnostics: [{ code: 'STALE', message: 'Refresh and retry', severity: 'error' }] }));
     process.exitCode = 1;
   `);
@@ -37,6 +37,8 @@ test('validation diagnostics become actionable errors', async t => {
 test('unknown APIs and non-JSON output are rejected', async t => {
   const { directory, file } = fixture(t, `console.log(JSON.stringify({ api_version: 99, ok: true, diagnostics: [] }));`);
   await assert.rejects(invoke(process.execPath, [file], directory, []), /Unsupported/);
+  writeFileSync(file, `console.log(JSON.stringify({ api_version: 1, ok: true, diagnostics: [] }));`);
+  await assert.rejects(invoke(process.execPath, [file], directory, []), /requires API 2/);
   writeFileSync(file, `console.log('not json');`);
   await assert.rejects(invoke(process.execPath, [file], directory, []), /not json/);
 });

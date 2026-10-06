@@ -1,13 +1,12 @@
 ---
 id: fbaee7c1-4c20-47ab-afd2-ae0503d428b5
 type: requirement
-status: proposed
 parents:
 - c93ab412-77b7-4849-a556-d8e3994b825b
 - 18d1da0d-8bc3-4d58-8720-8ce194a74d1b
 - e3494686-5da4-40f5-a622-f823c2e0c9b2
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
-managed_hash: 5c650ee929c7e76c1fc941a838a6648679de5553e6a996df1d4d7caf21d1fed7
+managed_hash: b0a5e9a6849095ebf30d841155cff82d4cfdf40cccde711f6f09ccaabc4cff6e
 ---
 # Reuse a layered graph engine while retaining safe native forms
 
@@ -36,4 +35,4 @@ no CDN, remote renderer, project-supplied scripts, or runtime code generation.
 The original sink-biased ranking is superseded by the separate root-anchored
 earliest-rank proposal. Endpoint circles and scale-dependent line/arrow weakness
 are superseded by the separate scale-stable tangent-arrow proposal; library reuse
-and safe native forms remain in scope. These choices remain proposed.
+and safe native forms remain in scope. These implementation choices remain revisable without an approval stage.

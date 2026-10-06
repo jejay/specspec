@@ -290,10 +290,23 @@ class GraphPanel {
     if (this.target) throw new Error('Historical comparisons are read-only.');
     if (!this.snapshot?.valid || typeof message.expect !== 'string') throw new Error('Load a valid graph before editing.');
     if (message.expect !== this.snapshot.fingerprint) throw new Error('Displayed graph is stale; refresh before editing. Unsaved text has been retained.');
+    const common = ['--expect', message.expect, '--json'];
+    if (message.type === 'migrate') {
+      if (this.snapshot.format_version !== 1) throw new Error('This graph already uses the current schema.');
+      const answer = await vscode.window.showWarningMessage(
+        'Migrate the whole graph to remove proposed/accepted metadata? IDs, text, dependencies and withdrawal history are preserved. Review the resulting Git diff.',
+        { modal: true }, 'Confirm',
+      );
+      if (answer !== 'Confirm') { await this.post({ type: 'cancelled' }); return; }
+      await this.cli<Snapshot>(['migrate', ...common]);
+      // A restored draft keeps its old fingerprint; migration is never a rebase.
+      await this.refresh();
+      return;
+    }
+    if (this.snapshot.format_version !== 2) throw new Error('Migrate this legacy graph before editing.');
     const nodes = new Map(this.snapshot.nodes.map(node => [node.id, node]));
     const id = message.id;
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('Unknown node ID.');
-    const common = ['--expect', message.expect, '--json'];
     let args: string[];
     let input: string | undefined;
     if (message.type === 'save' || message.type === 'add') {
@@ -310,9 +323,9 @@ class GraphPanel {
       const nodeType = message.type === 'add' ? message.nodeType : nodes.get(id as string)?.type;
       if (nodeType === 'implementation') args.push('--sources', message.sources);
       input = message.body;
-    } else if (message.type === 'accept' || message.type === 'retire') {
+    } else if (message.type === 'restore' || message.type === 'retire') {
       const answer = await vscode.window.showWarningMessage(
-        `${message.type === 'accept' ? 'Accept' : 'Retire'} this node? Review its binding text and dependency impact first.`,
+        `${message.type === 'restore' ? 'Restore this withdrawn node? Restoration is not approval.' : 'Retire this node, retaining its history?'} Check its dependency impact.`,
         { modal: true }, 'Confirm',
       );
       if (answer !== 'Confirm') { await this.post({ type: 'cancelled' }); return; }

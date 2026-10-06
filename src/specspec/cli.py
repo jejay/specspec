@@ -13,18 +13,19 @@ import click
 from . import __version__
 from .format import safe_source_path
 from .git import git_snapshot, install_hook, semantic_diff, source_change_impact
-from .model import Diagnostic, SpecError
+from .model import API_VERSION, Diagnostic, SpecError
 from .workspace import (
     Snapshot,
     add_node,
-    change_status,
     discover_root,
     initialize,
     load_snapshot,
     recover,
     require_node,
+    set_retired,
     update_node,
 )
+from .workspace import migrate as migrate_workspace
 
 
 def emit(
@@ -36,7 +37,7 @@ def emit(
 ) -> None:
     diagnostics = diagnostics or []
     envelope = {
-        "api_version": 1,
+        "api_version": API_VERSION,
         "ok": ok,
         "result": result,
         "diagnostics": [diagnostic.to_dict() for diagnostic in diagnostics],
@@ -189,7 +190,7 @@ def add(
     expect: str | None,
     as_json: bool,
 ) -> None:
-    """Create a proposed node."""
+    """Create a node without an approval stage."""
     snapshot, node_id = add_node(
         root_path(root),
         node_type,
@@ -241,7 +242,7 @@ def update(
     mutation_output(snapshot, [node_id], as_json)
 
 
-def status_command(name: str, status: str):
+def withdrawal_command(name: str, retired: bool):
     @main.command(name=name)
     @click.argument("ids", nargs=-1, required=True)
     @expect_option
@@ -250,28 +251,54 @@ def status_command(name: str, status: str):
     @guarded
     def command(root: Path | None, ids: tuple[str, ...], expect: str | None, as_json: bool) -> None:
         mutation_output(
-            change_status(root_path(root), list(ids), status, expect), list(ids), as_json
+            set_retired(root_path(root), list(ids), retired, expect), list(ids), as_json
         )
 
+    command.help = (
+        "Withdraw nodes, retaining their history."
+        if retired
+        else "Restore withdrawn nodes; this is not approval."
+    )
     return command
 
 
-status_command("accept", "accepted")
-status_command("retire", "retired")
+withdrawal_command("retire", True)
+withdrawal_command("restore", False)
 
 
-@main.command(name="list")
-@click.option("--status", type=click.Choice(["proposed", "accepted", "retired"]))
+@main.command(name="migrate")
+@expect_option
 @json_option
 @click.pass_obj
 @guarded
-def list_nodes(root: Path | None, status: str | None, as_json: bool) -> None:
+def migrate_command(root: Path | None, expect: str | None, as_json: bool) -> None:
+    """Convert a validated v1 graph to the approval-free v2 schema."""
+    project = root_path(root)
+    before = load_snapshot(project)
+    snapshot = migrate_workspace(project, expect)
+    ids = [
+        node.id
+        for node in snapshot.nodes
+        if snapshot.files[node.path] != before.files.get(node.path)
+    ]
+    mutation_output(snapshot, sorted(ids), as_json)
+
+
+@main.command(name="list")
+@click.option("--retired", "only_retired", is_flag=True, help="List withdrawn nodes only.")
+@click.option("--live", "only_live", is_flag=True, help="Exclude withdrawn nodes.")
+@json_option
+@click.pass_obj
+@guarded
+def list_nodes(root: Path | None, only_retired: bool, only_live: bool, as_json: bool) -> None:
     """List nodes and their current snapshot fingerprint."""
+    if only_retired and only_live:
+        raise SpecError([Diagnostic("ARGUMENT", "Do not combine --retired and --live.")], 2)
     snapshot = load_snapshot(root_path(root))
     snapshot.require_valid()
     result = snapshot.to_dict()
-    if status:
-        result["nodes"] = [node for node in result["nodes"] if node["status"] == status]
+    if only_retired or only_live:
+        result["nodes"] = [node for node in result["nodes"] if node["retired"] == only_retired]
         visible = {node["id"] for node in result["nodes"]}
         result["edges"] = [edge for edge in result["edges"] if set(edge) <= visible]
     emit(result, snapshot.diagnostics, as_json=as_json)
@@ -339,19 +366,17 @@ def context(
     snapshot = load_snapshot(root_path(root))
     node = require_node(snapshot, node_id)
     graph = snapshot.require_valid()
-    if node.status == "retired" and not include_retired:
+    if node.retired and not include_retired:
         raise SpecError([Diagnostic("RETIRED", "Use --include-retired to export a retired node.")])
     required = graph.closure(node_id, ancestors=True) | {node_id}
     children = {
-        key
-        for key in graph.children[node_id]
-        if include_retired or graph.nodes[key].status != "retired"
+        key for key in graph.children[node_id] if include_retired or not graph.nodes[key].retired
     }
     siblings = {
         child
         for parent in graph.parents[node_id]
         for child in graph.children[parent]
-        if graph.nodes[child].status == "proposed"
+        if include_retired or not graph.nodes[child].retired
     } - required
     optional = (children | siblings) - required
     result = {
@@ -359,7 +384,7 @@ def context(
         "fingerprint": snapshot.fingerprint,
         "required_ids": sorted(required),
         "child_ids": sorted(children),
-        "proposal_ids": sorted(siblings),
+        "sibling_ids": sorted(siblings),
         "nodes": [graph.nodes[key].to_dict() for key in graph.order if key in required],
         "omitted_ids": sorted(optional),
     }
@@ -368,7 +393,7 @@ def context(
         displayed = payload
         if as_json:
             displayed = {
-                "api_version": 1,
+                "api_version": API_VERSION,
                 "ok": True,
                 "result": payload,
                 "diagnostics": [item.to_dict() for item in snapshot.diagnostics],
@@ -426,7 +451,8 @@ def export_graph(root: Path | None, output_format: str) -> None:
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
             )
-            lines.append(f'  {mermaid_id(node_id)}["{title} ({node.status})"]')
+            suffix = " (retired)" if node.retired else ""
+            lines.append(f'  {mermaid_id(node_id)}["{title}{suffix}"]')
         lines.extend(
             f"  {mermaid_id(parent)} --> {mermaid_id(child)}" for parent, child in graph.edges()
         )

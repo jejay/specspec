@@ -1,10 +1,9 @@
 ---
 id: 48f77f19-391f-46d0-b06f-ec7530be4575
 type: requirement
-status: accepted
 parents:
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: c65f6cd5fb0cfb1cbe98e81d06e2a0961c9214d94bd21484d10d1b76977fe4c4
+managed_hash: 8fc0a79a4018b3135b8f5843cb1a040b26bc0ece96fb3cbbcff68d64c84e6399
 ---
 # Derive intention and conclusion positions from relationships
 

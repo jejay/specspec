@@ -13,12 +13,12 @@ from ruamel.yaml.error import YAMLError
 from ruamel.yaml.tokens import AliasToken, AnchorToken, TagToken
 
 from .model import (
+    FORMAT_VERSION,
     HASH_RE,
     ID_RE,
     MAX_FILE_BYTES,
     NODE_TYPES,
     SLUG_RE,
-    STATUSES,
     Diagnostic,
     SpecError,
     SpecNode,
@@ -27,7 +27,7 @@ from .model import (
 FIELDS = {
     "id",
     "type",
-    "status",
+    "retired",
     "parents",
     "format_version",
     "sources",
@@ -117,15 +117,19 @@ def safe_source_path(value: str) -> bool:
     )
 
 
-def parse_node(data: Mapping[str, Any], body: str, path: str) -> SpecNode:
+def parse_node(
+    data: Mapping[str, Any], body: str, path: str, *, version: int = FORMAT_VERSION
+) -> SpecNode:
     errors: list[Diagnostic] = []
 
     def check(condition: bool, message: str) -> None:
         if not condition:
             errors.append(Diagnostic("SCHEMA", message, path))
 
+    check(type(version) is int and version in {1, FORMAT_VERSION}, "Unsupported format version.")
+    fields = (FIELDS - {"retired"}) | {"status"} if version == 1 else FIELDS
     check(all(isinstance(key, str) for key in data), "Frontmatter keys must be strings.")
-    check(not (set(data) - FIELDS), f"Unknown fields: {sorted(str(k) for k in set(data) - FIELDS)}")
+    check(not (set(data) - fields), f"Unknown fields: {sorted(str(k) for k in set(data) - fields)}")
     node_id = data.get("id")
     check(
         isinstance(node_id, str) and bool(ID_RE.fullmatch(node_id)),
@@ -133,8 +137,17 @@ def parse_node(data: Mapping[str, Any], body: str, path: str) -> SpecNode:
     )
     node_type = data.get("type")
     check(isinstance(node_type, str) and node_type in NODE_TYPES, "Invalid node type.")
-    status = data.get("status")
-    check(isinstance(status, str) and status in STATUSES, "Invalid lifecycle status.")
+    legacy_status = None
+    if version == 1:
+        legacy_status = data.get("status")
+        check(
+            isinstance(legacy_status, str) and legacy_status in {"proposed", "accepted", "retired"},
+            "Invalid legacy lifecycle status.",
+        )
+        retired = legacy_status == "retired"
+    else:
+        retired = data.get("retired", False)
+        check(isinstance(retired, bool), "retired must be a boolean withdrawal flag.")
     parents = data.get("parents")
     valid_parents = isinstance(parents, list) and all(
         isinstance(parent, str) and ID_RE.fullmatch(parent) for parent in parents
@@ -142,11 +155,11 @@ def parse_node(data: Mapping[str, Any], body: str, path: str) -> SpecNode:
     check(valid_parents, "parents must be an array of lowercase UUIDv4 IDs.")
     if valid_parents:
         check(len(set(parents)) == len(parents), "parents must not contain duplicates.")
-    version = data.get("format_version")
+    format_version = data.get("format_version")
     if node_type == "manifesto":
         check(
-            isinstance(version, int) and not isinstance(version, bool) and version == 1,
-            "Manifesto requires format_version: 1.",
+            type(data.get("format_version")) is int and data["format_version"] == version,
+            f"Manifesto requires format_version: {version}.",
         )
     else:
         check("format_version" not in data, "format_version belongs on the manifesto only.")
@@ -204,18 +217,21 @@ def parse_node(data: Mapping[str, Any], body: str, path: str) -> SpecNode:
     return SpecNode(
         node_id,
         node_type,
-        status,
+        retired,
         list(parents),
         body,
         path,
-        version,
+        format_version,
         normalized_sources,
         extensions,
         managed_hash,
+        legacy_status,
     )
 
 
 def serialize(node: SpecNode, original: bytes | None = None) -> bytes:
+    if node.legacy_status is not None:
+        raise SpecError([Diagnostic("MIGRATION", "Run specspec migrate before editing v1 nodes.")])
     data = read_document(original, node.path)[0] if original is not None else {}
     # Keep round-trip comments on untouched fields and omit empty optional fields.
     # Validate caller-supplied data before hashing/sorting it (library callers

@@ -1,12 +1,11 @@
 ---
 id: d70cdad5-5e03-4200-ac75-74cf6514e56c
 type: requirement
-status: proposed
 parents:
 - 18d1da0d-8bc3-4d58-8720-8ce194a74d1b
 - a723adc8-d69d-4e60-8b4f-0997ab8f4d1d
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
-managed_hash: c95a3a6015c7519ee035e6c5d319e5389255ed95046f9543134932373e17e29b
+managed_hash: c0dac805e887eeaf93899f0bc0947cb208b22b4a6f0ce2b75970ce31b2110f98
 ---
 # Use a separate D3 camera for an unbounded editing surface
 

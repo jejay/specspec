@@ -1,10 +1,9 @@
 ---
 id: 003d697b-4104-4fdf-8e05-0db572c436d0
 type: requirement
-status: accepted
 parents:
 - b8983d8c-3dc0-4588-b74f-17721bfc4f5c
-managed_hash: dd85ad0993e9b504369ce066fdf278687b5ecd18fdf6213f4958e50d07ebe7fa
+managed_hash: 1797a6177a68b56c0427540e867885b6881d23150ce1e6fbf1c39eaedc68560f
 ---
 # Manage specification changes through the tool
 

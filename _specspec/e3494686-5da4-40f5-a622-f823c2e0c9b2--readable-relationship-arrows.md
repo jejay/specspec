@@ -1,11 +1,10 @@
 ---
 id: e3494686-5da4-40f5-a622-f823c2e0c9b2
 type: requirement
-status: accepted
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: e83ad09be9281ce1b82676f0fa4d8fb89e85b04378071d84a6489d24b1204c4e
+managed_hash: 52a27fe471c315802f341edd6a66c2eca48b38c6cdabf0c0cfb1b5ac4b72aa8c
 ---
 # Draw clearly connected and directional relationship arrows
 

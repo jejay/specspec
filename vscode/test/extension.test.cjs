@@ -6,7 +6,7 @@ const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
 const extensionPath = require.resolve('../out/extension.js');
-const snapshot = { fingerprint: 'current', nodes: [], edges: [], valid: true };
+const snapshot = { fingerprint: 'current', format_version: 2, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
 
 function fixture(t, options = {}) {
@@ -17,6 +17,7 @@ function fixture(t, options = {}) {
   const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0 };
   const context = { extensionUri: uri(join(root, 'vscode')), extensionMode: 2, subscriptions: [] };
   const output = { appendLine: line => calls.logs.push(line), show() {}, dispose() {} };
+  let current = options.snapshot || snapshot;
   const vscode = {
     ExtensionMode: { Production: 1, Development: 2, Test: 3 },
     ViewColumn: { One: 1 },
@@ -39,13 +40,15 @@ function fixture(t, options = {}) {
       showOpenDialog: async () => { calls.dialogs++; return options.cancel ? undefined : [uri(root)]; },
       showWorkspaceFolderPick: async () => { calls.picks++; return undefined; },
       showErrorMessage: async message => { calls.errors.push(message); },
-      showWarningMessage: async message => { calls.warnings.push(message); },
+      showInputBox: async () => options.revisions?.shift(),
+      showWarningMessage: async message => { calls.warnings.push(message); return options.confirm ? 'Confirm' : undefined; },
       createWebviewPanel: () => {
         let listener;
         let dispose;
         const messages = [];
         const panel = {
           messages,
+          send: value => listener(value),
           reveal() {},
           dispose: () => dispose?.(),
           onDidDispose: handler => { dispose = handler; return noopDisposable; },
@@ -77,10 +80,11 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args });
     if (options.cliError) throw new Error('Cannot run Python backend');
-    return { api_version: 1, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
-      base: snapshot, target: snapshot, changes: [], added_edges: [], removed_edges: [],
+    if (args[0] === 'migrate') current = { ...current, format_version: 2, fingerprint: 'migrated' };
+    return { api_version: 2, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+      base: current, target: current, changes: [], added_edges: [], removed_edges: [],
       base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
-    } : snapshot };
+    } : current };
   };
   // Exercise the actual command and panel lifecycle without requiring Electron.
   const originalLoad = Module._load;
@@ -98,8 +102,85 @@ function fixture(t, options = {}) {
     rmSync(root, { recursive: true, force: true });
     delete require.cache[extensionPath];
   });
-  return { root, uri, calls, context };
+  return { root, uri, calls, context, workspace: vscode.workspace };
 }
+
+async function waitFor(check) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (check()) return;
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  assert.ok(check(), 'The serialized graph action did not complete.');
+}
+
+test('legacy migration is explicitly confirmed and uses the displayed fingerprint', async t => {
+  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
+  await calls.commands.get('specspec.openGraph')();
+  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  await waitFor(() => calls.panels[0].messages.at(-1).snapshot?.fingerprint === 'migrated');
+  const mutation = calls.cli.find(call => call.args[0] === 'migrate');
+  assert.deepEqual(mutation.args, ['migrate', '--expect', 'current', '--json']);
+  assert.match(calls.warnings[0], /whole graph/);
+  assert.equal(calls.panels[0].messages.at(-1).snapshot.format_version, 2);
+  assert.equal(calls.panels[0].messages.at(-1).force, false);
+});
+
+test('cancelled or stale migration cannot invoke a writer', async t => {
+  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 } });
+  await calls.commands.get('specspec.openGraph')();
+  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  await waitFor(() => calls.panels[0].messages.at(-1).type === 'cancelled');
+  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
+  calls.panels[0].send({ type: 'migrate', expect: 'old' });
+  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
+  assert.match(calls.panels[0].messages.at(-1).message, /stale/);
+  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
+});
+
+test('ordinary writes cannot silently migrate a legacy workspace', async t => {
+  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
+  await calls.commands.get('specspec.openGraph')();
+  calls.panels[0].send({ type: 'add', expect: 'current', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
+  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
+  assert.match(calls.panels[0].messages.at(-1).message, /Migrate/);
+  assert.ok(!calls.cli.some(call => ['add', 'migrate'].includes(call.args[0])));
+});
+
+test('withdrawal and restoration are guarded commands and acceptance messages are rejected', async t => {
+  const node = { id: 'node', type: 'requirement', retired: true, parents: [], sources: [], body: '# Node', path: '_specspec/node.md' };
+  const { calls } = fixture(t, { snapshot: { ...snapshot, nodes: [node] }, confirm: true });
+  await calls.commands.get('specspec.openGraph')();
+  for (const action of ['restore', 'retire']) {
+    const count = calls.panels[0].messages.filter(message => message.type === 'snapshot').length;
+    calls.panels[0].send({ type: action, id: 'node', expect: 'current' });
+    await waitFor(() => calls.panels[0].messages.filter(message => message.type === 'snapshot').length > count);
+    assert.deepEqual(calls.cli.find(call => call.args[0] === action).args, [action, 'node', '--expect', 'current', '--json']);
+  }
+  calls.panels[0].send({ type: 'accept', id: 'node', expect: 'current' });
+  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
+  assert.match(calls.panels[0].messages.at(-1).message, /Unknown graph action/);
+  assert.ok(!calls.cli.some(call => call.args[0] === 'accept'));
+});
+
+test('historical legacy comparisons cannot invoke migration', async t => {
+  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true, revisions: ['HEAD', 'HEAD'] });
+  await calls.commands.get('specspec.compareRevisions')();
+  await waitFor(() => calls.panels[0].messages.at(-1).readonly === true);
+  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
+  assert.match(calls.panels[0].messages.at(-1).message, /read-only/);
+  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
+});
+
+test('losing trust prevents a previously loaded migration from executing', async t => {
+  const { calls, workspace } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
+  await calls.commands.get('specspec.openGraph')();
+  workspace.isTrusted = false;
+  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
+  assert.match(calls.panels[0].messages.at(-1).message, /trust/);
+  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
+});
 
 test('empty development windows use a filesystem folder picker and load the graph', async t => {
   const { root, calls } = fixture(t, { empty: true });

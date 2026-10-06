@@ -1,8 +1,9 @@
 # Node-canvas implementation rationale
 
 This is noncanonical design/evidence context. The [graph tour](own-spec.md#blender-style-canvas-revision)
-links the accepted user intentions and separately proposed technical conclusions.
-Working code does not accept a proposal. `INTENTION_SPEC.md` is unchanged.
+links the user's intentions and separately reasoned, revisable technical conclusions.
+Review is risk-proportionate rather than a per-node approval workflow; implementation
+is evidence, not permanence or correctness. `INTENTION_SPEC.md` is unchanged.
 
 ## Reuse rather than a Blender port
 
@@ -23,7 +24,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 
 ## Separation of responsibilities
 
-- **Python** validates schemas, lifecycle, links, fingerprints, and writes.
+- **Python** validates schemas, withdrawal, links, fingerprints, and writes.
 - **Dagre** produces a left-to-right presentation from stable ordered IDs,
   intrinsic sizes, and relationships; no viewport size. Reversed input and its
   RL longest-path ranker produce **earliest source ranks**, rather than drawing
@@ -69,7 +70,7 @@ the observed bias, not a universal density/optimality score or a stored taxonomy
 Earliest ranks alone still left the root's six direct neighbors vertically spread
 by sink alignment. On the same later 45-node snapshot, a rank-preserving placement
 backbone reduced their world-space span from 3792 to 1030, and total layout height
-from 3952 to 2092. The final graph also includes this separately proposed packing
+from 3952 to 2092. The final graph also includes this separately reasoned packing
 choice. Neither comparison deletes a relationship or constitutes a universal
 layout-quality guarantee.
 

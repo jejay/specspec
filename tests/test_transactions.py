@@ -4,7 +4,7 @@ import pytest
 
 from specspec import workspace as module
 from specspec.model import SpecError
-from specspec.workspace import add_node, change_status, load_snapshot, recover, serialize
+from specspec.workspace import add_node, load_snapshot, recover, serialize, set_retired
 
 
 def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
@@ -24,7 +24,7 @@ def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
 
     monkeypatch.setattr(module.os, "replace", interrupted)
     with pytest.raises(OSError, match="Simulated"):
-        change_status(root, [parent, child], "accepted")
+        set_retired(root, [parent, child], True)
     assert not load_snapshot(root).valid
     assert (root / ".specspec-local" / "journal.json").exists()
     assert all(entry.suffix == ".md" for entry in (root / "_specspec").iterdir())

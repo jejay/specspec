@@ -2,7 +2,7 @@
 
 Tool-managed Markdown specification graphs, with a Python CLI and a VS Code graph editor.
 
-This repository uses SpecSpec itself: [`_specspec/`](_specspec/) contains its working specification, with core intentions, proposed technical choices, retired design history, and implementation links to actual code/tests. Start with the [graph tour](docs/own-spec.md). [`INTENTION_SPEC.md`](INTENTION_SPEC.md) and [`CONCLUSION_SPEC.md`](CONCLUSION_SPEC.md) remain the original intention/design context.
+This repository uses SpecSpec itself: [`_specspec/`](_specspec/) contains its working specification, with core intentions, revisable technical choices, withdrawn design history, and implementation links to actual code/tests. Start with the [graph tour](docs/own-spec.md). [`INTENTION_SPEC.md`](INTENTION_SPEC.md) and [`CONCLUSION_SPEC.md`](CONCLUSION_SPEC.md) remain the original intention/design context.
 
 ## Install from this checkout
 
@@ -36,7 +36,7 @@ specspec context cc058342-0f01-4dc1-99bc-439b445c5a04 --json
 specspec diff --base HEAD --json
 ```
 
-The context example follows the actual Git implementation back to its requirements. Technical choices and implementation mappings remain proposed until individually reviewed; existing code is not automatic approval. CI validates the graph and its source references. See [the tour](docs/own-spec.md) for more entry points and the editing workflow.
+The context example follows the actual Git implementation back to its requirements. Review is a spectrum of confidence: users often spend more attention on early intentions and less on later, revisable conclusions. Once an implementation attempt is worth its uncertainty and token cost, no individual node sign-offs are required. Depth is not a confidence score, and risky details can merit review anywhere. Git additions identify new nodes; implementation and feedback guide further revision. CI checks structural integrity and source references, not whether choices are correct. See [the tour](docs/own-spec.md).
 
 ## First graph in another project
 
@@ -46,17 +46,31 @@ This checkout already has a graph: do not run `init` here. In a different projec
 specspec init --manifesto manifesto.md
 specspec list --json
 specspec add --parent <manifesto-id> --slug validate-edits --body requirement.md
-specspec accept <requirement-id>
 specspec validate
 specspec update <requirement-id> --body revised-requirement.md
 specspec context <requirement-id> --json
 ```
 
-`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `accept` and `retire` accept multiple explicitly named IDs; dependency rules apply to the resulting batch. Mutations support `--expect <fingerprint>` and `--json`.
+`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `retire` and `restore` take multiple explicitly named IDs; withdrawal dependency rules apply to the resulting batch. There is no approval status or `accept` command. Mutations support `--expect <fingerprint>` and `--json`.
 
-Do not edit `_specspec` files directly. The CLI validates the proposed graph and maintains integrity hashes. Read commands never refresh these hashes. An unmanaged body/metadata edit causes validation failure; restore the file from Git or undo the edit and apply it through `update`.
+Do not edit `_specspec` files directly. The CLI validates the candidate graph and maintains integrity hashes. Read commands never refresh these hashes. An unmanaged body/metadata edit causes validation failure; restore the file from Git or undo the edit and apply it through `update`.
 
 The flat `_specspec` directory contains nodes only. Global `format_version` metadata belongs on the manifesto. Runtime locks, staging files, and recovery journals live in the ignored `.specspec-local` directory. Do not delete an unfinished journal: run `specspec recover`. Use `recover --force-lock` only after confirming that no writer is running.
+
+## Schema and withdrawal
+
+Format 2 has no `status` field. Ordinary nodes have no stored review stage; optional `retired: true` marks a withdrawn explanation retained as history. The manifesto cannot be retired, and live nodes cannot depend on retired parents. `specspec restore ID` reverses withdrawal; it does not declare approval.
+
+Version-one graphs and old Git revisions remain readable. The reader verifies the original hashes, maps legacy retirement to withdrawal, and does not expose proposed/accepted labels. Convert an older workspace explicitly before editing:
+
+```sh
+specspec list --json
+specspec migrate --expect <displayed-fingerprint> --json
+specspec list --live --json
+specspec list --retired --json
+```
+
+Migration journals the complete conversion, preserves IDs, paths, body bytes, dependencies, references, extensions, and unaffected comments, and refuses stale or unmanaged input. An interrupted conversion uses the normal `recover` workflow. Repeating migration is a no-op. The shared JSON API is now **version 2**; upgrade the CLI and extension together.
 
 ## Git
 
@@ -70,7 +84,7 @@ specspec diff --base <older-commit> --target <newer-commit> --json
 
 The pre-commit hook validates the **staged** node blobs, including integrity and graph relationships. It does not confuse unstaged edits with the contents being committed. Installation refuses existing hooks and respects `core.hooksPath`; chain `specspec --root <project> hook check` manually when another hook already exists. The installed hook uses the Python environment from installation, which must remain available; reinstall it after moving environments.
 
-Hooks and integrity hashes guard against accidents, not adversarial modification or forged approval. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
+Hooks and integrity hashes guard against accidents, not adversarial modification or proof of review. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
 
 ## VS Code extension
 
@@ -102,11 +116,11 @@ Curved connections run directly from right to left card boundaries, without roun
 
 **Navigate:** middle-button drag or drag the background to pan; wheel / pinch to zoom around the pointer. Use **− / +**, **100%**, **Frame graph** and **Frame node** to recover your view. With the canvas focused, arrow keys pan, `+` / `-` zoom, `1` restores actual size, and `Home` / `F` frames the graph. Native form scrolling, text selection, and editing retain their normal behavior. Cameras survive refresh and back navigation; no positions or camera preferences are written into `_specspec`.
 
-Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** switches between lifecycle status and shortest distance to the manifesto, with a legend.
+Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** switches between shortest distance to the manifesto (default) and existing node types, with a legend. Neither is an acceptance score.
 
 Parent cards show manifesto distance. Child cards show **N downstream**: the entire reachable descendant subgraph, including every deeper generation, excluding that child and deduplicating shared nodes. Different child totals may overlap; this is potential-impact context rather than guaranteed invalidation.
 
-The webview supports node creation, binding-text/parent/source editing, explicit acceptance/retirement, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. It uses the Python CLI for all writes. Historical comparison views are read-only. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
+The webview supports node creation, binding-text/parent/source editing, explicit withdrawal/restoration, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. It uses the Python CLI for all writes. Historical comparison views are read-only. Legacy workspaces offer **Migrate specification** before editing; dirty drafts must be discarded first and never silently acquire a newer fingerprint. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
 
 Layout and navigation reuse locally bundled Dagre and D3 libraries, not a Blender engine port or a remote renderer. `npm run compile` builds the offline browser bundle and its license notices. See [the library rationale](docs/node-canvas.md).
 
@@ -114,4 +128,4 @@ Run `npm --prefix vscode test` for bridge, renderer, camera/layout, project-sele
 
 ## Current scope
 
-This is an initial implementation, not a production-ready release. Transactions recover from process interruptions; full power-loss durability and adversarial filesystem race protection are not guaranteed. Graph rendering uses Dagre's deterministic layered arrangement and a separate D3 camera; large graphs are not virtualized. Source symbols are descriptive, not language-resolved. Approval enforcement, choice groups, review receipts, large-graph UI optimization, and publishing remain follow-up work. The self-hosted graph accepts the user's supplied intentions, not every technical proposal; its implementation records explicitly describe current verification and remaining limitations.
+This is an initial implementation, not a production-ready release. Transactions recover from process interruptions; full power-loss durability and adversarial filesystem race protection are not guaranteed. Graph rendering uses Dagre's deterministic layered arrangement and a separate D3 camera; large graphs are not virtualized. Source symbols are descriptive, not language-resolved. Choice groups, large-graph UI optimization, and publishing remain follow-up work. Per-node approval enforcement and review-receipt gates are not part of the current direction. The self-hosted graph separates user intentions from revisable conclusions through explanations and relationships; implementation records describe actual verification and remaining limitations.

@@ -14,10 +14,10 @@ from specspec.graph import build_graph
 from specspec.model import SpecError, fingerprint
 from specspec.workspace import (
     add_node,
-    change_status,
     discover_root,
     load_snapshot,
     new_node,
+    set_retired,
     snapshot_from_files,
     update_node,
 )
@@ -30,7 +30,7 @@ def test_flat_init(workspace):
     assert snapshot.graph.order == [manifesto]
     assert all(path.is_file() and path.suffix == ".md" for path in (root / "_specspec").iterdir())
     assert not (root / "_specspec" / "specspec.yaml").exists()
-    assert snapshot.nodes[0].format_version == 1
+    assert snapshot.nodes[0].format_version == 2
 
 
 def test_diamond_and_implementation(workspace):
@@ -44,20 +44,22 @@ def test_diamond_and_implementation(workspace):
     assert snapshot.graph.order.index(left) < snapshot.graph.order.index(leaf)
 
 
-def test_status_batches_are_explicit(workspace):
+def test_withdrawal_batches_are_explicit_and_are_not_approval(workspace):
     root, manifesto = workspace
     _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
-    _, child = add_node(root, "requirement", [parent], "Child\n", "child")
-    with pytest.raises(SpecError, match="Accept parent"):
-        change_status(root, [child], "accepted")
-    assert load_snapshot(root).graph.nodes[parent].status == "proposed"
-    snapshot = change_status(root, [child, parent], "accepted")
-    assert snapshot.graph.nodes[child].status == "accepted"
-    with pytest.raises(SpecError):
-        change_status(root, [parent], "retired")
-    assert change_status(root, [parent, child], "retired").valid
-    with pytest.raises(SpecError):
-        change_status(root, [manifesto], "retired")
+    snapshot, child = add_node(root, "requirement", [parent], "Child\n", "child")
+    assert all("status" not in node.to_dict() for node in snapshot.nodes)
+    assert all(not node.retired for node in snapshot.nodes)
+    with pytest.raises(SpecError, match="retired parent"):
+        set_retired(root, [parent], True)
+    retired = set_retired(root, [parent, child], True)
+    assert retired.valid and retired.graph.nodes[child].retired
+    with pytest.raises(SpecError, match="retired parent"):
+        set_retired(root, [child], False)
+    restored = set_retired(root, [parent, child], False)
+    assert restored.valid and not restored.graph.nodes[child].retired
+    with pytest.raises(SpecError, match="manifesto cannot be retired"):
+        set_retired(root, [manifesto], True)
 
 
 def test_cycles_and_forbidden_parent_types_leave_files_unchanged(workspace):
@@ -140,9 +142,10 @@ def test_nearest_workspace_does_not_fall_back(workspace):
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\ntype: manifesto"),
         lambda raw: raw.replace(b"parents: []", b"parents: &alias []"),
         lambda raw: raw.replace(b"parents: []", b"parents: !!seq []"),
-        lambda raw: raw.replace(b"format_version: 1", b"format_version: true"),
-        lambda raw: raw.replace(b"format_version: 1", b"format_version: 999"),
-        lambda raw: raw.replace(b"status: accepted", b"status: 42"),
+        lambda raw: raw.replace(b"format_version: 2", b"format_version: true"),
+        lambda raw: raw.replace(b"format_version: 2", b"format_version: 999"),
+        lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nretired: 42"),
+        lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nstatus: accepted"),
         lambda raw: raw.replace(b"parents: []", b"parents: []\nunknown: true"),
         lambda raw: b"\xff" + raw,
     ],
@@ -215,7 +218,8 @@ def test_cli_end_to_end_and_budget(tmp_path):
     )
     assert result.exit_code == 0, result.output
     node_id = json.loads(result.output)["result"]["changed_ids"][0]
-    assert runner.invoke(main, [*prefix, "accept", node_id, "--json"]).exit_code == 0
+    assert runner.invoke(main, [*prefix, "accept", node_id, "--json"]).exit_code == 2
+    assert json.loads(result.output)["api_version"] == 2
     result = runner.invoke(main, [*prefix, "context", node_id, "--json"])
     assert len(json.loads(result.output)["result"]["nodes"]) == 2
     result = runner.invoke(main, [*prefix, "context", node_id, "--max-bytes", "10", "--json"])

@@ -75,8 +75,8 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
         if node.type == "manifesto":
             if node.parents:
                 error(node, "PARENTS", "The manifesto cannot have parents.")
-            if node.status != "accepted":
-                error(node, "STATUS", "The manifesto must remain accepted.")
+            if node.retired:
+                error(node, "RETIRED", "The manifesto cannot be retired.")
         elif not node.parents:
             error(node, "PARENTS", "A non-manifesto node needs at least one parent.")
         for parent_id in node.parents:
@@ -96,10 +96,8 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
                 error(node, "PARENT_TYPE", "Implementation nodes cannot have children.")
             if node.type == "implementation" and parent.type != "requirement":
                 error(node, "PARENT_TYPE", "Implementations need requirement parents.")
-            if node.status == "accepted" and parent.status != "accepted":
-                error(node, "STATUS", f"Accept parent {parent_id} before accepting its child.")
-            elif node.status != "retired" and parent.status == "retired":
-                error(node, "STATUS", f"Live nodes cannot depend on retired parent {parent_id}.")
+            if not node.retired and parent.retired:
+                error(node, "RETIRED", f"Live nodes cannot depend on retired parent {parent_id}.")
     graph = Graph(by_id, parents, children, [])
     indegrees = {node_id: len(incoming) for node_id, incoming in parents.items()}
     ready = [node_id for node_id, degree in indegrees.items() if degree == 0]

@@ -12,7 +12,8 @@ ID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
-STATUSES = {"proposed", "accepted", "retired"}
+FORMAT_VERSION = 2
+API_VERSION = 2
 MAX_FILE_BYTES = 1024 * 1024
 
 
@@ -46,7 +47,7 @@ def canonical_bytes(value: Any) -> bytes:
 class SpecNode:
     id: str
     type: str
-    status: str
+    retired: bool
     parents: list[str]
     body: str
     path: str
@@ -54,12 +55,15 @@ class SpecNode:
     sources: list[dict[str, str]] = field(default_factory=list)
     extensions: dict[str, Any] = field(default_factory=dict)
     managed_hash: str = ""
+    # Read-only v1 provenance, used solely to verify its original integrity hash.
+    # Never exposed as a current status or written by the v2 serializer.
+    legacy_status: str | None = None
 
     def semantic(self) -> dict[str, Any]:
         data: dict[str, Any] = {
             "id": self.id,
             "type": self.type,
-            "status": self.status,
+            "retired": self.retired,
             "parents": sorted(self.parents),
             "body": self.body.replace("\r\n", "\n"),
             "sources": sorted(self.sources, key=lambda s: (s["path"], s.get("symbol", ""))),
@@ -70,7 +74,12 @@ class SpecNode:
         return data
 
     def digest(self) -> str:
-        return hashlib.sha256(canonical_bytes(self.semantic())).hexdigest()
+        projection = self.semantic()
+        if self.legacy_status is not None:
+            # v1 hashes must be checked before discarding its approval metadata.
+            projection.pop("retired")
+            projection["status"] = self.legacy_status
+        return hashlib.sha256(canonical_bytes(projection)).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:
         return {**self.semantic(), "path": self.path, "managed_hash": self.managed_hash}
@@ -79,9 +88,12 @@ class SpecNode:
         result: dict[str, Any] = {
             "id": self.id,
             "type": self.type,
-            "status": self.status,
             "parents": self.parents,
         }
+        # Preserve invalid caller values until schema validation; do not coerce
+        # truthy values or silently omit falsey non-booleans during serialization.
+        if self.retired is not False:
+            result["retired"] = self.retired
         if self.format_version is not None:
             result["format_version"] = self.format_version
         if self.sources:
@@ -95,5 +107,5 @@ class SpecNode:
 def fingerprint(nodes: list[SpecNode]) -> str:
     projection = [node.semantic() for node in sorted(nodes, key=lambda n: n.id)]
     return hashlib.sha256(
-        canonical_bytes({"canonical_version": 1, "nodes": projection})
+        canonical_bytes({"canonical_version": 2, "nodes": projection})
     ).hexdigest()

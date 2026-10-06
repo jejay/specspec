@@ -84,10 +84,15 @@ exports.checkUI = async function checkUI(port) {
     } catch { /* Some installed hosts do not expose window bounds. */ }
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
+    assert.equal(await evaluate(`document.getElementById('accept')`), null);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'type']);
+    assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>!('status' in c.dataset))`));
+    assert.ok(await evaluate(`document.getElementById('migrate').hidden`), 'The current repository is already migrated.');
+    assert.ok(await evaluate(`document.querySelector('[data-retired="true"] .retired-badge') !== null`), 'Withdrawal is labeled independently of Git newness.');
     const positions = () => evaluate(`JSON.stringify([...document.querySelectorAll('#cards .card')].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.width, c.offsetHeight]))`);
     const camera = () => evaluate(`(() => { const d=document.getElementById('viewport').dataset; return { x:Number(d.cameraX),y:Number(d.cameraY),k:Number(d.scale) }; })()`);
     const initialPositions = await positions();
-    assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`));
+    assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link:not(.removed)')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`), 'Target relationships progress LR; removed references are overlays and may share or reverse columns.');
     assert.ok(await evaluate(`getComputedStyle(document.getElementById('viewport')).overflow === 'clip'`));
     assert.ok(await evaluate(`(() => {
       const cards=[...document.querySelectorAll('#cards .card:not(.removed)')],edges=[...document.querySelectorAll('#edges .link:not(.removed)')];
@@ -235,15 +240,19 @@ exports.checkUI = async function checkUI(port) {
     assert.equal(await evaluate(`document.querySelectorAll('#cards .card').length`), total);
     const restoredCamera = await camera();
     for(const key of ['x','y','k']) assert.ok(Math.abs(restoredCamera[key]-overviewCamera[key])<0.01);
+    await evaluate(`document.getElementById('color-mode').value='type'; document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Existing node types')`));
     await evaluate(`document.getElementById('color-mode').value='distance'; document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Shortest path')`));
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
     assert.equal(await evaluate(`document.getElementById('parent-add-controls').hidden`), true);
+    assert.equal(await evaluate(`document.getElementById('retire').disabled`), true);
+    assert.equal(await evaluate(`document.getElementById('save').textContent`), 'Save node');
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; approval-free controls, withdrawal labels, distance/type colors, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

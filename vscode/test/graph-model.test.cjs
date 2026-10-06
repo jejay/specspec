@@ -5,7 +5,7 @@ const model = require('../media/graph-model.js');
 function snapshot(edges, extra = []) {
   const ids = new Set(['root', ...edges.flat(), ...extra]);
   return { valid: true, nodes: [...ids].map(id => ({
-    id, type: id === 'root' ? 'manifesto' : 'requirement', status: 'proposed',
+    id, type: id === 'root' ? 'manifesto' : 'requirement', retired: false,
     parents: edges.filter(([, child]) => child === id).map(([parent]) => parent),
     body: `# ${id}\n`, sources: [],
   })), edges };

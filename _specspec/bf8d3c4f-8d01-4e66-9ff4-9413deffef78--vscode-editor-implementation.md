@@ -1,7 +1,6 @@
 ---
 id: bf8d3c4f-8d01-4e66-9ff4-9413deffef78
 type: implementation
-status: proposed
 parents:
 - 10ef1cdc-62a6-4212-8387-704d3cbbeeb4
 - 1f2e42c3-331f-4c1c-adc7-897f9bf2e004
@@ -10,9 +9,10 @@ parents:
 - 4254f33d-ce29-4e33-830e-28a8edd2a51c
 - 51c3e963-674e-4d5d-bd7a-b8d63649e1c8
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
+- c2ed5444-b7b2-4c2a-901c-ab1ba64e5e54
+- ca580dc7-c7fa-48bc-91b1-59243144a0bf
 - d70cdad5-5e03-4200-ac75-74cf6514e56c
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-- c2ed5444-b7b2-4c2a-901c-ab1ba64e5e54
 sources:
 - path: docs/node-canvas.md
 - path: vscode/.vscodeignore
@@ -21,6 +21,8 @@ sources:
   symbol: createCamera
 - path: vscode/media/graph-model.js
   symbol: edgeAppearance
+- path: vscode/media/graph-model.js
+  symbol: layoutBackbone
 - path: vscode/media/graph-model.js
   symbol: layoutGraph
 - path: vscode/media/graph-model.js
@@ -47,16 +49,20 @@ sources:
 - path: vscode/test/graph-model.test.cjs
 - path: vscode/test/graph.test.cjs
 - path: vscode/test/project.test.cjs
-- path: vscode/media/graph-model.js
-  symbol: layoutBackbone
-managed_hash: 7f37146e67af688f1c3ee4ca95b13944c79370c716cbd4784a01923ddfbd8ac7
+- path: vscode/src/extension.ts
+  symbol: GraphPanel.handleMessage migration and withdrawal guards
+- path: vscode/media/graph.js
+  symbol: legacyWorkspace and withdrawal presentation
+- path: tests/test_migration.py
+  symbol: versioned backend compatibility
+managed_hash: 9cbb047f727c4397eb4c2f8be7f4fb6b983abcd399341fa53becd34408d33834
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
 The extension host launches the Python JSON CLI with bounded, shell-free processes.
 The nonce-protected local webview renders an overview or focused neighborhood;
 the same native form DOM moves into the expanded selected node. Managed writes,
-actual parent links/candidate choices, explicit acceptance/retirement, workspace
+actual parent links/candidate choices, explicit withdrawal/restoration, workspace
 trust, read-only history, stale-fingerprint drafts, Git overlays, startup logs,
 and token-matched complete-render checks remain separate from presentation.
 
@@ -111,18 +117,18 @@ The local build bundles pinned Dagre/D3 modules and all transitive license notic
 it requires no CDN, remote renderer, executable project Markdown, or Blender port.
 A local VSIX build has been checked to include the offline assets and both project
 and dependency licenses, excluding node_modules and build/test sources.
-The library research/rationale is documentation, not acceptance of the proposals.
+The library rationale documents revisable choices, not a confidence score or individual approval stage.
 
-Verification includes TypeScript compilation, 59 bridge/activation/DOM/model tests,
-53 Python tests, Ruff, and warnings-as-errors graph validation. Regression fixtures
+Verification includes TypeScript compilation, 70 bridge/activation/DOM/model tests,
+68 Python tests, Ruff, and warnings-as-errors graph validation. Regression fixtures
 cover shallow branches sharing deep sinks, earliest ranks versus shortest hops,
 historical rank isolation, extreme bends, scaled width/head floors, dash patterns,
 full-height attachments, circle-free joins, and existing draft/trust/history/text
 safety. The supported camera limit is checked against settling/head clearance.
 
-Installed VS Code/Chromium on Windows has rendered the current 46-node graph and
+Installed VS Code/Chromium on Windows has rendered the current 48-node graph and
 verified each live node's earliest allowed rank and compact vertical origin
-neighborhood, including all six immediate manifesto children in rank one. It has checked actual screen strength at 12 percent
+neighborhood, including all seven immediate manifesto children in rank one. It has checked actual screen strength at 12 percent
 zoom, head-base/tangent joins, no circles, sampled painted-stroke boundaries for
 card/content intersections, inspected a real multiple-depth parent neighborhood,
 resized an intrinsic textarea, and retained navigation/cameras/native gestures.
@@ -133,4 +139,29 @@ project/dependency licenses without node_modules/build/test sources.
 Full manual mutation/review and revision-picker verification remain outstanding.
 Synchronous layout and full DOM rendering are not large-graph virtualization or a
 guarantee of an optimal/crossing-free diagram for every possible specification.
-Implementation and these technical choices remain proposed, not auto-accepted.
+Implementation is an attempt under the user's review/risk budget; its choices remain revisable.
+
+
+## Approval-free review workflow
+
+The TypeScript bridge requires JSON API two and represents withdrawal as a boolean.
+There is no acceptance message/action, status dataset, or approval-colored fill.
+Save node writes without a sign-off transition. Retire/Restore are confirmed
+withdrawal actions, and legacy workspaces offer confirmed whole-graph migration
+through the guarded CLI. History cannot migrate, untrusted workspaces cannot run
+tools, and dirty/restored drafts never acquire a new fingerprint silently.
+
+Distance-first fills and existing-node-type fills explain their meaning without
+encoding confidence. Obsolete saved status-mode preferences fall back to distance
+while preserving forms, drafts, cameras, caret, and selection. Withdrawn compact
+cards show a separate label, independent of added/changed/source-change badges.
+
+DOM/host tests cover absent approval controls, guarded retire/restore, removed
+accept messages, legacy read-only forms, explicit/cancelled/stale migration,
+historical/trust restrictions, dirty-draft preservation, and API-one rejection.
+The real Windows VS Code/Chromium check passed on 48 nodes with approval-free
+controls, withdrawal labels, both palettes, and the existing geometry/navigation
+regressions. Removed links can share/reverse columns as historical overlays;
+only target relationships impose LR ranks. All curves, including those old links,
+were checked for tangent joins and sampled painted-stroke/content clearance.
+Screenshots of overview/focus/root and other navigation cases were inspected.

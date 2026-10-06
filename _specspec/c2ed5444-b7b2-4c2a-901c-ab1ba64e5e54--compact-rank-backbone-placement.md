@@ -1,12 +1,11 @@
 ---
 id: c2ed5444-b7b2-4c2a-901c-ab1ba64e5e54
 type: requirement
-status: proposed
 parents:
 - cbcde9ec-5c0b-480e-9401-cf50a4bfeb96
 - 4254f33d-ce29-4e33-830e-28a8edd2a51c
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-managed_hash: 5764cf0f248c1e319b5640d6ccfcea585b147e61949bf9c8cf5ad1eaa4dc7ca3
+managed_hash: 30924b7f45372ba1a97850068acc62792547ef1b1429ba9a4a452625f9b4225c
 ---
 # Compact placement without discarding multi-parent relationships
 

@@ -1,4 +1,4 @@
-"""Dogfood the real graph without fixing its design choices or approval states."""
+"""Dogfood the real graph without fixing its choices or withdrawal history."""
 
 import json
 from pathlib import Path
@@ -31,7 +31,7 @@ def test_repository_spec_is_valid_and_has_no_missing_sources():
 def test_repository_graph_is_usable_as_agent_context():
     snapshot = load_snapshot(ROOT)
     graph = snapshot.require_valid()
-    # Exercise a real implementation record; do not freeze its ID or status.
+    # Exercise a real implementation record; do not freeze its ID or withdrawal flag.
     implementation = next(node for node in snapshot.nodes if node.type == "implementation")
     result = CliRunner().invoke(main, ["--root", str(ROOT), "context", implementation.id, "--json"])
     assert result.exit_code == 0, result.output

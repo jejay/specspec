@@ -1,12 +1,11 @@
 ---
 id: 10ef1cdc-62a6-4212-8387-704d3cbbeeb4
 type: requirement
-status: proposed
 parents:
 - e3494686-5da4-40f5-a622-f823c2e0c9b2
 - 1f2e42c3-331f-4c1c-adc7-897f9bf2e004
 - d70cdad5-5e03-4200-ac75-74cf6514e56c
-managed_hash: 5e1e1f4c24c0aa711e0343c493cf56835857e7b11aafd45a949a1c2167247750
+managed_hash: 6bc2ddaccbf6d78073fa1bd67eb10751f20a2211c2459285817f1e13be655b3a
 ---
 # Keep connection strength and arrow joins stable under magnification
 

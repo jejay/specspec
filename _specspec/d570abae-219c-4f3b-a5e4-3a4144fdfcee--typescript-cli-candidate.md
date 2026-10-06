@@ -1,10 +1,10 @@
 ---
 id: d570abae-219c-4f3b-a5e4-3a4144fdfcee
 type: requirement
-status: retired
 parents:
 - 003d697b-4104-4fdf-8e05-0db572c436d0
-managed_hash: 153491fd8920029aa82fd9fd3de4daf569f6885b7a8ba9e1858418de20d16257
+managed_hash: a0b8673999f74f452ec299fe0b18094ff9bbc79696c9ac675d9af3b3c2844bab
+retired: true
 ---
 # Retain the withdrawn TypeScript CLI candidate
 

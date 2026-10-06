@@ -1,10 +1,9 @@
 ---
 id: 5b93cd32-168c-488f-b4f9-caf03fe2652d
 type: requirement
-status: accepted
 parents:
 - 48f77f19-391f-46d0-b06f-ec7530be4575
-managed_hash: e3a1c2daba4ec2ec058245cbafa7607471ba9a3a4aed5fd1c701e28e2ea8eca8
+managed_hash: 312712c5761f602d8132f396f0c677efd528f51cc715ddc8debfd2e1c235d001
 ---
 # Leave project constraints and categories to the user
 

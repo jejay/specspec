@@ -9,7 +9,7 @@
   const CARD_WIDTH = 264, CARD_HEIGHT = 128, DETAIL_WIDTH = 620;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-  const STATUS_COLORS = { accepted: '#37ad83', proposed: '#e8aa42', retired: '#929baa' };
+  const TYPE_COLORS = { manifesto: '#6699ee', requirement: '#43b5b0', implementation: '#a786eb' };
   const DEPTH_COLORS = ['#6699ee', '#a786eb', '#43b5b0', '#dd9b48', '#dc7aab', '#84b466', '#7d9ed2'];
 
   function displayGraph(state) {
@@ -87,7 +87,7 @@
   }
 
   function color(mode, node, distance) {
-    if (mode === 'status') return STATUS_COLORS[node.status] || '#929baa';
+    if (mode === 'type') return TYPE_COLORS[node.type] || '#929baa';
     return Number.isInteger(distance) ? DEPTH_COLORS[distance % DEPTH_COLORS.length] : '#929baa';
   }
 
@@ -232,7 +232,7 @@
       head: `M${base.x},${base.y - half}L${route.end.x},${route.end.y}L${base.x},${base.y + half}Z` };
   }
 
-  return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, STATUS_COLORS, DEPTH_COLORS,
+  return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, TYPE_COLORS, DEPTH_COLORS,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS,
     displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
 });

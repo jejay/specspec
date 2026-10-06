@@ -11,7 +11,7 @@ export interface Diagnostic {
 export interface SpecNode {
   id: string;
   type: 'manifesto' | 'requirement' | 'implementation';
-  status: 'proposed' | 'accepted' | 'retired';
+  retired: boolean;
   parents: string[];
   body: string;
   sources: { path: string; symbol?: string }[];
@@ -20,6 +20,7 @@ export interface SpecNode {
 
 export interface Snapshot {
   fingerprint: string;
+  format_version: number | null;
   nodes: SpecNode[];
   edges: [string, string][];
   valid: boolean;
@@ -88,8 +89,8 @@ export function invoke<T>(
       let envelope: Envelope<T>;
       try { envelope = JSON.parse(output) as Envelope<T>; }
       catch { reject(new Error(errors || output || `CLI exited with ${code} without JSON.`)); return; }
-      if (envelope.api_version !== 1 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
-        reject(new Error('Unsupported SpecSpec JSON API.')); return;
+      if (envelope.api_version !== 2 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
+        reject(new Error('Unsupported SpecSpec JSON API. This extension requires API 2; upgrade the Python CLI.')); return;
       }
       if (code !== 0 || !envelope.ok) {
         reject(new Error(envelope.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n') || errors || 'CLI failed.'));

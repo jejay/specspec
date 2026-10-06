@@ -1,14 +1,14 @@
 ---
 id: d51d6da3-4142-4fc7-b593-d935ee5fdf6f
 type: requirement
-status: proposed
 parents:
 - 955b905a-6220-4d5c-b0ca-fab86b6b6db8
 - 95287a17-697f-43ad-80b0-140d5e0ec058
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
 - 48f77f19-391f-46d0-b06f-ec7530be4575
 - 5b93cd32-168c-488f-b4f9-caf03fe2652d
-managed_hash: d2ecfbc283a48d8c0690d2d726d37d569a7c95e8e767e76bfb42188a82525e1b
+managed_hash: 93b2953990d8bc341667a9c42b11e252657f9dc996dadd641ae639a6f9b57903
+retired: true
 ---
 # Use UUID identities and strict version-one frontmatter
 
@@ -22,3 +22,8 @@ review or reuse warrants another ID, rather than assigning list items automatic
 node semantics.
 
 Origin: [CONCLUSION_SPEC.md](../CONCLUSION_SPEC.md), files and schema.
+
+## Withdrawal
+
+The version-two schema removes approval status while retaining strict managed graph metadata and readable version-one history.
+History is retained; see the risk-proportionate-review intention and its separate schema conclusion.

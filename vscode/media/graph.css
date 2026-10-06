@@ -55,6 +55,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .git-badge.removed { color: var(--edge-removed); border-color: var(--edge-removed); }
 .git-badge.changed, .git-badge.source-changed { color: #dfad54; border-color: #dfad54; }
 .git-badge.renamed { color: #75a8ef; border-color: #75a8ef; }
+.retired-badge { color: #929baa; border-color: #929baa; }
 .card.expanded { height: auto; overflow: visible; padding: 18px; border-radius: 8px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .card.expanded:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
 .node-settings { width: 100%; min-width: 0; }

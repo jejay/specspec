@@ -1,15 +1,14 @@
 ---
 id: 624d0f3c-391d-4575-be87-3001f16052f6
 type: requirement
-status: proposed
 parents:
 - 003d697b-4104-4fdf-8e05-0db572c436d0
 - 9e4eeace-d288-49bb-8365-6af0372daf5c
-managed_hash: 93053456ff1e381441c8f44d29ff994343afe3a94bb7617661d060aef4189cf3
+managed_hash: 75ec9511293d96e5650b9f75b72ec8056b6da4e1bcc00b7b4ae2e08077968315
 ---
 # Validate and journal managed graph mutations
 
-Validate the current and proposed snapshots under a workspace lock. Support an
+Validate the current and candidate snapshots under a workspace lock. Support an
 expected semantic fingerprint and compare original file bytes before replacement.
 Stage replacements and record recoverable original/replacement states outside
 `_specspec`, in the ignored `.specspec-local` directory.

@@ -1,11 +1,10 @@
 ---
 id: a723adc8-d69d-4e60-8b4f-0997ab8f4d1d
 type: requirement
-status: accepted
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - ee57a451-059d-426b-868e-e898c2503082
-managed_hash: 671ad4ae298e4e31acffc36424e0dbc9ce68ed888b972ef4d3c9960eedc7201e
+managed_hash: c4a41a7760ff6fda7ac245cf74b00c2c4ecb33304399715624f2a7dcf65dc96c
 ---
 # Navigate a node canvas with smooth panning and zooming
 

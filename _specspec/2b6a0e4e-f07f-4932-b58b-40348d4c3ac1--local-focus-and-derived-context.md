@@ -1,13 +1,12 @@
 ---
 id: 2b6a0e4e-f07f-4932-b58b-40348d4c3ac1
 type: requirement
-status: proposed
 parents:
 - ee57a451-059d-426b-868e-e898c2503082
 - 2f6ee5bd-9014-4a0c-8677-53ecbab93f92
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: 25f5dcd432ea3c3f808ac796979182fbd650fc2d912f51523fb860f0cb163e68
+managed_hash: dfecc7e9fdf5d1c48078b789f5f41ee06cf2c149f9acb9d2f971e51b7abc8269
 ---
 # Use an in-webview neighborhood view and explicit relationship metrics
 

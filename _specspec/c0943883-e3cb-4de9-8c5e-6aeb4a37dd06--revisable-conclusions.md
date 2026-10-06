@@ -1,10 +1,9 @@
 ---
 id: c0943883-e3cb-4de9-8c5e-6aeb4a37dd06
 type: requirement
-status: accepted
 parents:
 - b8983d8c-3dc0-4588-b74f-17721bfc4f5c
-managed_hash: e46f78d748f0e8d214b2673ee7495cbb35d1e52f672f39ca86daf4c7ca4450c4
+managed_hash: 5a36dbabfc9f222d8ca46a44970d8df94c3f59c726108d787280c6f6ede512c3
 ---
 # Keep candidate conclusions separately revisable
 

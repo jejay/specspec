@@ -5,7 +5,7 @@
   const restored = vscode.getState() || {};
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
-  let colorMode = restored.colorMode === 'distance' ? 'distance' : 'status';
+  let colorMode = restored.colorMode === 'type' ? 'type' : 'distance';
   let dirty = false, pending = false, creating = false, formFingerprint, formParents = [];
   let layoutFrame, layout, layoutKey, cameraScene;
   let drawnEdges = [];
@@ -27,7 +27,9 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const editable = () => state?.snapshot.valid && !state.readonly && (creating || Boolean(currentNode()));
+  const legacyWorkspace = () => state?.snapshot.valid && !state.readonly && state.snapshot.format_version === 1;
+  const editable = () => state?.snapshot.valid && state.snapshot.format_version === 2 && !state.readonly && (creating || Boolean(currentNode()));
+  const description = node => `${node.type}${node.retired ? ' · retired' : ''}`;
   const formNodeType = () => creating ? $('node-type').value : graph.nodes.get(selected)?.type;
   const parentsEditable = () => editable() && !pending && formNodeType() !== 'manifesto';
   const contextFor = id => currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
@@ -46,10 +48,15 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || state.readonly || pending;
+    $('new').disabled = !state?.snapshot.valid || state.snapshot.format_version !== 2 || state.readonly || pending;
+    $('migrate').hidden = !legacyWorkspace();
+    $('migrate').disabled = !legacyWorkspace() || pending || dirty || creating;
     $('save').disabled = !editable() || pending;
-    $('accept').disabled = !editable() || creating || dirty || pending || currentNode()?.status === 'accepted';
-    $('retire').disabled = !editable() || creating || dirty || pending || currentNode()?.type === 'manifesto' || currentNode()?.status === 'retired';
+    const withdrawn = Boolean(graph.nodes.get(selected)?.retired);
+    $('retire').hidden = withdrawn;
+    $('restore').hidden = !withdrawn || creating;
+    $('retire').disabled = !editable() || creating || dirty || pending || currentNode()?.type === 'manifesto' || withdrawn;
+    $('restore').disabled = !editable() || creating || dirty || pending || !withdrawn;
     for (const id of elements) $(id).disabled = !editable() || pending;
     $('parent-candidate').disabled = !parentsEditable();
     $('add-parent').disabled = !parentsEditable() || !$('parent-candidate').value;
@@ -76,7 +83,7 @@
   function drawLegend() {
     $('color-mode').value = colorMode;
     $('legend').replaceChildren();
-    const entries = colorMode === 'status' ? Object.entries(model.STATUS_COLORS)
+    const entries = colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
       : [...new Set([...graph.nodes.keys()].map(id => contextFor(id)?.distances.get(id)).filter(Number.isInteger))]
         .sort((a, b) => a - b).map(depth => [`${depth} hop${depth === 1 ? '' : 's'}`, model.color('distance', {}, depth)]);
     for (const [label, color] of entries) {
@@ -86,7 +93,7 @@
     }
     const explanation = document.createElement('span');
     explanation.className = 'legend-help';
-    explanation.textContent = colorMode === 'distance' ? 'Shortest path from manifesto · metrics use each node’s own revision' : 'Lifecycle state · Git changes use separate badges';
+    explanation.textContent = colorMode === 'distance' ? 'Shortest path from manifesto · not a confidence score' : 'Existing node types · not review stages';
     $('legend').append(explanation);
   }
 
@@ -94,12 +101,12 @@
     const node = graph.nodes.get(id), context = contextFor(id), distance = context?.distances.get(id);
     const card = document.createElement('button');
     card.type = 'button'; card.className = `card ${node.type} ${kind || ''}`;
-    card.dataset.nodeId = id; card.dataset.status = node.status;
+    card.dataset.nodeId = id; card.dataset.retired = String(Boolean(node.retired));
     card.dataset.relation = related || ''; card.dataset.distance = distance ?? 'unknown';
     card.style.setProperty('--node-accent', model.color(colorMode, node, distance));
     card.title = `${id}\n${node.path}\n${snapshotName(id)} revision context`;
     const heading = document.createElement('strong'); heading.textContent = title(node);
-    const metadata = document.createElement('small'); metadata.textContent = `${node.type} · ${node.status} · ${id.slice(0, 8)}`;
+    const metadata = document.createElement('small'); metadata.textContent = `${description(node)} · ${id.slice(0, 8)}`;
     const badges = document.createElement('span'); badges.className = 'badges';
     function badge(text, className, tooltip) {
       const item = document.createElement('span'); item.className = `badge ${className}`; item.textContent = text;
@@ -114,6 +121,7 @@
       card.dataset.downstream = count;
       badge(`${count} downstream`, 'downstream-badge', 'All reachable descendants at every depth, excluding this child. Shared nodes counted once per child; totals may overlap. Potential impact, not guaranteed invalidation.');
     }
+    if (node.retired) badge('retired', 'retired-badge', 'Withdrawn, retained as history. Not an approval level.');
     if (kind) badge(kind.replace(/-/g, ' '), `git-badge ${kind}`);
     card.append(heading, metadata, badges);
     card.addEventListener('click', () => select(id));
@@ -141,8 +149,8 @@
     if (view === 'focus') {
       const card = document.createElement('article'), node = graph.nodes.get(selected);
       card.className = `card expanded ${creating ? $('node-type').value : node.type} ${kinds.get(selected) || ''}`;
-      card.dataset.nodeId = focalId;
-      card.style.setProperty('--node-accent', model.color(colorMode, node || { status: 'proposed' }, contextFor(selected)?.distances.get(selected)));
+      card.dataset.nodeId = focalId; card.dataset.retired = String(Boolean(!creating && node?.retired));
+      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, contextFor(selected)?.distances.get(selected)));
       card.append($('node-details')); $('cards').append(card);
     }
     drawLegend(); updateButtons(); applyLayout();
@@ -248,7 +256,7 @@
       : formParents.length ? `${formParents.length} linked parent${formParents.length === 1 ? '' : 's'}` : 'No parents linked.';
     $('parent-links').replaceChildren();
     for (const id of formParents) {
-      const node = graph.nodes.get(id), text = node ? `${title(node)} · ${node.status} · ${id.slice(0, 8)}` : id;
+      const node = graph.nodes.get(id), text = node ? `${title(node)} · ${description(node)} · ${id.slice(0, 8)}` : id;
       const item = document.createElement('li'); item.dataset.parentId = id;
       const label = document.createElement('span'); label.textContent = text; item.append(label);
       if (canEdit) {
@@ -272,7 +280,7 @@
         if (node.id === selected || formParents.includes(node.id) || node.type === 'implementation'
           || (nodeType === 'implementation' && node.type !== 'requirement')) continue;
         const option = document.createElement('option'); option.value = node.id;
-        option.textContent = `${title(node)} · ${node.status} · ${node.id.slice(0, 8)}`; $('parent-candidate').append(option);
+        option.textContent = `${title(node)} · ${description(node)} · ${node.id.slice(0, 8)}`; $('parent-candidate').append(option);
       }
     }
   }
@@ -281,7 +289,7 @@
     const node = graph.nodes.get(selected);
     if (!node) { $('editor').hidden = true; $('before-section').hidden = true; return; }
     $('editor').hidden = false; $('title').textContent = title(node);
-    $('identity').textContent = `${node.id}\n${node.type} · ${node.status}\n${node.path}`;
+    $('identity').textContent = `${node.id}\n${description(node)}\n${node.path}`;
     const context = contextFor(node.id);
     $('focus-context').textContent = `Manifesto distance: ${context.distances.get(node.id) ?? '?'} hops · ${context.descendantCount(node.id)} downstream nodes (all depths) · ${snapshotName(node.id)} revision`;
     $('type-label').hidden = true; $('slug-label').hidden = true;
@@ -326,16 +334,16 @@
     rememberCamera(); view = 'focus'; draw(); saveDraft();
   });
   $('color-mode').addEventListener('change', () => {
-    colorMode = $('color-mode').value === 'distance' ? 'distance' : 'status'; draw(); saveDraft();
+    colorMode = $('color-mode').value === 'type' ? 'type' : 'distance'; draw(); saveDraft();
   });
 
   $('new').addEventListener('click', () => {
-    if (!state || pending || state.readonly) return;
+    if (!state || pending || state.readonly || state.snapshot.format_version !== 2) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
     rememberCamera(); delete cameras.draft;
     creating = true; dirty = false; selected = undefined; view = 'focus'; formFingerprint = state.snapshot.fingerprint;
-    $('editor').hidden = false; $('title').textContent = 'New proposed node';
+    $('editor').hidden = false; $('title').textContent = 'New node';
     $('identity').textContent = 'The CLI will generate its ID and integrity marker.'; $('focus-context').textContent = 'Unsaved new node';
     $('type-label').hidden = false; $('slug-label').hidden = false;
     $('node-type').value = 'requirement'; $('slug').value = ''; $('body').value = ''; $('sources').value = '[]';
@@ -363,9 +371,13 @@
     send({ type: creating ? 'add' : 'save', id: selected, expect: formFingerprint,
       body: $('body').value, parents: [...formParents], sources: $('sources').value, slug: $('slug').value, nodeType: $('node-type').value });
   });
-  for (const action of ['accept', 'retire']) $(action).addEventListener('click', () => {
-    if (!editable() || dirty || pending) return;
+  for (const action of ['restore', 'retire']) $(action).addEventListener('click', () => {
+    if (!editable() || creating || dirty || pending) return;
     pending = true; updateButtons(); send({ type: action, id: selected, expect: formFingerprint });
+  });
+  $('migrate').addEventListener('click', () => {
+    if (!legacyWorkspace() || dirty || creating || pending) return;
+    pending = true; updateButtons(); send({ type: 'migrate', expect: state.snapshot.fingerprint });
   });
   $('discard').addEventListener('click', () => {
     dirty = false;
@@ -376,6 +388,8 @@
 
   function showSnapshotNotes() {
     setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`)].filter(Boolean).join('\n'));
+    $('schema-notice').hidden = !legacyWorkspace();
+    $('schema-notice').textContent = legacyWorkspace() ? 'Legacy v1 graph: migrate to remove approval metadata before editing. Discard any dirty draft first; migration preserves node text and withdrawal history.' : '';
     const sources = state.diff?.source_changes || [];
     $('linked-sources').hidden = !sources.length;
     $('source-summary').textContent = `${sources.length} changed linked source file${sources.length === 1 ? '' : 's'} — potential review context`;
@@ -399,7 +413,7 @@
       $('editor').hidden = false; $('body').value = restored.draft.body; $('sources').value = restored.draft.sources;
       $('slug').value = restored.draft.slug; $('node-type').value = restored.draft.nodeType;
       $('type-label').hidden = !creating; $('slug-label').hidden = !creating;
-      if (creating) { $('title').textContent = 'New proposed node'; $('identity').textContent = 'Restored unsaved draft'; }
+      if (creating) { $('title').textContent = 'New node'; $('identity').textContent = 'Restored unsaved draft'; }
       populateParents(restored.draft.parents, formNodeType());
       $('sources-label').hidden = formNodeType() !== 'implementation';
     } else if (dirty || creating) {

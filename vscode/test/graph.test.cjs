@@ -6,8 +6,8 @@ const { JSDOM } = require('jsdom');
 const { graphHtml } = require('../out/view.js');
 const model = require('../media/graph-model.js');
 
-const root = { id: 'root', type: 'manifesto', status: 'accepted', parents: [], body: '# Purpose\n', path: '_specspec/root.md', sources: [] };
-const child = { id: 'child', type: 'requirement', status: 'proposed', parents: ['root'], body: '# Child\n', path: '_specspec/child.md', sources: [] };
+const root = { id: 'root', type: 'manifesto', retired: false, parents: [], body: '# Purpose\n', path: '_specspec/root.md', sources: [] };
+const child = { id: 'child', type: 'requirement', retired: false, parents: ['root'], body: '# Child\n', path: '_specspec/child.md', sources: [] };
 
 function fixture(t, options = {}) {
   const dom = new JSDOM(graphHtml(name => name, 'local', 'test'), { runScripts: 'outside-only', pretendToBeVisual: true });
@@ -27,7 +27,7 @@ function fixture(t, options = {}) {
     dom.window.close();
     assert.deepEqual(messages.filter(message => message.type === 'client-error'), [], 'Renderer errors must not be mistaken for successful DOM tests.');
   });
-  const snapshot = { fingerprint: 'version-1', valid: true, nodes: [root, child], edges: [['root', 'child']] };
+  const snapshot = { fingerprint: 'version-1', format_version: 2, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
@@ -35,6 +35,89 @@ function fixture(t, options = {}) {
     viewportWidth = width; dom.window.dispatchEvent(new dom.window.Event('resize'));
   } };
 }
+
+test('nodes are editable without approval states or an acceptance action', t => {
+  const { dom, $, saved } = fixture(t);
+  assert.equal($('accept'), null);
+  assert.equal($('save').textContent, 'Save node');
+  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'type']);
+  assert.equal(saved().colorMode, 'distance');
+  for (const card of $('cards').children) {
+    assert.equal('status' in card.dataset, false);
+    assert.doesNotMatch(card.textContent, /proposed|accepted/);
+  }
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  assert.equal($('body').disabled, false);
+  assert.equal($('save').disabled, false);
+  assert.equal($('retire').disabled, false);
+  assert.doesNotMatch($('identity').textContent, /proposed|accepted/);
+});
+
+test('withdrawal and restoration send guarded actions, not acceptance', t => {
+  const { dom, snapshot, send, messages, $ } = fixture(t);
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  $('retire').click();
+  assert.equal(messages.at(-1).type, 'retire');
+  assert.equal(messages.at(-1).expect, snapshot.fingerprint);
+  assert.equal($('save').disabled, true);
+  const target = { ...snapshot, nodes: [root, { ...child, retired: true }] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false, force: true, selectedId: 'child' });
+  assert.match($('identity').textContent, /retired/);
+  assert.equal($('retire').hidden, true);
+  assert.equal($('restore').hidden, false);
+  $('restore').click();
+  assert.equal(messages.at(-1).type, 'restore');
+  assert.equal(messages.at(-1).expect, snapshot.fingerprint);
+});
+
+test('a legacy workspace is readable but only explicit migration can write', t => {
+  const { dom, snapshot, send, messages, $ } = fixture(t);
+  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: false });
+  assert.equal($('new').disabled, true);
+  assert.equal($('migrate').hidden, false);
+  assert.match($('schema-notice').textContent, /Legacy v1/);
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  assert.equal($('body').value, child.body);
+  assert.equal($('body').disabled, true);
+  assert.equal($('save').disabled, true);
+  assert.equal($('retire').disabled, true);
+  $('migrate').click();
+  assert.equal(messages.at(-1).type, 'migrate');
+  assert.equal(messages.at(-1).expect, snapshot.fingerprint);
+  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'migrated' }, diagnostics: [], readonly: false });
+  assert.equal($('migrate').hidden, true);
+  assert.equal($('body').disabled, false);
+  assert.equal($('body').value, child.body);
+});
+
+test('legacy histories cannot migrate and dirty drafts retain their original fingerprint', t => {
+  const { dom, snapshot, send, $, saved } = fixture(t);
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  $('body').value = '# Still my draft\n'; $('body').dispatchEvent(new dom.window.Event('input'));
+  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: false });
+  assert.equal($('migrate').disabled, true);
+  assert.equal($('body').value, '# Still my draft\n');
+  assert.equal(saved().formFingerprint, 'version-1');
+  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: true });
+  assert.equal($('migrate').hidden, true);
+  assert.equal($('save').disabled, true);
+  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'migrated' }, diagnostics: [], readonly: false });
+  assert.equal($('body').value, '# Still my draft\n');
+  assert.equal(saved().formFingerprint, 'version-1');
+});
+
+test('restored obsolete status colors fall back to distance without losing a draft or camera', t => {
+  const { $, saved } = fixture(t, { restored: {
+    colorMode: 'status', selected: 'child', view: 'focus', dirty: true,
+    formFingerprint: 'original', creating: false,
+    cameras: { 'focus:child': { x: 30, y: -50, k: 0.8 } },
+    draft: { body: '# My draft\n', sources: '[]', slug: '', nodeType: 'requirement', parents: ['root'] },
+  } });
+  assert.equal(saved().colorMode, 'distance');
+  assert.equal($('body').value, '# My draft\n');
+  assert.equal(saved().formFingerprint, 'original');
+  assert.deepEqual({ ...saved().cameras['focus:child'] }, { x: 30, y: -50, k: 0.8 });
+});
 
 test('graph renders and new-node creation goes through a typed message', t => {
   const { dom, messages, $ } = fixture(t);
@@ -83,7 +166,7 @@ test('parent list displays actual links; adding and removing are explicit draft 
   $('add-parent').click();
   assert.equal($('parent-links').children.length, 2);
   assert.deepEqual([...saved().draft.parents], ['root', 'branch']);
-  assert.equal($('accept').disabled, true);
+  assert.equal($('retire').disabled, true);
   assert.ok(![...$('parent-candidate').options].some(option => option.value === 'branch'));
   $('parent-links').querySelector('button').click();
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'branch');
@@ -152,7 +235,7 @@ test('external refresh preserves unsaved text and its original fingerprint', t =
   dom.window.document.querySelector('.card.requirement').click();
   $('body').value = '# Unsaved\n';
   $('body').dispatchEvent(new dom.window.Event('input'));
-  assert.equal($('accept').disabled, true);
+  assert.equal($('retire').disabled, true);
   send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'version-2' }, diagnostics: [], readonly: false });
   assert.equal($('body').value, '# Unsaved\n');
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
@@ -250,19 +333,22 @@ test('new-node drafts survive the total-graph view and produce valid render repo
 
 test('color modes have legends, persist without canonical changes and do not erase Git badges', t => {
   const { dom, snapshot, send, $, saved } = fixture(t);
-  const target = { ...snapshot, nodes: [root, { ...child, status: 'retired' }] };
+  const target = { ...snapshot, nodes: [root, { ...child, retired: true }] };
   send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false, diff: {
     base: snapshot, target, changes: [{ id: 'child', kind: 'changed' }], added_edges: [], removed_edges: [], base_ref: 'HEAD', target_ref: 'workspace',
   } });
   const oldColor = dom.window.document.querySelector('[data-node-id="child"]').style.getPropertyValue('--node-accent');
-  $('color-mode').value = 'distance'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
+  $('color-mode').value = 'type'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
   const card = dom.window.document.querySelector('[data-node-id="child"]');
   assert.notEqual(card.style.getPropertyValue('--node-accent'), oldColor);
   assert.equal(card.dataset.distance, '1');
   assert.match(card.querySelector('.git-badge').textContent, /changed/);
-  assert.match($('legend').textContent, /Shortest path/);
-  assert.equal(saved().colorMode, 'distance');
-  assert.equal(target.nodes[1].status, 'retired');
+  assert.match($('legend').textContent, /Existing node types/);
+  assert.equal(saved().colorMode, 'type');
+  assert.equal(target.nodes[1].retired, true);
+  assert.equal(card.dataset.retired, 'true');
+  assert.match(card.querySelector('.retired-badge').textContent, /retired/);
+  assert.equal('status' in target.nodes[1], false);
   assert.equal('distance' in target.nodes[1], false);
 });
 

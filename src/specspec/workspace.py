@@ -17,7 +17,7 @@ from typing import Any
 
 from .format import parse_node, read_document, serialize
 from .graph import Graph, build_graph
-from .model import Diagnostic, SpecError, SpecNode, fingerprint
+from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode, fingerprint
 
 SPEC_DIR = "_specspec"
 STATE_DIR = ".specspec-local"
@@ -46,9 +46,14 @@ class Snapshot:
             )
         return self.graph
 
+    @property
+    def format_version(self) -> int | None:
+        return next((node.format_version for node in self.nodes if node.type == "manifesto"), None)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "fingerprint": self.fingerprint,
+            "format_version": self.format_version,
             "nodes": [node.to_dict() for node in sorted(self.nodes, key=lambda n: n.id)],
             "edges": self.graph.edges() if self.graph else [],
             "valid": self.valid,
@@ -138,10 +143,12 @@ def snapshot_from_files(
         return Snapshot(root, files, [], errors, None)
     manifesto_path, manifesto_data = manifestos[0]
     version = manifesto_data.get("format_version")
-    if not isinstance(version, int) or isinstance(version, bool) or version != 1:
+    if type(version) is not int or version not in {1, FORMAT_VERSION}:
         errors.append(
             Diagnostic(
-                "VERSION", "Manifesto must declare supported format_version: 1.", manifesto_path
+                "VERSION",
+                f"Manifesto must declare supported format_version: 1 or {FORMAT_VERSION}.",
+                manifesto_path,
             )
         )
         return Snapshot(root, files, [], errors, None)
@@ -150,7 +157,7 @@ def snapshot_from_files(
     duplicates = False
     for path, (data, body) in documents.items():
         try:
-            node = parse_node(data, body, path)
+            node = parse_node(data, body, path, version=version)
             if node.id in seen:
                 errors.append(
                     Diagnostic(
@@ -189,7 +196,7 @@ def snapshot_from_files(
                             node.id,
                         )
                     )
-                elif node.status != "retired" and not target.is_file():
+                elif not node.retired and not target.is_file():
                     errors.append(
                         Diagnostic(
                             "SOURCE_MISSING",
@@ -224,11 +231,11 @@ def new_node(node_type: str, parents: list[str], body: str, slug: str) -> SpecNo
     return SpecNode(
         node_id,
         node_type,
-        "accepted" if node_type == "manifesto" else "proposed",
+        False,
         parents,
         body,
         f"{SPEC_DIR}/{node_id}--{slugify(slug)}.md",
-        1 if node_type == "manifesto" else None,
+        FORMAT_VERSION if node_type == "manifesto" else None,
     )
 
 
@@ -327,6 +334,7 @@ def mutate(
     operation: Callable[[Snapshot], dict[str, bytes]],
     *,
     expect: str | None = None,
+    allow_legacy: bool = False,
 ) -> Snapshot:
     with workspace_lock(root) as state:
         before = load_snapshot(root, ignore_state=True)
@@ -335,7 +343,17 @@ def mutate(
             raise SpecError(
                 [Diagnostic("STALE", "Graph changed since it was displayed; refresh and retry.")]
             )
+        if before.format_version != FORMAT_VERSION and not allow_legacy:
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "MIGRATION", "Run specspec migrate --expect <fingerprint> before editing."
+                    )
+                ]
+            )
         changes = operation(before)
+        if not changes:
+            return before
         proposed_files = {**before.files, **changes}
         candidate = snapshot_from_files(root, proposed_files, check_sources=True)
         candidate.require_valid()
@@ -431,15 +449,36 @@ def update_node(
     return mutate(root, operation, expect=expect)
 
 
-def change_status(root: Path, ids: list[str], status: str, expect: str | None = None) -> Snapshot:
+def set_retired(root: Path, ids: list[str], retired: bool, expect: str | None = None) -> Snapshot:
     def operation(before: Snapshot) -> dict[str, bytes]:
         changes: dict[str, bytes] = {}
         for node_id in ids:
-            node = replace(require_node(before, node_id), status=status)
+            node = replace(require_node(before, node_id), retired=retired)
             changes[node.path] = serialize(node, before.files[node.path])
         return changes
 
     return mutate(root, operation, expect=expect)
+
+
+def migrate(root: Path, expect: str | None = None) -> Snapshot:
+    """Validate v1 integrity, then journal the entire approval-free conversion."""
+
+    def operation(before: Snapshot) -> dict[str, bytes]:
+        if before.format_version == FORMAT_VERSION:
+            return {}
+        return {
+            node.path: serialize(
+                replace(
+                    node,
+                    format_version=FORMAT_VERSION if node.type == "manifesto" else None,
+                    legacy_status=None,
+                ),
+                before.files[node.path],
+            )
+            for node in before.nodes
+        }
+
+    return mutate(root, operation, expect=expect, allow_legacy=True)
 
 
 def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:

@@ -1,11 +1,10 @@
 ---
 id: 2f6ee5bd-9014-4a0c-8677-53ecbab93f92
 type: requirement
-status: accepted
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 48f77f19-391f-46d0-b06f-ec7530be4575
-managed_hash: 08bffcebaa20bdbe21518825b51f8273c81d3aa3f33b8ec33ef5e0b156f029fe
+managed_hash: 7462f69a5e1a378770d263003c08dce1e8eb8585ec1ae4b9047f4a4395971b3a
 ---
 # Show relationship context and potential downstream impact
 
