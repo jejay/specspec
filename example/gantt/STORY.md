@@ -134,3 +134,18 @@ revisable experiment; there is no invented per-node approval ceremony.
 The following audit records its real hash once it exists and verifies all three
 spec/code pairs and both large withdrawals against Git blobs. Recording a future
 commit's hash inside itself would be fiction, so the ledger is completed afterward.
+
+## Final audit — the history is real
+
+The final implementation is `660af26`. Its following audit records that actual hash
+and verifies all three spec/code pairs, the initially absent graph/code, fresh CLI
+fingerprint chains, large explicit withdrawals, and original retained semantics.
+The first audit exposed the legitimate empty predecessor snapshot before `init`;
+the verifier now treats that boundary explicitly rather than requiring a nonexistent
+graph. Parent/nested graph tests also check exact staged blobs independently using a
+disposable repository, never corrupting or installing hooks in the real checkout.
+
+The SpecSpec parent graph links this example and its verification. CI is configured
+for both graphs, full Git-history audit, model and real-browser checks; remote CI is
+not claimed run. The final audit is a separate real commit, not a fabricated part of
+the simulated dialogue. No files were pushed or unrelated logos staged.

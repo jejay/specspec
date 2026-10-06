@@ -55,6 +55,8 @@
       "c673f8f3-26c6-4da9-8651-7fba937b82db"
     ],
     "spec_live_count": 19,
-    "spec_commit": "95be927eb24577e89771fa74fb10d223e5d4fc60"
+    "spec_commit": "95be927eb24577e89771fa74fb10d223e5d4fc60",
+    "implementation_commit": "660af2684ee8590ae44404f58e76f3d89be883d1",
+    "implementation_fingerprint": "2f4d21bd113275672dc19a32e66cbd5ab447fe33c3d6ff0addd7ca89504cad2d"
   }
 ]

@@ -4,6 +4,16 @@ Tool-managed Markdown specification graphs, with a Python CLI and a VS Code grap
 
 This repository uses SpecSpec itself: [`_specspec/`](_specspec/) contains its working specification, with core intentions, revisable technical choices, withdrawn design history, and implementation links to actual code/tests. Start with the [graph tour](docs/own-spec.md). [`INTENTION_SPEC.md`](INTENTION_SPEC.md) and [`CONCLUSION_SPEC.md`](CONCLUSION_SPEC.md) remain the original intention/design context.
 
+## Worked example: a planning app that changes direction
+
+[`example/gantt/`](example/gantt/) is a runnable local Gantt planner developed with
+SpecSpec **before the first code**, plus a clearly [simulated user/AI conversation](example/gantt/STORY.md).
+Two major redirects withdraw **13/17** and **9/16** live graph nodes, with original
+reasoning and runnable prototypes retained in real Git stage commits. The final app
+has weekday dependency forecasts, an explicit what-if baseline, native forms, and
+safe local JSON import/export. See the [run/history guide](example/gantt/README.md).
+It has its own `_specspec/` graph—not a nested Git repository or an approval workflow.
+
 ## Install from this checkout
 
 Python 3.11+ is required. The package is not yet published to PyPI.

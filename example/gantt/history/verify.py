@@ -62,9 +62,16 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             spec = git_snapshot(root, spec_ref)
             implementation = git_snapshot(root, implementation_ref)
             before = git_snapshot(root, record["predecessor_commit"], allow_empty=True)
-            for snapshot in (spec, implementation, before):
+            for snapshot in (spec, implementation):
                 snapshot.require_valid()
                 assert not snapshot.diagnostics
+            assert before.valid and not before.diagnostics
+            if before.nodes:
+                before.require_valid()
+            else:
+                assert previous_implementation is None, (
+                    "Only the first stage may start without a graph."
+                )
             assert spec.fingerprint == record["spec_fingerprint"]
             assert implementation.fingerprint == record["implementation_fingerprint"]
             assert sum(not node.retired for node in spec.nodes) == record["spec_live_count"]

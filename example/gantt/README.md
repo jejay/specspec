@@ -45,7 +45,7 @@ file-origin storage behavior varies by browser.
 | --- | --- | --- | --- |
 | 01 | `3ba86c0` | `8ac5676` | Business portfolio, weekday forecasts, owners/rollups; cloud and leveling only unimplemented candidates |
 | 02 | `f656942` | `f54142a` | Personal manual calendar ranges/weekends/priorities; **13 of 17 live nodes withdrawn** |
-| 03 | `95be927` | Recorded in the following audit commit's ledger | Workshop durations/prerequisites/earliest bounds and explicit baseline; **9 of 16 live nodes withdrawn** |
+| 03 | `95be927` | `660af26` | Workshop durations/prerequisites/earliest bounds and explicit baseline; **9 of 16 live nodes withdrawn** |
 
 Each spec-only checkpoint precedes its application rewrite and explicitly still
 runs the previous prototype. Implementation commits add terminal evidence nodes.

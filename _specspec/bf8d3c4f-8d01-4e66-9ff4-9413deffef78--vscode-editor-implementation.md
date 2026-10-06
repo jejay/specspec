@@ -80,7 +80,7 @@ sources:
   symbol: distance modes/revisions/preferences, labels, native drafts/text
 - path: vscode/test-host/ui.cjs
   symbol: checkHeadlineRendering and independent min/max path checks
-managed_hash: 45b075717af3f7a0acc35ff5da8e0d6a44c91e4dd743961d0979dba3111cad1a
+managed_hash: f1afdef927a38164f303cd8e3144d0da20d989e817d1ba0d504e815e9df95019
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
@@ -151,7 +151,7 @@ historical rank isolation, extreme bends, scaled width/head floors, dash pattern
 full-height attachments, circle-free joins, and existing draft/trust/history/text
 safety. The supported camera limit is checked against settling/head clearance.
 
-Installed VS Code/Chromium on Windows has rendered the current 51-node graph and
+Installed VS Code/Chromium on Windows has rendered the then-current 51-node graph and
 verified each live node's earliest allowed rank and compact vertical origin
 neighborhood, including all seven immediate manifesto children in rank one. It has checked actual screen strength at 12 percent
 zoom, head-base/tangent joins, no circles, sampled painted-stroke boundaries for

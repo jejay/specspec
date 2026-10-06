@@ -138,6 +138,30 @@ card fit, unchanged geometry, and existing hover/arrow/navigation protections.
 These rendering/spacing choices remain revisable, not canonical scores or universal
 font-quality/performance guarantees.
 
+## An independent worked planning example
+
+The [worked-example intention](../_specspec/5e6030af-efb6-4123-a354-1afd099c5fce--worked-planning-example.md)
+records the project owner's request for a Gantt/planning app that uses SpecSpec from
+the start, with at least two substantial user redirects and proper Git history.
+A separate [nested-graph/real-commit conclusion](../_specspec/afe92d9e-343f-4d90-8405-81eeaf4cfbeb--independent-versioned-example.md)
+chooses an independent `example/gantt/_specspec/` in the existing repository.
+
+The [example](../example/gantt/README.md) has a clearly fictional dialogue and real
+spec-before-code commits. Business-portfolio → personal manual-date → workshop
+forecast redirects withdraw 13/17 and 9/16 live nodes, retaining old reasoning and
+runnable code in Git. The final app has a 44-node graph (22 live, 22 withdrawn),
+weekday prerequisite forecasting, explicit baseline comparison, protected local
+storage, and previewed JSON conversion. Narrative stages are not node approval stages.
+
+Actual CLI receipts and a full-history verifier check original bodies/parents/sources,
+fingerprints, ancestor ordering, large withdrawal sets, no code in the first spec
+commit, and runnable files in every implementation commit. Both nested and parent
+index snapshots are validated before each authorized commit. CI now checks both
+working graphs, the original stage history, model tests, and an isolated installed-
+Chromium app smoke test; remote execution is not claimed. The real local browser
+passed and desktop/narrow screenshots were inspected. The example remains a bounded
+educational prototype, not a production scheduler, backup, or authentication service.
+
 ## Entry points
 
 | What to inspect | Node |
