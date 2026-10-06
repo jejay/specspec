@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+.specspec-local/
+.vscode-test/
+node_modules/
+vscode/out/
+vscode/media/vendor/
+*.vsix

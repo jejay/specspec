@@ -1,0 +1,77 @@
+{
+  "name": "specspec-vscode",
+  "displayName": "SpecSpec",
+  "description": "View, edit, and compare tool-managed specification graphs",
+  "version": "0.1.0",
+  "publisher": "specspec-dev",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "workspaceContains:_specspec/*.md"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "specspec.openGraph",
+        "title": "SpecSpec: Open Graph"
+      },
+      {
+        "command": "specspec.compareRevisions",
+        "title": "SpecSpec: Compare Revisions"
+      }
+    ],
+    "configuration": {
+      "title": "SpecSpec",
+      "properties": {
+        "specspec.command": {
+          "type": "string",
+          "default": "specspec",
+          "scope": "machine-overridable",
+          "description": "Python CLI executable; executed without a shell."
+        },
+        "specspec.args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "machine-overridable",
+          "description": "Argument prefix, such as [\"-m\", \"specspec\"]."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p . && node scripts/build-webview.cjs",
+    "watch": "node scripts/build-webview.cjs && tsc -w -p .",
+    "test": "npm run compile && node --test test/*.test.cjs",
+    "test:host": "npm run compile && node test-host/run.cjs",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "0.28.2",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.0"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1",
+    "d3-selection": "3.0.0",
+    "d3-shape": "3.2.0",
+    "d3-transition": "3.0.1",
+    "d3-zoom": "3.0.0"
+  }
+}

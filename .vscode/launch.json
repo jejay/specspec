@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run SpecSpec on this repository",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--new-window",
+        "--user-data-dir=${workspaceFolder}/.vscode-test/dev-profile",
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode",
+        "${workspaceFolder}/specspec-dev.code-workspace"
+      ],
+      "outFiles": ["${workspaceFolder}/vscode/out/**/*.js"],
+      "preLaunchTask": "SpecSpec: compile extension",
+      "env": {
+        "SPECSPEC_PYTHON": "${workspaceFolder}/.venv/bin/python"
+      },
+      "windows": {
+        "env": {
+          "SPECSPEC_PYTHON": "${workspaceFolder}/.venv/Scripts/python.exe"
+        }
+      }
+    }
+  ]
+}

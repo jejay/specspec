@@ -1,0 +1,84 @@
+:root { color-scheme: light dark; --edge-normal: var(--vscode-descriptionForeground, #a2aaba); --edge-added: #42b68b; --edge-removed: #e27878; --edge-draft: #8f98ee; }
+* { box-sizing: border-box; }
+body { margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px; border-bottom: 1px solid var(--vscode-panel-border); }
+.toolbar strong { margin-right: 8px; }
+button { cursor: pointer; padding: 6px 10px; color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: 1px solid transparent; border-radius: 5px; }
+button:hover { background: var(--vscode-button-hoverBackground); }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--vscode-focusBorder); outline-offset: 2px; }
+#back { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+.color-control { display: flex; align-items: center; gap: 8px; margin: 0 0 0 auto; white-space: nowrap; }
+.color-control select { margin: 0; width: auto; }
+#revision { font-size: 11px; color: var(--vscode-descriptionForeground); }
+#legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 8px 14px; font-size: 12px; }
+#legend > span { display: inline-flex; align-items: center; gap: 5px; }
+#legend i { width: 10px; height: 10px; border-radius: 3px; }
+.legend-help { color: var(--vscode-descriptionForeground); }
+#message { white-space: pre-wrap; padding: 0 14px; margin: 0; font-size: 12px; color: var(--vscode-editorWarning-foreground); }
+#message:not(:empty) { padding-bottom: 10px; }
+#linked-sources { margin: 0 14px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+#linked-sources summary { cursor: pointer; }
+#source-files { max-height: 110px; overflow: auto; margin: 6px 0; padding-left: 22px; }
+.canvas-shell { position: relative; flex: 1; min-height: 180px; }
+#viewport { position: absolute; inset: 0 0 42px; overflow: hidden; overflow: clip; touch-action: none; cursor: grab; outline-offset: -2px; background-color: var(--vscode-editor-background); background-image: radial-gradient(circle, color-mix(in srgb, var(--vscode-descriptionForeground) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
+#viewport.panning, #viewport.panning .card { cursor: grabbing; }
+#graph { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+#edges, #cards { position: absolute; inset: 0 auto auto 0; }
+#edges { pointer-events: none; overflow: visible; }
+.camera-controls { position: absolute; bottom: 0; left: 0; right: 0; height: 42px; display: flex; align-items: center; gap: 3px; padding: 5px 12px; background: var(--vscode-editorWidget-background); border-top: 1px solid var(--vscode-panel-border); }
+.camera-controls button { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); min-width: 32px; padding: 6px 9px; }
+#zoom-reset { min-width: 62px; font-variant-numeric: tabular-nums; }
+.canvas-help { position: absolute; bottom: 12px; right: 14px; margin: 0; font-size: 11px; color: var(--vscode-descriptionForeground); pointer-events: none; }
+@media (max-width: 1450px) { .canvas-help { display: none; } }
+.socket { fill: var(--vscode-editor-background); stroke: var(--edge-normal); stroke-width: 2px; }
+.socket.added { stroke: var(--edge-added); }
+.socket.removed { stroke: var(--edge-removed); }
+.socket.draft { stroke: var(--edge-draft); }
+.link { fill: none; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.link.normal { stroke: var(--edge-normal); opacity: .8; }
+.link.added { stroke: var(--edge-added); }
+.link.removed { stroke: var(--edge-removed); stroke-dasharray: 6 5; }
+.link.draft { stroke: var(--edge-draft); stroke-dasharray: 3 4; }
+.arrow-head.normal { fill: var(--edge-normal); }
+.arrow-head.added { fill: var(--edge-added); }
+.arrow-head.removed { fill: var(--edge-removed); }
+.arrow-head.draft { fill: var(--edge-draft); }
+.card { position: absolute; width: 264px; height: 128px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; border: 1px solid var(--node-accent, #8993a4); border-top: 4px solid var(--node-accent, #8993a4); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
+.card:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background)); }
+.card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
+.card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
+.card.manifesto { border-top-width: 6px; }
+.card.implementation { border-radius: 20px; }
+.card.removed { border-style: dashed; }
+.card.source-changed { border-bottom-style: dotted; }
+.badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.badge { font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--vscode-editorWidget-background); border: 1px solid color-mix(in srgb, var(--node-accent, #8993a4) 50%, transparent); white-space: nowrap; }
+.git-badge.added { color: var(--edge-added); border-color: var(--edge-added); }
+.git-badge.removed { color: var(--edge-removed); border-color: var(--edge-removed); }
+.git-badge.changed, .git-badge.source-changed { color: #dfad54; border-color: #dfad54; }
+.git-badge.renamed { color: #75a8ef; border-color: #75a8ef; }
+.card.expanded { height: auto; overflow: visible; padding: 18px; border-radius: 8px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
+.card.expanded:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
+.node-settings { width: 100%; min-width: 0; }
+h2 { margin: 0 0 8px; font-size: 18px; overflow-wrap: anywhere; }
+#identity { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--vscode-descriptionForeground); }
+label { display: block; margin: 10px 0; font-size: 12px; }
+textarea, input, select { width: 100%; margin-top: 5px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); padding: 6px; }
+textarea { resize: vertical; font-family: var(--vscode-editor-font-family); }
+#parents-fieldset { margin: 10px 0; padding: 8px; border: 1px solid var(--vscode-panel-border, #777); min-width: 0; }
+#parents-fieldset legend { font-size: 12px; }
+.form-help { margin: 4px 0; font-size: 12px; color: var(--vscode-descriptionForeground); }
+#parent-links { margin: 0; padding: 0; list-style: none; }
+#parent-links li { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+#parent-links li span { flex: 1; overflow-wrap: anywhere; }
+.parent-add { display: flex; align-items: center; gap: 8px; }
+.parent-add select { flex: 1; min-width: 0; margin: 0; }
+.parent-add button, #parent-links button { flex-shrink: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vscode-textCodeBlock-background); padding: 8px; }
+footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscode-descriptionForeground); border-top: 1px solid var(--vscode-panel-border); }
+[hidden] { display: none !important; }
+body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); background: var(--vscode-editor-background); }
+@media (max-width: 700px) { .color-control { margin-left: 0; } footer { font-size: 10px; } .camera-controls { padding-inline: 6px; } }
+@media (prefers-reduced-motion: reduce) { #graph { will-change: auto; } }
