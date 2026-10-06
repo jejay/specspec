@@ -3,7 +3,8 @@ id: ec5afd48-6c16-4ec0-bc5a-453f40926a62
 type: requirement
 parents:
 - 13fc8d97-495d-48c3-bb80-753307c737f7
-managed_hash: 7b641d64b61c0875285e6ab67943cadeed6fa5c7b9e2383b8ba9e7a0a0abc078
+managed_hash: fdde93af1d4540de026e1caa0d6c12177d6a59546aa269eb5afcb2146b581c31
+retired: true
 ---
 # Keep tasks independent
 

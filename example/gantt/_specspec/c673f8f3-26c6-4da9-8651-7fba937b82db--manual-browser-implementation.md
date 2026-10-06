@@ -14,7 +14,8 @@ sources:
   symbol: manual editing, import/export, autosave
 - path: styles.css
   symbol: native controls and calendar bars
-managed_hash: 4de9f259b09aa8e3afe17b60c3c0ab888ecff7960127ca36e499d315709f9608
+managed_hash: 5e55cbd0d96450b98b26ff55ba190b19e788ad1ca150b444f36e455e5d01043d
+retired: true
 ---
 # Implement a local editable personal timeline
 

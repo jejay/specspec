@@ -69,3 +69,38 @@ Git revision remains runnable. Seven actual Node model tests and syntax checks
 passed. Corrupt saved data is left untouched until reset. I exported the real demo
 as `history/personal-v1.json` for a later compatibility exercise. Real-browser
 interaction and storage failure paths are still unverified at this stage.
+
+## 03 — Redirect two: a workshop what-if planner
+
+**User (simulated):** I showed the personal version at our makerspace. The useful
+problem is planning a workshop, not renovating my house. Replace the manual-date/
+priority model with workday durations, prerequisites, and optional earliest dates.
+We work Monday–Friday. I need to freeze a baseline, change a duration, and see which
+finish dates move. Keep local files and autosave. Still no portfolio, owner leveling,
+accounts, or cloud. Don't silently reinterpret my old personal-plan JSON.
+
+**AI (simulated):** This replaces **9 of the 16 live nodes**: personal scope, manual
+ranges/weekends, priorities, independent tasks, the v1 schema choice, and both
+implementation explanations. Portability, local autosave, and the browser-storage
+choice survive with the common intentions. I'll withdraw the obsolete branch in
+one guarded batch. Weekday dependencies resemble the initial experiment, but this
+new workshop forecast is a separately justified conclusion, not restoration or
+approval of the old portfolio branch.
+
+**User (simulated):** Use the simple dependency forecast, not an optimizer. Excluding
+holidays and resources is fine if the app says so. Baseline capture must be explicit;
+a new edit must never quietly overwrite it. Show me an import preview and explain
+what is lost when converting the personal file.
+
+**AI (simulated):** I'll choose an iterative whole-day forecast, a deep baseline
+snapshot, and a version-two envelope. V1 manual spans become weekday durations of
+at least one day; start becomes an earliest bound, priority is lost, and weekend/
+finish semantics change. Preview and explicit Apply are required. Imported/stored
+data is validated before it replaces work; corrupt storage stays protected.
+Native forms and a local DOM chart keep the prototype inspectable without a runtime
+API/CDN. The graph has practical chart/task/date bounds, not production guarantees.
+
+**AI (simulated, spec-only checkpoint):** I read contexts/impacts, recorded new
+intentions separately from those choices, and committed this second replacement
+before rewriting code. This checkpoint still runs the stage-02 app. The next
+implementation must add real unit and browser evidence, with remaining risks stated.

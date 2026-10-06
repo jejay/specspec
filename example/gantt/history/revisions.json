@@ -33,6 +33,27 @@
       "d5ec8f06-adc6-492e-afdb-e08e4a0a9792"
     ],
     "spec_live_count": 14,
-    "spec_commit": "f656942184bfad34e86d82242f23bb2053f6f365"
+    "spec_commit": "f656942184bfad34e86d82242f23bb2053f6f365",
+    "implementation_commit": "f54142ab14956a5ba90f7e52517abc026617496d",
+    "implementation_fingerprint": "ee013f481837948c5e464fe69625628e0b1b24ab744faf85e9b26cdee657d124"
+  },
+  {
+    "key": "03",
+    "label": "Workshop dependency forecasts and baseline",
+    "predecessor_commit": "f54142ab14956a5ba90f7e52517abc026617496d",
+    "spec_fingerprint": "829ca42c4867fc54fb44e166f5a4baee6ec4768131b769564f53081a212e76cb",
+    "live_before": 16,
+    "withdrawn_ids": [
+      "6ebf348e-da2b-48ff-95e9-0e11150d1b85",
+      "1d46fccc-8b7a-42d3-8724-9c3d84bfd1e7",
+      "2891bf7d-3dae-4066-98b8-8f599d4b2368",
+      "5f068b9f-a29a-4445-bb3a-96c7b12d2fff",
+      "ec5afd48-6c16-4ec0-bc5a-453f40926a62",
+      "7a6014c1-9e6b-4bd8-87f7-f365f5b0765a",
+      "a237a71f-db85-4bf8-a20a-2287be08c28b",
+      "6006dc63-84fe-4aba-ac7a-0c6144536f61",
+      "c673f8f3-26c6-4da9-8651-7fba937b82db"
+    ],
+    "spec_live_count": 19
   }
 ]

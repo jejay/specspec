@@ -6,7 +6,8 @@ parents:
 - 1d46fccc-8b7a-42d3-8724-9c3d84bfd1e7
 - 5f068b9f-a29a-4445-bb3a-96c7b12d2fff
 - 928060fa-c02d-46dd-b823-b002bcf41353
-managed_hash: f372a73979d34f21326b3e8db636da23d990ab2bf4297687f7ff4a9350c0f86d
+managed_hash: edf487c73e93382414623517d401a1e30c38c32a3fede60e93e476bade5f01e5
+retired: true
 ---
 # Use a small version-one file format
 

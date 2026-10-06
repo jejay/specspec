@@ -6,7 +6,8 @@ parents:
 - 2891bf7d-3dae-4066-98b8-8f599d4b2368
 - ec5afd48-6c16-4ec0-bc5a-453f40926a62
 - 928060fa-c02d-46dd-b823-b002bcf41353
-managed_hash: 2df6407a05caeb4325aaa9b890d3e6b56e2835e8e5d8a8112264b24dc6415dc8
+managed_hash: 8a760ecd12c94c9e6c1b939475ffc49c995eb3adf94312f91ce4e7f3b701a274
+retired: true
 ---
 # Use inclusive manual calendar ranges
 
