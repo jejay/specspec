@@ -4,7 +4,7 @@ type: requirement
 parents:
 - cbcde9ec-5c0b-480e-9401-cf50a4bfeb96
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-managed_hash: cdfc443791da73e334e20242292c4e67b5dd245dea29938d57ab7ea41158459e
+managed_hash: d3baddd209f368458e8f1b199a747d7fb59edee33e2bd625ae99fa6658db55ee
 ---
 # Anchor layered ranks at the origin rather than shared sinks
 
@@ -12,7 +12,9 @@ For an acyclic displayed graph, assign the manifesto rank zero and each node the
 earliest rank strictly after all its displayed parents: one plus the maximum
 parent rank. A short branch or a new shared sink must not pull earlier intentions
 rightward. This is not shortest manifesto distance: a multi-parent node still
-needs to follow its deepest parent, while its context badge retains shortest hops.
+needs to follow its deepest parent. Minimum-distance color follows shortest paths;
+maximum-distance color follows full-snapshot longest paths, not only visible
+placement constraints. Neither requires a repeated hop badge on the card.
 
 Reuse Dagre's longest-path ranker on a reversed rank-preserving input graph with
 an RL engine direction; the compact-backbone proposal separately adapts placement. That adapter yields the original graph's earliest-source ranks while

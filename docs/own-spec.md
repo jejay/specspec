@@ -64,7 +64,8 @@ The user-requested intentions remain separate from the implementation conclusion
 Downstream counts include every deeper descendant, not just the next generation.
 Count unique IDs per child, excluding that child; overlapping child totals are not
 additive. Metrics are potential impact, not a declaration of invalidation or review.
-Distance-first fills and the existing node types replace the obsolete status mode.
+Minimum-distance-first fills, maximum distance, and existing node types replace
+the obsolete status mode. The later label-removal correction is described below.
 
 ## Blender-style canvas revision
 
@@ -109,6 +110,33 @@ drafts, or camera preferences, and sends no host/CLI messages. Redraw and camera
 changes reconcile the actual card under the last pointer rather than keeping a
 stale highlight. Tests cover direct membership, paired heads, native drafts/caret,
 leave/blur/touch, revision/draft views, and computed browser paint at minimum zoom.
+
+## Minimum/maximum distance, spacing, and headline correction
+
+The updated [color intention](../_specspec/fc78af57-8c98-4dc5-9cc4-e590d4594cf2--selectable-graph-colors.md)
+asks for **Min. Distance to Manifesto** and **Max. Distance to Manifesto**.
+The [relationship-context intention](../_specspec/2f6ee5bd-9014-4a0c-8677-53ecbab93f92--visible-relationship-context.md)
+now removes repetitive on-node hop labels while retaining child downstream counts.
+[Origin density](../_specspec/cbcde9ec-5c0b-480e-9401-cf50a4bfeb96--manifesto-centered-graph-density.md)
+asks for only slightly larger gaps; [navigation](../_specspec/a723adc8-d69d-4e60-8b4f-0997ab8f4d1d--smooth-node-canvas-navigation.md)
+asks for crisp headlines at high zoom.
+
+Separate conclusions choose [revision-local path bounds](../_specspec/f65750b7-0e8c-4014-b209-e2b480ab26d2--revision-local-distance-bounds.md)
+and [unhinted native text](../_specspec/02a4e457-d709-40af-979c-1216064b1f82--unhinted-high-zoom-dom-text.md).
+Minimum/maximum count shortest/longest directed paths from the manifesto in each
+full snapshot, never the focused subset, placement backbone, or revision union.
+The old distance preference remains minimum; maximum and type are alternatives.
+The expanded card also loses distance text. Git/withdrawal/downstream cues remain.
+
+Compact height falls 128 → 112 world units while rank/sibling gaps grow modestly
+128 → 140 / 36 → 44; net vertical pitch is smaller. The permanent compositor hint
+is removed without changing fonts, camera, native forms, or intrinsic dimensions.
+Installed VS Code checks passed with 51 nodes and inspected same-pose 250% text
+screenshots show clearly sharper rendering. Tests check bounds, deep/defensive
+traversal, revision isolation, labels/legends/preferences, native drafts/caret,
+card fit, unchanged geometry, and existing hover/arrow/navigation protections.
+These rendering/spacing choices remain revisable, not canonical scores or universal
+font-quality/performance guarantees.
 
 ## Entry points
 
@@ -199,10 +227,10 @@ JSON API 2. Legacy workspaces offer a confirmed **Migrate specification** action
 but history is never migrated and dirty drafts never silently rebase.
 
 Click a node to edit inside its expanded neighborhood card. **Save node** writes
-without approval metadata. **Retire**/**Restore** change withdrawal only. Parent
-cards show manifesto distance; child cards show all-depth downstream impact.
+without approval metadata. **Retire**/**Restore** change withdrawal only. Distance is explained by color/legend, without on-node hop labels; child cards
+show all-depth downstream impact.
 **Total graph**/**Resume draft** preserve the same form, caret, and original
-fingerprint. **Color by** selects distance or existing node type. Git badges and
+fingerprint. **Color by** selects minimum distance, maximum distance, or existing node type. Git badges and
 withdrawn labels are separate; green arrows mean added relationships, not approval.
 
 Arrangement remains relation-derived and viewport-independent. Middle/background
@@ -212,8 +240,8 @@ colors, ranks, and counts remain presentation state, not canonical metadata.
 `npm --prefix vscode test` covers host/DOM/model regressions. `npm --prefix vscode
 run test:host` drives installed VS Code through a loopback Chromium debugger with
 a disposable profile, requiring Node 22+. It checks approval-free controls,
-withdrawn labels, both fill modes, connection-hover paint, canvas geometry, pan/zoom,
-drafts, native gestures,
+withdrawn labels, three fill modes/path bounds, label-free card fit, high-zoom native
+headlines, connection-hover paint, canvas geometry, pan/zoom, drafts, native gestures,
 and resized curve clearance. Only this isolated automated host disables trust.
 Screenshots can be saved with `SPECSPEC_SCREENSHOT_DIR`. Full manual mutation and
 revision-picker workflows and remote CI remain separate verification boundaries.

@@ -6,7 +6,7 @@ parents:
 - 2f6ee5bd-9014-4a0c-8677-53ecbab93f92
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: dfecc7e9fdf5d1c48078b789f5f41ee06cf2c149f9acb9d2f971e51b7abc8269
+managed_hash: e9b25dd18d1350f36349469ad5f44ba3da028b3b451cdaa279685e78593136d4
 ---
 # Use an in-webview neighborhood view and explicit relationship metrics
 
@@ -16,8 +16,10 @@ existing form into that card rather than introducing another write path. Back
 returns to the overview without discarding a draft; switching to a different
 node requires explicit discard confirmation if the form is dirty.
 
-Distance means the shortest directed hop count from the manifesto, computed in
-each individual snapshot, not in the potentially cyclic revision union. For a
+Minimum and maximum distance mean shortest/longest directed edge counts from the
+manifesto, computed separately per snapshot under the distance-bounds conclusion,
+not in the potentially cyclic revision union. Explain them through color/legend,
+not repeated on-node distance text. For a
 child card, count all distinct nodes reachable below that child at any depth,
 excluding the child itself. Traverse iteratively and deduplicate by ID so a DAG
 with multiple paths does not inflate the total. A leaf shows zero. Label this

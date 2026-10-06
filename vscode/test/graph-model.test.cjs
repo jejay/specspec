@@ -11,12 +11,44 @@ function snapshot(edges, extra = []) {
   })), edges };
 }
 
-test('distance is shortest root hop count, not longest layout rank', () => {
+test('minimum and maximum distance count shortest/longest directed root paths', () => {
   const graph = snapshot([['root', 'a'], ['a', 'b'], ['b', 'c'], ['root', 'c']]);
+  const before = JSON.stringify(graph), metrics = model.metrics(graph);
+  assert.equal(metrics.minDistances.get('root'), 0);
+  assert.equal(metrics.maxDistances.get('root'), 0);
+  assert.equal(metrics.minDistances.get('b'), 2);
+  assert.equal(metrics.maxDistances.get('b'), 2);
+  assert.equal(metrics.minDistances.get('c'), 1);
+  assert.equal(metrics.maxDistances.get('c'), 3);
+  assert.equal(JSON.stringify(graph), before, 'Derived distances do not alter canonical records.');
+});
+
+test('distance bounds handle repeated/shared paths, input order, missing edges and unreachable nodes', () => {
+  const graph = snapshot([['root', 'a'], ['root', 'b'], ['a', 'shared'], ['b', 'shared'],
+    ['shared', 'deep'], ['root', 'deep'], ['root', 'a'], ['orphan', 'remote']], ['isolated']);
+  graph.edges.push(['missing-parent', 'a'], ['deep', 'missing-child']);
   const metrics = model.metrics(graph);
-  assert.equal(metrics.distances.get('root'), 0);
-  assert.equal(metrics.distances.get('b'), 2);
-  assert.equal(metrics.distances.get('c'), 1);
+  assert.equal(metrics.minDistances.get('shared'), 2);
+  assert.equal(metrics.maxDistances.get('shared'), 2);
+  assert.equal(metrics.minDistances.get('deep'), 1);
+  assert.equal(metrics.maxDistances.get('deep'), 3);
+  for (const id of ['orphan', 'remote', 'isolated', 'missing-parent', 'missing-child']) {
+    assert.equal(metrics.minDistances.has(id), false);
+    assert.equal(metrics.maxDistances.has(id), false);
+  }
+  const reordered = model.metrics({ ...graph, nodes: [...graph.nodes].reverse(), edges: [...graph.edges].reverse() });
+  for (const key of ['minDistances', 'maxDistances']) assert.deepEqual([...metrics[key]].sort(), [...reordered[key]].sort());
+});
+
+test('defensive cycles keep minimum paths but never invent finite maximums for blocked descendants', () => {
+  const graph = snapshot([['root', 'a'], ['a', 'b'], ['b', 'a'], ['a', 'blocked'],
+    ['root', 'blocked'], ['root', 'safe'], ['safe', 'leaf'], ['root', 'loop'], ['loop', 'loop']]);
+  const metrics = model.metrics(graph);
+  assert.equal(metrics.minDistances.get('a'), 1);
+  assert.equal(metrics.minDistances.get('blocked'), 1);
+  for (const id of ['a', 'b', 'blocked', 'loop']) assert.equal(metrics.maxDistances.has(id), false);
+  assert.equal(metrics.maxDistances.get('leaf'), 2);
+  assert.equal(model.color('max-distance', {}, metrics.maxDistances.get('a')), '#929baa');
 });
 
 test('potential impact counts the entire descendant DAG, including deep shared nodes once', () => {
@@ -33,7 +65,10 @@ test('potential impact counts the entire descendant DAG, including deep shared n
 
 test('descendant traversal is iterative and guards against repeated paths or cycles', () => {
   const chain = Array.from({ length: 6000 }, (_, i) => [i ? `n${i - 1}` : 'root', `n${i}`]);
-  assert.equal(model.metrics(snapshot(chain)).descendantCount('root'), 6000);
+  const deep = model.metrics(snapshot(chain));
+  assert.equal(deep.descendantCount('root'), 6000);
+  assert.equal(deep.minDistances.get('n5999'), 6000);
+  assert.equal(deep.maxDistances.get('n5999'), 6000);
   const cyclic = snapshot([['root', 'a'], ['a', 'b'], ['b', 'a']]);
   assert.equal(model.metrics(cyclic).descendantCount('a'), 1);
 });
@@ -83,6 +118,18 @@ test('layered layout progresses left-to-right with engine waypoints for skipped 
   const routes = model.routeEdges(layout.positions, edges, layout.guides);
   assert.ok(routes.find(route => route.edge[0] === 'root' && route.edge[1] === 'b').points.length > 4);
   assert.ok(routes.every(route => route.d.includes('C')));
+});
+
+test('shorter label-free cards modestly widen rank/sibling gaps without a larger vertical pitch', () => {
+  const data = snapshot([['root', 'a'], ['root', 'b']]);
+  const layout = model.layoutGraph(new Map(data.nodes.map(n => [n.id, n])), data.edges.map(edge => ({ edge, kind: '' })));
+  const root = layout.positions.get('root'), a = layout.positions.get('a'), b = layout.positions.get('b');
+  assert.equal(model.CARD_HEIGHT, 112);
+  assert.equal(a.x - root.x - root.width, model.RANK_GAP);
+  assert.equal(Math.abs(a.y - b.y) - a.height, model.NODE_GAP);
+  assert.ok(model.RANK_GAP > 128 && model.RANK_GAP <= 144);
+  assert.ok(model.NODE_GAP > 36 && model.NODE_GAP <= 48);
+  assert.ok(model.CARD_HEIGHT + model.NODE_GAP < 128 + 36, 'Less card content still improves net vertical density.');
 });
 
 test('layout is deterministic across input order and independent of display dimensions', () => {
@@ -152,7 +199,8 @@ test('earliest ranks respect every parent while context distance remains shortes
   const edges = data.edges.map(edge => ({ edge, kind: '' }));
   const layout = model.layoutGraph(new Map(data.nodes.map(node => [node.id, node])), edges);
   assert.ok(layout.positions.get('c').x > layout.positions.get('b').x + model.CARD_WIDTH);
-  assert.equal(model.metrics(data).distances.get('c'), 1, 'Visual rank is not the color/badge distance.');
+  assert.equal(model.metrics(data).minDistances.get('c'), 1, 'Minimum path is not longest-path placement rank.');
+  assert.equal(model.metrics(data).maxDistances.get('c'), 3);
 });
 
 test('old relations cannot pull live ranks away from the origin; base-only branches remain visible', () => {

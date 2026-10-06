@@ -23,7 +23,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .canvas-shell { position: relative; flex: 1; min-height: 180px; }
 #viewport { position: absolute; inset: 0 0 42px; overflow: hidden; overflow: clip; touch-action: none; cursor: grab; outline-offset: -2px; background-color: var(--vscode-editor-background); background-image: radial-gradient(circle, color-mix(in srgb, var(--vscode-descriptionForeground) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
 #viewport.panning, #viewport.panning .card { cursor: grabbing; }
-#graph { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+#graph { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 #edges, #cards { position: absolute; inset: 0 auto auto 0; }
 #edges { pointer-events: none; overflow: visible; }
 .camera-controls { position: absolute; bottom: 0; left: 0; right: 0; height: 42px; display: flex; align-items: center; gap: 3px; padding: 5px 12px; background: var(--vscode-editorWidget-background); border-top: 1px solid var(--vscode-panel-border); }
@@ -44,7 +44,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 /* Contrast only: keep Git hue/dashes and the existing painted clearance. */
 .link.incident-highlight { stroke: color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff)); opacity: 1; }
 .arrow-head.incident-highlight { fill: color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff)); }
-.card { position: absolute; width: 264px; height: 128px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; border: 1px solid var(--node-accent, #8993a4); border-top: 4px solid var(--node-accent, #8993a4); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
+.card { position: absolute; width: 264px; height: 112px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; border: 1px solid var(--node-accent, #8993a4); border-top: 4px solid var(--node-accent, #8993a4); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
 .card:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background)); }
 .card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
@@ -53,6 +53,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.badges:empty { display: none; }
 .badge { font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--vscode-editorWidget-background); border: 1px solid color-mix(in srgb, var(--node-accent, #8993a4) 50%, transparent); white-space: nowrap; }
 .git-badge.added { color: var(--edge-added); border-color: var(--edge-added); }
 .git-badge.removed { color: var(--edge-removed); border-color: var(--edge-removed); }
@@ -82,4 +83,3 @@ footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscod
 [hidden] { display: none !important; }
 body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); background: var(--vscode-editor-background); }
 @media (max-width: 700px) { .color-control { margin-left: 0; } footer { font-size: 10px; } .camera-controls { padding-inline: 6px; } }
-@media (prefers-reduced-motion: reduce) { #graph { will-change: auto; } }

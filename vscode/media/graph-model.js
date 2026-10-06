@@ -6,7 +6,8 @@
   else root.SpecSpecGraph = api;
 })(globalThis, vendor => {
   'use strict';
-  const CARD_WIDTH = 264, CARD_HEIGHT = 128, DETAIL_WIDTH = 620;
+  const CARD_WIDTH = 264, CARD_HEIGHT = 112, DETAIL_WIDTH = 620;
+  const RANK_GAP = 140, NODE_GAP = 44;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
   const TYPE_COLORS = { manifesto: '#6699ee', requirement: '#43b5b0', implementation: '#a786eb' };
@@ -57,18 +58,37 @@
     for (const [parent, child] of snapshot.edges) {
       if (nodes.has(child)) children.get(parent)?.add(child);
     }
-    const distances = new Map();
-    const queue = snapshot.nodes.filter(node => node.type === 'manifesto').map(node => node.id);
-    queue.forEach(id => distances.set(id, 0));
+    const minDistances = new Map(), maxDistances = new Map();
+    const roots = snapshot.nodes.filter(node => node.type === 'manifesto').map(node => node.id);
+    const queue = [...roots];
+    queue.forEach(id => minDistances.set(id, 0));
     for (let index = 0; index < queue.length; index++) {
       const id = queue[index];
       for (const child of children.get(id) || []) {
-        if (!distances.has(child)) {
-          distances.set(child, distances.get(id) + 1);
+        if (!minDistances.has(child)) {
+          minDistances.set(child, minDistances.get(id) + 1);
           queue.push(child);
         }
       }
     }
+    // Full snapshot relationships, never a focus/placement forest or revision
+    // union. Deduplicated indegrees keep this iterative even for very deep DAGs.
+    const remaining = new Map(snapshot.nodes.map(node => [node.id, 0]));
+    for (const list of children.values()) for (const child of list) remaining.set(child, remaining.get(child) + 1);
+    const ready = [...remaining.keys()].filter(id => !remaining.get(id)), candidates = new Map();
+    for (const id of roots) if (!remaining.get(id)) maxDistances.set(id, 0);
+    for (let index = 0; index < ready.length; index++) {
+      const id = ready[index];
+      for (const child of children.get(id) || []) {
+        if (maxDistances.has(id)) candidates.set(child, Math.max(candidates.get(child) ?? -1, maxDistances.get(id) + 1));
+        remaining.set(child, remaining.get(child) - 1);
+        if (!remaining.get(child)) {
+          if (candidates.has(child)) maxDistances.set(child, candidates.get(child));
+          ready.push(child);
+        }
+      }
+    }
+    // A cycle (and its blocked descendants) has no finite maximum; leave unknown.
     const descendantCounts = new Map();
     function descendantCount(id) {
       if (!descendantCounts.has(id)) {
@@ -83,7 +103,7 @@
       }
       return descendantCounts.get(id);
     }
-    return { distances, children, descendantCount };
+    return { minDistances, maxDistances, children, descendantCount };
   }
 
   function color(mode, node, distance) {
@@ -120,7 +140,7 @@
     const engine = new vendor.dagre.graphlib.Graph({ multigraph: true });
     // Longest-path normally anchors at sinks. Reverse input + RL instead gives
     // earliest SOURCE ranks: rank(node) = 1 + max(rank(parent)). Visible flow is LR.
-    engine.setGraph({ rankdir: 'RL', ranksep: 128, nodesep: 36, edgesep: 16,
+    engine.setGraph({ rankdir: 'RL', ranksep: RANK_GAP, nodesep: NODE_GAP, edgesep: 16,
       marginx: 80, marginy: 80, acyclicer: 'greedy', ranker: 'longest-path' });
     engine.setDefaultEdgeLabel(() => ({}));
     for (const id of [...nodes.keys()].sort(compare)) {
@@ -232,7 +252,7 @@
       head: `M${base.x},${base.y - half}L${route.end.x},${route.end.y}L${base.x},${base.y + half}Z` };
   }
 
-  return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, TYPE_COLORS, DEPTH_COLORS,
+  return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, DEPTH_COLORS,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS,
     displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
 });

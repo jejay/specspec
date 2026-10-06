@@ -10,7 +10,7 @@ export function graphHtml(resource: (name: string) => string, cspSource: string,
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
     <button id="migrate" hidden>Migrate specification</button>
     <label class="color-control" for="color-mode">Color by <select id="color-mode">
-    <option value="distance">Distance to manifesto</option><option value="type">Node type</option></select></label>
+    <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="type">Node type</option></select></label>
     <span id="revision"></span></header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>

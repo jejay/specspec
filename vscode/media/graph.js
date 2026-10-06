@@ -5,7 +5,7 @@
   const restored = vscode.getState() || {};
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
-  let colorMode = restored.colorMode === 'type' ? 'type' : 'distance';
+  let colorMode = ['type', 'max-distance'].includes(restored.colorMode) ? restored.colorMode : 'distance';
   let dirty = false, pending = false, creating = false, formFingerprint, formParents = [];
   let layoutFrame, layout, layoutKey, cameraScene;
   let drawnEdges = [], hoveredNode, hoverPoint;
@@ -35,6 +35,7 @@
   const parentsEditable = () => editable() && !pending && formNodeType() !== 'manifesto';
   const contextFor = id => currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
   const snapshotName = id => currentNodeById(id) ? 'target' : 'base';
+  const distanceFor = id => (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
 
   function saveDraft() {
     vscode.setState({ selected, view, colorMode, cameras: { ...cameras }, dirty, creating, formFingerprint, draft: dirty || creating ? {
@@ -135,7 +136,7 @@
     $('color-mode').value = colorMode;
     $('legend').replaceChildren();
     const entries = colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
-      : [...new Set([...graph.nodes.keys()].map(id => contextFor(id)?.distances.get(id)).filter(Number.isInteger))]
+      : [...new Set([...graph.nodes.keys()].map(distanceFor).filter(Number.isInteger))]
         .sort((a, b) => a - b).map(depth => [`${depth} hop${depth === 1 ? '' : 's'}`, model.color('distance', {}, depth)]);
     for (const [label, color] of entries) {
       const item = document.createElement('span'), swatch = document.createElement('i');
@@ -144,17 +145,20 @@
     }
     const explanation = document.createElement('span');
     explanation.className = 'legend-help';
-    explanation.textContent = colorMode === 'distance' ? 'Shortest path from manifesto · not a confidence score' : 'Existing node types · not review stages';
+    explanation.textContent = colorMode === 'type' ? 'Existing node types · not review stages'
+      : `${colorMode === 'max-distance' ? 'Longest' : 'Shortest'} directed path from manifesto · not a confidence score`;
     $('legend').append(explanation);
   }
 
   function compactCard(id, kind, related) {
-    const node = graph.nodes.get(id), context = contextFor(id), distance = context?.distances.get(id);
+    const node = graph.nodes.get(id), context = contextFor(id);
     const card = document.createElement('button');
     card.type = 'button'; card.className = `card ${node.type} ${kind || ''}`;
     card.dataset.nodeId = id; card.dataset.retired = String(Boolean(node.retired));
-    card.dataset.relation = related || ''; card.dataset.distance = distance ?? 'unknown';
-    card.style.setProperty('--node-accent', model.color(colorMode, node, distance));
+    card.dataset.relation = related || '';
+    card.dataset.minDistance = context?.minDistances.get(id) ?? 'unknown';
+    card.dataset.maxDistance = context?.maxDistances.get(id) ?? 'unknown';
+    card.style.setProperty('--node-accent', model.color(colorMode, node, distanceFor(id)));
     card.title = `${id}\n${node.path}\n${snapshotName(id)} revision context`;
     const heading = document.createElement('strong'); heading.textContent = title(node);
     const metadata = document.createElement('small'); metadata.textContent = `${description(node)} · ${id.slice(0, 8)}`;
@@ -163,9 +167,6 @@
       const item = document.createElement('span'); item.className = `badge ${className}`; item.textContent = text;
       if (tooltip) item.title = tooltip;
       badges.append(item);
-    }
-    if (related === 'parent' || related === 'both' || colorMode === 'distance') {
-      badge(`Manifesto: ${distance ?? '?'} hop${distance === 1 ? '' : 's'}`, 'distance-badge', 'Shortest directed path in this node’s revision.');
     }
     if (related === 'child' || related === 'both') {
       const count = context?.descendantCount(id) ?? 0;
@@ -201,7 +202,7 @@
       const card = document.createElement('article'), node = graph.nodes.get(selected);
       card.className = `card expanded ${creating ? $('node-type').value : node.type} ${kinds.get(selected) || ''}`;
       card.dataset.nodeId = focalId; card.dataset.retired = String(Boolean(!creating && node?.retired));
-      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, contextFor(selected)?.distances.get(selected)));
+      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected)));
       card.append($('node-details')); $('cards').append(card);
     }
     drawLegend(); updateButtons(); applyLayout();
@@ -344,7 +345,7 @@
     $('editor').hidden = false; $('title').textContent = title(node);
     $('identity').textContent = `${node.id}\n${description(node)}\n${node.path}`;
     const context = contextFor(node.id);
-    $('focus-context').textContent = `Manifesto distance: ${context.distances.get(node.id) ?? '?'} hops · ${context.descendantCount(node.id)} downstream nodes (all depths) · ${snapshotName(node.id)} revision`;
+    $('focus-context').textContent = `${context.descendantCount(node.id)} downstream nodes (all depths) · ${snapshotName(node.id)} revision`;
     $('type-label').hidden = true; $('slug-label').hidden = true;
     $('body').value = node.body; $('sources').value = JSON.stringify(node.sources, null, 2);
     $('sources-label').hidden = node.type !== 'implementation'; populateParents(node.parents, node.type);
@@ -387,7 +388,7 @@
     rememberCamera(); view = 'focus'; draw(); saveDraft();
   });
   $('color-mode').addEventListener('change', () => {
-    colorMode = $('color-mode').value === 'type' ? 'type' : 'distance'; draw(); saveDraft();
+    colorMode = ['type', 'max-distance'].includes($('color-mode').value) ? $('color-mode').value : 'distance'; draw(); saveDraft();
   });
 
   $('new').addEventListener('click', () => {

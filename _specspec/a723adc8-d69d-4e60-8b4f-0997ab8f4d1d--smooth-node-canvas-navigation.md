@@ -4,7 +4,7 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - ee57a451-059d-426b-868e-e898c2503082
-managed_hash: c4a41a7760ff6fda7ac245cf74b00c2c4ecb33304399715624f2a7dcf65dc96c
+managed_hash: 377d339d9a960d64f18a95fbee6768d6dd3291fab8c4c4a0ff3eabc5e35c006d
 ---
 # Navigate a node canvas with smooth panning and zooming
 
@@ -14,8 +14,12 @@ Users must be able to recover their bearings and reach content beyond the visibl
 area without layout reflow. Navigation must coexist with selecting nodes, editing
 text and settings, retained drafts, historical read-only views, and review cues.
 
+Node headlines should remain clearly rendered when zooming deeply into detail,
+not look like an enlarged low-resolution bitmap. Preserve native text/form behavior
+and world layout while improving headline rendering at high magnification.
+
 This requests the navigation experience, not Blender's computational node engine,
 file format, visual branding, or arbitrary graph mutation by dragging connections.
 
-Origin: the user's Blender-like node-editor request in this conversation.
+Origin: the user's high-zoom headline feedback and Blender-like node-editor request in this conversation.
 Library, algorithm, and gesture-binding choices are separate technical conclusions.

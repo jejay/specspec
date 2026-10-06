@@ -5,7 +5,7 @@ parents:
 - cbcde9ec-5c0b-480e-9401-cf50a4bfeb96
 - 4254f33d-ce29-4e33-830e-28a8edd2a51c
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-managed_hash: 30924b7f45372ba1a97850068acc62792547ef1b1429ba9a4a452625f9b4225c
+managed_hash: 5792b539457ba10cb392f10784195b4350356934d2985aa7d5ec5700142dd873
 ---
 # Compact placement without discarding multi-parent relationships
 
@@ -28,3 +28,12 @@ independence, full-height attachments, screen-strength floors, and tangent-align
 arrow approaches. Test root-neighbor vertical concentration as well as early
 columns, with full relationship membership and painted-stroke clearance. No tree,
 position, ranking, or choice preference is stored in canonical metadata.
+
+
+After removing distance badges, use slightly shorter compact cards while opening
+intrinsic rank and sibling gaps modestly. The initial tuning is 112-world-unit
+card height (was 128), rank gap 140 (was 128), and sibling gap 44 (was 36), with
+unchanged compact width and routing clearances. These are revisable implementation
+constants, not user-prescribed canonical sizes. Verify two-line headlines and the
+remaining badges fit, packing stays compact, and changed gaps preserve painted
+curve/head clearance and viewport-independent arrangement.

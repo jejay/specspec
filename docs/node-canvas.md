@@ -49,10 +49,24 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   at the current 12% camera limit. These are implementation choices, not canonical
   node metadata or fixed user pixel requirements. No edge/form DOM is recreated
   and no layout or mutation runs during zoom.
+- **Distance fills** select shortest (minimum/default) or longest (maximum)
+  directed edge counts from the manifesto, computed iteratively across each full
+  snapshot. Cycles/blocked descendants have no finite maximum. Surviving/removed
+  nodes use target/base metrics respectively, not the revision union or placement
+  backbone. Legends explain the selected metric; on-node hop labels are removed.
+  Downstream, Git, and withdrawn badges remain independent.
+- **Compact spacing** uses 112-unit-high cards instead of 128, with rank gap 140
+  instead of 128 and sibling gap 44 instead of 36. This opens the gaps modestly
+  while reducing vertical pitch 164 → 156. Widths/routing margins stay unchanged.
 - **D3 zoom** applies one transform to cards and SVG. The viewport clips overflow;
   panning is unconstrained and scale is 12–250%. Wheel/pinch anchoring and drag
   event handling come from the library. Framing/zoom buttons animate except under
   reduced-motion preferences. Resizing does not refit or reflow the graph.
+- **Native headline rasterization** has no permanent `will-change: transform`
+  hint on the world. Removing that hint visibly sharpened text (and SVG) in a
+  same-pose 250% before/after Chromium check without changing font/world sizes or
+  replacing native text. Browser/OS antialiasing and large-graph performance remain
+  platform-dependent; this is not a universal text-quality/performance proof.
 - **Native forms** retain text editing, selection, scrolling, resize, keyboard
   controls, drafts, and original stale-context fingerprints. Camera gestures are
   excluded from settings controls. Navigation alone sends no mutation commands.
@@ -104,7 +118,8 @@ Chromium checks the real graph, focuses nodes, pans/zooms, narrows the canvas,
 resizes a textarea, samples centerlines and stroke-normal boundaries for content
 intersections, verifies actual earliest ranks and vertical origin concentration,
 checks tangent/head joins and screen
-strength at 12% zoom, confirms circle-free endpoints, visits a real multiple-depth
+strength at 12% zoom, three color modes and revision-local bounds, label-free
+shorter-card fit, same-pose native headline rendering at 250%, confirms circle-free endpoints, visits a real multiple-depth
 parent neighborhood, restores the overview camera, and switches semantic colors. Optional
 `SPECSPEC_SCREENSHOT_DIR` captures screenshots of overview and focused views. The
 agent inspected these on Windows; this does not replace full human editing/review

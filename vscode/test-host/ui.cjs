@@ -85,7 +85,11 @@ exports.checkUI = async function checkUI(port) {
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
     assert.equal(await evaluate(`document.getElementById('accept')`), null);
-    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'type']);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'type']);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type']);
+    assert.equal(await evaluate(`document.querySelector('.distance-badge')`), null);
+    assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>c.offsetHeight===112&&c.scrollHeight<=c.clientHeight+1)`), 'Shorter compact cards must fit two-line headlines and remaining badges.');
+    assert.equal(await evaluate(`getComputedStyle(document.getElementById('graph')).willChange`), 'auto');
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>!('status' in c.dataset))`));
     assert.ok(await evaluate(`document.getElementById('migrate').hidden`), 'The current repository is already migrated.');
     assert.ok(await evaluate(`document.querySelector('[data-retired="true"] .retired-badge') !== null`), 'Withdrawal is labeled independently of Git newness.');
@@ -128,6 +132,46 @@ exports.checkUI = async function checkUI(port) {
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
       assert.deepEqual(await paint(),before,'Exiting hover restores computed paint and SVG order.');
       await evaluate(`delete window.__hoverPaths`);
+    }
+    async function restoreActualSize(pose) {
+      await evaluate(`document.getElementById('zoom-reset').click()`); await delay(250);
+      const now=await camera(),dx=pose.x-now.x,dy=pose.y-now.y;
+      await evaluate(`(() => { const v=document.getElementById('viewport'),r=v.getBoundingClientRect(),x=r.left+10,y=r.top+10;
+        v.dispatchEvent(new MouseEvent('mousedown',{view:window,bubbles:true,cancelable:true,button:1,clientX:x,clientY:y}));
+        window.dispatchEvent(new MouseEvent('mousemove',{view:window,bubbles:true,button:1,clientX:x+${dx},clientY:y+${dy}}));
+        window.dispatchEvent(new MouseEvent('mouseup',{view:window,bubbles:true,button:1,clientX:x+${dx},clientY:y+${dy}}));
+      })()`);
+      const restored=await camera();
+      // Synthetic MouseEvent client positions are integer-quantized in Chromium.
+      for(const key of ['x','y','k']) assert.ok(Math.abs(restored[key]-pose[key])<(key==='k'?0.001:1),`Camera restoration ${key}: ${JSON.stringify({pose,now,restored,dx,dy})}`);
+    }
+    async function checkHeadlineRendering() {
+      const pose=await camera(),world=await positions();
+      await evaluate(`window.__testHeadline=document.querySelector('#cards .card.manifesto strong')`);
+      const style=()=>evaluate(`(() => {const h=window.__testHeadline,r=h.getBoundingClientRect();return {text:h.textContent,width:h.offsetWidth,height:h.offsetHeight,font:getComputedStyle(h).fontSize,screenWidth:r.width,screenHeight:r.height,willChange:getComputedStyle(document.getElementById('graph')).willChange};})()`);
+      const normal=await style();
+      const zoom=()=>evaluate(`(() => {const h=window.__testHeadline,r=h.getBoundingClientRect(),v=document.getElementById('viewport');v.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-6000,clientX:r.left+r.width/2,clientY:r.top+r.height/2}));})()`);
+      // A/B probe of the old compositor hint at the same pose; only this test
+      // temporarily restores it. Production has no forced raster promotion.
+      await evaluate(`document.getElementById('graph').style.willChange='transform'`); await delay(100);
+      await zoom();await delay(250);
+      const hintedPose=await camera(); assert.equal(hintedPose.k,2.5);
+      await screenshot('headline-before-250');
+      // Removing the hint at this exact pose isolates raster behavior from any
+      // camera/font/layout change (including subpixel mouse-coordinate rounding).
+      await evaluate(`document.getElementById('graph').style.willChange=''`);await delay(300);
+      const high=await style();
+      await screenshot('headline-after-250');
+      assert.equal(high.willChange,'auto');assert.equal(high.font,normal.font);
+      assert.equal(high.width,normal.width);assert.equal(high.height,normal.height);assert.equal(high.text,normal.text);
+      // getBoundingClientRect also includes any host/webview CSS zoom; compare
+      // screen ratios rather than assuming it equals unscaled offset dimensions.
+      assert.ok(Math.abs(high.screenWidth-normal.screenWidth*hintedPose.k/pose.k)<1,JSON.stringify({normal,high,pose,hintedPose}));
+      assert.ok(Math.abs(high.screenHeight-normal.screenHeight*hintedPose.k/pose.k)<1,JSON.stringify({normal,high,pose,hintedPose}));
+      assert.equal(await positions(),world);
+      for(const key of ['x','y','k']) assert.ok(Math.abs((await camera())[key]-hintedPose[key])<0.01,'Before/after text must have the same camera pose.');
+      assert.ok(await evaluate(`window.__testHeadline===document.querySelector('#cards .card.manifesto strong')&&!document.querySelector('#cards canvas,#cards img')`));
+      await restoreActualSize(pose);await evaluate(`delete window.__testHeadline`);
     }
     const initialPositions = await positions();
     assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link:not(.removed)')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`), 'Target relationships progress LR; removed references are overlays and may share or reverse columns.');
@@ -179,6 +223,8 @@ exports.checkUI = async function checkUI(port) {
     })()`);
     assert.deepEqual(await curveCollisions(), [], 'Curves must not cross node content.');
     await screenshot('origin-initial');
+    await checkHeadlineRendering();
+    assert.equal(await positions(),initialPositions);
     // Actual browser event handling; no special production test commands.
     const beforeZoom = await camera();
     await evaluate(`(() => { const v=document.getElementById('viewport'),r=v.getBoundingClientRect(); v.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-100,clientX:r.left+300,clientY:r.top+200})); })()`);
@@ -230,7 +276,8 @@ exports.checkUI = async function checkUI(port) {
     const branch = await evaluate(`(() => { const cards = [...document.querySelectorAll('[data-relation="child"]')].sort((a,b) => Number(b.dataset.downstream)-Number(a.dataset.downstream)); return cards[0]?.dataset.nodeId; })()`);
     assert.ok(branch);
     await evaluate(`document.querySelector('[data-node-id="' + ${JSON.stringify(branch)} + '"]').click()`);
-    assert.ok(await evaluate(`document.querySelector('[data-relation="parent"] .distance-badge') !== null`));
+    assert.equal(await evaluate(`document.querySelector('.distance-badge')`), null);
+    assert.ok(await evaluate(`!document.getElementById('focus-context').textContent.match(/distance|hops/i)`));
     assert.ok(await evaluate(`document.querySelector('#cards .expanded').contains(document.getElementById('body'))`));
     assert.ok(await evaluate(`(() => { const focus=document.querySelector('.expanded'); return [...document.querySelectorAll('[data-relation="parent"]')].every(p=>parseFloat(p.style.left)+p.offsetWidth < parseFloat(focus.style.left)) && [...document.querySelectorAll('[data-relation="child"]')].every(c=>parseFloat(c.style.left)>parseFloat(focus.style.left)+focus.offsetWidth); })()`));
     const focusedPositions = await positions(), focusedCamera = await camera();
@@ -273,7 +320,7 @@ exports.checkUI = async function checkUI(port) {
     const multipleParent = await evaluate(`(() => {
       const cards=[...document.querySelectorAll('#cards .card')],links=[...document.querySelectorAll('#edges .link')];
       return cards.filter(c=>c.classList.contains('requirement')).map(c=>({id:c.dataset.nodeId,parents:links.filter(p=>p.dataset.child===c.dataset.nodeId).map(p=>cards.find(b=>b.dataset.nodeId===p.dataset.parent))}))
-        .filter(c=>c.parents.length>=2&&new Set(c.parents.map(p=>p.dataset.distance)).size>=2).sort((a,b)=>b.parents.length-a.parents.length)[0]?.id;
+        .filter(c=>c.parents.length>=2&&new Set(c.parents.map(p=>p.dataset.minDistance)).size>=2).sort((a,b)=>b.parents.length-a.parents.length)[0]?.id;
     })()`);
     assert.ok(multipleParent,'Use an actual multiple-depth parent neighborhood.');
     await evaluate(`document.querySelector('[data-node-id="' + ${JSON.stringify(multipleParent)} + '"]').click()`);
@@ -288,8 +335,25 @@ exports.checkUI = async function checkUI(port) {
     for(const key of ['x','y','k']) assert.ok(Math.abs(restoredCamera[key]-overviewCamera[key])<0.01);
     await evaluate(`document.getElementById('color-mode').value='type'; document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Existing node types')`));
-    await evaluate(`document.getElementById('color-mode').value='distance'; document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
-    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Shortest path')`));
+    const paletteWorld=await positions(),paletteCamera=await camera();
+    const minimum=await evaluate(`(() => {document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'));return [...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c.style.getPropertyValue('--node-accent')]);})()`);
+    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Shortest directed path')`));
+    await evaluate(`document.getElementById('color-mode').value='max-distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Longest directed path')`));
+    const maximum=await evaluate(`[...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c.style.getPropertyValue('--node-accent')])`);
+    assert.ok(maximum.some(([id,color])=>minimum.find(([key])=>key===id)[1]!==color),'Unequal root paths must produce different selected fills.');
+    assert.equal(await positions(),paletteWorld);assert.deepEqual(await camera(),paletteCamera);
+    assert.equal(await evaluate(`document.querySelector('.distance-badge')`),null);
+    assert.ok(await evaluate(`(() => {
+      const cards=[...document.querySelectorAll('#cards .card')],links=[...document.querySelectorAll('#edges .link:not(.removed)')],root=cards.find(c=>c.classList.contains('manifesto')).dataset.nodeId;
+      const min=new Map([[root,0]]),max=new Map([[root,0]]),queue=[root];
+      for(let i=0;i<queue.length;i++) for(const p of links.filter(p=>p.dataset.parent===queue[i])) if(!min.has(p.dataset.child)){min.set(p.dataset.child,min.get(queue[i])+1);queue.push(p.dataset.child);}
+      for(let round=0;round<cards.length;round++) for(const c of cards){if(max.has(c.dataset.nodeId))continue;const parents=links.filter(p=>p.dataset.child===c.dataset.nodeId).map(p=>p.dataset.parent);if(parents.length&&parents.every(id=>max.has(id)))max.set(c.dataset.nodeId,1+Math.max(...parents.map(id=>max.get(id))));}
+      return cards.every(c=>Number(c.dataset.minDistance)===min.get(c.dataset.nodeId)&&Number(c.dataset.maxDistance)===max.get(c.dataset.nodeId));
+    })()`),'Both modes use all revision relationships, not the visible placement backbone.');
+    await screenshot('distance-maximum');
+    await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+    await screenshot('distance-minimum');
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
     assert.equal(await evaluate(`document.getElementById('parent-add-controls').hidden`), true);
@@ -298,7 +362,7 @@ exports.checkUI = async function checkUI(port) {
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; incident curve/head hover with unchanged geometry, approval-free controls, withdrawal labels, distance/type colors, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, incident curve/head hover with unchanged geometry, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

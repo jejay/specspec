@@ -195,7 +195,7 @@ test('nodes are editable without approval states or an acceptance action', t => 
   const { dom, $, saved } = fixture(t);
   assert.equal($('accept'), null);
   assert.equal($('save').textContent, 'Save node');
-  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'type']);
+  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'max-distance', 'type']);
   assert.equal(saved().colorMode, 'distance');
   for (const card of $('cards').children) {
     assert.equal('status' in card.dataset, false);
@@ -431,7 +431,9 @@ test('click opens only the neighborhood and places the editor inside the expande
   const expanded = dom.window.document.querySelector('.expanded[data-node-id="child"]');
   assert.ok(expanded.contains($('editor')));
   const parent = dom.window.document.querySelector('[data-node-id="root"]');
-  assert.match(parent.textContent, /Manifesto: 0 hops/);
+  assert.equal(parent.querySelector('.distance-badge'), null);
+  assert.equal(parent.dataset.minDistance, '0');
+  assert.doesNotMatch($('focus-context').textContent, /distance|hops/i);
   const childCard = dom.window.document.querySelector('[data-node-id="grand"]');
   assert.equal(childCard.dataset.downstream, '2');
   assert.match(childCard.textContent, /2 downstream/);
@@ -496,7 +498,8 @@ test('color modes have legends, persist without canonical changes and do not era
   $('color-mode').value = 'type'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
   const card = dom.window.document.querySelector('[data-node-id="child"]');
   assert.notEqual(card.style.getPropertyValue('--node-accent'), oldColor);
-  assert.equal(card.dataset.distance, '1');
+  assert.equal(card.dataset.minDistance, '1');
+  assert.equal(card.dataset.maxDistance, '1');
   assert.match(card.querySelector('.git-badge').textContent, /changed/);
   assert.match($('legend').textContent, /Existing node types/);
   assert.equal(saved().colorMode, 'type');
@@ -505,6 +508,114 @@ test('color modes have legends, persist without canonical changes and do not era
   assert.match(card.querySelector('.retired-badge').textContent, /retired/);
   assert.equal('status' in target.nodes[1], false);
   assert.equal('distance' in target.nodes[1], false);
+});
+
+function distanceFixture(t) {
+  const f = fixture(t), nodes = [root, child, { ...child, id: 'a' }, { ...child, id: 'b', parents: ['a'] }];
+  nodes[1] = { ...child, parents: ['root', 'b'] };
+  f.snapshot = { ...f.snapshot, nodes, edges: [['root', 'a'], ['a', 'b'], ['b', 'child'], ['root', 'child']] };
+  f.send({ type: 'snapshot', snapshot: f.snapshot, diagnostics: [], readonly: false });
+  f.card = id => f.dom.window.document.querySelector(`[data-node-id="${id}"]`);
+  return f;
+}
+
+test('minimum/maximum distance modes have exact labels, different fills/legends, and no on-node hop text', t => {
+  const { dom, $, card, snapshot, messages, saved } = distanceFixture(t);
+  assert.deepEqual([...$('color-mode').options].map(o => o.textContent), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type']);
+  const world = [...$('cards').children].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.height]);
+  const camera = $('graph').style.transform, before = JSON.stringify(snapshot);
+  assert.equal(card('child').style.getPropertyValue('--node-accent'), model.color('distance', child, 1));
+  assert.match($('legend').textContent, /Shortest directed path/);
+  $('color-mode').value = 'max-distance'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
+  assert.equal(card('child').style.getPropertyValue('--node-accent'), model.color('max-distance', child, 3));
+  assert.equal(card('child').dataset.minDistance, '1');
+  assert.equal(card('child').dataset.maxDistance, '3');
+  assert.match($('legend').textContent, /3 hops.*Longest directed path/);
+  assert.equal(saved().colorMode, 'max-distance');
+  assert.deepEqual([...$('cards').children].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.height]), world);
+  assert.equal($('graph').style.transform, camera);
+  card('child').click();
+  for (const mode of ['type', 'distance', 'max-distance']) {
+    $('color-mode').value = mode; $('color-mode').dispatchEvent(new dom.window.Event('change'));
+    assert.equal(dom.window.document.querySelector('.distance-badge'), null);
+    assert.doesNotMatch($('cards').textContent, /Manifesto:|\b\d+ hops?\b/);
+    assert.doesNotMatch($('focus-context').textContent, /distance|hops/i);
+  }
+  assert.equal(JSON.stringify(snapshot), before);
+  assert.ok(messages.every(m => ['ready', 'rendered'].includes(m.type)));
+});
+
+test('distance switches and refreshed path bounds retain the same dirty form, caret, fingerprint and camera', t => {
+  const { dom, $, card, snapshot, send, saved } = distanceFixture(t);
+  card('child').click();
+  const body = $('body'); body.value = '# Draft'; body.dispatchEvent(new dom.window.Event('input'));
+  body.focus(); body.setSelectionRange(2, 5, 'backward');
+  const camera = $('graph').style.transform;
+  $('color-mode').value = 'max-distance'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
+  assert.equal($('body'), body);
+  assert.equal(dom.window.document.activeElement, body);
+  assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
+  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal($('graph').style.transform, camera);
+  // Bounds come from the whole snapshot: b remains at distance two in this focus.
+  assert.equal(card('b').dataset.maxDistance, '2');
+  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'new' }, diagnostics: [], readonly: false });
+  assert.equal(saved().colorMode, 'max-distance');
+  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal($('body').value, '# Draft');
+  assert.deepEqual([body.selectionStart, body.selectionEnd], [2, 5]);
+});
+
+test('maximum-distance preference restores without rebasing a draft or camera', t => {
+  const { $, saved } = fixture(t, { restored: {
+    colorMode: 'max-distance', selected: 'child', view: 'focus', dirty: true,
+    formFingerprint: 'old', cameras: { 'focus:child': { x: 40, y: -70, k: 1.6 } },
+    draft: { body: '# Restored', sources: '[]', slug: '', nodeType: 'requirement', parents: ['root'] },
+  } });
+  assert.equal($('color-mode').value, 'max-distance');
+  assert.equal(saved().colorMode, 'max-distance');
+  assert.equal(saved().formFingerprint, 'old');
+  assert.equal($('body').value, '# Restored');
+  assert.deepEqual({ ...saved().cameras['focus:child'] }, { x: 40, y: -70, k: 1.6 });
+});
+
+test('min/max revision metrics stay separate even when historical overlays create a display cycle', t => {
+  const { dom, $, card, snapshot, send } = distanceFixture(t);
+  const old = { ...child, id: 'old', parents: ['child'] };
+  const base = { ...snapshot, nodes: [...snapshot.nodes, old], edges: [...snapshot.edges, ['child', 'old']] };
+  const target = { ...snapshot, nodes: [root, { ...child, parents: ['root'] }, { ...child, id: 'a', parents: ['child'] }, { ...child, id: 'b', parents: ['a'] }],
+    edges: [['root', 'child'], ['child', 'a'], ['a', 'b']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: true, diff: {
+    base, target, changes: [{ id: 'old', kind: 'removed' }], added_edges: [['child', 'a']], removed_edges: [['root', 'a'], ['b', 'child'], ['child', 'old']], base_ref: 'base', target_ref: 'target',
+  } });
+  $('color-mode').value = 'max-distance'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
+  assert.equal(card('child').dataset.maxDistance, '1', 'A surviving node uses target paths, not base or union.');
+  assert.equal(card('old').dataset.minDistance, '2');
+  assert.equal(card('old').dataset.maxDistance, '4', 'A removed node uses the complete base paths.');
+  assert.equal(card('old').style.getPropertyValue('--node-accent'), model.color('max-distance', old, 4));
+  card('old').click();
+  assert.equal($('save').disabled, true);
+  assert.doesNotMatch($('focus-context').textContent, /hops|distance/i);
+});
+
+test('high zoom keeps native headline/form identity, intrinsic size, caret and unhinted text styles', t => {
+  const { dom, $, messages, saved } = fixture(t);
+  const style = dom.window.document.createElement('style');
+  style.textContent = readFileSync(join(__dirname, '../media/graph.css'), 'utf8'); dom.window.document.head.append(style);
+  assert.doesNotMatch(style.textContent, /will-change\s*:\s*transform/);
+  assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.card')).height, '112px');
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  const headline = $('title'), body = $('body'), card = headline.closest('.card'), width = card.style.width;
+  body.value = '# Native draft'; body.dispatchEvent(new dom.window.Event('input')); body.focus(); body.setSelectionRange(2, 7);
+  $('viewport').dispatchEvent(new dom.window.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -6000, clientX: 400, clientY: 250 }));
+  assert.equal(Number($('viewport').dataset.scale), 2.5);
+  assert.equal($('title'), headline); assert.equal($('body'), body);
+  assert.equal(card.style.width, width);
+  assert.equal(dom.window.getComputedStyle(headline).fontSize, '18px');
+  assert.deepEqual([body.selectionStart, body.selectionEnd], [2, 7]);
+  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(dom.window.document.querySelector('#cards canvas, #cards img'), null);
+  assert.ok(messages.every(m => ['ready', 'rendered'].includes(m.type)));
 });
 
 test('removed-node metrics come from the base snapshot rather than a revision union', t => {

@@ -6,13 +6,15 @@ parents:
 - e3494686-5da4-40f5-a622-f823c2e0c9b2
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
 - 51c3e963-674e-4d5d-bd7a-b8d63649e1c8
-managed_hash: d1864540bb0332f553f1218fa068bd050914a422cb632b7775fcbe736fe92f13
+managed_hash: 52c889d8f56fa22f1c57805a99f7f5ab5f66f1fb9413a711c0ec6196d65318f0
 ---
 # Separate semantic fills from Git accents and route links at actual boundaries
 
-Offer shortest-distance and existing-node-type color modes with legends and textual
-badges, using theme-compatible tinted fills. Default to distance, and map a restored
-obsolete status-mode preference to distance without changing drafts or cameras.
+Offer minimum-distance, maximum-distance, and existing-node-type color modes with
+legends and theme-compatible tinted fills. Default to minimum; keep the previous
+distance preference and obsolete-status fallback mapped to minimum without
+changing drafts or cameras. Do not repeat hop-distance labels on compact/expanded
+cards. Keep downstream and Git/withdrawal badges separately understandable.
 Withdrawal is labeled separately, not a confidence stage. Git additions/removals/
 changes retain separate labels, strokes, and patterns rather than replacing semantic
 colors. Persist presentation choices only in webview state.

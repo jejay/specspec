@@ -5,7 +5,7 @@ parents:
 - 48f77f19-391f-46d0-b06f-ec7530be4575
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - c93ab412-77b7-4849-a556-d8e3994b825b
-managed_hash: 1458755ef307340304161e5c5182fe1463485f6782ccc04168f9ae6e6cfa8e44
+managed_hash: 84516745fb9b5a79373e026c07741939c7957cab786eab55224605e652f616e8
 ---
 # Concentrate graph development near the manifesto
 
@@ -19,5 +19,10 @@ Retain left-to-right relationship development, readable non-overlapping cards,
 and arrangement independent of the viewport. Density must come from logical
 relationships and presentation, not stored node positions or spectrum scores.
 
-Origin: the user's layout-heuristic correction in this conversation. This states
+Give adjacent nodes just a little more breathing room after removing repetitive
+hop badges, without losing compact development near the origin. The simpler cards
+may still yield a denser graph overall. This requests a modest spacing adjustment,
+not a larger sparse graph, viewport-driven compression, or fixed pixel constants.
+
+Origin: the user's modest-spacing request and earlier layout-heuristic correction in this conversation. This states
 the requested result; ranking, spacing, and library adaptations are conclusions.
