@@ -6,6 +6,7 @@
   "publisher": "specspec-dev",
   "private": true,
   "license": "MIT",
+  "icon": "media/app-icon.png",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -14,7 +15,8 @@
   ],
   "main": "./out/extension.js",
   "activationEvents": [
-    "workspaceContains:_specspec/*.md"
+    "workspaceContains:_specspec/*.md",
+    "onView:specspec.graph"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -29,7 +31,13 @@
       },
       {
         "command": "specspec.compareRevisions",
-        "title": "SpecSpec: Compare Revisions"
+        "title": "SpecSpec: Compare Revisions",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "specspec.selectProject",
+        "title": "SpecSpec: Select Project",
+        "icon": "$(folder-opened)"
       }
     ],
     "configuration": {
@@ -51,6 +59,45 @@
           "description": "Argument prefix, such as [\"-m\", \"specspec\"]."
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "specspec",
+          "title": "SpecSpec",
+          "icon": "media/specspec.svg"
+        }
+      ]
+    },
+    "views": {
+      "specspec": [
+        {
+          "type": "webview",
+          "id": "specspec.graph",
+          "name": "Graph"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "specspec.selectProject",
+          "when": "view == specspec.graph",
+          "group": "navigation@1"
+        },
+        {
+          "command": "specspec.compareRevisions",
+          "when": "view == specspec.graph",
+          "group": "navigation@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "specspec.openGraph",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@20"
+        }
+      ]
     }
   },
   "scripts": {

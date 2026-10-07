@@ -33,7 +33,11 @@ function fixture(t, options = {}) {
         inspect: name => options.settings?.[name] !== undefined ? { globalValue: options.settings[name] } : {},
       }),
     },
-    commands: { registerCommand: (name, handler) => { calls.commands.set(name, handler); return noopDisposable; } },
+    commands: { registerCommand: (name, handler) => { calls.commands.set(name, handler); return noopDisposable; },
+      executeCommand: async name => {
+        assert.equal(name, 'specspec.graph.focus');
+        if (!calls.panels.length) calls.provider.resolveWebviewView(vscode.window.createWebviewView());
+      } },
     extensions: { getExtension: () => undefined },
     window: {
       createOutputChannel: () => output,
@@ -42,14 +46,18 @@ function fixture(t, options = {}) {
       showErrorMessage: async message => { calls.errors.push(message); },
       showInputBox: async () => options.revisions?.shift(),
       showWarningMessage: async message => { calls.warnings.push(message); return options.confirm ? 'Confirm' : undefined; },
-      createWebviewPanel: () => {
+      registerWebviewViewProvider: (id, provider, options) => {
+        assert.equal(id, 'specspec.graph'); assert.equal(options.webviewOptions.retainContextWhenHidden, true);
+        calls.provider = provider; return noopDisposable;
+      },
+      createWebviewView: () => {
         let listener;
         let dispose;
         const messages = [];
         const panel = {
           messages,
           send: value => listener(value),
-          reveal() {},
+          show() {},
           dispose: () => dispose?.(),
           onDidDispose: handler => { dispose = handler; return noopDisposable; },
           webview: {
@@ -257,4 +265,23 @@ test('development interpreter avoids PATH while explicit CLI settings override i
   await configured.calls.commands.get('specspec.openGraph')();
   assert.equal(configured.calls.cli[0].command, 'uvx');
   assert.deepEqual(configured.calls.cli[0].prefix, ['specspec']);
+});
+
+
+test('Activity Bar activation auto-loads its graph without creating an editor tab', async t => {
+  const {calls}=fixture(t);assert.equal(calls.panels.length,0);
+  const view = { show(){}, onDidDispose(){return noopDisposable;}, webview:{options:{},cspSource:'local',asWebviewUri:v=>v.fsPath,
+    onDidReceiveMessage(fn){this.listener=fn;return noopDisposable;},postMessage(value){calls.iconSnapshot=value;if(value.type==='snapshot')this.listener({type:'rendered',renderToken:value.renderToken,nodeCount:value.snapshot.nodes.length});return Promise.resolve(true);},
+    set html(value){this.listener({type:'ready'});}}};
+  calls.provider.resolveWebviewView(view);await waitFor(()=>calls.iconSnapshot?.type==='snapshot');
+  assert.equal(calls.panels.length,0,'No createWebviewPanel/editor tab API is used.');
+  calls.provider.dispose();
+});
+
+test('Select Project resolves a nested graph in the same Activity Bar view', async t => {
+  const {root,uri,calls}=fixture(t);await calls.commands.get('specspec.openGraph')();
+  const nested=join(root,'example/gantt');mkdirSync(join(nested,'_specspec'),{recursive:true});
+  await calls.commands.get('specspec.openGraph')(uri(nested));
+  assert.equal(calls.panels.length,1);assert.equal(calls.cli.at(-1).root,nested);
+  await calls.commands.get('specspec.openGraph')();assert.equal(calls.cli.at(-1).root,nested);
 });

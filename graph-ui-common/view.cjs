@@ -3,10 +3,11 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
   const attr = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
     <meta name="specspec-project" content="${attr(options.scope || '')}">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; img-src ${cspSource}; script-src 'nonce-${nonce}';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="${resource('graph.css')}" rel="stylesheet"><title>SpecSpec Graph</title></head>
-    <body><header class="toolbar"><strong>SpecSpec</strong>
+    <link href="${resource('graph.css')}" rel="stylesheet"><link href="${resource('host.css')}" rel="stylesheet"><title>SpecSpec Graph</title></head>
+    <body><header class="toolbar"><span class="brand-icon" aria-hidden="true" style="mask-image:url('${attr(resource('specspec.svg'))}')"></span><strong>SpecSpec</strong>
+    <button id="project" title="Choose a local SpecSpec project">Open project</button>
     <button id="back" hidden>← Total graph</button><button id="refresh">Refresh</button>
     <button id="compare">Compare revisions</button><button id="workspace">HEAD / workspace</button>
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
@@ -40,7 +41,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <label id="sources-label">Source references (JSON)<textarea id="sources" rows="4" spellcheck="false"></textarea></label>
     <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="retire">Retire</button><button type="button" id="restore" hidden>Restore</button><button type="button" id="discard">Discard form edits</button></div></form>
     <section id="before-section" hidden><h3>Base revision text</h3><pre id="before"></pre></section></section></div>
-    <footer>Click a node to explore and edit its neighborhood. Fills: selected color mode. Git badges/strokes: added, removed, changed, renamed. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
+    <footer>Click a node to explore and edit its neighborhood. Fills: selected color mode. Git title/corner: A added, M modified, D deleted, R renamed. Linked-source and withdrawal cues remain separate. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
     <script nonce="${nonce}" src="${resource('host.js')}"></script>
     <script nonce="${nonce}" src="${resource('vendor/graph-vendor.js')}"></script>
     <script nonce="${nonce}" src="${resource('graph-model.js')}"></script>

@@ -15,6 +15,8 @@ exports.run = async function run() {
   await vscode.commands.executeCommand('workbench.action.closeSidebar');
   await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
   const snapshot = await vscode.commands.executeCommand('specspec.openGraph');
+  // Verify the real clipped sidebar, not an editor-tab rendering substitute.
+  await vscode.commands.executeCommand('workbench.action.focusSideBar');
   assert.ok(snapshot?.valid, 'Open Graph must load and render a valid graph.');
   assert.ok(snapshot.nodes.length > 0);
   assert.ok(snapshot.nodes.some(node => node.type === 'manifesto'));

@@ -1,8 +1,9 @@
-:root { color-scheme: light dark; --edge-normal: var(--vscode-descriptionForeground, #a2aaba); --edge-added: #42b68b; --edge-removed: #e27878; --edge-draft: #8f98ee; }
+:root { color-scheme: light dark; --edge-normal: var(--vscode-descriptionForeground, #a2aaba); --edge-added: #42b68b; --edge-removed: #e27878; --edge-draft: #8f98ee; --git-added: var(--vscode-gitDecoration-addedResourceForeground, #81b88b); --git-modified: var(--vscode-editorGutter-modifiedBackground, #0078d4); --git-deleted: var(--vscode-gitDecoration-deletedResourceForeground, #c74e39); }
 * { box-sizing: border-box; }
 body { margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); }
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px; border-bottom: 1px solid var(--vscode-panel-border); }
 .toolbar strong { margin-right: 8px; }
+.brand-icon { flex: 0 0 24px; width: 24px; height: 24px; display: inline-block; background: currentColor; mask-size: contain; mask-repeat: no-repeat; }
 button { cursor: pointer; padding: 6px 10px; color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: 1px solid transparent; border-radius: 5px; }
 button:hover { background: var(--vscode-button-hoverBackground); }
 button:disabled { opacity: .45; cursor: default; }
@@ -52,13 +53,17 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.implementation { border-radius: 20px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
-.badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 18px; }
+.card.added strong, .card.added h2, .git-corner.added { color: var(--git-added); }
+.card.changed strong, .card.changed h2, .card.renamed strong, .card.renamed h2, .git-corner.changed, .git-corner.renamed { color: var(--git-modified); }
+.card.removed strong, .card.removed h2, .git-corner.removed { color: var(--git-deleted); }
+.git-corner { position: absolute; right: 10px; bottom: 8px; font-size: 14px; font-weight: 700; line-height: 1; pointer-events: none; }
 .badges:empty { display: none; }
 .badge { font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--vscode-editorWidget-background); border: 1px solid color-mix(in srgb, var(--node-accent, #8993a4) 50%, transparent); white-space: nowrap; }
-.git-badge.added { color: var(--edge-added); border-color: var(--edge-added); }
-.git-badge.removed { color: var(--edge-removed); border-color: var(--edge-removed); }
-.git-badge.changed, .git-badge.source-changed { color: #dfad54; border-color: #dfad54; }
-.git-badge.renamed { color: #75a8ef; border-color: #75a8ef; }
+.git-badge.added { color: var(--git-added); border-color: var(--git-added); }
+.git-badge.removed { color: var(--git-deleted); border-color: var(--git-deleted); }
+.git-badge.changed, .git-badge.renamed { color: var(--git-modified); border-color: var(--git-modified); }
+.git-badge.source-changed { color: var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d); border-color: currentColor; }
 .retired-badge { color: #929baa; border-color: #929baa; }
 .card.expanded { height: auto; overflow: visible; padding: 18px; border-radius: 8px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .card.expanded:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
@@ -83,3 +88,13 @@ footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscod
 [hidden] { display: none !important; }
 body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); background: var(--vscode-editor-background); }
 @media (max-width: 700px) { .color-control { margin-left: 0; } footer { font-size: 10px; } .camera-controls { padding-inline: 6px; } }
+/* Narrow host chrome adapts, never world cards/ports/layout. */
+@media (max-width: 500px) {
+  .toolbar { padding: 8px; gap: 4px; }
+  .toolbar button { font-size: 11px; padding: 4px 6px; }
+  .color-control { width: 100%; min-width: 0; white-space: normal; }
+  .color-control select { flex: 1; min-width: 0; }
+  #legend { gap: 6px; padding: 5px 8px; }
+  footer { display: none; }
+  .canvas-shell { min-height: 120px; }
+}

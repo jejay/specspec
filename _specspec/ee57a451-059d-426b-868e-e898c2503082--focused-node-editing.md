@@ -4,7 +4,7 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 003d697b-4104-4fdf-8e05-0db572c436d0
-managed_hash: 781e724a5c34d52a7e15af712f76418c4d2394382388b6075a79c41b73c4d5cb
+managed_hash: 6c9cd479ba59684bd8bdf6f984b560881cb6abbc769a402a359720539cc39bab
 ---
 # Edit a selected node within its relationship context
 
@@ -19,3 +19,6 @@ in this presentation, without introducing an individual approval step.
 
 Origin: the user's requested tree UI revision, 2026-10-04. This records requested
 product behavior, not a chosen layout or rendering mechanism.
+
+
+The later Activity Bar request hosts the whole graph in VS Code's sidebar; this does not reinstate a separate settings sidebar alongside the graph. Settings still expand inside the selected node.

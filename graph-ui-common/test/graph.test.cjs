@@ -789,3 +789,49 @@ test('project text cannot inject markup or scripts into node cards', t => {
   assert.equal(dom.window.injected, undefined);
   assert.equal(dom.window.document.querySelector('.card strong').textContent, attack);
 });
+
+
+test('Git A/M/D/R corners match semantic kinds in compact and expanded cards', t => {
+  const {dom,snapshot,send,$}=fixture(t);
+  const added={...child,id:'added',body:'# Added'},removed={...child,id:'removed',body:'# Deleted'},renamed={...child,id:'renamed',body:'# Renamed'};
+  const base={...snapshot,nodes:[root,child,removed,renamed],edges:[['root','child'],['root','removed'],['root','renamed']]};
+  const target={...snapshot,nodes:[root,{...child,retired:true},added,renamed],edges:[['root','child'],['root','added'],['root','renamed']]};
+  send({type:'snapshot',snapshot:target,readonly:false,diagnostics:[],diff:{base,target,changes:[{id:'child',kind:'changed'},{id:'added',kind:'added'},{id:'removed',kind:'removed'},{id:'renamed',kind:'renamed'}],added_edges:[['root','added']],removed_edges:[['root','removed']]}});
+  for(const [id,letter] of [['child','M'],['added','A'],['removed','D'],['renamed','R']]){
+    const card=dom.window.document.querySelector(`[data-node-id="${id}"]`);
+    assert.equal(card.querySelector('.git-corner').textContent,letter);assert.match(card.querySelector('.git-corner').getAttribute('aria-label'),/comparison base/);
+  }
+  assert.equal(dom.window.document.querySelector('[data-node-id="child"]').dataset.retired,'true');
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  assert.equal(dom.window.document.querySelector('.expanded .git-corner').textContent,'M');
+  assert.equal($('title').textContent,'Child');
+});
+
+test('source-only impact and withdrawal never invent M or D corner letters', t => {
+  const {dom,snapshot,send}=fixture(t);
+  const target={...snapshot,nodes:[root,{...child,retired:true}]};
+  send({type:'snapshot',snapshot:target,readonly:false,diagnostics:[],diff:{base:target,target,changes:[],added_edges:[],removed_edges:[],source_affected:['child']}});
+  const card=dom.window.document.querySelector('[data-node-id="child"]');
+  assert.ok(card.classList.contains('source-changed'));assert.equal(card.querySelector('.git-corner'),null);
+  assert.match(card.querySelector('.retired-badge').textContent,/retired/);assert.match(card.querySelector('.git-badge').textContent,/source changed/);
+});
+
+test('Git refresh changes presentation without rebasing a dirty draft or its native caret', t => {
+  const {dom,snapshot,send,$,saved,messages}=fixture(t);
+  dom.window.document.querySelector('[data-node-id="child"]').click();const body=$('body');
+  body.value='# Dirty';body.dispatchEvent(new dom.window.Event('input'));body.focus();body.setSelectionRange(1,4,'backward');
+  const camera=$('graph').style.transform,old=saved().formFingerprint;
+  send({type:'snapshot',snapshot:{...snapshot,fingerprint:'new'},readonly:false,diagnostics:[],diff:{base:snapshot,target:snapshot,changes:[{id:'child',kind:'changed'}],added_edges:[],removed_edges:[]}});
+  assert.equal($('body'),body);assert.equal(body.value,'# Dirty');assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[1,4,'backward']);
+  assert.equal(saved().formFingerprint,old);assert.equal($('graph').style.transform,camera);
+  assert.equal(dom.window.document.querySelector('.expanded .git-corner').textContent,'M');
+  assert.ok(!messages.some(m=>['save','add','retire','restore'].includes(m.type)));
+});
+
+test('shared Git CSS reads theme tokens with Dark Modern defaults, separate from edge ink', () => {
+  const css=readFileSync(join(__dirname,'../media/graph.css'),'utf8');
+  for(const text of ['--vscode-gitDecoration-addedResourceForeground, #81b88b','--vscode-editorGutter-modifiedBackground, #0078d4','--vscode-gitDecoration-deletedResourceForeground, #c74e39'])assert.ok(css.includes(text));
+  assert.match(css,/\.git-corner \{[^}]*right: 10px; bottom: 8px/);
+  assert.match(css,/\.card\.changed strong/);assert.match(css,/\.card\.removed h2/);
+  assert.match(css,/--edge-added: #42b68b/);
+});

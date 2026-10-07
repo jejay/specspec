@@ -17,6 +17,10 @@ sources:
   symbol: worked-example run and history guide
 - path: example/gantt/history/verify.py
   symbol: actual receipt guards and full Git history
+- path: graph-ui-common/host/session.cjs
+  symbol: shared guarded session
+- path: graph-ui-common/view.cjs
+  symbol: single HTML shell
 - path: specspec-dev.code-workspace
 - path: tests/fixtures/README.md
   symbol: original tool-managed compatibility data
@@ -30,11 +34,17 @@ sources:
 - path: vscode/test-host/run.cjs
 - path: vscode/test-host/smoke.cjs
 - path: vscode/test-host/ui.cjs
-- path: graph-ui-common/host/session.cjs
-  symbol: shared guarded session
-- path: graph-ui-common/view.cjs
-  symbol: single HTML shell
-managed_hash: 11a891630e6d0d41fc44fe91d5b252cc1397978b4a2e635ea0b247b47b4b289b
+- path: graph-ui-common/package.json
+  symbol: shared suite/build
+- path: electron/README.md
+  symbol: actual standalone setup and target/verification limits
+- path: branding/README.md
+  symbol: original-preserving branding and inspected resvg renders
+- path: graph-ui-common/test-host/ui.cjs
+  symbol: common real-host tests
+- path: electron/test-host/run.cjs
+  symbol: desktop lifecycle/mutation evidence
+managed_hash: 90f22a2394339856f18e42be0d91fd07e08c639847aaf6b9e10019d6b876835e
 ---
 # Check and document this repository's approval-free graph
 
@@ -116,3 +126,32 @@ logos remain unchanged. The narrative is not external client authorization or re
 ## Shared UI extraction checkpoint
 
 The renderer/model/camera/CSS and DOM/model tests now have their single source in graph-ui-common. The editor wrapper delegates the template, bounded CLI/discovery and guarded GraphSession, while keeping VS Code authorization, dialogs, watching and messages. Historical test counts above remain original evidence. All 68 common and 23 editor-adapter tests pass at this checkpoint; six new shared-session tests strengthen modern fingerprint/complete-render and authorization/disposal guards. Twelve bundled license notices remain. Activity Bar, branding/Git cues and Electron are planned next, not claimed already implemented here.
+
+
+## Shared hosts and brand verification
+
+The root graph now has 66 nodes after four new intentions, five separate host/
+branding/Git conclusions, the shared implementation, and two desktop/icon evidence
+nodes; later agent integration remains a requirement without an implementation.
+The independent Gantt graph remains 44 nodes and its original history/receipt
+chain unchanged. All 72 Python, 72 common, 27 VS Code and six Electron tests pass.
+Real Windows hosts use cloned CLI/Git fixtures for A/M/D and one shared canvas
+regression suite; no actual canonical node is manually corrupted/deleted by those
+tests. Electron additionally performs actual guarded UI save/stale rejection,
+retained draft reload and historical/workspace switching. Screenshots and resvg
+24px light/dark/240px icon renders were inspected. A Windows portable app and
+self-contained VSIX are built/inspected separately; dependencies report no known
+audit findings, not a universal security guarantee.
+
+CI is configured for Linux/Windows desktop tests/packages and common/editor tests;
+Linux local execution and completed remote CI remain unverified. The unsupported
+container-order proposal was corrected with source/runtime evidence, not private
+layout manipulation. Future Claude Code/Codex adapters, installers/signing/updating,
+large-graph and full manual/accessibility/platform guarantees remain separate.
+Original loose logos, INTENTION_SPEC.md, LICENSE and pre-existing local settings
+are untouched; no push/hook installation occurs. Both exact staged graphs are
+validated before authorized commits. Historical counts/evidence above remain their
+original checkpoints, not current totals or an implicit approval ceremony.
+
+
+Final artifact checks passed: the self-contained 83-KiB VSIX and Windows portable ASAR contain current shared renderer/template/session bytes, branded assets and project/dependency licenses, without test screenshots, private diagnostics or node_modules. The actual portable executable passed the full real canvas/save/stale/reload/history checks. Final VS Code verified a 66-node target plus one removed overlay (67 displayed). Camera return assertions compare the most recent explicit framing, preserving strict geometry checks despite progress chrome changing available height. The desktop read test waits for completed-render acknowledgement before inspecting canonical files during a journaled write, and polls real revision/reload completion rather than assuming short fixed delays. These corrections strengthen the harness, not canonical review policy.

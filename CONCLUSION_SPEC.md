@@ -14,12 +14,33 @@ src/specspec/
   workspace.py    # Discovery, snapshots, managed mutations, recovery
   git.py          # Index/revision snapshots, semantic diff, hook installation
   cli.py          # Commands and versioned JSON responses
+graph-ui-common/
+  media/          # Single native renderer, camera/model/CSS source
+  host/           # Shared guarded session, CLI bridge and project discovery
+  view.cjs        # Shared nonce-protected local template
 vscode/
-  src/            # Extension host and CLI bridge
-  media/          # Local graph viewer/editor assets
+  src/            # Activity Bar adapter, VS Code dialogs/trust/watchers
+  media/          # Generated shared assets + tiny host adapter
+electron/
+  main.cjs        # Authorized local shell, bounded IPC/CLI and asset protocol
+  preload.cjs     # Narrow context-isolated/sandboxed renderer port
+branding/
+  dachshund.svg    # Exact supplied brand import
+  activity-icon.svg # Minimal themed 24x24 mask
 ```
 
-The extension invokes the CLI with argument arrays and JSON output. It contains no independent schema, withdrawal, or graph validation implementation. The Python library does not depend on VS Code or Git for ordinary workspace operations.
+The [portable-host revision](docs/platforms.md) shares the existing native canvas and
+serialized graph session rather than introducing renderer forks. VS Code hosts it
+in a retained Activity Bar WebviewView; an initial Electron shell targets Windows
+and Linux with external Python/Git. Its restricted renderer cannot select executables
+or read project files. Later Claude Code/Codex transports remain undecided work.
+A proposed manifest icon order was corrected after API/real-host inspection: users
+can drag the custom icon below Run/Debug, but the extension must not force private
+layout changes. The dachshund artwork and tiny monochrome derivative remain separate.
+Git title/corner A/M/D/R colors use theme tokens, with modified-gutter blue for M;
+semantic fills, source-only context and withdrawal remain independent.
+
+The adapters invoke the CLI with argument arrays and JSON output. It contains no independent schema, withdrawal, or graph validation implementation. The Python library does not depend on VS Code or Git for ordinary workspace operations.
 
 Distribution targets are `pipx install specspec` and `uvx --from specspec specspec`. Until published, support installation from a local checkout or Git URL. Do not assume the PyPI name is available; confirm it before publishing.
 

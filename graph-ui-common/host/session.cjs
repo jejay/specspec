@@ -64,6 +64,7 @@ class GraphSession {
     return this.host.cli(args, input);
   }
   async refresh(force = false, selectedId) {
+    await this.post({ type: 'notice', message: this.target ? 'Loading revision comparison…' : 'Refreshing specification graph…' });
     let diff, snapshot, diagnostics, note = '';
     if (this.target) {
       const response = await this.cli(['diff', '--base', this.base, '--target', this.target, '--json']);

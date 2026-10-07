@@ -49,7 +49,9 @@ python -m specspec validate --warnings-as-errors
 python -m ruff check .
 python -m ruff format --check .
 python -m pytest
+npm --prefix graph-ui-common test
 npm --prefix vscode test
+npm --prefix electron test
 ```
 
 Use `python -m specspec diff --base HEAD --json` for a review report. Before an

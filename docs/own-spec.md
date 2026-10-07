@@ -138,6 +138,34 @@ card fit, unchanged geometry, and existing hover/arrow/navigation protections.
 These rendering/spacing choices remain revisable, not canonical scores or universal
 font-quality/performance guarantees.
 
+## Shared hosts, Activity Bar, dachshund and Git cues
+
+The user's new [portable experience](../_specspec/5563649e-f76e-4c59-8e1d-52f60be938ee--host-independent-graph-experience.md),
+[Activity Bar](../_specspec/6f69c873-0ab4-450b-b306-791102affe95--activity-bar-graph-entry.md),
+[brand](../_specspec/c1d04e2d-2e56-4096-9549-b66141b46ebd--dachshund-brand.md) and
+[Git comparison](../_specspec/51c3e963-674e-4d5d-bd7a-b8d63649e1c8--git-graph-comparisons.md)
+outcomes remain separate from the [shared renderer/session](../_specspec/65f28474-18be-46f8-89f6-b9ce30a0ec96--shared-ui-and-host-session.md),
+[isolated Electron](../_specspec/449d5e44-2d5f-4c30-b4f3-9207b21b6286--isolated-electron-cli-shell.md),
+[WebviewView](../_specspec/e5c7bf6a-99d2-4173-94d4-a73cb796f470--activity-bar-webview-view.md),
+[minimal icon](../_specspec/a1595f98-cae9-4593-aae9-baff7789b435--minimal-themed-dachshund-icon.md) and
+[themed title/corner](../_specspec/037c4383-1934-4181-96e5-9fc3b2958e2f--theme-git-headlines-and-corner-letters.md) choices.
+See [the plan/verification boundary](platforms.md) and [desktop run guide](../electron/README.md).
+
+`graph-ui-common` owns the native canvas and guarded Python-backed operations. VS Code
+hosts it in a retained Activity Bar view; Electron supplies a restricted preload/main
+adapter. Both use the same code, not hand-maintained copies. Project-scoped persistence,
+inline forms, stale drafts, read-only history, backend integrity and native gestures stay
+intact. Later [Claude Code/Codex integration](../_specspec/cbd93667-ac3b-4461-9e9d-d9ed3da6d373--later-agent-host-integration.md)
+is still an intention, not an implemented connector.
+
+The proposed container `order: 4` was corrected after source/real-host inspection:
+VS Code's supported contribution API assigns extension containers after built-ins.
+Drag the dog below Run/Debug if desired; we don't override user layout or use private APIs.
+A/M/D titles/corners read current theme tokens (M uses modified-gutter blue); pure rename
+keeps R, and source-only/withdrawal cues do not masquerade as M/D. Electron supplies
+VS Code dark defaults. Miniature resvg and real Windows host screenshots were inspected.
+Linux is a target with a configured CI/Xvfb job, not locally executed evidence.
+
 ## An independent worked planning example
 
 The [worked-example intention](../_specspec/5e6030af-efb6-4123-a354-1afd099c5fce--worked-planning-example.md)
@@ -237,6 +265,12 @@ running before `recover --force-lock`. A migration journal restores the original
 whole schema; mixed partially converted files are never blessed by a read.
 
 ## Open the graph in VS Code
+
+Click the **dachshund Activity Bar icon**: the graph lives in the left sidebar,
+not an editor tab. Drag its icon below Run/Debug if preferred. **Open project** /
+**SpecSpec: Select Project** and Explorer folder → **SpecSpec: Open Graph** can
+choose `example/gantt` without opening another workspace. Narrowing the sidebar
+clips the same world; widen it or pan/zoom rather than expecting cards to reflow.
 
 After installing `.[dev]` into `.venv`, run `npm --prefix graph-ui-common ci` and `npm --prefix vscode ci`, open the
 repository root, and launch **Run SpecSpec on this repository** (F5). Alternatively

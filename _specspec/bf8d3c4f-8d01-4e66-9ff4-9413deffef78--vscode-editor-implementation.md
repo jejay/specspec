@@ -16,8 +16,13 @@ parents:
 - d70cdad5-5e03-4200-ac75-74cf6514e56c
 - f65750b7-0e8c-4014-b209-e2b480ab26d2
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
+- e5c7bf6a-99d2-4173-94d4-a73cb796f470
+- 037c4383-1934-4181-96e5-9fc3b2958e2f
+- a1595f98-cae9-4593-aae9-baff7789b435
 sources:
 - path: docs/node-canvas.md
+- path: graph-ui-common/host/session.cjs
+  symbol: shared guarded session
 - path: graph-ui-common/media/graph-camera.js
   symbol: createCamera
 - path: graph-ui-common/media/graph-model.js
@@ -51,6 +56,8 @@ sources:
   symbol: distance modes/revisions/preferences, labels, native drafts/text
 - path: graph-ui-common/test/graph.test.cjs
   symbol: hover membership, native forms, lifecycle and revision regressions
+- path: graph-ui-common/view.cjs
+  symbol: single HTML shell
 - path: tests/test_migration.py
   symbol: versioned backend compatibility
 - path: vscode/.vscodeignore
@@ -80,11 +87,19 @@ sources:
 - path: vscode/test/bridge.test.cjs
 - path: vscode/test/extension.test.cjs
 - path: vscode/test/project.test.cjs
-- path: graph-ui-common/host/session.cjs
-  symbol: shared guarded session
-- path: graph-ui-common/view.cjs
-  symbol: single HTML shell
-managed_hash: 7bb340c546ff8a13becc11a268cf4bbfcf4ec17629c4e1daebd75c5014cbf4c9
+- path: vscode/src/host.js
+  symbol: project-scoped messaging/state adapter
+- path: vscode/test/host.test.cjs
+  symbol: port state/draft isolation
+- path: graph-ui-common/test-host/ui.cjs
+  symbol: shared real-host geometry/hover/metrics
+- path: graph-ui-common/test-host/platform.cjs
+  symbol: actual Git title/corner/theme checks
+- path: branding/activity-icon.svg
+  symbol: Activity Bar mask
+- path: graph-ui-common/media/graph.css
+  symbol: git title/corner tokens and narrow host chrome
+managed_hash: 4d55ed544ec9b741a0591a555f7bf3e2a1fc4e29dfda23e36888fb1ad23b8723
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
@@ -278,3 +293,31 @@ remain separate verification boundaries.
 ## Shared UI extraction checkpoint
 
 The renderer/model/camera/CSS and DOM/model tests now have their single source in graph-ui-common. The editor wrapper delegates the template, bounded CLI/discovery and guarded GraphSession, while keeping VS Code authorization, dialogs, watching and messages. Historical test counts above remain original evidence. All 68 common and 23 editor-adapter tests pass at this checkpoint; six new shared-session tests strengthen modern fingerprint/complete-render and authorization/disposal guards. Twelve bundled license notices remain. Activity Bar, branding/Git cues and Electron are planned next, not claimed already implemented here.
+
+
+## Activity Bar host and Git/brand correction
+
+The graph now lives in one retained Activity Bar WebviewView, not an editor tab.
+GraphViewProvider serializes project opens, finishes pending old-root operations,
+resolves nested graphs, and focuses the existing view. Open project/Select Project
+and Explorer-folder Open Graph work without reopening the workspace. Renderer
+state is project-scoped; reload/switch never share dirty drafts between roots.
+Settings remain inline. The narrow host chrome adapts but cards/layout do not reflow.
+VS Code assigns extension containers after built-ins; inspection corrected the
+unsupported order-4 proposal. Drag the dachshund below Run/Debug if preferred;
+no private API or user-layout overwrite is used. The minimal mask/full package
+icon are built from branding assets, not hand-maintained platform copies.
+
+Shared CSS colors compact/expanded titles and bottom-right A/M/D/R from theme
+tokens. M deliberately uses modified-gutter blue instead of amber resource text.
+Source-only hints keep their own badge and do not invent M; withdrawal isn't D.
+Semantic fills, edge colors/dashes, geometry, fingerprints and native forms remain.
+All 72 common and 27 VS Code adapter tests pass. New tests cover exact corner kinds,
+source/withdrawal distinctions, native dirty/caret/camera retention, token defaults,
+scoped port state, direct icon activation and nested switching in the same view.
+Real installed Windows VS Code on a disposable canonical/Git fixture passed the
+same canvas/paint suite as Electron, including A/M/D, live theme changes, clipped
+sidebar hover and complete geometry/path metrics. Sidebar and miniature icon
+screenshots were inspected. Prior 51-node/full-editor-tab evidence remains historical,
+not a claim that today's surface or counts were tested then. Native project/revision
+pickers and complete manual workflows remain distinct from dispatched tests.

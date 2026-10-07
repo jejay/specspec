@@ -15,8 +15,11 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   camera/metrics/layout, bounded CLI bridge, and guarded serialized graph session.
   Small adapters provide messaging/state, project selection/authorization,
   confirmations, revision input, watchers, themes and asset URLs. No renderer forks.
-- VS Code: a retained WebviewView in an Activity Bar container, initial `order: 4`
-  near Run/Debug. User ordering remains VS Code's choice. Inline node forms remain;
+- VS Code: a retained WebviewView in an Activity Bar container. The initial
+  `order: 4` proposal was corrected after inspecting the supported contribution API
+  and a real launch: custom containers are assigned after built-ins, and a manifest
+  order field is ignored. Users can drag the icon below Run/Debug; don't use private
+  APIs or rewrite their layout to force it. Inline node forms remain;
   this host sidebar is not a second settings sidebar. Project-scoped state protects
   nested-project drafts. Open Graph focuses the container, with explicit project
   selection and historical comparison commands.
@@ -32,6 +35,26 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   `editorGutter.modifiedBackground`, because VS Code modified-file foreground is
   often amber. Standalone uses VS Code dark defaults. Source-only changes do not
   invent a node M; retirement is not deletion. Semantic fills remain independent.
+
+## Implemented first slice
+
+The shared extraction, Activity Bar view, minimal/full branding, themed A/M/D/R
+cues and initial Electron adapter are implemented. The real Windows hosts passed
+on disposable CLI-managed/Git fixtures; screenshots and miniature resvg renders
+were inspected. Tests cover 72 shared cases, 27 editor-adapter cases, six desktop
+security/state cases, and 72 Python cases. A Windows portable package and VSIX
+are inspected separately for shared bytes/offline assets/licenses. Electron's
+first runtime install may download the pinned framework; the application renderer
+has no remote dependencies or requests.
+
+Real desktop checks include an actual UI save, backend stale-fingerprint rejection,
+retained/reloaded native drafts and actual historical/workspace switching. The
+historical test polls completion rather than assuming a Git diff completes in five
+seconds. Root selection/authorization/native confirmations are covered by adapter
+and shared-session tests, not a claim of exhaustive manual dialog workflows. The
+same Chromium harness now selects the renderer's main-world port (not Electron's
+isolated preload world) and tests only actually visible hover targets in the clipped
+sidebar, while checking geometry/metrics for every displayed node/edge.
 
 ## Milestones and verification boundaries
 

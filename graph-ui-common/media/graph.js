@@ -150,6 +150,14 @@
     $('legend').append(explanation);
   }
 
+  function gitCorner(card, kind) {
+    const entry = { added: ['A', 'Added'], changed: ['M', 'Modified'], removed: ['D', 'Deleted'], renamed: ['R', 'Renamed'] }[kind];
+    if (!entry) return; // Linked-source impact is not a node modification.
+    const marker = document.createElement('span'); marker.className = `git-corner ${kind}`;
+    marker.textContent = entry[0]; marker.title = `${entry[1]} relative to the comparison base`;
+    marker.setAttribute('aria-label', marker.title); card.append(marker);
+  }
+
   function compactCard(id, kind, related) {
     const node = graph.nodes.get(id), context = contextFor(id);
     const card = document.createElement('button');
@@ -175,7 +183,7 @@
     }
     if (node.retired) badge('retired', 'retired-badge', 'Withdrawn, retained as history. Not an approval level.');
     if (kind) badge(kind.replace(/-/g, ' '), `git-badge ${kind}`);
-    card.append(heading, metadata, badges);
+    card.append(heading, metadata, badges); gitCorner(card, kind);
     card.addEventListener('click', () => select(id));
     return card;
   }
@@ -203,7 +211,7 @@
       card.className = `card expanded ${creating ? $('node-type').value : node.type} ${kinds.get(selected) || ''}`;
       card.dataset.nodeId = focalId; card.dataset.retired = String(Boolean(!creating && node?.retired));
       card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected)));
-      card.append($('node-details')); $('cards').append(card);
+      card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
     }
     drawLegend(); updateButtons(); applyLayout();
     if ($('cards').contains(activeInput) && !activeInput.disabled) {
@@ -439,6 +447,7 @@
     else { formFingerprint = state.snapshot.fingerprint; loadForm(); draw(); saveDraft(); }
   });
   for (const action of ['refresh', 'compare', 'workspace']) $(action).addEventListener('click', () => send({ type: action }));
+  $('project').addEventListener('click', () => send({ type: 'select-project' }));
 
   function showSnapshotNotes() {
     setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`)].filter(Boolean).join('\n'));
@@ -452,6 +461,7 @@
   }
 
   host.onMessage(message => {
+    if (message.type === 'notice') { setMessage(message.message); return; }
     if (message.type === 'error') { pending = false; setMessage(message.message); updateButtons(); return; }
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;
