@@ -13,9 +13,15 @@ sources:
 - path: README.md
 - path: docs/node-canvas.md
 - path: docs/own-spec.md
+- path: example/gantt/README.md
+  symbol: worked-example run and history guide
+- path: example/gantt/history/verify.py
+  symbol: actual receipt guards and full Git history
 - path: specspec-dev.code-workspace
 - path: tests/fixtures/README.md
   symbol: original tool-managed compatibility data
+- path: tests/test_gantt_example.py
+  symbol: independent nested graph/context/index and real stage audit
 - path: tests/test_migration.py
   symbol: legacy conversion and cross-version verification
 - path: tests/test_repository_spec.py
@@ -24,13 +30,11 @@ sources:
 - path: vscode/test-host/run.cjs
 - path: vscode/test-host/smoke.cjs
 - path: vscode/test-host/ui.cjs
-- path: tests/test_gantt_example.py
-  symbol: independent nested graph/context/index and real stage audit
-- path: example/gantt/history/verify.py
-  symbol: actual receipt guards and full Git history
-- path: example/gantt/README.md
-  symbol: worked-example run and history guide
-managed_hash: e8901be1814f397495a3bf808a0bd6894e302d02999f451a78a036dcf78421b6
+- path: graph-ui-common/host/session.cjs
+  symbol: shared guarded session
+- path: graph-ui-common/view.cjs
+  symbol: single HTML shell
+managed_hash: 11a891630e6d0d41fc44fe91d5b252cc1397978b4a2e635ea0b247b47b4b289b
 ---
 # Check and document this repository's approval-free graph
 
@@ -107,3 +111,8 @@ full recorded history and adds a no-install app model/browser job; remote CI rem
 unverified. Both real indexes are checked before every authorized stage commit.
 No hooks were installed and no files pushed. Original intention/license and unrelated
 logos remain unchanged. The narrative is not external client authorization or review proof.
+
+
+## Shared UI extraction checkpoint
+
+The renderer/model/camera/CSS and DOM/model tests now have their single source in graph-ui-common. The editor wrapper delegates the template, bounded CLI/discovery and guarded GraphSession, while keeping VS Code authorization, dialogs, watching and messages. Historical test counts above remain original evidence. All 68 common and 23 editor-adapter tests pass at this checkpoint; six new shared-session tests strengthen modern fingerprint/complete-render and authorization/disposal guards. Twelve bundled license notices remain. Activity Bar, branding/Git cues and Electron are planned next, not claimed already implemented here.

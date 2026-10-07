@@ -18,28 +18,43 @@ parents:
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
 sources:
 - path: docs/node-canvas.md
+- path: graph-ui-common/media/graph-camera.js
+  symbol: createCamera
+- path: graph-ui-common/media/graph-model.js
+  symbol: edgeAppearance
+- path: graph-ui-common/media/graph-model.js
+  symbol: layoutBackbone
+- path: graph-ui-common/media/graph-model.js
+  symbol: layoutGraph
+- path: graph-ui-common/media/graph-model.js
+  symbol: metrics
+- path: graph-ui-common/media/graph-model.js
+  symbol: metrics minDistances/maxDistances; CARD_HEIGHT, RANK_GAP, NODE_GAP
+- path: graph-ui-common/media/graph.css
+- path: graph-ui-common/media/graph.css
+  symbol: incident-highlight contrast and Git ink
+- path: graph-ui-common/media/graph.css
+  symbol: shorter cards, empty badge rows, unhinted world text
+- path: graph-ui-common/media/graph.js
+- path: graph-ui-common/media/graph.js
+  symbol: distanceFor, drawLegend, compactCard, loadForm
+- path: graph-ui-common/media/graph.js
+  symbol: legacyWorkspace and withdrawal presentation
+- path: graph-ui-common/media/graph.js
+  symbol: trackHover, syncHover, updateEdgeHighlights
+- path: graph-ui-common/src/graph-vendor.js
+- path: graph-ui-common/test/graph-model.test.cjs
+- path: graph-ui-common/test/graph-model.test.cjs
+  symbol: path bounds, defensive cycles/deep graphs, spacing
+- path: graph-ui-common/test/graph.test.cjs
+- path: graph-ui-common/test/graph.test.cjs
+  symbol: distance modes/revisions/preferences, labels, native drafts/text
+- path: graph-ui-common/test/graph.test.cjs
+  symbol: hover membership, native forms, lifecycle and revision regressions
 - path: tests/test_migration.py
   symbol: versioned backend compatibility
 - path: vscode/.vscodeignore
 - path: vscode/LICENSE
-- path: vscode/media/graph-camera.js
-  symbol: createCamera
-- path: vscode/media/graph-model.js
-  symbol: edgeAppearance
-- path: vscode/media/graph-model.js
-  symbol: layoutBackbone
-- path: vscode/media/graph-model.js
-  symbol: layoutGraph
-- path: vscode/media/graph-model.js
-  symbol: metrics
-- path: vscode/media/graph.css
-- path: vscode/media/graph.css
-  symbol: incident-highlight contrast and Git ink
-- path: vscode/media/graph.js
-- path: vscode/media/graph.js
-  symbol: legacyWorkspace and withdrawal presentation
-- path: vscode/media/graph.js
-  symbol: trackHover, syncHover, updateEdgeHighlights
 - path: vscode/package-lock.json
 - path: vscode/package.json
 - path: vscode/scripts/build-webview.cjs
@@ -49,38 +64,27 @@ sources:
   symbol: GraphPanel
 - path: vscode/src/extension.ts
   symbol: GraphPanel.handleMessage migration and withdrawal guards
-- path: vscode/src/graph-vendor.js
 - path: vscode/src/project.ts
   symbol: findProjectRoot
+- path: vscode/src/view.ts
+  symbol: Min./Max. Distance to Manifesto selector labels
 - path: vscode/src/view.ts
   symbol: graphHtml
 - path: vscode/test-host/run.cjs
 - path: vscode/test-host/smoke.cjs
 - path: vscode/test-host/ui.cjs
 - path: vscode/test-host/ui.cjs
+  symbol: checkHeadlineRendering and independent min/max path checks
+- path: vscode/test-host/ui.cjs
   symbol: checkHover computed paint and unchanged geometry
 - path: vscode/test/bridge.test.cjs
 - path: vscode/test/extension.test.cjs
-- path: vscode/test/graph-model.test.cjs
-- path: vscode/test/graph.test.cjs
-- path: vscode/test/graph.test.cjs
-  symbol: hover membership, native forms, lifecycle and revision regressions
 - path: vscode/test/project.test.cjs
-- path: vscode/media/graph-model.js
-  symbol: metrics minDistances/maxDistances; CARD_HEIGHT, RANK_GAP, NODE_GAP
-- path: vscode/media/graph.js
-  symbol: distanceFor, drawLegend, compactCard, loadForm
-- path: vscode/media/graph.css
-  symbol: shorter cards, empty badge rows, unhinted world text
-- path: vscode/src/view.ts
-  symbol: Min./Max. Distance to Manifesto selector labels
-- path: vscode/test/graph-model.test.cjs
-  symbol: path bounds, defensive cycles/deep graphs, spacing
-- path: vscode/test/graph.test.cjs
-  symbol: distance modes/revisions/preferences, labels, native drafts/text
-- path: vscode/test-host/ui.cjs
-  symbol: checkHeadlineRendering and independent min/max path checks
-managed_hash: f1afdef927a38164f303cd8e3144d0da20d989e817d1ba0d504e815e9df95019
+- path: graph-ui-common/host/session.cjs
+  symbol: shared guarded session
+- path: graph-ui-common/view.cjs
+  symbol: single HTML shell
+managed_hash: 7bb340c546ff8a13becc11a268cf4bbfcf4ec17629c4e1daebd75c5014cbf4c9
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
@@ -269,3 +273,8 @@ hover, low-zoom arrows, native gestures/cameras, and resized painted-stroke clea
 Minimum/maximum overview, focused, and same-pose 250-percent text images were captured
 and inspected. Full manual mutation/revision workflows and large-graph optimization
 remain separate verification boundaries.
+
+
+## Shared UI extraction checkpoint
+
+The renderer/model/camera/CSS and DOM/model tests now have their single source in graph-ui-common. The editor wrapper delegates the template, bounded CLI/discovery and guarded GraphSession, while keeping VS Code authorization, dialogs, watching and messages. Historical test counts above remain original evidence. All 68 common and 23 editor-adapter tests pass at this checkpoint; six new shared-session tests strengthen modern fingerprint/complete-render and authorization/disposal guards. Twelve bundled license notices remain. Activity Bar, branding/Git cues and Electron are planned next, not claimed already implemented here.

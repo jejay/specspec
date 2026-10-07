@@ -39,6 +39,8 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: vscode/package-lock.json
+      - run: npm --prefix ../graph-ui-common ci
+      - run: npm --prefix ../graph-ui-common test
       - run: npm ci
       - run: npm test
   gantt:

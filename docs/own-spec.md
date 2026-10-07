@@ -238,7 +238,7 @@ whole schema; mixed partially converted files are never blessed by a read.
 
 ## Open the graph in VS Code
 
-After installing `.[dev]` into `.venv`, run `npm --prefix vscode ci`, open the
+After installing `.[dev]` into `.venv`, run `npm --prefix graph-ui-common ci` and `npm --prefix vscode ci`, open the
 repository root, and launch **Run SpecSpec on this repository** (F5). Alternatively
 launch **Run SpecSpec Extension** from `vscode/`. Both use a dedicated development
 workspace/profile and explicitly select the local Python interpreter. Normal
@@ -261,7 +261,7 @@ Arrangement remains relation-derived and viewport-independent. Middle/background
 drag pans, wheel/pinch zooms, and buttons/keyboard actions frame the view. Cameras,
 colors, ranks, and counts remain presentation state, not canonical metadata.
 
-`npm --prefix vscode test` covers host/DOM/model regressions. `npm --prefix vscode
+`npm --prefix graph-ui-common test` covers shared session/DOM/model regressions; `npm --prefix vscode test` covers the editor adapter. `npm --prefix vscode
 run test:host` drives installed VS Code through a loopback Chromium debugger with
 a disposable profile, requiring Node 22+. It checks approval-free controls,
 withdrawn labels, three fill modes/path bounds, label-free card fit, high-zoom native

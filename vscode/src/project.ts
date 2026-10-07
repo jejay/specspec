@@ -1,27 +1,7 @@
-import { lstat } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+const shared: { findProjectRoot(start: string): Promise<string> } = require('./common/host/project.cjs');
 
 /** Match the CLI's nearest-workspace discovery, including invalid nearest entries. */
-export async function findProjectRoot(start: string): Promise<string> {
-  let current = resolve(start);
-  const selected = await lstat(current);
-  if (selected.isFile()) current = dirname(current);
-  while (true) {
-    try {
-      await lstat(join(current, '_specspec'));
-      // Let the Python backend diagnose files/symlinks/invalid graphs. Never
-      // silently fall back past an existing but invalid nearest workspace.
-      return current;
-    } catch (error) {
-      const code = (error as NodeJS.ErrnoException).code;
-      if (code !== 'ENOENT') throw error;
-    }
-    const parent = dirname(current);
-    if (parent === current) break;
-    current = parent;
-  }
-  throw new Error(`No _specspec directory found at or above ${start}. Select a SpecSpec project folder, or initialize it with specspec init first.`);
-}
+export const findProjectRoot = shared.findProjectRoot;
 
 export interface Invocation {
   command: string;

@@ -1,8 +1,8 @@
 /* Project content is data: use textContent/value, never project-supplied HTML. */
 (() => {
-  const vscode = acquireVsCodeApi(), model = window.SpecSpecGraph;
+  const host = window.SpecSpecHost, model = window.SpecSpecGraph;
   const $ = id => document.getElementById(id);
-  const restored = vscode.getState() || {};
+  const restored = host.getState() || {};
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
   let colorMode = ['type', 'max-distance'].includes(restored.colorMode) ? restored.colorMode : 'distance';
@@ -24,7 +24,7 @@
   });
   const elements = ['body', 'sources', 'slug', 'node-type'];
   const title = node => node.body.split(/\r?\n/).find(line => line.startsWith('#'))?.replace(/^#+\s*/, '') || node.body.split(/\r?\n/).find(line => line.trim()) || node.type;
-  const send = message => vscode.postMessage(message);
+  const send = message => host.postMessage(message);
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
@@ -38,7 +38,7 @@
   const distanceFor = id => (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
 
   function saveDraft() {
-    vscode.setState({ selected, view, colorMode, cameras: { ...cameras }, dirty, creating, formFingerprint, draft: dirty || creating ? {
+    host.setState({ selected, view, colorMode, cameras: { ...cameras }, dirty, creating, formFingerprint, draft: dirty || creating ? {
       body: $('body').value, sources: $('sources').value, slug: $('slug').value,
       nodeType: $('node-type').value, parents: [...formParents],
     } : undefined });
@@ -451,8 +451,7 @@
     for (const source of sources) { const item = document.createElement('li'); item.textContent = source.path; $('source-files').append(item); }
   }
 
-  window.addEventListener('message', event => {
-    const message = event.data;
+  host.onMessage(message => {
     if (message.type === 'error') { pending = false; setMessage(message.message); updateButtons(); return; }
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;

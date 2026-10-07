@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { JSDOM } = require('jsdom');
-const { graphHtml } = require('../out/view.js');
+const { graphHtml } = require('../view.cjs');
 const model = require('../media/graph-model.js');
 
 const root = { id: 'root', type: 'manifesto', retired: false, parents: [], body: '# Purpose\n', path: '_specspec/root.md', sources: [] };
@@ -17,7 +17,8 @@ function fixture(t, options = {}) {
   Object.defineProperty(viewport, 'clientWidth', { get: () => viewportWidth });
   Object.defineProperty(viewport, 'clientHeight', { value: 650 });
   let saved = options.restored;
-  dom.window.acquireVsCodeApi = () => ({ postMessage: message => messages.push(message), getState: () => saved, setState: value => { saved = value; } });
+  dom.window.SpecSpecHost = { postMessage: message => messages.push(message), getState: () => saved, setState: value => { saved = value; },
+    onMessage: listener => dom.window.addEventListener('message', event => listener(event.data)) };
   dom.window.confirm = () => true;
   dom.window.structuredClone = structuredClone; // Browser API not supplied by jsdom.
   for (const name of ['vendor/graph-vendor.js', 'graph-model.js', 'graph-camera.js', 'graph.js']) {

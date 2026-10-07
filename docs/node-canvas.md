@@ -96,8 +96,8 @@ layout-quality guarantee.
 
 ## Build, licenses, and packaging
 
-`npm --prefix vscode ci` then `npm --prefix vscode run compile` builds
-`vscode/media/vendor/graph-vendor.js` from `vscode/src/graph-vendor.js` and generates
+`npm --prefix graph-ui-common ci`, `npm --prefix vscode ci`, then `npm --prefix vscode run compile` builds
+`vscode/media/vendor/graph-vendor.js` from the shared `graph-ui-common/src/graph-vendor.js` and generates
 `THIRD_PARTY_NOTICES.txt` containing licenses for every bundled dependency.
 Build artifacts are ignored in Git but included in extension packaging. Node
 modules and build sources are excluded from the VSIX. The lockfile pins versions.

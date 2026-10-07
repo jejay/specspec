@@ -9,5 +9,8 @@ dist/
 .vscode-test/
 node_modules/
 vscode/out/
-vscode/media/vendor/
+vscode/media/
+graph-ui-common/media/vendor/
+electron/build/
+electron/release/
 *.vsix
