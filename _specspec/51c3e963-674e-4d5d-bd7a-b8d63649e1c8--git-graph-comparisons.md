@@ -4,7 +4,7 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - aee203cc-e68a-4b0d-af18-9920e5303e49
-managed_hash: 014cb91456291b1f90b45cccff4376d7682b051508290f2c3875c40fdd012140
+managed_hash: cc4a107c6b7811130de52f9c7adc1d51d68a322f628f4f57944fbb0926eabe4e
 ---
 # Visualize workspace and revision graph deltas
 
@@ -13,3 +13,8 @@ inspect changes between the workspace and the last commit, and compare the
 specification graphs in different commits.
 
 Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), Git-aware visual editing.
+
+
+Make node version-control differences easier to recognize: color the title and show a matching bottom-right A/M/D cue for added/modified/deleted nodes relative to the selected comparison. Honor configured host theme colors where available and use VS Code defaults otherwise, including standalone windows. Keep semantic fills, linked-source context, rename distinctions and withdrawal separate; a withdrawn file is not deleted and a source-only change is not a modified node.
+
+Origin: the user's title/letter/theme-color correction in this conversation.
