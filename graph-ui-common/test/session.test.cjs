@@ -125,3 +125,16 @@ test('polls do not pile up behind slow reads or refresh immutable historical tar
   await f.s.chooseRevisions(); const count = f.calls.length; f.s.configurePolling(2); f.s.scheduleRefresh(); await pause(25);
   assert.equal(f.calls.length, count);
 });
+test('native document sessions coalesce rapid typing, flush received edits, and acknowledge per-view sequences', async t => {
+  const f = fixture(t), edits = []; let version = 1;
+  f.s.host.document = {
+    state: () => ({ nodeId: 'node', version, dirty: true }),
+    edit: async message => { edits.push(message.editSequence); await pause(10); version++; return true; },
+    save: async () => {},
+  };
+  await f.s.open(); assert.equal(f.messages.at(-1).selectedId, 'node');
+  for (let i = 1; i <= 20; i++) f.s.receive({ type: 'edit', id: 'node', editSequence: i });
+  await f.s.flushDocument(); assert.deepEqual(edits, [1, 20]);
+  assert.deepEqual(f.messages.filter(m => m.type === 'document-status').map(m => m.editSequence), [1, 20]);
+  assert.ok(!f.calls.some(c => c.args[0] === 'update'));
+});

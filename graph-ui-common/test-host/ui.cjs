@@ -19,23 +19,28 @@ class CDP {
       } else if (message.method === 'Runtime.executionContextCreated') {
         const context = message.params.context;
         this.contexts.set(`${message.sessionId || ''}:${context.id}`, { id: context.id, session: message.sessionId });
+      } else if (message.method === 'Runtime.executionContextDestroyed') {
+        this.contexts.delete(`${message.sessionId || ''}:${message.params.executionContextId}`);
+      } else if (message.method === 'Runtime.executionContextsCleared' || message.method === 'Target.detachedFromTarget') {
+        const session = message.params?.sessionId || message.sessionId;
+        for (const [key, context] of this.contexts) if (context.session === session) this.contexts.delete(key);
       } else if (message.method === 'Target.attachedToTarget') {
         void this.send('Runtime.enable', {}, message.params.sessionId).catch(() => {});
       }
     });
   }
-  async send(method, params = {}, sessionId) {
+  async send(method, params = {}, sessionId, timeoutMs = 10_000) {
     await this.ready;
     const id = ++this.next;
     const result = new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 10_000);
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, timeoutMs);
       this.pending.set(id, { resolve, reject, timer });
     });
     this.socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
     return result;
   }
-  async evaluate(context, expression) {
-    const response = await this.send('Runtime.evaluate', { expression, contextId: context.id, returnByValue: true, awaitPromise: true }, context.session);
+  async evaluate(context, expression, timeoutMs) {
+    const response = await this.send('Runtime.evaluate', { expression, contextId: context.id, returnByValue: true, awaitPromise: true }, context.session, timeoutMs);
     if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description || response.exceptionDetails.text);
     return response.result.value;
   }

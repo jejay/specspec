@@ -11,6 +11,7 @@ from typing import Any
 import click
 
 from . import __version__
+from .editor import MAX_REQUEST_BYTES, editor_request
 from .format import safe_source_path
 from .git import git_snapshot, install_hook, semantic_diff, source_change_impact
 from .model import API_VERSION, Diagnostic, SpecError
@@ -441,6 +442,25 @@ def export_graph(root: Path | None, output_format: str) -> None:
             f"  {mermaid_id(parent)} --> {mermaid_id(child)}" for parent, child in graph.edges()
         )
         click.echo("\n".join(lines))
+
+
+@main.command(name="editor")
+@click.option("--base", help="Optional Git base for an overlay comparison.")
+@json_option
+@click.pass_obj
+@guarded
+def editor(root: Path | None, base: str | None, as_json: bool) -> None:
+    """Read document overlays / plan an edit from JSON stdin, without writing files."""
+    raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
+    if len(raw) > MAX_REQUEST_BYTES:
+        raise SpecError([Diagnostic("EDITOR", "Editor request exceeds the 16 MiB limit.")], 2)
+    try:
+        request = json.loads(raw)
+    except (ValueError, UnicodeError) as error:
+        raise SpecError([Diagnostic("EDITOR", f"Invalid editor JSON: {error}")], 2) from error
+    result = editor_request(root_path(root), request, base)
+    # Invalid buffers are a successful read/plan with explicit schema/DAG diagnostics.
+    emit(result, [Diagnostic(**entry) for entry in result["diagnostics"]], as_json=as_json)
 
 
 @main.command()

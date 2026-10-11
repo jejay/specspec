@@ -15,8 +15,7 @@
   ],
   "main": "./out/extension.js",
   "activationEvents": [
-    "workspaceContains:_specspec/*.md",
-    "onView:specspec.graph"
+    "workspaceContains:_specspec/*.md"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -68,35 +67,22 @@
         }
       }
     },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "specspec",
-          "title": "SpecSpec",
-          "icon": "media/specspec.svg"
-        }
-      ]
-    },
-    "views": {
-      "specspec": [
-        {
-          "type": "webview",
-          "id": "specspec.graph",
-          "name": "Graph"
-        }
-      ]
-    },
+    "customEditors": [
+      {
+        "viewType": "specspec.graphEditor",
+        "displayName": "SpecSpec Graph",
+        "selector": [
+          { "filenamePattern": "**/_specspec/*--*.md" }
+        ],
+        "priority": "default"
+      }
+    ],
     "menus": {
-      "view/title": [
-        {
-          "command": "specspec.selectProject",
-          "when": "view == specspec.graph",
-          "group": "navigation@1"
-        },
+      "editor/title": [
         {
           "command": "specspec.compareRevisions",
-          "when": "view == specspec.graph",
-          "group": "navigation@2"
+          "when": "activeCustomEditorId == specspec.graphEditor",
+          "group": "navigation@1"
         }
       ],
       "explorer/context": [

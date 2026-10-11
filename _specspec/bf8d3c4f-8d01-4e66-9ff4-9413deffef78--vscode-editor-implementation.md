@@ -3,6 +3,7 @@ id: bf8d3c4f-8d01-4e66-9ff4-9413deffef78
 type: implementation
 parents:
 - 02a4e457-d709-40af-979c-1216064b1f82
+- 037c4383-1934-4181-96e5-9fc3b2958e2f
 - 10ef1cdc-62a6-4212-8387-704d3cbbeeb4
 - 1ba7e336-cdc2-46a9-8118-4b8f9e92057b
 - 1f2e42c3-331f-4c1c-adc7-897f9bf2e004
@@ -10,16 +11,17 @@ parents:
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
 - 4254f33d-ce29-4e33-830e-28a8edd2a51c
 - 51c3e963-674e-4d5d-bd7a-b8d63649e1c8
+- a1595f98-cae9-4593-aae9-baff7789b435
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - c2ed5444-b7b2-4c2a-901c-ab1ba64e5e54
 - ca580dc7-c7fa-48bc-91b1-59243144a0bf
 - d70cdad5-5e03-4200-ac75-74cf6514e56c
+- af518184-9eb4-4612-bfda-2876b4dbeb6a
 - f65750b7-0e8c-4014-b209-e2b480ab26d2
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-- e5c7bf6a-99d2-4173-94d4-a73cb796f470
-- 037c4383-1934-4181-96e5-9fc3b2958e2f
-- a1595f98-cae9-4593-aae9-baff7789b435
 sources:
+- path: branding/activity-icon.svg
+  symbol: Activity Bar mask
 - path: docs/node-canvas.md
 - path: graph-ui-common/host/session.cjs
   symbol: shared guarded session
@@ -37,6 +39,8 @@ sources:
   symbol: metrics minDistances/maxDistances; CARD_HEIGHT, RANK_GAP, NODE_GAP
 - path: graph-ui-common/media/graph.css
 - path: graph-ui-common/media/graph.css
+  symbol: git title/corner tokens and narrow host chrome
+- path: graph-ui-common/media/graph.css
   symbol: incident-highlight contrast and Git ink
 - path: graph-ui-common/media/graph.css
   symbol: shorter cards, empty badge rows, unhinted world text
@@ -48,6 +52,10 @@ sources:
 - path: graph-ui-common/media/graph.js
   symbol: trackHover, syncHover, updateEdgeHighlights
 - path: graph-ui-common/src/graph-vendor.js
+- path: graph-ui-common/test-host/platform.cjs
+  symbol: actual Git title/corner/theme checks
+- path: graph-ui-common/test-host/ui.cjs
+  symbol: shared real-host geometry/hover/metrics
 - path: graph-ui-common/test/graph-model.test.cjs
 - path: graph-ui-common/test/graph-model.test.cjs
   symbol: path bounds, defensive cycles/deep graphs, spacing
@@ -68,9 +76,11 @@ sources:
 - path: vscode/src/bridge.ts
   symbol: invoke
 - path: vscode/src/extension.ts
-  symbol: GraphPanel
+  symbol: GraphEditors, GraphProject, GraphView
 - path: vscode/src/extension.ts
-  symbol: GraphPanel.handleMessage migration and withdrawal guards
+  symbol: GraphEditors, GraphProject, GraphView
+- path: vscode/src/host.js
+  symbol: project-scoped messaging/state adapter
 - path: vscode/src/project.ts
   symbol: findProjectRoot
 - path: vscode/src/view.ts
@@ -86,19 +96,9 @@ sources:
   symbol: checkHover computed paint and unchanged geometry
 - path: vscode/test/bridge.test.cjs
 - path: vscode/test/extension.test.cjs
-- path: vscode/test/project.test.cjs
-- path: vscode/src/host.js
-  symbol: project-scoped messaging/state adapter
 - path: vscode/test/host.test.cjs
   symbol: port state/draft isolation
-- path: graph-ui-common/test-host/ui.cjs
-  symbol: shared real-host geometry/hover/metrics
-- path: graph-ui-common/test-host/platform.cjs
-  symbol: actual Git title/corner/theme checks
-- path: branding/activity-icon.svg
-  symbol: Activity Bar mask
-- path: graph-ui-common/media/graph.css
-  symbol: git title/corner tokens and narrow host chrome
+- path: vscode/test/project.test.cjs
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
@@ -358,3 +358,7 @@ rewriting those files, and preserved drafts/caret/camera/native controls. Both r
 working graphs are valid with warnings as errors; deliberately malformed fixtures
 are disposable and restored. No Linux/macOS or remote-CI run is inferred. See the
 hash-free-markdown-sync implementation record for the current complete evidence.
+
+## Native node-file editor correction
+
+The current VS Code adapter replaces the preceding sidebar host with GraphEditors (CustomTextEditorProvider), reference-counted GraphProject document coordination and independent GraphView panels. Canonical node files open by default in the main editor, with raw text access; neighbors open their file editors and commit comparisons open independent panels. Native document saves/undo/dirty/recovery differ deliberately from Python-managed project/Electron writes. The old WebviewView conclusion is withdrawn and this live implementation is reconnected to the new native-document choice. A separate current implementation record links the non-writing planner, shared document ports, form recovery and verification boundaries. The earlier sidebar/API evidence remains history, not current hosting behavior.

@@ -35,6 +35,11 @@ class GraphSession {
       } else this.lastRendered = value.renderToken;
       this.listeners.forEach(f => f()); return;
     }
+    if (value.type === 'edit' && this.host.document) {
+      this.nextDocumentEdit = value;
+      if (!this.documentEdits) this.documentEdits = this.drainDocumentEdits().finally(() => { this.documentEdits = undefined; });
+      return;
+    }
     this.enqueue(() => this.handle(value));
   }
   async open() {
@@ -69,11 +74,29 @@ class GraphSession {
     if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to run SpecSpec.');
     return this.host.cli(args, input);
   }
+  flushDocument() { return this.documentEdits || Promise.resolve(); }
+  async drainDocumentEdits() {
+    while (this.nextDocumentEdit) {
+      const message = this.nextDocumentEdit; this.nextDocumentEdit = undefined;
+      try { await this.editDocument(message); }
+      catch (error) { this.log(error); await this.post({ type: 'error', message: error.message }); }
+    }
+  }
+  async editDocument(message) {
+    if (this.disposed || !this.host.authorized()) throw new Error('Workspace trust / project authorization is required to edit documents.');
+    const applied = await this.host.document.edit(message);
+    if (!applied) { await this.post({ type: 'cancelled' }); return; }
+    const document = this.host.document.state();
+    if (Number.isInteger(applied.version)) document.version = applied.version;
+    await this.post({ type: 'document-status', document, editSequence: message.editSequence });
+    this.scheduleRefresh();
+  }
   async readGraph() {
     if (this.target) {
       const response = await this.cli(['diff', '--base', this.base, '--target', this.target, '--json']);
       return { diff: response.result, snapshot: response.result.target, diagnostics: response.diagnostics, note: '' };
     }
+    if (this.host.readGraph) return this.host.readGraph(this.base);
     const response = await this.cli(['export', '--format', 'json']);
     let snapshot = response.result, diff, note = '', diagnostics = response.diagnostics;
     try {
@@ -88,7 +111,8 @@ class GraphSession {
   }
   async invalid(error) {
     this.sourceInvalid = true;
-    await this.post({ type: 'sync-error', message: `Files could not be loaded. The displayed graph is out of date; editing is disabled until the files are valid.\n${error.message}` });
+    const policy = this.host.document ? 'The bound document remains editable for repair.' : 'Editing is disabled until the files are valid.';
+    await this.post({ type: 'sync-error', message: `Files could not be loaded. The displayed graph is out of date. ${policy}\n${error.message}` });
   }
   async refresh(force = false, selectedId, automatic = false) {
     if (!automatic) await this.post({ type: 'notice', message: this.target ? 'Loading revision comparison…' : 'Refreshing specification graph…' });
@@ -106,14 +130,17 @@ class GraphSession {
       }
     } catch (error) { await this.invalid(error); if (!automatic) throw error; this.log(error); return; }
     if (this.disposed) return;
-    const payload = { ...loaded, note: [this.warning, loaded.note].filter(Boolean).join('\n'), readonly: Boolean(this.target) };
+    const document = this.host.document?.state();
+    const payload = { ...loaded, ...(document ? { document } : {}), note: [this.warning, loaded.note].filter(Boolean).join('\n'), readonly: Boolean(this.target) };
     // Direct record comparison, not a saved or calculated graph digest.
     if (automatic && !this.sourceInvalid && isDeepStrictEqual(payload, this.lastPayload)) return;
     this.sourceInvalid = false; this.lastPayload = payload; this.snapshot = loaded.snapshot;
     this.renderError = undefined; this.renderState = loaded;
     this.expectedCount = new Set([...(loaded.diff?.base.nodes || []), ...loaded.snapshot.nodes].map(n => n.id)).size;
     const renderToken = ++this.renderSequence;
-    await this.post({ type: 'snapshot', ...payload, force, selectedId, renderToken });
+    const initialId = this.host.document && !this.hasOpened ? document.nodeId : undefined;
+    this.hasOpened = true;
+    await this.post({ type: 'snapshot', ...payload, force, selectedId: selectedId || initialId, renderToken });
     await this.waitRender(renderToken);
   }
   async chooseRevisions() {
@@ -145,6 +172,24 @@ class GraphSession {
     });
   }
   async handle(message) {
+    if (this.host.document && ['save', 'retire', 'restore'].includes(message.type)) {
+      if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to edit documents.');
+      if (message.id !== this.host.document.state().nodeId) throw new Error('A node-file editor can only edit its bound node.');
+      await this.flushDocument();
+      let applied;
+      if (message.type === 'save') {
+        applied = await this.host.document.edit(message);
+        if (!applied) { await this.post({ type: 'cancelled' }); return; }
+        await this.host.document.save();
+      } else {
+        if (!await this.host.confirm(`${message.type === 'restore' ? 'Restore this withdrawn node? Restoration is not approval.' : 'Retire this node, retaining its history?'} Check its dependency impact.`)) { await this.post({ type: 'cancelled' }); return; }
+        await this.host.document.withdrawal(message.type === 'retire');
+      }
+      const document = this.host.document.state();
+      if (Number.isInteger(applied?.version)) document.version = applied.version;
+      await this.post({ type: 'document-status', document, editSequence: message.editSequence });
+      await this.refresh(); return;
+    }
     switch (message.type) {
       case 'refresh': await this.refresh(); return;
       case 'compare': await this.chooseRevisions(); return;

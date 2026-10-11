@@ -7,6 +7,7 @@
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
   let colorMode = ['type', 'max-distance'].includes(restored.colorMode) ? restored.colorMode : 'distance';
   let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
+  let editSequence = 0, documentVersion;
   let layoutFrame, layout, layoutKey, cameraScene;
   let drawnEdges = [], hoveredNode, hoverPoint;
   const cameraAPI = window.SpecSpecCamera;
@@ -29,7 +30,8 @@
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
   const legacyWorkspace = () => state?.snapshot.valid && !sourceInvalid && !state.readonly && state.snapshot.format_version !== 3;
-  const editable = () => state?.snapshot.valid && !sourceInvalid && state.snapshot.format_version === 3 && !state.readonly && (creating || Boolean(currentNode()));
+  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 3 && !state.readonly &&
+    (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
   const draftCard = () => creating || orphaned();
   const description = node => `${node.type}${node.retired ? ' · retired' : ''}`;
@@ -46,14 +48,27 @@
     } : undefined });
   }
 
+  function documentEdit() {
+    if (!state?.document || creating || !editable()) return;
+    send({ type: 'edit', id: selected, body: $('body').value, parents: [...formParents], sources: $('sources').value,
+      documentVersion, editSequence: ++editSequence });
+  }
+  function formChanged() { dirty = true; updateButtons(); saveDraft(); documentEdit(); }
+
   function updateButtons() {
     $('sync-notice').hidden = !sourceInvalid;
+    $('sync-notice').textContent = state?.document ? 'Displaying the last valid graph. Repair the bound document or other invalid Markdown; native Save can persist invalid text.'
+      : 'Displayed graph is out of date. Fix the Markdown files and refresh; graph changes are disabled.';
     $('back').hidden = view !== 'focus';
     $('back').disabled = pending;
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 3 || state.readonly || pending;
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 3 || state.readonly || pending || Boolean(state.document);
+    $('save').textContent = state?.document ? 'Save file' : 'Save node';
+    $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
+    $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
+    $('retire').title = $('restore').title = state?.document ? 'Changes the document; save the file to persist it.' : '';
     $('migrate').hidden = !legacyWorkspace();
     $('migrate').disabled = !legacyWorkspace() || pending || dirty || creating;
     $('save').disabled = !editable() || pending;
@@ -65,7 +80,7 @@
     for (const id of elements) $(id).disabled = !editable() || pending;
     for (const id of ['body', 'sources']) {
       // Keep retained text selectable/copyable when files are invalid or deleted.
-      $(id).readOnly = sourceInvalid || orphaned();
+      $(id).readOnly = (sourceInvalid && !state?.document) || orphaned();
       if (sourceInvalid || orphaned()) $(id).disabled = pending;
     }
     $('parent-candidate').disabled = !parentsEditable();
@@ -335,7 +350,7 @@
         remove.addEventListener('click', () => {
           if (!parentsEditable()) return;
           populateParents(formParents.filter(parent => parent !== id), formNodeType());
-          dirty = true; updateButtons(); saveDraft();
+          formChanged();
           if (creating) draw(); else requestLayout();
         });
         item.append(remove);
@@ -363,13 +378,19 @@
     const context = contextFor(node.id);
     $('focus-context').textContent = `${context.descendantCount(node.id)} downstream nodes (all depths) · ${snapshotName(node.id)} revision`;
     $('type-label').hidden = true; $('slug-label').hidden = true;
-    $('body').value = node.body; $('sources').value = JSON.stringify(node.sources, null, 2);
+    if ($('body').value !== node.body) $('body').value = node.body;
+    let sameSources = false;
+    try { sameSources = JSON.stringify(JSON.parse($('sources').value)) === JSON.stringify(node.sources); } catch { /* Intermediate JSON typing. */ }
+    if (!sameSources) $('sources').value = JSON.stringify(node.sources, null, 2);
     $('sources-label').hidden = node.type !== 'implementation'; populateParents(node.parents, node.type);
     const old = state.diff?.base.nodes.find(item => item.id === selected);
     $('before-section').hidden = !old; $('before').textContent = old?.body || '';
   }
 
   function select(id, force = false) {
+    if (!force && state?.document && id !== state.document.nodeId && !state.readonly) {
+      send({ type: 'open-node', id }); return;
+    }
     if (!force && pending) return;
     if (!force && id === selected && !creating) {
       if (view === 'overview') { rememberCamera(); view = 'focus'; draw(); saveDraft(); }
@@ -422,12 +443,12 @@
     draw(); saveDraft();
   });
 
-  for (const id of elements) $(id).addEventListener('input', () => { dirty = true; updateButtons(); saveDraft(); });
+  for (const id of elements) $(id).addEventListener('input', formChanged);
   $('parent-candidate').addEventListener('change', updateButtons);
   $('add-parent').addEventListener('click', () => {
     const id = $('parent-candidate').value;
     if (!parentsEditable() || !id || formParents.includes(id)) return;
-    populateParents([...formParents, id], formNodeType()); dirty = true; updateButtons(); saveDraft();
+    populateParents([...formParents, id], formNodeType()); formChanged();
     if (creating) draw(); else requestLayout();
   });
   $('node-type').addEventListener('change', () => {
@@ -439,7 +460,8 @@
     event.preventDefault(); if (!editable() || pending) return;
     pending = true; updateButtons();
     send({ type: creating ? 'add' : 'save', id: selected, originalNode,
-      body: $('body').value, parents: [...formParents], sources: $('sources').value, slug: $('slug').value, nodeType: $('node-type').value });
+      body: $('body').value, parents: [...formParents], sources: $('sources').value, slug: $('slug').value, nodeType: $('node-type').value,
+      ...(state.document ? { documentVersion, editSequence } : {}) });
   });
   for (const action of ['restore', 'retire']) $(action).addEventListener('click', () => {
     if (!editable() || creating || dirty || pending) return;
@@ -450,6 +472,7 @@
     pending = true; updateButtons(); send({ type: 'migrate' });
   });
   $('discard').addEventListener('click', () => {
+    if (state?.document) send({ type: 'discard-form' });
     dirty = false;
     if (creating) { rememberCamera(); creating = false; selected = undefined; view = 'overview'; draw(); saveDraft(); }
     else { originalNode = currentNode(); loadForm(); draw(); saveDraft(); }
@@ -469,18 +492,37 @@
   }
 
   host.onMessage(message => {
+    if (message.type === 'document-status') {
+      const newerSnapshot = state?.document && state.document.version > message.document.version;
+      if (!newerSnapshot) { documentVersion = message.document.version; if (state) state.document = message.document; }
+      if (message.editSequence === editSequence) {
+        dirty = false;
+        if (state?.document) delete state.document.recoveredForm;
+        if (newerSnapshot) { originalNode = currentNode(); loadForm(); draw(); }
+        saveDraft();
+      }
+      updateButtons(); return;
+    }
     if (message.type === 'notice' || message.type === 'sync-warning') { setMessage(message.message); return; }
     if (message.type === 'sync-error') { sourceInvalid = true; pending = false; setMessage(message.message); updateButtons(); return; }
-    if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Displayed graph is out of date; editing is disabled.\n${message.message}` : message.message); updateButtons(); return; }
+    if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Displayed graph is out of date; ${state?.document ? 'the bound document can be repaired' : 'editing is disabled'}.\n${message.message}` : message.message); updateButtons(); return; }
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;
     state = message; sourceInvalid = false; pending = false; graph = model.displayGraph(state);
+    if (state.document) documentVersion = state.document.version;
+    if (!restored.used && state.document?.recoveredForm && !restored.draft) {
+      const form = state.document.recoveredForm;
+      restored.draft = { body: form.body, parents: form.parents, sources: form.sources, slug: '', nodeType: graph.nodes.get(state.document.nodeId)?.type };
+      restored.dirty = true; selected = state.document.nodeId; view = 'focus';
+    }
+    if (!restored.used && message.selectedId && !restored.draft) { selected = message.selectedId; view = 'focus'; }
     targetMetrics = model.metrics(state.snapshot); baseMetrics = state.diff ? model.metrics(state.diff.base) : undefined;
     $('revision').textContent = state.diff ? `${state.diff.base_ref} → ${state.diff.target_ref}${state.readonly ? ' (read-only)' : ''}` : 'Workspace';
     showSnapshotNotes();
     if (message.force) { select(message.selectedId || selected, true); return; }
     if (!restored.used && restored.draft && (restored.dirty || restored.creating)) {
       restored.used = true; dirty = Boolean(restored.dirty); creating = Boolean(restored.creating); originalNode = restored.originalNode;
+      if (state.document) documentVersion = undefined; // Restored out-of-band drafts need conflict confirmation.
       if (!creating) loadForm();
       $('editor').hidden = false; $('body').value = restored.draft.body; $('sources').value = restored.draft.sources;
       $('slug').value = restored.draft.slug; $('node-type').value = restored.draft.nodeType;
@@ -499,6 +541,11 @@
       if (orphaned()) { $('editor').hidden = false; $('title').textContent = 'Deleted node draft'; $('identity').textContent = selected || ''; }
     }
     draw(); saveDraft();
+  });
+  window.addEventListener('keydown', event => {
+    if (state?.document && (event.ctrlKey || event.metaKey) && ['z', 'y'].includes(event.key.toLowerCase())) {
+      event.preventDefault(); send({ type: event.key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo' });
+    }
   });
   window.addEventListener('error', event => send({ type: 'client-error', message: event.message }));
   updateButtons(); send({ type: 'ready' });

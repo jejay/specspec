@@ -13,11 +13,13 @@ expands to contain the relevant settings and inputs; its neighbors retain the
 compact detail level used in the total graph. Provide a back action to return to
 the total graph and allow navigation by selecting neighboring nodes.
 
-Preserve managed editing, Git change context, drafts, and withdrawal history
+Preserve graph-aware editing, Git change context, drafts, and withdrawal history
 in this presentation, without introducing an individual approval step.
 
 Origin: the user's requested tree UI revision, 2026-10-04. This records requested
 product behavior, not a chosen layout or rendering mechanism.
 
-
-The later Activity Bar request hosts the whole graph in VS Code's sidebar; this does not reinstate a separate settings sidebar alongside the graph. Settings still expand inside the selected node.
+The later main-editor correction withdraws sidebar hosting. Settings still expand
+inside the graph node, not in a second settings sidebar. The user-authorized
+native-document experiment permits separate file tabs: their neighbors can open
+another node-file editor rather than silently changing which resource a tab saves.

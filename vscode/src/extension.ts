@@ -1,53 +1,106 @@
 import * as vscode from 'vscode';
 import { randomBytes } from 'node:crypto';
-import { Envelope, Snapshot, invoke } from './bridge';
+import { relative, sep } from 'node:path';
+import { Envelope, Snapshot, SpecNode, invoke } from './bridge';
 import { findProjectRoot, resolveInvocation } from './project';
 import { graphHtml } from './view';
 const { GraphSession } = require('./common/host/session.cjs');
+const { ProjectDocuments } = require('./common/host/documents.cjs');
 const presentation = require('../media/graph-model.js');
 
+const VIEW_TYPE = 'specspec.graphEditor';
 interface GitRepository { state: { onDidChange: vscode.Event<void> }; }
 interface GitAPI { repositories: GitRepository[]; onDidOpenRepository: vscode.Event<GitRepository>; }
+interface DocumentState { path: string; text: string; version: number; dirty: boolean; closed: boolean; eol: string; }
+interface FormEdit { id: string; body: string; parents: string[]; sources: string; editSequence: number; documentVersion?: number; }
+interface FormRecovery { key: string; form: FormEdit; }
 
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel('SpecSpec');
-  const provider = new GraphViewProvider(context, output);
-  context.subscriptions.push(output, provider,
-    vscode.window.registerWebviewViewProvider('specspec.graph', provider, { webviewOptions: { retainContextWhenHidden: true } }),
-    vscode.commands.registerCommand('specspec.openGraph', (resource?: vscode.Uri) => provider.open(resource)),
-    vscode.commands.registerCommand('specspec.compareRevisions', (resource?: vscode.Uri) => provider.open(resource, true)),
-    vscode.commands.registerCommand('specspec.selectProject', () => provider.open(undefined, false, true)));
+  const editors = new GraphEditors(context, output);
+  context.subscriptions.push(output, editors,
+    vscode.window.registerCustomEditorProvider(VIEW_TYPE, editors, { webviewOptions: { retainContextWhenHidden: true } }),
+    vscode.commands.registerCommand('specspec.openGraph', (resource?: vscode.Uri) => editors.open(resource)),
+    vscode.commands.registerCommand('specspec.compareRevisions', (resource?: vscode.Uri) => editors.open(resource, true)),
+    vscode.commands.registerCommand('specspec.selectProject', () => editors.open(undefined, false, true)));
 }
 
-class GraphViewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-  private view?: vscode.WebviewView;
-  private graph?: GraphHost;
+class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable {
+  private readonly projects = new Map<string, GraphProject>();
+  private readonly views = new Set<GraphView>();
   private lastRoot?: vscode.Uri;
-  private queue: Promise<unknown> = Promise.resolve();
-  private pendingOpens = 0;
-  private readonly waiters = new Set<() => void>();
-  constructor(private context: vscode.ExtensionContext, private output: vscode.OutputChannel) {}
-
-  resolveWebviewView(view: vscode.WebviewView): void {
-    this.view = view;
-    view.webview.options = { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')] };
-    view.onDidDispose(() => { this.graph?.dispose(); this.graph = undefined; this.view = undefined; });
-    this.waiters.forEach(f => f());
-    // Direct icon activation opens the same path as the command. No parallel initial session.
-    if (!this.pendingOpens) void this.open(this.lastRoot);
+  private disposed = false;
+  private readonly disposables: vscode.Disposable[];
+  constructor(private context: vscode.ExtensionContext, private output: vscode.OutputChannel) {
+    this.disposables = [vscode.workspace.onDidChangeTextDocument(event => this.documentChanged(event.document)),
+      vscode.workspace.onDidSaveTextDocument(document => this.documentChanged(document)),
+      vscode.workspace.onDidCloseTextDocument(document => this.documentChanged(document)),
+      vscode.workspace.onWillSaveTextDocument(event => {
+        // Drain form edits already received before a native save. This is not a
+        // schema veto or a replacement for VS Code's persistence/backup model.
+        const views = [...this.views].filter(view => view.document === event.document);
+        if (views.length) event.waitUntil(Promise.all(views.map(view => view.flushDocument())).then(() => []));
+      })];
   }
-
-  open(resource?: vscode.Uri, compare = false, selectFolder = false): Promise<Snapshot | undefined> {
-    this.pendingOpens++;
-    const result = this.queue.then(() => this.openImpl(resource, compare, selectFolder)).finally(() => { this.pendingOpens--; });
-    this.queue = result.catch(() => {}); return result;
+  private documentChanged(document: vscode.TextDocument): void {
+    for (const project of this.projects.values()) if (project.documentPath(document)) project.documents.changed();
   }
-
-  private async openImpl(resource?: vscode.Uri, compare = false, selectFolder = false): Promise<Snapshot | undefined> {
+  private async project(resource: vscode.Uri): Promise<GraphProject> {
+    if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before executing the SpecSpec CLI.');
+    if (resource.scheme !== 'file') throw new Error('The current CLI integration requires a local project folder.');
+    const root = vscode.Uri.file(await findProjectRoot(resource.fsPath));
+    if (this.disposed) throw new Error('SpecSpec editors are closed.');
+    const key = process.platform === 'win32' ? root.fsPath.toLowerCase() : root.fsPath;
+    let project = this.projects.get(key);
+    if (!project) {
+      project = new GraphProject(root, this.context, this.output); this.projects.set(key, project);
+    }
+    this.lastRoot = root; return project;
+  }
+  private attach(project: GraphProject, panel: vscode.WebviewPanel, document?: vscode.TextDocument, node?: SpecNode, recovery?: FormRecovery): GraphView {
+    const view = new GraphView(project, panel, this.context, this.output, document, node, recovery,
+      () => { void this.open(undefined, false, true); }, () => { void this.open(project.root, true); });
+    this.views.add(view); project.references++;
+    panel.onDidChangeViewState(event => { if (event.webviewPanel.active) this.lastRoot = project.root; });
+    panel.onDidDispose(() => {
+      this.views.delete(view); project.references--;
+      // Already-received document edits finish before releasing their project.
+      void view.flushDocument().finally(() => {
+        view.dispose();
+        if (!project.references) { project.dispose(); for (const [key, value] of this.projects) if (value === project) this.projects.delete(key); }
+      });
+    });
+    return view;
+  }
+  async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel): Promise<void> {
+    try {
+      const project = await this.project(document.uri);
+      const path = project.documentPath(document);
+      if (!path) throw new Error('Only direct canonical _specspec node files can use the graph editor.');
+      const loaded = await project.documents.request();
+      const node: SpecNode | undefined = loaded.snapshot.nodes.find((item: SpecNode) => item.path === path);
+      if (!node) throw new Error('This node cannot be parsed. Reopen it with Text Editor to repair the Markdown.');
+      const prefix = `specspec.pendingForm:${document.uri.toString()}:`;
+      const active = new Set([...this.views].map(view => view.recoveryKey));
+      const key = this.context.workspaceState.keys().find(key => key.startsWith(prefix) && !active.has(key));
+      const form = key ? this.context.workspaceState.get<FormEdit>(key) : undefined;
+      const recovery = key && form && form.id === node.id && typeof form.body === 'string' && typeof form.sources === 'string'
+        && Array.isArray(form.parents) && form.parents.every(p => typeof p === 'string') ? { key, form } : undefined;
+      const view = this.attach(project, panel, document, node, recovery);
+      // VS Code completes custom-editor wiring after resolve returns. Awaiting a
+      // webview render acknowledgement here can deadlock that lifecycle.
+      void view.open().catch(error => this.report(error, document.uri));
+    } catch (error) {
+      const text = (error instanceof Error ? error.message : String(error)).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
+      panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'"></head><body><h1>SpecSpec graph unavailable</h1><pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
+      await this.report(error, document.uri);
+    }
+  }
+  async open(resource?: vscode.Uri, compare = false, selectFolder = false): Promise<Snapshot | undefined> {
     try {
       if (!vscode.workspace.isTrusted) { await vscode.window.showWarningMessage('Trust this workspace before executing the SpecSpec CLI.'); return; }
       let selected = resource;
-      if (!selected && !selectFolder && this.graph) selected = this.graph.root;
+      if (!selected && !selectFolder) selected = this.lastRoot;
       if (!selected && !selectFolder) {
         const folders = vscode.workspace.workspaceFolders ?? [];
         if (folders.length === 1) selected = folders[0].uri;
@@ -58,80 +111,57 @@ class GraphViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
         canSelectFiles: false, canSelectMany: false, defaultUri: this.lastRoot || vscode.Uri.joinPath(this.context.extensionUri, '..'),
       }))?.[0];
       if (!selected) { this.output.appendLine('Project selection cancelled.'); return; }
-      if (selected.scheme !== 'file') throw new Error('The current CLI integration requires a local project folder.');
-      const root = vscode.Uri.file(await findProjectRoot(selected.fsPath));
-      this.output.appendLine(`Opening graph: ${root.fsPath}`);
-      if (!this.view) { await vscode.commands.executeCommand('specspec.graph.focus'); await this.waitForView(); }
-      if (!this.graph || this.graph.root.fsPath !== root.fsPath) {
-        // Finish a pending authorized old-root operation before replacing the adapter.
-        if (this.graph) { await this.graph.idle(); this.graph.dispose(); }
-        this.lastRoot = root;
-        this.graph = new GraphHost(root, this.view!, this.context, this.output, () => { void this.open(undefined, false, true); });
-      }
-      this.view!.description = root.fsPath; this.view!.show(false);
-      const snapshot = await this.graph.open();
-      if (compare) this.graph.chooseRevisions();
-      return snapshot;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.output.appendLine(error instanceof Error ? error.stack || message : message);
-      await vscode.window.showErrorMessage(`SpecSpec: ${message}`, 'Show Log').then(action => { if (action === 'Show Log') this.output.show(); });
-      return;
-    }
+      const project = await this.project(selected);
+      const panel = vscode.window.createWebviewPanel('specspec.projectGraph', 'SpecSpec Graph', vscode.ViewColumn.Active,
+        { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')] });
+      const view = this.attach(project, panel);
+      // A commit comparison must also open when dirty workspace buffers are invalid.
+      if (compare) { await view.chooseRevisions(); if (view.snapshot) return view.snapshot; }
+      return await view.open();
+    } catch (error) { await this.report(error); return; }
   }
-  private async waitForView(): Promise<void> {
-    if (this.view) return;
-    await new Promise<void>((resolve, reject) => {
-      const check = () => { if (this.view) { clearTimeout(timer); this.waiters.delete(check); resolve(); } };
-      const timer = setTimeout(() => { this.waiters.delete(check); reject(new Error('SpecSpec Activity Bar view did not open.')); }, 10_000);
-      this.waiters.add(check); check();
-    });
+  private async report(error: unknown, resource?: vscode.Uri): Promise<void> {
+    const message = error instanceof Error ? error.message : String(error);
+    this.output.appendLine(error instanceof Error ? error.stack || message : message);
+    const action = await vscode.window.showErrorMessage(`SpecSpec: ${message}`, ...(resource ? ['Open Markdown'] : []), 'Show Log');
+    if (action === 'Show Log') this.output.show();
+    if (action === 'Open Markdown' && resource) await vscode.commands.executeCommand('vscode.openWith', resource, 'default');
   }
-  dispose(): void { this.graph?.dispose(); }
+  dispose(): void {
+    this.disposed = true; this.disposables.forEach(d => d.dispose());
+    this.views.forEach(view => view.dispose()); this.projects.forEach(project => project.dispose());
+  }
 }
 
-class GraphHost {
+class GraphProject implements vscode.Disposable {
+  readonly documents: any;
+  references = 0;
   private readonly disposables: vscode.Disposable[] = [];
-  private readonly session: any;
   private disposed = false;
-  constructor(readonly root: vscode.Uri, private panel: vscode.WebviewView,
-    private context: vscode.ExtensionContext, private output: vscode.OutputChannel, selectProject: () => void) {
-    this.session = new GraphSession({
-      cli: (args: string[], input?: string) => this.cli(args, input), authorized: () => vscode.workspace.isTrusted,
-      post: (message: unknown) => this.panel.webview.postMessage(message), log: (message: string) => this.output.appendLine(message),
-      renderMatches: presentation.renderMatches, sameNode: presentation.sameNode,
+  constructor(readonly root: vscode.Uri, private context: vscode.ExtensionContext, private output: vscode.OutputChannel) {
+    this.documents = new ProjectDocuments({
+      documents: () => vscode.workspace.textDocuments.filter(d => this.documentPath(d)).map(d => this.documentState(d)),
+      cli: (args: string[], input?: string) => this.cli(args, input),
       confirm: async (message: string) => (await vscode.window.showWarningMessage(message, { modal: true }, 'Confirm')) === 'Confirm',
-      revisions: async (base: string, target: string) => {
-        const a = await vscode.window.showInputBox({ prompt: 'Base commit/ref', value: base }); if (!a) return;
-        const b = await vscode.window.showInputBox({ prompt: 'Target commit/ref (empty = workspace)', value: target });
-        if (b !== undefined) return [a, b];
-      },
     });
-    this.disposables.push(panel.webview.onDidReceiveMessage(message => {
-      if (message?.type === 'select-project') selectProject(); else this.session.receive(message);
-    }));
-    // Include the directory itself to catch removal/recreation as well as node saves.
     const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '_specspec{,/**}'));
-    this.disposables.push(watcher, watcher.onDidChange(() => this.session.scheduleRefresh()),
-      watcher.onDidCreate(() => this.session.scheduleRefresh()), watcher.onDidDelete(() => this.session.scheduleRefresh()));
-    const configurePolling = () => {
-      try { this.session.configurePolling(vscode.workspace.getConfiguration('specspec', root).get<number>('pollIntervalMs', 0)); }
-      catch (error) { this.session.warn(error); }
-    };
-    configurePolling();
+    this.disposables.push(watcher, watcher.onDidChange(() => this.documents.changed()),
+      watcher.onDidCreate(() => this.documents.changed()), watcher.onDidDelete(() => this.documents.changed()));
     this.disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('specspec', root)) { configurePolling(); this.session.scheduleRefresh(); }
+      if (event.affectsConfiguration('specspec', root)) this.documents.changed();
     }));
-    const resource = (name: string) => panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', name)).toString();
-    panel.webview.html = graphHtml(resource, panel.webview.cspSource, randomBytes(16).toString('hex'), { scope: root.fsPath });
     void this.connectGit();
   }
-  open(): Promise<Snapshot> { return this.session.open(); }
-  idle(): Promise<void> { return this.session.run(async () => {}); }
-  chooseRevisions(): void { this.session.enqueue(() => this.session.chooseRevisions()); }
-  dispose(): void { this.disposed = true; this.session.dispose(); this.disposables.forEach(d => d.dispose()); }
-
-  private async cli<T>(args: string[], input?: string): Promise<Envelope<T>> {
+  documentPath(document: vscode.TextDocument): string | undefined {
+    if (document.uri.scheme !== 'file') return;
+    const path = relative(this.root.fsPath, document.uri.fsPath).split(sep).join('/');
+    if (/^_specspec\/[^/]+\.md$/.test(path)) return path;
+  }
+  documentState(document: vscode.TextDocument): DocumentState {
+    return { path: this.documentPath(document)!, text: document.getText(), version: document.version, dirty: document.isDirty,
+      closed: document.isClosed, eol: document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n' };
+  }
+  async cli<T>(args: string[], input?: string): Promise<Envelope<T>> {
     if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to run SpecSpec.');
     const configuration = vscode.workspace.getConfiguration('specspec', this.root);
     const command = configuration.get<string>('command', 'specspec');
@@ -147,18 +177,105 @@ class GraphHost {
     this.output.appendLine(`CLI: ${invocation.command} ${[...invocation.args, ...args].join(' ')}`);
     return invoke<T>(invocation.command, invocation.args, this.root.fsPath, args, input);
   }
-
   private async connectGit(): Promise<void> {
     try {
       const extension = vscode.extensions.getExtension<{ getAPI(version: number): GitAPI }>('vscode.git');
       if (!extension) return;
       const api = (extension.isActive ? extension.exports : await extension.activate()).getAPI(1);
       if (this.disposed) return;
-      const subscribe = (repository: GitRepository) => {
-        this.disposables.push(repository.state.onDidChange(() => this.session.scheduleRefresh()));
-      };
-      api.repositories.forEach(subscribe);
-      this.disposables.push(api.onDidOpenRepository(subscribe));
+      const subscribe = (repository: GitRepository) => this.disposables.push(repository.state.onDidChange(() => this.documents.changed()));
+      api.repositories.forEach(subscribe); this.disposables.push(api.onDidOpenRepository(subscribe));
     } catch { /* Git notifications are optional; canonical-file watching still works. */ }
   }
+  dispose(): void { this.disposed = true; this.disposables.forEach(d => d.dispose()); }
+}
+
+class GraphView implements vscode.Disposable {
+  private readonly disposables: vscode.Disposable[] = [];
+  private readonly session: any;
+  readonly recoveryKey: string;
+  constructor(private project: GraphProject, panel: vscode.WebviewPanel, context: vscode.ExtensionContext,
+    output: vscode.OutputChannel, readonly document: vscode.TextDocument | undefined, node: SpecNode | undefined, recovery: FormRecovery | undefined,
+    selectProject: () => void, compare: () => void) {
+    this.recoveryKey = `specspec.pendingForm:${document?.uri.toString()}:${randomBytes(16).toString('hex')}`;
+    let latestEditSequence: number | undefined;
+    const clearRecovery = async () => {
+      await context.workspaceState.update(this.recoveryKey, undefined);
+      if (recovery) { await context.workspaceState.update(recovery.key, undefined); recovery = undefined; }
+    };
+    panel.webview.options = { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')] };
+    const adapter = document ? {
+      id: node!.id,
+      get: () => project.documentState(document),
+      apply: async (before: string, _after: string, edit: { start: number; end: number; text: string }) => {
+        if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to edit SpecSpec documents.');
+        if (document.isClosed || document.getText() !== before) throw new Error('Document changed or closed; the form is retained.');
+        const workspaceEdit = new vscode.WorkspaceEdit();
+        workspaceEdit.replace(document.uri, new vscode.Range(document.positionAt(edit.start), document.positionAt(edit.end)), edit.text);
+        if (!await vscode.workspace.applyEdit(workspaceEdit)) throw new Error('VS Code could not apply the document edit.');
+      },
+    } : undefined;
+    this.session = new GraphSession({
+      cli: (args: string[], input?: string) => ['add', 'update', 'retire', 'restore', 'migrate'].includes(args[0])
+        ? project.documents.mutate(args, input) : project.cli(args, input),
+      readGraph: (base: string) => project.documents.readGraph(base),
+      authorized: () => vscode.workspace.isTrusted,
+      post: async (message: any) => {
+        if (document && message.type === 'document-status' && message.editSequence === latestEditSequence) {
+          await clearRecovery(); delete message.document.recoveredForm;
+        }
+        return panel.webview.postMessage(message);
+      }, log: (message: string) => output.appendLine(message),
+      renderMatches: presentation.renderMatches, sameNode: presentation.sameNode,
+      confirm: async (message: string) => (await vscode.window.showWarningMessage(message, { modal: true }, 'Confirm')) === 'Confirm',
+      revisions: async (base: string, target: string) => {
+        const a = await vscode.window.showInputBox({ prompt: 'Base commit/ref', value: base }); if (!a) return;
+        const b = await vscode.window.showInputBox({ prompt: 'Target commit/ref (empty = workspace)', value: target });
+        if (b !== undefined) { panel.title = `SpecSpec: ${a} → ${b || 'workspace'}`; return [a, b]; }
+      },
+      ...(adapter && document ? { document: {
+        state: () => ({ nodeId: adapter.id, path: adapter.get().path, version: document.version, dirty: document.isDirty,
+          ...(recovery ? { recoveredForm: recovery.form } : {}) }),
+        edit: (message: unknown) => project.documents.edit(adapter, message),
+        withdrawal: (retired: boolean) => project.documents.withdrawal(adapter, retired),
+        save: async () => { await project.documents.idle(); if (!await document.save()) throw new Error('VS Code could not save the node file.'); },
+      } } : {}),
+    });
+    this.disposables.push(panel.webview.onDidReceiveMessage(message => {
+      if (document && message?.type === 'edit' && message.id === adapter?.id && Buffer.byteLength(JSON.stringify(message), 'utf8') <= 3 * 1024 * 1024) {
+        latestEditSequence = message.editSequence;
+        // Native recovery covers applied document edits; this small separate
+        // backup protects form input still waiting on (or rejected by) Python.
+        void Promise.resolve(context.workspaceState.update(this.recoveryKey, message)).catch(error => this.session.warn(error));
+      }
+      if (document && message?.type === 'discard-form') {
+        void clearRecovery().then(() => panel.webview.postMessage({ type: 'document-status', document: this.session.host.document.state() })).catch(error => this.session.warn(error));
+      }
+      else if (message?.type === 'select-project') selectProject();
+      else if (document && message?.type === 'compare') compare();
+      else if (document && message?.type === 'open-node') void this.openNode(message.id).catch(error => this.session.warn(error));
+      else if (document && ['undo', 'redo'].includes(message?.type)) void this.session.flushDocument().then(() => vscode.commands.executeCommand(message.type));
+      else this.session.receive(message);
+    }));
+    const configure = () => {
+      try { this.session.configurePolling(vscode.workspace.getConfiguration('specspec', project.root).get<number>('pollIntervalMs', 0)); }
+      catch (error) { this.session.warn(error); }
+    };
+    configure(); this.disposables.push(project.documents.subscribe(() => { configure(); this.session.scheduleRefresh(); }));
+    const resource = (name: string) => panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', name)).toString();
+    panel.webview.html = graphHtml(resource, panel.webview.cspSource, randomBytes(16).toString('hex'), { scope: project.root.fsPath });
+  }
+  private async openNode(id: unknown): Promise<void> {
+    if (typeof id !== 'string') throw new Error('Invalid node identity.');
+    const graph = await this.project.documents.readGraph();
+    const node: SpecNode | undefined = graph.snapshot.nodes.find((n: SpecNode) => n.id === id);
+    if (!node) throw new Error('The node no longer exists.');
+    await this.flushDocument();
+    await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.joinPath(this.project.root, node.path), VIEW_TYPE);
+  }
+  open(): Promise<Snapshot> { return this.session.open(); }
+  get snapshot(): Snapshot | undefined { return this.session.snapshot; }
+  async chooseRevisions(): Promise<void> { await this.session.waitReady(); await this.session.run(() => this.session.chooseRevisions()); }
+  flushDocument(): Promise<void> { return this.session.flushDocument(); }
+  dispose(): void { this.session.dispose(); this.disposables.forEach(d => d.dispose()); }
 }

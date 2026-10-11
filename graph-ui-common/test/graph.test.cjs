@@ -881,3 +881,67 @@ test('shared Git CSS reads theme tokens with Dark Modern defaults, separate from
   assert.match(css,/\.card\.changed strong/);assert.match(css,/\.card\.removed h2/);
   assert.match(css,/--edge-added: #42b68b/);
 });
+
+function nativeFixture(t) {
+  const f = fixture(t);
+  f.document = { nodeId: 'child', path: child.path, version: 1, dirty: false };
+  f.send({ type: 'snapshot', snapshot: f.snapshot, document: f.document, selectedId: 'child', diagnostics: [], readonly: false });
+  return f;
+}
+test('native document forms send edits immediately; graph navigation opens the other node file', t => {
+  const { dom, $, messages, saved } = nativeFixture(t);
+  assert.equal($('title').textContent, 'Child'); assert.equal($('save').textContent, 'Save file');
+  assert.equal($('new').disabled, true); assert.equal($('discard').hidden, true);
+  $('body').value = '# Native typing'; $('body').dispatchEvent(new dom.window.Event('input'));
+  const edit = messages.find(m => m.type === 'edit');
+  assert.equal(edit.id, 'child'); assert.equal(edit.body, '# Native typing'); assert.equal(edit.documentVersion, 1);
+  assert.equal(saved().dirty, true);
+  dom.window.document.querySelector('[data-node-id="root"]').click();
+  assert.equal(messages.at(-1).type, 'open-node'); assert.equal(messages.at(-1).id, 'root');
+  assert.equal($('title').textContent, 'Child');
+});
+test('acknowledged native edits retain caret, while older acknowledgements cannot clear newer input', t => {
+  const { dom, $, messages, saved, send, snapshot, document } = nativeFixture(t);
+  const body = $('body'); body.value = '# First'; body.dispatchEvent(new dom.window.Event('input'));
+  body.value = '# Second'; body.dispatchEvent(new dom.window.Event('input')); body.focus(); body.setSelectionRange(1, 4, 'backward');
+  send({ type: 'document-status', document: { ...document, version: 2, dirty: true }, editSequence: 1 });
+  assert.equal(saved().dirty, true);
+  send({ type: 'document-status', document: { ...document, version: 3, dirty: true }, editSequence: 2 });
+  assert.equal(saved().dirty, false); assert.equal(saved().draft, undefined);
+  send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [root, { ...child, body: '# Second' }] }, document: { ...document, version: 3, dirty: true }, diagnostics: [], readonly: false });
+  assert.equal($('body'), body); assert.equal(body.value, '# Second');
+  assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [1, 4, 'backward']);
+  body.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  assert.equal(messages.at(-1).type, 'undo');
+});
+test('late native acknowledgements cannot relabel a newer peer snapshot or overwrite its form', t => {
+  const f = nativeFixture(t);
+  f.$('body').value = '# Mine'; f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  f.send({ type: 'snapshot', snapshot: { ...f.snapshot, nodes: [root, { ...child, body: '# Peer' }] }, document: { ...f.document, version: 3 }, diagnostics: [], readonly: false });
+  assert.equal(f.$('body').value, '# Mine');
+  f.send({ type: 'document-status', document: { ...f.document, version: 2 }, editSequence: 1 });
+  assert.equal(f.$('body').value, '# Peer'); assert.equal(f.saved().dirty, false);
+  f.$('body').value = '# Peer + mine'; f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  assert.equal(f.messages.at(-1).documentVersion, 3);
+});
+test('invalid native graph overlays retain editable form text for repair; managed Electron forms remain blocked', t => {
+  const f = nativeFixture(t);
+  f.$('body').value = ''; f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  f.send({ type: 'sync-error', message: 'Invalid buffer' });
+  assert.equal(f.$('body').disabled, false); assert.equal(f.$('body').readOnly, false);
+  f.$('body').value = '# Repair'; f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  assert.equal(f.messages.at(-1).type, 'edit');
+  const managed = fixture(t); managed.dom.window.document.querySelector('[data-node-id="child"]').click();
+  managed.send({ type: 'sync-error', message: 'Invalid file' }); assert.equal(managed.$('body').readOnly, true);
+});
+test('unapplied native recovery is visible/copyable, never auto-applied, and can be discarded explicitly', t => {
+  const f = nativeFixture(t);
+  f.send({ type: 'snapshot', snapshot: f.snapshot, document: { ...f.document, recoveredForm: {
+    id: 'child', body: '# Unapplied recovered form', parents: ['root'], sources: '[]',
+  } }, diagnostics: [], readonly: false });
+  assert.equal(f.$('body').value, '# Unapplied recovered form'); assert.equal(f.saved().dirty, true);
+  assert.equal(f.$('discard').hidden, false); assert.equal(f.$('discard').textContent, 'Discard recovered form');
+  assert.ok(!f.messages.some(m => m.type === 'edit'));
+  f.$('discard').click(); assert.equal(f.messages.some(m => m.type === 'discard-form'), true);
+  assert.equal(f.$('body').value, child.body); assert.equal(f.saved().dirty, false);
+});

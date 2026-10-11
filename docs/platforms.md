@@ -1,10 +1,11 @@
-# Shared graph UI and desktop adapter — implementation plan
+# Shared graph UI and desktop adapter — architecture and verification history
 
 ## Intentions
 
 The user wants the same SpecSpec graph experience in VS Code and a standalone
-Linux/Windows window, later usable in Claude Code or Codex workflows; a left-side
-Activity Bar entry; a dachshund brand/minimal icon; and clearer themed Git titles
+Linux/Windows window, later usable in Claude Code or Codex workflows; a large
+main-editor workspace with independent node/commit tabs; a dachshund brand/minimal
+icon; and clearer themed Git titles
 and A/M/D corner cues. Keep native editing, managed writes, revision context,
 drafts/original node contents, and viewport-independent geometry. These are outcomes, not
 an instruction to adopt React, expose a web server, or embed agent credentials.
@@ -15,14 +16,15 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   camera/metrics/layout, bounded CLI bridge, and guarded serialized graph session.
   Small adapters provide messaging/state, project selection/authorization,
   confirmations, revision input, watchers, themes and asset URLs. No renderer forks.
-- VS Code: a retained WebviewView in an Activity Bar container. The initial
-  `order: 4` proposal was corrected after inspecting the supported contribution API
-  and a real launch: custom containers are assigned after built-ins, and a manifest
-  order field is ignored. Users can drag the icon below Run/Debug; don't use private
-  APIs or rewrite their layout to force it. Inline node forms remain;
-  this host sidebar is not a second settings sidebar. Project-scoped state protects
-  nested-project drafts. Open Graph focuses the container, with explicit project
-  selection and historical comparison commands.
+- VS Code: default native custom text editors for canonical node Markdown, plus
+  independent project/commit panels in the main editor. Documents share unsaved
+  contents, not cameras. Python plans changes and validates open-text overlays;
+  VS Code owns native Save/undo/recovery. Project-wide managed writes refuse dirty
+  documents. This persistence choice is not a Python-journaled native save or a
+  guaranteed save veto. See [native editor semantics](native-editors.md).
+  The preceding Activity Bar WebviewView choice is withdrawn: its icon selected a
+  narrow sidebar, not the large workspace the user intended. Earlier supported-API
+  ordering evidence remains history, not a current instruction to drag an icon.
 - Electron: isolated/sandboxed renderer, fixed narrow preload API, sender-checked
   main-process IPC, explicit local project authorization, shell-free Python API 3,
   bounded process/render checks, no remote navigation/popups/renderer filesystem.
@@ -36,7 +38,7 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   often amber. Standalone uses VS Code dark defaults. Source-only changes do not
   invent a node M; retirement is not deletion. Semantic fills remain independent.
 
-## Implemented first slice
+## Preceding shared-host/sidebar slice (historical evidence)
 
 The shared extraction, Activity Bar view, minimal/full branding, themed A/M/D/R
 cues and initial Electron adapter are implemented. The real Windows hosts passed
@@ -70,7 +72,7 @@ incomplete reads, compares records directly, and retains invalid views/drafts.
 Watchers are OS/filesystem-dependent hints; no universal delivery/race guarantee
 or silent fallback polling is claimed. See README for the conflict/recovery policy.
 
-## Milestones and verification boundaries
+## Original milestones and verification boundaries (historical)
 
 1. Commit this intention/conclusion plan before the extraction.
 2. Extract common renderer/session while preserving existing tests and draft safety;

@@ -1,12 +1,13 @@
 /* Run installed VS Code and Chromium UI checks in a disposable profile. */
-const { spawn } = require('node:child_process');
-const { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } = require('node:fs');
+const { spawn, execFileSync } = require('node:child_process');
+const { existsSync, mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 const { createServer } = require('node:net');
 const { checkUI } = require('./ui.cjs');
 const { fixture } = require('../../graph-ui-common/test-host/fixture.cjs');
 const { platformChecks } = require('../../graph-ui-common/test-host/platform.cjs');
+const { documentChecks } = require('./documents.cjs');
 
 async function run() {
   const root = resolve(__dirname, '../..');
@@ -25,10 +26,25 @@ async function run() {
     server.listen(0, '127.0.0.1', () => { const port = server.address().port; server.close(() => resolve(port)); });
   });
   const project = fixture(root, python);
+  // Native document lifecycle checks use a compact nested graph; the full canvas
+  // geometry suite above still exercises the repository-sized graph.
+  const nativeRoot = join(project.root, 'native-documents'); mkdirSync(nativeRoot);
+  const nativeCli = (args, input) => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', nativeRoot, ...args], { input, encoding: 'utf8' })).result;
+  const manifesto = nativeCli(['init', '--manifesto', '-', '--json'], '# Native document fixture\n').changed_ids[0];
+  const nativeNode = nativeCli(['add', '--parent', manifesto, '--slug', 'native-node', '--body', '-', '--json'], '# Native node\n').changed_ids[0];
+  const nativeOther = nativeCli(['add', '--parent', nativeNode, '--slug', 'other-node', '--body', '-', '--json'], '# Other node\n').changed_ids[0];
+  const nativeSnapshot = nativeCli(['list', '--json']);
+  const otherPath = join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path);
+  writeFileSync(otherPath, readFileSync(otherPath, 'utf8').replace(/\n/g, '\r\n'));
+  const nativeProject = { root: nativeRoot, modified: nativeNode, cli: nativeCli };
   const profile = mkdtempSync(join(tmpdir(), 'specspec-vscode-host-'));
   const extensions = join(profile, 'extensions'), uiResult = join(profile, 'ui-result.json');
   mkdirSync(extensions);
-  const env = { ...process.env, SPECSPEC_PYTHON: python, SPECSPEC_TEST_PROJECT_ROOT: project.root, SPECSPEC_UI_RESULT: uiResult };
+  const native = { request: join(profile, 'native-request.json'), response: join(profile, 'native-response.json'), result: join(profile, 'native-result.json') };
+  const env = { ...process.env, SPECSPEC_PYTHON: python, SPECSPEC_TEST_PROJECT_ROOT: project.root, SPECSPEC_UI_RESULT: uiResult,
+    SPECSPEC_NATIVE_REQUEST: native.request, SPECSPEC_NATIVE_RESPONSE: native.response, SPECSPEC_NATIVE_RESULT: native.result, SPECSPEC_NATIVE_NODE: nativeNode,
+    SPECSPEC_NATIVE_PATH: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeNode).path),
+    SPECSPEC_NATIVE_OTHER: JSON.stringify({ id: nativeOther, path: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path) }) };
   delete env.ELECTRON_RUN_AS_NODE;
   const child = spawn(executable, [
     '--new-window', '--skip-welcome', '--skip-release-notes', '--disable-workspace-trust',
@@ -43,13 +59,17 @@ async function run() {
     if (markerBuffer.includes('SPECSPEC_REAL_HOST_SMOKE_OK')) smokePassed = true;
   });
   child.stderr.on('data', chunk => process.stderr.write(chunk));
-  const ui = checkUI(port, platformChecks(project, 'vscode')).then(() => {
-    uiPassed = true; writeFileSync(uiResult, JSON.stringify({ ok: true }));
-  }, error => {
+  const ui = (async () => {
+    if (!process.env.SPECSPEC_NATIVE_ONLY) await checkUI(port, platformChecks(project, 'vscode'));
+    writeFileSync(uiResult, JSON.stringify({ ok: true }));
+    await documentChecks(port, nativeProject, native);
+    uiPassed = true; writeFileSync(native.result, JSON.stringify({ ok: true }));
+  })().catch(error => {
     console.error('Real webview UI test failed:', error);
-    writeFileSync(uiResult, JSON.stringify({ ok: false, error: error.message }));
+    const result = JSON.stringify({ ok: false, error: error.message });
+    writeFileSync(uiResult, result); writeFileSync(native.result, result);
   });
-  const timer = setTimeout(() => { console.error('VS Code host smoke test timed out.'); child.kill(); }, 120_000);
+  const timer = setTimeout(() => { console.error('VS Code host smoke test timed out.'); child.kill(); }, 240_000);
   child.on('error', error => { console.error(error); process.exitCode = 1; });
   child.on('close', async code => {
     clearTimeout(timer); await ui;

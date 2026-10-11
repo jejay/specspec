@@ -170,26 +170,28 @@ card fit, unchanged geometry, and existing hover/arrow/navigation protections.
 These rendering/spacing choices remain revisable, not canonical scores or universal
 font-quality/performance guarantees.
 
-## Shared hosts, Activity Bar, dachshund and Git cues
+## Shared hosts, branding and the preceding Activity Bar slice
 
 The user's new [portable experience](../_specspec/5563649e-f76e-4c59-8e1d-52f60be938ee--host-independent-graph-experience.md),
-[Activity Bar](../_specspec/6f69c873-0ab4-450b-b306-791102affe95--activity-bar-graph-entry.md),
+[main-editor access](../_specspec/6f69c873-0ab4-450b-b306-791102affe95--activity-bar-graph-entry.md),
 [brand](../_specspec/c1d04e2d-2e56-4096-9549-b66141b46ebd--dachshund-brand.md) and
 [Git comparison](../_specspec/51c3e963-674e-4d5d-bd7a-b8d63649e1c8--git-graph-comparisons.md)
 outcomes remain separate from the [shared renderer/session](../_specspec/65f28474-18be-46f8-89f6-b9ce30a0ec96--shared-ui-and-host-session.md),
 [isolated Electron](../_specspec/449d5e44-2d5f-4c30-b4f3-9207b21b6286--isolated-electron-cli-shell.md),
-[WebviewView](../_specspec/e5c7bf6a-99d2-4173-94d4-a73cb796f470--activity-bar-webview-view.md),
+[withdrawn WebviewView](../_specspec/e5c7bf6a-99d2-4173-94d4-a73cb796f470--activity-bar-webview-view.md),
 [minimal icon](../_specspec/a1595f98-cae9-4593-aae9-baff7789b435--minimal-themed-dachshund-icon.md) and
 [themed title/corner](../_specspec/037c4383-1934-4181-96e5-9fc3b2958e2f--theme-git-headlines-and-corner-letters.md) choices.
 See [the plan/verification boundary](platforms.md) and [desktop run guide](../electron/README.md).
 
 `graph-ui-common` owns the native canvas and guarded Python-backed operations. VS Code
-hosts it in a retained Activity Bar view; Electron supplies a restricted preload/main
-adapter. Both use the same code, not hand-maintained copies. Project-scoped persistence,
+hosts it in native node-file custom editors and independent main-editor panels;
+Electron supplies a restricted preload/main adapter. Both use the same code, not hand-maintained copies. Project-scoped persistence,
 inline forms, stale drafts, read-only history, backend integrity and native gestures stay
 intact. Later [Claude Code/Codex integration](../_specspec/cbd93667-ac3b-4461-9e9d-d9ed3da6d373--later-agent-host-integration.md)
 is still an intention, not an implemented connector.
 
+The preceding sidebar-host choice is now withdrawn; the native-editor correction
+below removes the container. Its original placement evidence remains history.
 The proposed container `order: 4` was corrected after source/real-host inspection:
 VS Code's supported contribution API assigns extension containers after built-ins.
 Drag the dog below Run/Debug if desired; we don't override user layout or use private APIs.
@@ -197,6 +199,25 @@ A/M/D titles/corners read current theme tokens (M uses modified-gutter blue); pu
 keeps R, and source-only/withdrawal cues do not masquerade as M/D. Electron supplies
 VS Code dark defaults. Miniature resvg and real Windows host screenshots were inspected.
 Linux is a target with a configured CI/Xvfb job, not locally executed evidence.
+
+## Native node-file editors and independent graph tabs
+
+The user's clarification corrects [main-editor access](../_specspec/6f69c873-0ab4-450b-b306-791102affe95--activity-bar-graph-entry.md):
+Activity Bar entries select sidebar containers, not large editor workspaces. The old
+WebviewView conclusion is withdrawn with its live implementation reconnected. A
+separate [native-document/view conclusion](../_specspec/af518184-9eb4-4612-bfda-2876b4dbeb6a--native-node-documents-and-independent-graph-views.md)
+chooses file associations, `CustomTextEditorProvider`, unsaved text overlays and
+per-view cameras/commit comparisons. The [implementation/evidence record](../_specspec/54ed1528-668d-4278-937b-199ed9e0f9e0--native-node-editor-implementation.md)
+links the planner, ports, adapters and actual checks. See [the architecture and trade-offs](native-editors.md).
+
+Python plans edits without writing files. VS Code applies them to native documents;
+its Save/autosave/undo/recovery own ordinary file persistence, deliberately not the
+Python journal. Electron retains its managed-save adapter and the same renderer.
+Invalid native buffers remain repairable, raw Markdown is accessible, and CLI project
+mutations refuse dirty documents. The non-writing planner never recreates deleted
+files or hides runtime locks/recovery. Native form input not yet applied to a document
+has a separate recoverable backup. This is not a save veto, arbitrary-panel restart
+restoration, or a large-graph typing-performance guarantee.
 
 ## An independent worked planning example
 
@@ -299,11 +320,12 @@ whole schema; mixed partially converted files are never blessed by a read.
 
 ## Open the graph in VS Code
 
-Click the **dachshund Activity Bar icon**: the graph lives in the left sidebar,
-not an editor tab. Drag its icon below Run/Debug if preferred. **Open project** /
-**SpecSpec: Select Project** and Explorer folder → **SpecSpec: Open Graph** can
-choose `example/gantt` without opening another workspace. Narrowing the sidebar
-clips the same world; widen it or pan/zoom rather than expecting cards to reflow.
+Open a canonical `_specspec/<uuid>--summary.md` file: the graph opens in the main
+editor, focused on that node. **Reopen Editor With → Text Editor** keeps Markdown
+accessible. Split editors share node contents, with independent cameras. **Open project** /
+**SpecSpec: Select Project** and Explorer folder → **SpecSpec: Open Graph** open
+independent project panels and can choose `example/gantt` without another workspace.
+The Activity Bar entry is removed. Resizing clips the same world rather than reflowing cards.
 
 After installing `.[dev]` into `.venv`, run `npm --prefix graph-ui-common ci` and `npm --prefix vscode ci`, open the
 repository root, and launch **Run SpecSpec on this repository** (F5). Alternatively
@@ -317,8 +339,10 @@ notifications and **View → Output → SpecSpec**. CLI and extension must both 
 JSON API 3. Legacy workspaces offer a confirmed **Migrate specification** action,
 but history is never migrated and dirty drafts retain their original node records.
 
-Click a node to edit inside its expanded neighborhood card. **Save node** writes
-without approval metadata. **Retire**/**Restore** change withdrawal only. Distance is explained by color/legend, without on-node hop labels; child cards
+Node-file tabs edit their bound node inside its expanded neighborhood card;
+selecting neighbors opens their file editors. **Save file** uses native VS Code
+persistence without approval metadata. Project panels retain **Save node** through
+the managed CLI, and comparisons open independent panels. **Retire**/**Restore** change withdrawal only. Distance is explained by color/legend, without on-node hop labels; child cards
 show all-depth downstream impact.
 **Total graph**/**Resume draft** preserve the same form, caret, and original
 node contents. **Color by** selects minimum distance, maximum distance, or existing node type. Git badges and
@@ -333,6 +357,9 @@ run test:host` drives installed VS Code through a loopback Chromium debugger wit
 a disposable profile, requiring Node 22+. It checks approval-free controls,
 withdrawn labels, three fill modes/path bounds, label-free card fit, high-zoom native
 headlines, connection-hover paint, canvas geometry, pan/zoom, drafts, native gestures,
-and resized curve clearance. Only this isolated automated host disables trust.
+and resized curve clearance. It also checks default node-file associations and native dirty/save/undo/redo,
+raw edits, split synchronization, independent cameras and invalid-buffer repair
+on a compact nested graph, separately from the repository-sized canvas tests.
+Only this isolated automated host disables trust.
 Screenshots can be saved with `SPECSPEC_SCREENSHOT_DIR`. Full manual mutation and
 revision-picker workflows and remote CI remain separate verification boundaries.
