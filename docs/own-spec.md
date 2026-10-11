@@ -254,9 +254,15 @@ standard Base64's `/` also conflicts with flat filenames. Padded RFC 4648
 Base64url over five random bytes is recommended, but not yet selected or implemented.
 A custom 42-bit scheme would need to describe `=` as a terminator, not standard padding.
 
-Clarification is needed on encoding priority and whether to rekey existing nodes
-or preserve their identities while changing new-node generation. Historical Git
-bytes remain untouched. The analysis covers lock-scoped live/withdrawn collision
+The user's [follow-up correction](../_specspec/e45b1bef-bcd9-4c8e-a48e-8f048f063e58--current-scheme-only-and-gantt-git-regressions.md)
+selects canonical Base64url and conversion of existing nodes. It also withdraws
+old-schema compatibility: this graph is self-referencing evolving design
+documentation, not the historical Git regression corpus. Old root revisions may
+be rejected. The [backend choice](../_specspec/6db6a7ad-39ca-48b7-a84f-f63cbdc43471--canonical-base64url-and-current-only-backend.md)
+removes superseded readers/migration paths. The [Gantt history choice](../_specspec/8319ae0f-ba84-4748-a119-e77865dbff34--independent-current-schema-gantt-history.md)
+rebuilds an independent current-schema Git fixture for rigorous versioning tests,
+without rewriting unrelated SpecSpec commits. Earlier compatibility statements
+in this tour describe superseded choices, not requirements to preserve them. The analysis covers lock-scoped live/withdrawn collision
 checks, case-insensitive filesystems, schema/legacy compatibility, Mermaid export,
 VS Code associations and potential conversion/recovery work. The [investigation
 record](../_specspec/8afe8c39-6900-4f12-a2de-0dc6e41acf20--compact-id-investigation-and-baseline.md)

@@ -28,9 +28,11 @@ material uncertainty and conflicts rather than manufacturing agreement.
 
 ## Changes
 
-- Use `add`, `update`, `retire`, `restore`, and `migrate` for canonical graph changes
+- Use `add`, `update`, `retire`, and `restore` for ordinary canonical graph changes
   in this checkout. The product permits manual Markdown edits, but CLI/UI editing
   remains recommended. Format/API 3 has no hashes, fingerprints, or `--expect`.
+  The authorized compact-ID conversion is a one-time tool-managed migration,
+  not a permanent compatibility command.
 - Record a separate conclusion when a change introduces a meaningful choice.
   Do not rewrite its parent intention to make a chosen implementation inevitable.
 - Do not introduce approval statuses, acceptance scores, or parent-review gates.
@@ -54,15 +56,22 @@ npm --prefix vscode test
 npm --prefix electron test
 ```
 
-Use `python -m specspec diff --base HEAD --json` for a review report. Before an
-explicitly authorized commit, stage the complete intended graph change and use
-`hook check` to validate that exact index; working-tree validation cannot
-substitute for staged validation.
+Use `python -m specspec diff --base <current-scheme-ref> --json` for a review report
+when the baseline uses the current schema. Before an explicitly authorized commit,
+stage the complete intended graph change and use `hook check` to validate that exact
+index; working-tree validation cannot substitute for staged validation.
 
-The current writer uses format/API version 3. Older Git revisions remain readable;
-convert a valid v1/v2 workspace with `migrate` before tool-driven editing.
-Migration validates actual graph consistency, ignores obsolete hashes and journals
-removal of legacy metadata across the whole graph.
+Maintain only the current schema: padded Base64url IDs over five random bytes,
+including the final `=`, and `<id><slug>.md` filenames. Do not retain overwritten
+schemas, UUID readers, old metadata normalization or permanent migration commands.
+
+This repository's own graph is self-referencing design documentation. Validate
+its working graph and current source references, but do not require Git tooling
+to work against its obsolete historical schemas. Rejected older revisions are
+expected. Use the independent, rewritten current-schema Gantt history in
+`example/gantt/history/gantt.bundle` for rigorous Git regression tests. Clone it
+into a disposable repository; do not install nested Git metadata in the checkout
+or rewrite unrelated SpecSpec development history.
 
 If an edit is interrupted, retain `.specspec-local/` and run `recover`. Remove a
 stale lock with `recover --force-lock` only after confirming no writer is running.
