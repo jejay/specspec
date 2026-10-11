@@ -134,8 +134,8 @@ The initial [rendering choice](../_specspec/6MUwTIw=stable-root-and-transient-ho
 misinterpreted gray as a solid pale root. The [user correction](../_specspec/iktVTRU=consistent-gray-cards-and-roomier-markdown.md)
 and [shared-tint/readability choice](../_specspec/xCOHepQ=shared-card-tints-and-80-column-editing.md)
 keep the gray accent but restore ordinary theme text and shared card tints: the
-root is only modestly lighter than a dark canvas, with a white hover border like
-other cards. Expanded Markdown/revision-text areas are 860 world units wide for
+root is only modestly lighter than a dark canvas, with a white hover border.
+White belongs only to the manifesto; other cards emphasize their semantic hue. Expanded Markdown/revision-text areas are 860 world units wide for
 typical 80-column text; compact cards stay 264×112 with larger/heavier Git corners.
 Connected nodes still mean direct displayed neighbors, matching incident highlighting.
 Non-incident links darken even when both endpoints are neighbors. The root's base
@@ -154,6 +154,27 @@ invariants. The first screenshot-enabled VS Code run passed the full canvas but
 timed out in native-document checks; its unchanged isolated rerun passed.
 The [current implementation record](../_specspec/AXhpgds=shared-gray-tints-wide-text-and-bold-git-corners.md)
 links shared code, test evidence and font/platform limits.
+
+### Color-preserving hover correction and regression trace
+
+The [user correction](../_specspec/pqNhV6s=color-preserving-node-and-connection-hover.md)
+rejects white borders on non-manifesto nodes and washed-out colored connections.
+Spec commit `0d8d44b` (2026-10-11) overgeneralized the manifesto-only white-border
+request into “all cards” in xCOHepQ=. Code commit `c2d8e15` then implemented that
+global override and enforced it in tests. The parent intention requested white
+only for the gray root; shared tint behavior did not authorize whitening other
+semantic borders. Those conclusions are corrected explicitly, not treated as
+user requests or validated by their passing tests.
+
+The [replacement choice](../_specspec/bLBNk80=hue-preserving-hover-lightness-and-chroma.md)
+keeps white only on the manifesto and raises non-root border lightness/chroma
+in its own semantic hue (yellow stays strong yellow). Added/removed/draft incident
+curves and heads likewise become brighter and more saturated without foreground
+mixing. The washed-out mix originated in `34e72bb` (2026-10-06): 50% ink and 50%
+theme foreground. Neutral normal links keep theme contrast emphasis; modified
+nodes do not imply a new modified-link kind. Geometry, dashes, paired ordering,
+one-hop darkening, native forms and exit restoration remain unchanged. Relative
+OKLCH constants and gamut/platform limits are separate revisable choices.
 
 ## Minimum/maximum distance, spacing, and headline correction
 

@@ -21,6 +21,13 @@ sources:
 - path: electron/test-host/run.cjs
   symbol: installed shared canvas and desktop checks
 ---
+## Later hover-scope correction
+
+The all-card white borders and tests below describe the c2d8e15 implementation,
+not a user request or current contract. pqNhV6s= clarifies white only for
+the manifesto; bLBNk80= supersedes white borders elsewhere and washed-out
+colored-link emphasis. Earlier test counts remain historical evidence.
+
 # Share gray card styling, fit typical 80-column text and strengthen Git markers
 
 The user's correction rejects the previous solid pale manifesto as a mistaken

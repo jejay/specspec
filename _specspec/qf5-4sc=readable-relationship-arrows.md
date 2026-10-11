@@ -22,7 +22,10 @@ Hovering a node also highlights all its displayed incoming and outgoing connecti
 curves and arrowheads, so users can trace its immediate relationships without
 selecting or editing it. Apply this in overview and focused neighborhoods, including
 expanded cards. Leaving the node removes the temporary emphasis. Preserve clear
-direction and distinguish Git relationship changes while highlighting.
+direction and distinguish Git relationship changes while highlighting. Colored
+incident curves and heads become brighter and more saturated in their own hue,
+not less colored through white/foreground mixing, including added/removed links
+when hovering new, changed or deleted nodes.
 
 Origin: the user's node-hover request and initial arrow correction, Blender-like editor request, and
 subsequent minimum-strength/no-circles/arrow-transition feedback in this conversation.

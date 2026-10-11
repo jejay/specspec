@@ -23,8 +23,10 @@ the actual card under it rather than retaining a stale node identity.
 
 Toggle one presentation class on each existing curve/filled-head pair and raise
 incident pairs above other SVG connections, restoring normal ordering on exit.
-Mix each connection's existing ink with the theme foreground for stronger contrast
-and full opacity. Retain Git hues, semantic classes and camera-compensated dashes;
+Use full opacity and brighter, higher-chroma versions of colored connection ink
+in its own hue; bLBNk80= replaces the earlier theme-foreground mix for
+added/removed/draft links because it washed out their colors. Normal neutral links
+retain theme contrast mixing. Retain semantic classes and camera-compensated dashes;
 do not replace every relationship with an ambiguous common Git color. Do not grow
 stroke width, arrowheads, glow, or hit areas: existing clearance, minimum screen
 strength, tangent joins and routing remain unchanged. The SVG stays non-interactive.

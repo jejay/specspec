@@ -40,5 +40,7 @@ cues distinct. Other node palettes, derived metrics and routing remain unchanged
 
 iktVTRU= clarifies that the preceding solid-root exception misunderstood the
 request. xCOHepQ= restores the generic tinted fill and theme text for the manifesto
-while retaining its neutral gray accent/legend. All cards share white hover
-borders and hover tint shifting; the outside-neighborhood darkening is unchanged.
+while retaining its neutral gray accent/legend. Cards share hover tint shifting,
+not white borders: the white override belongs only to the manifesto. The earlier
+all-card claim overgeneralized the root request; bLBNk80= restores stronger
+semantic-hue borders elsewhere. Outside-neighborhood darkening is unchanged.

@@ -48,6 +48,8 @@ Leave unrelated local settings/artwork untouched; install no Git hooks.
 
 The user clarification iktVTRU= rejects the solid pale fill/dark text paragraph
 above. xCOHepQ= replaces only that styling with shared tinted fills, theme text
-and white hover borders, and adds roomier expanded text/Git markers. The fixed
+and a white manifesto hover border, and adds roomier expanded text/Git markers.
+Its initial all-card white-border choice was also mistaken; bLBNk80=
+limits white to the manifesto and strengthens other hovered semantic colors. The fixed
 gray semantic accent, truthful legends and transient one-hop darkening remain.
 The original solid-root reasoning is retained as history, not a live requirement.

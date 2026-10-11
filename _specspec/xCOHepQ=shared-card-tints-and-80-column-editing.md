@@ -12,10 +12,11 @@ parents:
 Keep the manifesto accent #d3d3d3, but remove its solid background, dark text and
 special badge/contrast-theme rules. Share the 15% accent resting fill and 24%
 hover fill for compact and expanded cards alike, with ordinary theme text. Use
-one transient node-hovered class from existing delegated hover state and a white
-hover border for all cards; matching root and other-node behavior avoids a new
-root-only color-shifting rule. Keep contrast-theme resting background/borders
-shared too, with the white hover border. Leave existing relationship emphasis,
+one transient node-hovered class from existing delegated hover state. Only the
+manifesto gets a white hover border; other hovered borders emphasize their own
+semantic hue. Keep contrast-theme resting background/borders shared too. The
+original all-card white-border choice in 0d8d44b overgeneralized the root request
+and is superseded by bLBNk80=. Leave existing relationship emphasis,
 non-neighbor darkening, palette metrics and truthful gray legends intact.
 
 Increase fixed expanded world width from 620 to 860 units, leaving compact cards

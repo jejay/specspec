@@ -12,7 +12,9 @@ Correction: light gray describes the manifesto's accent, not a solid pale card.
 Use the same background tint distance and hover color shifting as other nodes:
 on a dark theme its core is gray only modestly lighter than the canvas. Its border
 becomes white when hovered, leaving a visible change from the resting gray accent.
-Keep the root neutral in all semantic color modes, with matching legends. Preserve
+White applies only to the manifesto border, not to other nodes. Other hovered
+borders retain and emphasize their semantic hue. Keep the root neutral in all
+semantic color modes, with matching legends. Preserve
 the existing outside-hover-neighborhood darkening.
 
 Widen the expanded node's Markdown editor and text display so typical 80-character
