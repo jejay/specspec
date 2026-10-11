@@ -14,7 +14,6 @@ function fixture(t, options = {}) {
     cli: async (args, input) => { calls.push({ args, input });
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
-      if (args[0] === 'migrate') current = { ...current, format_version: 3 };
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
       return { api_version: 3, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
         base: current, target: current, changes: [], added_edges: [], removed_edges: [],
@@ -32,14 +31,10 @@ function fixture(t, options = {}) {
 }
 const save = originalNode => ({ type: 'save', id: 'node', originalNode, parents: [], sources: '[]', body: '# Draft' });
 
-test('migration uses no hashes or expectation options and cancellation preserves legacy files', async t => {
-  const f = fixture(t, { snapshot: { ...snapshot, format_version: 2 }, confirm: false }); await f.s.open();
-  await f.s.handle({ type: 'migrate' }); assert.equal(f.messages.at(-1).type, 'cancelled');
-  assert.ok(!f.calls.some(c => c.args[0] === 'migrate'));
-  const yes = fixture(t, { snapshot: { ...snapshot, format_version: 1 } }); await yes.s.open();
-  await yes.s.handle({ type: 'migrate' });
-  assert.deepEqual(yes.calls.find(c => c.args[0] === 'migrate').args, ['migrate', '--json']);
-  assert.equal(yes.messages.at(-1).force, false);
+test('unsupported schema snapshots cannot invoke a writer', async t => {
+  const f = fixture(t, { snapshot: { ...snapshot, format_version: 999 } }); await f.s.open();
+  await assert.rejects(f.s.handle(save(node)), /Unsupported/);
+  assert.ok(!f.calls.some(c => c.args[0] === 'update'));
 });
 test('authorization loss and historical selection block writes', async t => {
   const f = fixture(t); await f.s.open(); f.revoke();

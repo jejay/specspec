@@ -59,7 +59,7 @@ test('graph reads cannot label an old buffer snapshot with a newer native docume
 });
 test('project-wide mutations refuse dirty open documents and unknown node editors', async () => {
   const f = fixture(); f.doc.dirty = true;
-  await assert.rejects(f.project.mutate(['migrate', '--json']), /Save or revert/);
+  await assert.rejects(f.project.mutate(['add', '--json']), /Save or revert/);
   assert.equal(f.calls.length, 0);
   await assert.rejects(f.project.edit(f.adapter, { ...edit('# Mine'), id: 'other' }), /bound node/);
   f.doc.closed = true; await assert.rejects(f.project.edit(f.adapter, edit('# Mine')), /closed/);

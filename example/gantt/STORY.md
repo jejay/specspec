@@ -1,4 +1,10 @@
-# Simulated conversation, real development history
+# Simulated conversation, maintained development history
+
+The independent history in `history/gantt.bundle` was explicitly reconstructed
+with the current SpecSpec scheme. The dialogue/app evolution below is retained;
+node IDs, CLI receipts and Git stage references now come from new current-tool
+executions. This is not a claim that untouched original commits used today's
+encoding. Inspect the bundle's `stage/01-spec` through `stage/03-code` tags.
 
 **Every User/AI turn below is fictional.** The actual project owner asked for a
 Gantt/planning example, at least two major redirects, and proper Git recording.
@@ -139,7 +145,7 @@ commit's hash inside itself would be fiction, so the ledger is completed afterwa
 
 The final implementation is `660af26`. Its following audit records that actual hash
 and verifies all three spec/code pairs, the initially absent graph/code, fresh CLI
-fingerprint chains, large explicit withdrawals, and original retained semantics.
+current CLI receipt contents, large explicit withdrawals, and retained branch semantics.
 The first audit exposed the legitimate empty predecessor snapshot before `init`;
 the verifier now treats that boundary explicitly rather than requiring a nonexistent
 graph. Parent/nested graph tests also check exact staged blobs independently using a

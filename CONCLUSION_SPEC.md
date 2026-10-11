@@ -19,7 +19,7 @@ graph-ui-common/
   host/           # Shared guarded session, CLI bridge and project discovery
   view.cjs        # Shared nonce-protected local template
 vscode/
-  src/            # Activity Bar adapter, VS Code dialogs/trust/watchers
+  src/            # Native node editors/project panels, dialogs/trust/watchers
   media/          # Generated shared assets + tiny host adapter
 electron/
   main.cjs        # Authorized local shell, bounded IPC/CLI and asset protocol
@@ -31,12 +31,13 @@ branding/
 
 The [portable-host revision](docs/platforms.md) shares the existing native canvas and
 serialized graph session rather than introducing renderer forks. VS Code hosts it
-in a retained Activity Bar WebviewView; an initial Electron shell targets Windows
-and Linux with external Python/Git. Its restricted renderer cannot select executables
+in native node-file custom text editors and independent project/comparison panels;
+there is no Activity Bar container. Electron targets Windows and Linux with
+external Python/Git. Its restricted renderer cannot select executables
 or read project files. Later Claude Code/Codex transports remain undecided work.
-A proposed manifest icon order was corrected after API/real-host inspection: users
-can drag the custom icon below Run/Debug, but the extension must not force private
-layout changes. The dachshund artwork and tiny monochrome derivative remain separate.
+The preceding Activity Bar host choice is withdrawn, not retained as a runtime
+compatibility mode. Native saves use non-writing Python plans and VS Code documents;
+managed project/Electron operations retain the Python writer. The dachshund artwork and tiny monochrome derivative remain separate.
 Git title/corner A/M/D/R colors use theme tokens, with modified-gutter blue for M;
 semantic fills, source-only context and withdrawal remain independent.
 
@@ -48,20 +49,26 @@ Distribution targets are `pipx install specspec` and `uvx --from specspec specsp
 
 ```text
 _specspec/
-  <uuid>--project-manifesto.md
-  <uuid>--validate-graph-edits.md
-  <uuid>--validator-implementation.md
+  XV5_rPQ=project-manifesto.md
+  Zm9vYmE=validate-graph-edits.md
+  ZnJlc2g=validator-implementation.md
 ```
 
-Use lowercase UUIDv4 IDs from `uuid.uuid4()`. Frontmatter is authoritative, with a matching `<id>--<ascii-slug>.md` filename. Resolve references only by full ID. Discover direct files only; reject directories, symlinks, and non-node files.
+Use canonical padded RFC 4648 Base64url IDs over `secrets.token_bytes(5)`:
+40 random bits encoded as seven symbols plus one `=`, for eight characters total.
+Keep the trailing equals sign in the full identity and use it as the sole filename
+separator: `<id><ascii-slug>.md`. Generate under the writer lock and retry exact
+or case-only collisions against all current nodes, including withdrawn nodes,
+regardless of summary. Validate zero pad bits and reject case-only graph aliases
+for portable filename safety. Frontmatter is authoritative, with a matching filename. Resolve references only by full ID. Discover direct files only; reject directories, symlinks, and non-node files.
 
 Search upward for the nearest `_specspec` directory, stopping even when it is invalid. Support an explicit project-root override. Keep all operation state outside `_specspec`; do not introduce a configuration file or node subdirectory.
 
-Version 3 frontmatter (versions 1/2 remain read/migration compatibility formats):
+Current format/API 3 frontmatter (the sole supported scheme):
 
 | Field | Rule |
 | --- | --- |
-| `id` | Required lowercase UUIDv4. |
+| `id` | Required canonical padded Base64url of five octets, including `=`. |
 | `type` | `manifesto`, `requirement`, or `implementation`. |
 | `retired` | Optional strict boolean; true means withdrawn, not unreviewed. No approval `status` field. |
 | `parents` | Required array of unique IDs; order is non-semantic. |
@@ -91,8 +98,8 @@ The user's later consenting-adults correction removes `managed_hash`, graph
 fingerprints, `--expect` and hash verification. CLI/UI edits remain recommended;
 manual Markdown changes are permitted and validated on schema/graph consistency,
 not provenance. API/format 3 contains no replacement marker or fingerprint.
-Older v1/v2 readers recognize obsolete hash fields only as ignored metadata and
-normalize approval fields away. Git compares semantic records and raw bytes directly.
+Superseded node schemes and unknown metadata fail validation; no obsolete reader
+or normalization path remains. Git compares semantic records and raw bytes directly.
 Require valid input/candidate graphs for tool mutations; no special repair or
 acknowledgement workflow is required merely because an edit was manual.
 
@@ -114,7 +121,13 @@ Remove approval statuses, scores, parent-approval rules, and the accept command.
 
 Keep a strict optional retired boolean for withdrawal and retained history. Explicit retire/restore batches name their nodes; live nodes cannot depend on withdrawn parents, and the manifesto cannot be withdrawn. Restoration does not claim review or approval. Keep withdrawal controls separate from content saves.
 
-Expose a migrate command: validate a v1/v2 graph's actual contents, convert the complete graph to v3 through the existing journal/lock transaction, preserve identities/text/links/references/extensions/unaffected comments, and map only legacy retirement to a flag. Ordinary writes to a legacy workspace require this explicit conversion. Historical v1/v2 revisions remain readable with obsolete hashes ignored, normalized to the approval-free model without changing stored bytes. Interrupted conversion recovers the complete original schema. Migration removes obsolete hash/approval metadata; an existing v3 migration is a no-op.
+Keep only the current node scheme in production tooling. The authorized conversion
+of both working graphs was performed once through a temporary journaled tool, not
+a shipped migration command. The self-referencing root graph's older revisions
+need not work with the current reader. Test Git tooling against the independent
+rewritten Gantt history, stored as a bundle with freshly executed current CLI
+receipts and real stage commit IDs. No unrelated SpecSpec history is rewritten.
+See the current-only intention and separate backend/history conclusions in the graph.
 
 Explicit choice groups remain separate work; the earlier approval-receipt candidate is withdrawn, not a required future workflow.
 
@@ -127,7 +140,6 @@ specspec [--root <project>] add --type requirement --parent <id> --slug <text> -
 specspec [--root <project>] update <id> --body <file> [--parent <id> ...]
 specspec [--root <project>] retire <id>...
 specspec [--root <project>] restore <id>...
-specspec [--root <project>] migrate
 specspec [--root <project>] list [--live | --retired] [--json]
 specspec [--root <project>] show <id> [--ancestors] [--descendants] [--json]
 specspec [--root <project>] context <id> [--max-bytes <n>] [--json]
@@ -223,9 +235,9 @@ Never silently truncate binding text. Measure the actual serialized response, in
 
 ## 10. Build sequence and verification
 
-1. **Python package and read/write core:** strict hash-free format, graph validation, CLI, transactional init/add/update/withdrawal/migration operations, and recovery.
+1. **Python package and read/write core:** strict hash-free format, graph validation, CLI, transactional init/add/update/withdrawal operations, and recovery.
 2. **Git integration:** staged validation, hook installation, revision snapshots, semantic diffs, and old/new impact analysis.
 3. **VS Code slice:** graph rendering, node creation/editing, HEAD/workspace overlays, and commit-to-commit comparisons through the CLI.
 4. **Dogfooding and distribution:** installable wheel, package checks, CI, editor packaging, and risk-proportionate self-specification review.
 
-Test malformed frontmatter, duplicate IDs, cycles, multi-parent graphs, withdrawal failures, v1/v2-to-v3 migration and recovery, valid manual changes, watcher/polling/draft conflicts, symlink/path escapes, comments/body preservation, interrupted mutations, invalid/partial external saves, partial staging, hook non-overwrite, slug renames, removed edges, and missing/unsupported revision formats. Run CLI integration tests in disposable repositories. Test Python on Windows and Linux; compile the extension and manually verify its VS Code UI before calling editor behavior production-ready.
+Test malformed frontmatter, duplicate IDs, cycles, multi-parent graphs, withdrawal failures, current-only schema rejection and interrupted-write recovery, valid manual changes, watcher/polling/draft conflicts, symlink/path escapes, comments/body preservation, interrupted mutations, invalid/partial external saves, partial staging, hook non-overwrite, slug renames, removed edges, and missing/unsupported revision formats. Run CLI integration tests in disposable repositories. Test Python on Windows and Linux; compile the extension and manually verify its VS Code UI before calling editor behavior production-ready.

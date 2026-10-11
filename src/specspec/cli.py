@@ -26,7 +26,6 @@ from .workspace import (
     set_retired,
     update_node,
 )
-from .workspace import migrate as migrate_workspace
 
 
 def emit(
@@ -198,7 +197,7 @@ def add(
     mutation_output(snapshot, [node_id], as_json)
 
 
-@main.command()
+@main.command(context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @click.option("--body", help="Replacement Markdown body file, or - for stdin.")
 @click.option("--parent", "parents", multiple=True, help="Replace the complete parent list.")
@@ -235,7 +234,7 @@ def update(
 
 
 def withdrawal_command(name: str, retired: bool):
-    @main.command(name=name)
+    @main.command(name=name, context_settings={"ignore_unknown_options": True})
     @click.argument("ids", nargs=-1, required=True)
     @json_option
     @click.pass_obj
@@ -253,23 +252,6 @@ def withdrawal_command(name: str, retired: bool):
 
 withdrawal_command("retire", True)
 withdrawal_command("restore", False)
-
-
-@main.command(name="migrate")
-@json_option
-@click.pass_obj
-@guarded
-def migrate_command(root: Path | None, as_json: bool) -> None:
-    """Convert a validated v1/v2 graph to the hash-free v3 schema."""
-    project = root_path(root)
-    before = load_snapshot(project)
-    snapshot = migrate_workspace(project)
-    ids = [
-        node.id
-        for node in snapshot.nodes
-        if snapshot.files[node.path] != before.files.get(node.path)
-    ]
-    mutation_output(snapshot, sorted(ids), as_json)
 
 
 @main.command(name="list")
@@ -292,7 +274,7 @@ def list_nodes(root: Path | None, only_retired: bool, only_live: bool, as_json: 
     emit(result, snapshot.diagnostics, as_json=as_json)
 
 
-@main.command()
+@main.command(context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @click.option("--ancestors", is_flag=True)
 @click.option("--descendants", is_flag=True)
@@ -319,7 +301,7 @@ def show(
     )
 
 
-@main.command()
+@main.command(context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @json_option
 @click.pass_obj
@@ -338,7 +320,7 @@ def impact(root: Path | None, node_id: str, as_json: bool) -> None:
     )
 
 
-@main.command()
+@main.command(context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @click.option("--max-bytes", type=click.IntRange(min=1))
 @click.option("--include-retired", is_flag=True)
@@ -421,7 +403,7 @@ def export_graph(root: Path | None, output_format: str) -> None:
     else:
 
         def mermaid_id(node_id: str) -> str:
-            return "n_" + node_id.replace("-", "_")
+            return "n_" + node_id.encode("ascii").hex()
 
         lines = ["graph TD"]
         for node_id in graph.order:

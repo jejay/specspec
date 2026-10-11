@@ -110,7 +110,6 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args, input) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args, input });
     if (options.cliError) throw new Error(options.cliErrorMessage || 'Cannot run Python backend');
-    if (args[0] === 'migrate') current = { ...current, format_version: 3 };
     if (args[0] === 'editor') {
       const request = JSON.parse(input);
       if (options.editError && request.edit) throw new Error('Planner temporarily unavailable');
@@ -167,33 +166,13 @@ async function waitFor(check) {
   assert.ok(check(), 'The serialized graph action did not complete.');
 }
 
-test('legacy migration is explicitly confirmed without hash expectations', async t => {
-  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
-  await calls.commands.get('specspec.openGraph')();
-  calls.panels[0].send({ type: 'migrate' });
-  await waitFor(() => calls.panels[0].messages.at(-1).snapshot?.format_version === 3);
-  const mutation = calls.cli.find(call => call.args[0] === 'migrate');
-  assert.deepEqual(mutation.args, ['migrate', '--json']);
-  assert.match(calls.warnings[0], /whole graph/);
-  assert.equal(calls.panels[0].messages.at(-1).snapshot.format_version, 3);
-  assert.equal(calls.panels[0].messages.at(-1).force, false);
-});
-
-test('cancelled migration cannot invoke a writer', async t => {
-  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 } });
-  await calls.commands.get('specspec.openGraph')();
-  calls.panels[0].send({ type: 'migrate' });
-  await waitFor(() => calls.panels[0].messages.at(-1).type === 'cancelled');
-  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
-});
-
-test('ordinary writes cannot silently migrate a legacy workspace', async t => {
-  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
+test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
+  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 999 }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
   calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
-  assert.match(calls.panels[0].messages.at(-1).message, /Migrate/);
-  assert.ok(!calls.cli.some(call => ['add', 'migrate'].includes(call.args[0])));
+  assert.match(calls.panels[0].messages.at(-1).message, /Unsupported/);
+  assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
 });
 
 test('withdrawal and restoration are guarded commands and acceptance messages are rejected', async t => {
@@ -212,24 +191,14 @@ test('withdrawal and restoration are guarded commands and acceptance messages ar
   assert.ok(!calls.cli.some(call => call.args[0] === 'accept'));
 });
 
-test('historical legacy comparisons cannot invoke migration', async t => {
-  const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true, revisions: ['HEAD', 'HEAD'] });
-  await calls.commands.get('specspec.compareRevisions')();
-  await waitFor(() => calls.panels[0].messages.at(-1).readonly === true);
-  calls.panels[0].send({ type: 'migrate' });
-  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
-  assert.match(calls.panels[0].messages.at(-1).message, /read-only/);
-  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
-});
-
-test('losing trust prevents a previously loaded migration from executing', async t => {
-  const { calls, workspace } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
+test('losing trust prevents a previously loaded graph from executing writes', async t => {
+  const { calls, workspace } = fixture(t, { confirm: true });
   await calls.commands.get('specspec.openGraph')();
   workspace.isTrusted = false;
-  calls.panels[0].send({ type: 'migrate' });
+  calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /trust/);
-  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
+  assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
 });
 
 test('empty development windows use a filesystem folder picker and load the graph', async t => {
@@ -399,7 +368,7 @@ test('node-file comparisons open an independent panel instead of rebinding the w
 });
 test('the manifest selects only canonical node patterns and has no Activity Bar container', () => {
   const manifest = require('../package.json');
-  assert.deepEqual(manifest.contributes.customEditors[0].selector, [{ filenamePattern: '**/_specspec/*--*.md' }]);
+  assert.deepEqual(manifest.contributes.customEditors[0].selector, [{ filenamePattern: '**/_specspec/???????=*.md' }]);
   assert.equal(manifest.contributes.customEditors[0].priority, 'default');
   assert.equal(manifest.contributes.viewsContainers, undefined);
 });

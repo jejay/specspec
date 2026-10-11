@@ -11,14 +11,12 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <button id="back" hidden>← Total graph</button><button id="refresh">Refresh</button>
     <button id="compare">Compare revisions</button><button id="workspace">HEAD / workspace</button>
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
-    <button id="migrate" hidden>Migrate specification</button>
     <label class="color-control" for="color-mode">Color by <select id="color-mode">
     <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="type">Node type</option></select></label>
     <span id="revision"></span></header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>
     <p id="sync-notice" role="status" hidden>Displayed graph is out of date. Fix the Markdown files and refresh; graph changes are disabled.</p>
-    <p id="schema-notice" class="form-help" hidden></p>
     <details id="linked-sources" hidden><summary id="source-summary"></summary><ul id="source-files"></ul></details>
     <div class="canvas-shell"><main id="viewport" tabindex="0" aria-label="Specification node canvas" aria-describedby="canvas-help"><div id="graph">
     <svg id="edges" aria-hidden="true"></svg><div id="cards"></div></div></main>

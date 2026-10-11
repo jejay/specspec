@@ -1,0 +1,25 @@
+---
+id: t8RQMdE=
+type: requirement
+parents:
+- eLTZ3sg=
+- ME4UXTA=
+---
+# Edit a selected node within its relationship context
+
+Clicking a node opens a focused subgraph containing that node, its direct parents,
+and its direct children instead of a separate editing sidebar. The selected node
+expands to contain the relevant settings and inputs; its neighbors retain the
+compact detail level used in the total graph. Provide a back action to return to
+the total graph and allow navigation by selecting neighboring nodes.
+
+Preserve graph-aware editing, Git change context, drafts, and withdrawal history
+in this presentation, without introducing an individual approval step.
+
+Origin: the user's requested tree UI revision, 2026-10-04. This records requested
+product behavior, not a chosen layout or rendering mechanism.
+
+The later main-editor correction withdraws sidebar hosting. Settings still expand
+inside the graph node, not in a second settings sidebar. The user-authorized
+native-document experiment permits separate file tabs: their neighbors can open
+another node-file editor rather than silently changing which resource a tab saves.

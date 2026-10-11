@@ -2,61 +2,61 @@
   {
     "key": "01",
     "label": "Business portfolio prototype",
-    "predecessor_commit": "85b7b8b6b02f0aca2cacfab48ecb172937b76d92",
-    "spec_fingerprint": "ae782eb2d2aa9a23f52038cd0b0d277732afe3123c33d18083cf4fe45aebb173",
     "live_before": 0,
-    "withdrawn_ids": [],
     "spec_live_count": 15,
-    "spec_commit": "3ba86c0d89585a4928440369f48a9c0c94f8dd29",
-    "implementation_commit": "8ac56760b9c90f389c0eee919fde7b708a08bf8f",
-    "implementation_fingerprint": "86c95461cf0ea5d239a95390a1d09aaa38d7b7a75f6041e08abeb1e3cf940672"
+    "withdrawn_ids": [],
+    "spec_receipt": 28,
+    "spec_commit": "985986d274f5b1502e45354b80f3e9ff09d2324f",
+    "predecessor_commit": "d6bd05b55526bc0551a9eb727a51bb143289f097",
+    "implementation_receipt": 34,
+    "implementation_commit": "047c3a83dee39d7fa87d57df88f7d47605f33598"
   },
   {
     "key": "02",
     "label": "Personal manual-date planner",
-    "predecessor_commit": "8ac56760b9c90f389c0eee919fde7b708a08bf8f",
-    "spec_fingerprint": "f12ad7a2c825fdd73544b99707a55483f2080db3c90401fe4a71809dad3f874c",
     "live_before": 17,
-    "withdrawn_ids": [
-      "ac3d8b1d-980e-4c16-be96-ed1a61f02972",
-      "7fd262ae-3014-4e6e-a812-92bed9926e3b",
-      "aa4e41fe-22f4-464a-8295-ba7dd1fef7f5",
-      "3c141122-2f7a-41c1-bee7-7d8b35d1e5fd",
-      "071327f3-0409-4816-8a5f-2d5156221968",
-      "b199d1c4-4599-4aeb-a7b6-570047f83da8",
-      "6ba58c02-317a-4a35-aacd-706360dda225",
-      "beb1f8f3-aafe-4f77-83fb-9d1ffc9b3baa",
-      "453d830b-99ce-45bc-83dc-ca8b1c293019",
-      "a8a584cd-1ed6-4b4d-a944-c56979f57632",
-      "c8c5bfbf-76ef-4fcd-bfe8-7977a2324cb6",
-      "006fd979-8651-4c7b-8627-c5ade1ca0b57",
-      "d5ec8f06-adc6-492e-afdb-e08e4a0a9792"
-    ],
     "spec_live_count": 14,
-    "spec_commit": "f656942184bfad34e86d82242f23bb2053f6f365",
-    "implementation_commit": "f54142ab14956a5ba90f7e52517abc026617496d",
-    "implementation_fingerprint": "ee013f481837948c5e464fe69625628e0b1b24ab744faf85e9b26cdee657d124"
+    "withdrawn_ids": [
+      "mfuZv1o=",
+      "yevyQYA=",
+      "hRCUVP4=",
+      "e0X7hrw=",
+      "7B81rns=",
+      "MRCLgPU=",
+      "_Gmdp6Q=",
+      "046joRU=",
+      "jVUHzPU=",
+      "mS49hpI=",
+      "7xveLvU=",
+      "amgKjDA=",
+      "6Dhjl-E="
+    ],
+    "spec_receipt": 69,
+    "spec_commit": "d8cedf9a9e5a503253afbde59df1e5adb42bf519",
+    "predecessor_commit": "047c3a83dee39d7fa87d57df88f7d47605f33598",
+    "implementation_receipt": 75,
+    "implementation_commit": "d6ef6077e6adb416fb5ef605aee51a3eeac288cb"
   },
   {
     "key": "03",
     "label": "Workshop dependency forecasts and baseline",
-    "predecessor_commit": "f54142ab14956a5ba90f7e52517abc026617496d",
-    "spec_fingerprint": "829ca42c4867fc54fb44e166f5a4baee6ec4768131b769564f53081a212e76cb",
     "live_before": 16,
-    "withdrawn_ids": [
-      "6ebf348e-da2b-48ff-95e9-0e11150d1b85",
-      "1d46fccc-8b7a-42d3-8724-9c3d84bfd1e7",
-      "2891bf7d-3dae-4066-98b8-8f599d4b2368",
-      "5f068b9f-a29a-4445-bb3a-96c7b12d2fff",
-      "ec5afd48-6c16-4ec0-bc5a-453f40926a62",
-      "7a6014c1-9e6b-4bd8-87f7-f365f5b0765a",
-      "a237a71f-db85-4bf8-a20a-2287be08c28b",
-      "6006dc63-84fe-4aba-ac7a-0c6144536f61",
-      "c673f8f3-26c6-4da9-8651-7fba937b82db"
-    ],
     "spec_live_count": 19,
-    "spec_commit": "95be927eb24577e89771fa74fb10d223e5d4fc60",
-    "implementation_commit": "660af2684ee8590ae44404f58e76f3d89be883d1",
-    "implementation_fingerprint": "2f4d21bd113275672dc19a32e66cbd5ab447fe33c3d6ff0addd7ca89504cad2d"
+    "withdrawn_ids": [
+      "kKTdUPc=",
+      "oAUR6gY=",
+      "Mn2McPE=",
+      "gg2lTOQ=",
+      "iJOEBVM=",
+      "mmJXFu8=",
+      "3XINhcU=",
+      "jrlMFeU=",
+      "O1Mpdxo="
+    ],
+    "predecessor_commit": "d6ef6077e6adb416fb5ef605aee51a3eeac288cb",
+    "spec_receipt": 110,
+    "spec_commit": "7f7dcab3720b848a02400e5d3ba27b95d2135201",
+    "implementation_receipt": 118,
+    "implementation_commit": "a31aa302b49faef2b3ca32ad29f1bfb07d430058"
   }
 ]

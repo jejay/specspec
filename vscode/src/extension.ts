@@ -216,7 +216,7 @@ class GraphView implements vscode.Disposable {
       },
     } : undefined;
     this.session = new GraphSession({
-      cli: (args: string[], input?: string) => ['add', 'update', 'retire', 'restore', 'migrate'].includes(args[0])
+      cli: (args: string[], input?: string) => ['add', 'update', 'retire', 'restore'].includes(args[0])
         ? project.documents.mutate(args, input) : project.cli(args, input),
       readGraph: (base: string) => project.documents.readGraph(base),
       authorized: () => vscode.workspace.isTrusted,

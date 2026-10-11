@@ -205,12 +205,7 @@ class GraphSession {
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
     const common = ['--json'];
-    if (message.type === 'migrate') {
-      if (current.format_version === 3) throw new Error('This graph already uses the current schema.');
-      if (!await this.host.confirm('Migrate the whole graph to the hash-free format? Obsolete hashes and approval metadata are removed; IDs, text, dependencies and withdrawal history are preserved. Review the resulting Git diff.')) { await this.post({ type: 'cancelled' }); return; }
-      await this.cli(['migrate', ...common]); await this.refresh(); return;
-    }
-    if (current.format_version !== 3) throw new Error('Migrate this legacy graph before editing.');
+    if (current.format_version !== 3) throw new Error('Unsupported specification format.');
     const nodes = new Map(current.nodes.map(n => [n.id, n])), id = message.id;
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('The node no longer exists. Unsaved text has been retained.');
     let args, input;

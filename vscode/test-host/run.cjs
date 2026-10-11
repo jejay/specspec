@@ -25,9 +25,9 @@ async function run() {
     const server = createServer(); server.on('error', reject);
     server.listen(0, '127.0.0.1', () => { const port = server.address().port; server.close(() => resolve(port)); });
   });
-  const project = fixture(root, python);
-  // Native document lifecycle checks use a compact nested graph; the full canvas
-  // geometry suite above still exercises the repository-sized graph.
+  const project = fixture(join(root, 'example/gantt'), python);
+  // Canvas/Git regressions use the maintained example graph, independent of
+  // changes to the self-referencing design graph. Native lifecycle uses a compact graph.
   const nativeRoot = join(project.root, 'native-documents'); mkdirSync(nativeRoot);
   const nativeCli = (args, input) => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', nativeRoot, ...args], { input, encoding: 'utf8' })).result;
   const manifesto = nativeCli(['init', '--manifesto', '-', '--json'], '# Native document fixture\n').changed_ids[0];

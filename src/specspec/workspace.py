@@ -5,10 +5,10 @@ from __future__ import annotations
 import base64
 import json
 import os
+import secrets
 import shutil
 import unicodedata
-import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path, PurePosixPath
@@ -137,11 +137,11 @@ def snapshot_from_files(
         return Snapshot(root, files, [], errors, None)
     manifesto_path, manifesto_data = manifestos[0]
     version = manifesto_data.get("format_version")
-    if type(version) is not int or version not in {1, 2, FORMAT_VERSION}:
+    if type(version) is not int or version != FORMAT_VERSION:
         errors.append(
             Diagnostic(
                 "VERSION",
-                f"Manifesto must declare supported format_version: 1, 2 or {FORMAT_VERSION}.",
+                f"Manifesto must declare current format_version: {FORMAT_VERSION}.",
                 manifesto_path,
             )
         )
@@ -152,14 +152,18 @@ def snapshot_from_files(
     for path, (data, body) in documents.items():
         try:
             node = parse_node(data, body, path, version=version)
-            if node.id in seen:
+            key = node.id.casefold()
+            if key in seen:
                 errors.append(
                     Diagnostic(
-                        "DUPLICATE", f"Duplicate ID also present in {seen[node.id]}.", path, node.id
+                        "DUPLICATE",
+                        f"Duplicate or case-only ID also present in {seen[key]}.",
+                        path,
+                        node.id,
                     )
                 )
                 duplicates = True
-            seen[node.id] = path
+            seen[key] = path
             nodes.append(node)
         except SpecError as error:
             errors.extend(error.diagnostics)
@@ -211,15 +215,26 @@ def slugify(value: str) -> str:
     return slug
 
 
-def new_node(node_type: str, parents: list[str], body: str, slug: str) -> SpecNode:
-    node_id = str(uuid.uuid4())
+def new_node(
+    node_type: str,
+    parents: list[str],
+    body: str,
+    slug: str,
+    *,
+    reserved_ids: Collection[str] = (),
+) -> SpecNode:
+    reserved = {node_id.casefold() for node_id in reserved_ids}
+    while True:
+        node_id = base64.urlsafe_b64encode(secrets.token_bytes(5)).decode("ascii")
+        if node_id.casefold() not in reserved:
+            break
     return SpecNode(
         node_id,
         node_type,
         False,
         parents,
         body,
-        f"{SPEC_DIR}/{node_id}--{slugify(slug)}.md",
+        f"{SPEC_DIR}/{node_id}{slugify(slug)}.md",
         FORMAT_VERSION if node_type == "manifesto" else None,
     )
 
@@ -288,11 +303,11 @@ def initialize(root: Path, body: str, slug: str = "project-manifesto") -> Snapsh
         raise SpecError(
             [Diagnostic("EXISTS", "Refusing to overwrite an existing _specspec workspace.")]
         )
-    node = new_node("manifesto", [], body, slug)
-    raw = serialize(node)
-    candidate = snapshot_from_files(root, {node.path: raw})
-    candidate.require_valid()
     with workspace_lock(root) as state:
+        node = new_node("manifesto", [], body, slug)
+        raw = serialize(node)
+        candidate = snapshot_from_files(root, {node.path: raw})
+        candidate.require_valid()
         if state.stat().st_dev != root.stat().st_dev:
             raise SpecError(
                 [Diagnostic("FILESYSTEM", "Staging and workspace must share a filesystem.")]
@@ -314,19 +329,10 @@ def initialize(root: Path, body: str, slug: str = "project-manifesto") -> Snapsh
     return result
 
 
-def mutate(
-    root: Path,
-    operation: Callable[[Snapshot], dict[str, bytes]],
-    *,
-    allow_legacy: bool = False,
-) -> Snapshot:
+def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes]]) -> Snapshot:
     with workspace_lock(root) as state:
         before = load_snapshot(root, ignore_state=True)
         before.require_valid()
-        if before.format_version != FORMAT_VERSION and not allow_legacy:
-            raise SpecError(
-                [Diagnostic("MIGRATION", "Run specspec migrate before editing this older format.")]
-            )
         changes = operation(before)
         if not changes:
             return before
@@ -389,10 +395,17 @@ def add_node(
     slug: str,
     sources: list[dict[str, str]] | None = None,
 ) -> tuple[Snapshot, str]:
-    node = new_node(node_type, parents, body, slug)
-    node.sources = sources or []
-    result = mutate(root, lambda _: {node.path: serialize(node)})
-    return result, node.id
+    node_id = ""
+
+    def operation(before: Snapshot) -> dict[str, bytes]:
+        nonlocal node_id
+        node = new_node(node_type, parents, body, slug, reserved_ids=before.require_valid().nodes)
+        node.sources = sources or []
+        node_id = node.id
+        return {node.path: serialize(node)}
+
+    result = mutate(root, operation)
+    return result, node_id
 
 
 def require_node(snapshot: Snapshot, node_id: str) -> SpecNode:
@@ -432,26 +445,6 @@ def set_retired(root: Path, ids: list[str], retired: bool) -> Snapshot:
         return changes
 
     return mutate(root, operation)
-
-
-def migrate(root: Path) -> Snapshot:
-    """Validate graph consistency, then journal the entire hash-free conversion."""
-
-    def operation(before: Snapshot) -> dict[str, bytes]:
-        if before.format_version == FORMAT_VERSION:
-            return {}
-        return {
-            node.path: serialize(
-                replace(
-                    node,
-                    format_version=FORMAT_VERSION if node.type == "manifesto" else None,
-                ),
-                before.files[node.path],
-            )
-            for node in before.nodes
-        }
-
-    return mutate(root, operation, allow_legacy=True)
 
 
 def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:

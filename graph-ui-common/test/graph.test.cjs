@@ -37,6 +37,24 @@ function fixture(t, options = {}) {
   } };
 }
 
+test('canonical compact IDs retain equals signs in cards, parent pickers and save messages', t => {
+  const { dom, snapshot, send, $, messages } = fixture(t);
+  const shortRoot = { ...root, id: '-_____8=', path: '_specspec/-_____8=root.md' };
+  const shortChild = { ...child, id: 'Zm9vYmE=', parents: [shortRoot.id], path: '_specspec/Zm9vYmE=child.md' };
+  const candidate = { ...child, id: 'ZnJlc2g=', parents: [shortRoot.id], path: '_specspec/ZnJlc2g=candidate.md' };
+  send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [shortRoot, shortChild, candidate], edges: [[shortRoot.id, shortChild.id], [shortRoot.id, candidate.id]] }, diagnostics: [], readonly: false });
+  assert.ok(dom.window.document.querySelector('[data-node-id="-_____8="] small').textContent.endsWith(shortRoot.id));
+  dom.window.document.querySelector('[data-node-id="Zm9vYmE="]').click();
+  assert.ok($('identity').textContent.includes(shortChild.id));
+  assert.ok($('identity').textContent.includes(shortChild.path));
+  assert.ok([...$('parent-candidate').options].some(o => o.textContent.endsWith(candidate.id)));
+  $('body').value = '# Full identity'; $('body').dispatchEvent(new dom.window.Event('input'));
+  $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
+  const save = messages.at(-1);
+  assert.equal(save.type, 'save'); assert.equal(save.id, shortChild.id);
+  assert.deepEqual(Array.from(save.parents), [shortRoot.id]);
+});
+
 function hoverFixture(t) {
   const f = fixture(t);
   const grand = { ...child, id: 'grand', parents: ['child'], body: '# Grand\n' };
@@ -226,40 +244,19 @@ test('withdrawal and restoration send guarded actions, not acceptance', t => {
   assert.equal('expect' in messages.at(-1), false);
 });
 
-test('a legacy workspace is readable but only explicit migration can write', t => {
-  const { dom, snapshot, send, messages, $ } = fixture(t);
-  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: false });
-  assert.equal($('new').disabled, true);
-  assert.equal($('migrate').hidden, false);
-  assert.match($('schema-notice').textContent, /Legacy v1/);
-  dom.window.document.querySelector('[data-node-id="child"]').click();
-  assert.equal($('body').value, child.body);
-  assert.equal($('body').disabled, true);
-  assert.equal($('save').disabled, true);
-  assert.equal($('retire').disabled, true);
-  $('migrate').click();
-  assert.equal(messages.at(-1).type, 'migrate');
-  assert.equal('expect' in messages.at(-1), false);
-  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
-  assert.equal($('migrate').hidden, true);
-  assert.equal($('body').disabled, false);
-  assert.equal($('body').value, child.body);
-});
-
-test('legacy histories cannot migrate and dirty drafts retain their original contents', t => {
+test('unsupported snapshots have no conversion controls and retain a disabled draft', t => {
   const { dom, snapshot, send, $, saved } = fixture(t);
   dom.window.document.querySelector('[data-node-id="child"]').click();
   $('body').value = '# Still my draft\n'; $('body').dispatchEvent(new dom.window.Event('input'));
-  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: false });
-  assert.equal($('migrate').disabled, true);
+  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 999 }, diagnostics: [], readonly: false });
+  assert.equal($('migrate'), null);
+  assert.equal($('schema-notice'), null);
+  assert.equal($('new').disabled, true);
+  assert.equal($('save').disabled, true);
   assert.equal($('body').value, '# Still my draft\n');
   assert.equal(saved().originalNode, child);
-  send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: true });
-  assert.equal($('migrate').hidden, true);
-  assert.equal($('save').disabled, true);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.equal($('body').value, '# Still my draft\n');
-  assert.equal(saved().originalNode, child);
 });
 
 test('restored obsolete status colors fall back to distance without losing a draft or camera', t => {

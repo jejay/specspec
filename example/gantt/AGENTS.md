@@ -1,7 +1,8 @@
 # Working on the Gantt example
 
-This folder is an independent SpecSpec project inside the parent Git repository.
-Do not initialize it again, create a nested repository, or edit canonical Markdown.
+This folder has an independent SpecSpec graph inside the parent checkout. Its
+maintained standalone Git history is `history/gantt.bundle`; tests clone it into
+disposable repositories. Do not add a nested `.git` here or reinitialize the graph.
 Run the installed CLI from here, or `python -m specspec --root example/gantt ...`
 from the repository root. The parent project's agent instructions also apply.
 
@@ -13,8 +14,15 @@ complete obsolete dependent branch, retaining its explanations and original IDs.
 
 `STORY.md` is explicitly fictional dialogue, not actual user authorization.
 `history/cli.jsonl` records real CLI operations; `history/revisions.json` records
-real Git revisions. Never invent receipts, backdate commits, or claim unrun checks.
-Implementation nodes link actual code/tests and explain omissions.
+actual rebuilt fixture Git revisions and receipt ordinals. The fixture was
+explicitly reconstructed through current CLI executions, not represented as the
+untouched original history. Never invent receipts, backdate commits or claim
+unrun checks. Implementation nodes link actual code/tests and explain omissions.
+
+Use canonical five-byte padded Base64url IDs (40 bits, full trailing `=`) and
+`<id><slug>.md` filenames. Keep only the current SpecSpec schema in tooling.
+Obsolete surrounding SpecSpec graph revisions need not work. This Gantt history
+is the rigorous Git regression corpus; every maintained commit must be compliant.
 
 Before an authorized commit, stage the complete intended change and run BOTH:
 

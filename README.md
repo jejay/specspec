@@ -42,11 +42,15 @@ After installation, from this repository root:
 ```sh
 specspec validate --warnings-as-errors
 specspec list --json
-specspec context cc058342-0f01-4dc1-99bc-439b445c5a04 --json
-specspec diff --base HEAD --json
+specspec context qowy5AI= --json
+specspec export --format mermaid
 ```
 
-The context example follows the actual Git implementation back to its requirements. Review is a spectrum of confidence: users often spend more attention on early intentions and less on later, revisable conclusions. Once an implementation attempt is worth its uncertainty and token cost, no individual node sign-offs are required. Depth is not a confidence score, and risky details can merit review anywhere. Git additions identify new nodes; implementation and feedback guide further revision. CI checks structural integrity and source references, not whether choices are correct. See [the tour](docs/own-spec.md).
+The context example follows the current compact-ID conclusion back to its intentions.
+This self-referencing graph is evolving design documentation: old root revisions
+need not work with current tooling. Rigorous Git history checks use the rewritten,
+current-schema [Gantt bundle](example/gantt/history/WALKTHROUGH.md), not obsolete
+root schemas. Review is a spectrum of confidence: users often spend more attention on early intentions and less on later, revisable conclusions. Once an implementation attempt is worth its uncertainty and token cost, no individual node sign-offs are required. Depth is not a confidence score, and risky details can merit review anywhere. Git additions identify new nodes; implementation and feedback guide further revision. CI checks structural integrity and source references, not whether choices are correct. See [the tour](docs/own-spec.md).
 
 ## First graph in another project
 
@@ -65,22 +69,26 @@ specspec context <requirement-id> --json
 
 The CLI and graph editor are recommended, but manual `_specspec` Markdown edits are allowed. Validation checks actual schema and graph consistency, not how the files were edited. There are no stored `managed_hash` markers or graph fingerprints. Valid manual changes need no repair or provenance acknowledgement.
 
+Node IDs are canonical padded Base64url of **five random bytes (40 bits)**:
+seven symbols plus `=`, eight characters in total. The full trailing equals sign
+belongs to the identity and also separates it from the filename summary, for
+example `XV5_rPQ=specspec-manifesto.md`. Tool creation retries project-local
+collisions, including withdrawn nodes and case-only aliases, under the writer
+lock. IDs remain case-sensitive; these are references, not security tokens.
+
 The flat `_specspec` directory contains nodes only. Global `format_version` metadata belongs on the manifesto. Runtime locks, staging files, and recovery journals live in the ignored `.specspec-local` directory. Do not delete an unfinished journal: run `specspec recover`. Use `recover --force-lock` only after confirming that no writer is running.
 
 ## Schema and withdrawal
 
 Format 3 has no `managed_hash` or `status` field. Ordinary nodes have no stored review stage; optional `retired: true` marks a withdrawn explanation retained as history. The manifesto cannot be retired, and live nodes cannot depend on retired parents. `specspec restore ID` reverses withdrawal; it does not declare approval.
 
-Version-one/two graphs and old Git revisions remain readable. The reader ignores obsolete hash fields, maps legacy retirement to withdrawal, and does not expose proposed/accepted labels. Convert an older workspace explicitly before editing:
-
-```sh
-specspec list --json
-specspec migrate --json
-specspec list --live --json
-specspec list --retired --json
-```
-
-Migration journals the complete conversion, preserves IDs, paths, body bytes, dependencies, references, extensions, and unaffected comments, and rejects structurally invalid input. An interrupted conversion uses the normal `recover` workflow. Repeating migration is a no-op. The shared JSON API is now **version 3**, without fingerprints or managed hashes; upgrade the CLI and extension together.
+Only the current compact-ID format/API **3** schema is supported. Obsolete
+node formats, UUID IDs and unknown fields are rejected, not silently normalized.
+There is no permanent migration command or editor conversion control. Both working
+graphs were converted once through a temporary journaled tool. Old root-history
+comparisons may fail; that is expected and is not a compatibility test obligation.
+Upgrade the CLI and extension together. Gantt's maintained standalone history was
+rebuilt through current CLI executions and is cloned from its bundle for tests.
 
 ## Git
 
@@ -93,6 +101,9 @@ specspec diff --base <older-commit> --target <newer-commit> --json
 ```
 
 The pre-commit hook validates the **staged** node blobs, including schema and graph relationships. It does not confuse unstaged edits with the contents being committed. Installation refuses existing hooks and respects `core.hooksPath`; chain `specspec --root <project> hook check` manually when another hook already exists. The installed hook uses the Python environment from installation, which must remain available; reinstall it after moving environments.
+
+Comparisons require current-schema graph snapshots. For a compliant historical
+corpus, clone `example/gantt/history/gantt.bundle` as described in its walkthrough.
 
 Hooks guard against inconsistent graphs, not manual edits, adversarial modification, or proof of review. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
 
@@ -135,7 +146,7 @@ Click a node to open its **neighborhood view**: compact parents to the left, com
 
 Nodes no longer repeat hop-distance labels; the selected color legend explains that context. Child cards still show **N downstream**: the entire reachable descendant subgraph, including every deeper generation, excluding that child and deduplicating shared nodes. Different child totals may overlap; this is potential-impact context rather than guaranteed invalidation.
 
-The webview supports node creation, binding-text/parent/source editing, explicit withdrawal/restoration, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. Node-file tabs update their bound VS Code `TextDocument` through Python-planned edits, with native dirty state, Save/autosave, undo/redo and recovery. Selecting another node opens its file editor. Project panels and Electron retain Python-managed writes; create nodes through **Open Graph**. Commit-target comparison views are read-only. See [document/persistence semantics](docs/native-editors.md). Legacy workspaces offer **Migrate specification** before editing; dirty drafts must be discarded first and never silently lose their original node contents. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
+The webview supports node creation, binding-text/parent/source editing, explicit withdrawal/restoration, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. Node-file tabs update their bound VS Code `TextDocument` through Python-planned edits, with native dirty state, Save/autosave, undo/redo and recovery. Selecting another node opens its file editor. Project panels and Electron retain Python-managed writes; create nodes through **Open Graph**. Commit-target comparison views are read-only. See [document/persistence semantics](docs/native-editors.md). Unsupported schemas report diagnostics without conversion controls; invalid files never silently lose drafts or get rewritten. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
 
 **Markdown synchronization:** both hosts reload on file-watcher notifications, coalescing bursts and briefly retrying incomplete saves. Polling is **off by default**. Enable it in VS Code with `"specspec.pollIntervalMs": 5000`, or in Electron with `--poll-interval-ms 5000` / `SPECSPEC_POLL_INTERVAL_MS=5000`; `0` disables it. Watchers remain enabled. Explicit Refresh is always available; watcher-only delivery depends on the OS/filesystem and is not guaranteed on every network/mounted drive.
 

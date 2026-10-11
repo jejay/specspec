@@ -13,7 +13,7 @@ async function run() {
   const source = resolve(__dirname, '../..');
   const python = process.env.SPECSPEC_PYTHON || join(source, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
   if (!existsSync(python)) throw new Error('Set SPECSPEC_PYTHON to an installed CLI interpreter.');
-  const project = fixture(source, python), profile = mkdtempSync(join(tmpdir(), 'specspec-electron-host-'));
+  const project = fixture(join(source, 'example/gantt'), python), profile = mkdtempSync(join(tmpdir(), 'specspec-electron-host-'));
   const port = await new Promise(resolve => { const server = createServer(); server.listen(0, '127.0.0.1', () => { const p = server.address().port; server.close(() => resolve(p)); }); });
   const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
   const executable = process.env.SPECSPEC_DESKTOP_EXECUTABLE || require('electron');

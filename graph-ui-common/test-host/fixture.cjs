@@ -14,7 +14,9 @@ function fixture(source, python) {
   git('init'); git('config', 'core.autocrlf', 'false'); git('config', 'user.name', 'Isolated UI fixture');
   git('config', 'user.email', 'ui-fixture@example.invalid'); git('add', '.'); git('commit', '-m', 'Disposable baseline');
   let s = cli(['list', '--json']);
-  const modified = s.nodes.find(n => n.id === 'c0943883-e3cb-4de9-8c5e-6aeb4a37dd06');
+  const manifesto = s.nodes.find(n => n.type === 'manifesto');
+  const modified = s.nodes.find(n => n.type === 'requirement' && !n.retired && n.parents.includes(manifesto.id));
+  if (!modified) throw new Error('The UI fixture needs a live manifesto-child requirement.');
   cli(['update', modified.id, '--body', '-', '--json'], '# Modified UI fixture intention\n\nDisposable test content, not the real project.\n');
   s = cli(['list', '--json']);
   const added = cli(['add', '--parent', s.nodes.find(n => n.type === 'manifesto').id, '--slug', 'added-ui-fixture', '--body', '-', '--json'], '# Added UI fixture intention\n\nDisposable test content.\n').changed_ids[0];

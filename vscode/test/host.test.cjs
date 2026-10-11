@@ -20,8 +20,9 @@ test('the VS Code port preserves dirty drafts across project switches without sh
   assert.equal(again.getState().originalNode.body, '# Original A'); assert.equal(again.getState().draft.body, '# A');
   assert.equal(saved.projects['/b'].originalNode.body, '# Original B');
 });
-test('pre-extraction single-project drafts keep their old fingerprint through port migration', t => {
-  let saved = { dirty: true, formFingerprint: 'legacy', draft: { body: '# Unfinished' } };
-  const a = open(t, '/a', () => saved, value => { saved = value; }); assert.equal(a.getState().formFingerprint, 'legacy');
+test('current project-scoped drafts restore their full node record', t => {
+  let saved = { projects: { '/a': { dirty: true, originalNode: { id: 'Zm9vYmE=', body: '# Original' }, draft: { body: '# Unfinished' } } } };
+  const a = open(t, '/a', () => saved, value => { saved = value; });
+  assert.equal(a.getState().originalNode.id, 'Zm9vYmE=');
   a.setState(a.getState()); assert.equal(saved.projects['/a'].draft.body, '# Unfinished');
 });

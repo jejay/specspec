@@ -6,7 +6,9 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-ID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+# Five octets encode to seven Base64url symbols and one '='. The last
+# symbol has four significant bits and two zero pad bits (RFC 4648).
+ID_RE = re.compile(r"^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
 FORMAT_VERSION = 3

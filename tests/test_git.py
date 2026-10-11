@@ -55,7 +55,7 @@ def test_commit_diffs_removed_edges_and_renames(workspace):
     assert child in result["affected"]
     assert result["impact_complete"]
     node = load_snapshot(root).graph.nodes[left]
-    (root / node.path).rename(root / "_specspec" / f"{left}--renamed.md")
+    (root / node.path).rename(root / "_specspec" / f"{left}renamed.md")
     result = semantic_diff(base, load_snapshot(root))
     assert {"id": left, "kind": "renamed", "fields": ["path"]} in result["changes"]
     git(root, "add", "_specspec")

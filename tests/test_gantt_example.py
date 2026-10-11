@@ -8,7 +8,7 @@ from click.testing import CliRunner
 from test_git import git
 
 from specspec.cli import main
-from specspec.workspace import discover_root, load_snapshot
+from specspec.workspace import discover_root, initialize, load_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 GANTT = ROOT / "example/gantt"
@@ -48,13 +48,13 @@ def test_example_receipts_and_all_three_real_git_stage_pairs_are_verified():
 
 
 def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index(tmp_path):
-    # Verbatim fixtures in a disposable repo: never edit the live canonical graph.
+    # The maintained Gantt graph, not root graph history, is the Git corpus.
     original = load_snapshot(GANTT)
-    for source, target in [(ROOT, tmp_path), (GANTT, tmp_path / "example/gantt")]:
-        for relative, raw in load_snapshot(source).files.items():
-            file = target / relative
-            file.parent.mkdir(parents=True, exist_ok=True)
-            file.write_bytes(raw)
+    initialize(tmp_path, "# Independent synthetic parent\n")
+    for relative, raw in original.files.items():
+        file = tmp_path / "example/gantt" / relative
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_bytes(raw)
     nested = tmp_path / "example/gantt"
     git(tmp_path, "init")
     git(tmp_path, "config", "core.autocrlf", "false")

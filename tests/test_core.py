@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import random
-import uuid
 from dataclasses import replace
 
 import pytest
@@ -112,7 +111,7 @@ def test_slug_rename_preserves_semantics(workspace):
     root, _ = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    (root / node.path).rename(root / "_specspec" / f"{node.id}--renamed.md")
+    (root / node.path).rename(root / "_specspec" / f"{node.id}renamed.md")
     assert load_snapshot(root).nodes[0].semantic() == node.semantic()
     assert load_snapshot(root).valid
 
@@ -164,10 +163,10 @@ def test_duplicate_ids_and_missing_parents(workspace):
     root, manifesto = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    duplicates = {**snapshot.files, f"_specspec/{node.id}--duplicate.md": snapshot.files[node.path]}
+    duplicates = {**snapshot.files, f"_specspec/{node.id}duplicate.md": snapshot.files[node.path]}
     assert not snapshot_from_files(root, duplicates).valid
     with pytest.raises(SpecError, match="Missing parent"):
-        add_node(root, "requirement", [str(uuid.uuid4())], "Missing\n", "missing")
+        add_node(root, "requirement", ["bWlzc2k="], "Missing\n", "missing")
     with pytest.raises(SpecError, match="duplicates"):
         add_node(root, "requirement", [manifesto, manifesto], "Duplicate\n", "duplicate")
 

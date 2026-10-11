@@ -124,36 +124,23 @@ def parse_node(
         if not condition:
             errors.append(Diagnostic("SCHEMA", message, path))
 
-    check(type(version) is int and version in {1, 2, FORMAT_VERSION}, "Unsupported format version.")
-    fields = (FIELDS - {"retired"}) | {"status"} if version == 1 else FIELDS
-    if version in {1, 2}:
-        # Obsolete markers are ignored, not checked or exposed in the current API.
-        fields = fields | {"managed_hash"}
+    check(type(version) is int and version == FORMAT_VERSION, "Unsupported format version.")
     check(all(isinstance(key, str) for key in data), "Frontmatter keys must be strings.")
-    check(not (set(data) - fields), f"Unknown fields: {sorted(str(k) for k in set(data) - fields)}")
+    check(not (set(data) - FIELDS), f"Unknown fields: {sorted(str(k) for k in set(data) - FIELDS)}")
     node_id = data.get("id")
     check(
         isinstance(node_id, str) and bool(ID_RE.fullmatch(node_id)),
-        "id must be a lowercase UUIDv4.",
+        "id must be canonical padded Base64url of five bytes (seven symbols plus '=').",
     )
     node_type = data.get("type")
     check(isinstance(node_type, str) and node_type in NODE_TYPES, "Invalid node type.")
-    legacy_status = None
-    if version == 1:
-        legacy_status = data.get("status")
-        check(
-            isinstance(legacy_status, str) and legacy_status in {"proposed", "accepted", "retired"},
-            "Invalid legacy lifecycle status.",
-        )
-        retired = legacy_status == "retired"
-    else:
-        retired = data.get("retired", False)
-        check(isinstance(retired, bool), "retired must be a boolean withdrawal flag.")
+    retired = data.get("retired", False)
+    check(isinstance(retired, bool), "retired must be a boolean withdrawal flag.")
     parents = data.get("parents")
     valid_parents = isinstance(parents, list) and all(
         isinstance(parent, str) and ID_RE.fullmatch(parent) for parent in parents
     )
-    check(valid_parents, "parents must be an array of lowercase UUIDv4 IDs.")
+    check(valid_parents, "parents must be an array of full canonical padded Base64url IDs.")
     if valid_parents:
         check(len(set(parents)) == len(parents), "parents must not contain duplicates.")
     format_version = data.get("format_version")
@@ -199,7 +186,7 @@ def parse_node(
         check(False, str(error))
     filename = PurePosixPath(path).name
     if isinstance(node_id, str):
-        prefix = f"{node_id}--"
+        prefix = node_id
         check(
             filename.startswith(prefix) and filename.endswith(".md"), "Filename must match its id."
         )

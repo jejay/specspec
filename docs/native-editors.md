@@ -1,6 +1,6 @@
 # Native node-file editors and portable graph views
 
-Opening `**/_specspec/*--*.md` defaults to **SpecSpec Graph** in VS Code's main
+Opening `**/_specspec/???????=*.md` defaults to **SpecSpec Graph** in VS Code's main
 editor area. The filename glob is discovery only: Python resolves/validates the
 actual node. **Reopen Editor With → Text Editor** remains available, and user
 editor associations can override the default. There is no Activity Bar container.
@@ -80,12 +80,12 @@ format metadata, hashes, approval stages, Git staging, or commits are introduced
 
 ```json
 {
-  "documents": {"_specspec/<uuid>--summary.md": "---\n..."},
+  "documents": {"_specspec/Zm9vYmE=summary.md": "---\n..."},
   "edit": {
-    "path": "_specspec/<uuid>--summary.md",
-    "id": "<uuid>",
+    "path": "_specspec/Zm9vYmE=summary.md",
+    "id": "Zm9vYmE=",
     "body": "# Updated binding text\n",
-    "parents": ["<parent-uuid>"],
+    "parents": ["ZnJlc2g="],
     "sources": "[]"
   }
 }
@@ -98,7 +98,7 @@ optional boolean edit. The result has `snapshot`, `diagnostics`,
 `changes` (`path`, exact `before`/`after` text), optional `diff`, and `note`.
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
 explicit diagnostics, not successful graph validation. Unsafe/missing files,
-identity changes, legacy mutation, locks/recovery, and oversized requests fail.
+identity changes, unsupported schemas, locks/recovery, and oversized requests fail.
 The planner never writes files or recreates a deleted node. API stays version 3;
 upgrade the development CLI and extension together to gain this new command.
 
@@ -109,9 +109,10 @@ repair, graph rules, missing/unsafe paths, runtime locks, bounds and unsaved Git
 comparisons. Shared tests cover coordination, coalescing, minimal edits, sequence
 acknowledgements, caret/drafts and managed-host regression. Adapter tests cover
 native edits/save, independent panels, dirty-document protection and unapplied-form
-recovery. The installed-host runner uses a repository-sized graph for the existing
-canvas suite and a compact nested graph for native lifecycle/split/camera/undo/raw
-edit/repair checks. Those are separate scale boundaries, not a large-graph typing
+recovery. The installed-host runner uses the maintained current-schema Gantt graph for
+canvas/Git/watcher regressions and a compact nested graph for native lifecycle,
+split/camera/undo/raw-edit/repair checks. It does not depend on old self-spec IDs
+or historical schemes. Those are separate scale boundaries, not a large-graph typing
 performance guarantee. Electron's unchanged managed behavior uses its own real
 host suite. See implementation records for actual runs; configured CI is not
 locally observed remote execution.

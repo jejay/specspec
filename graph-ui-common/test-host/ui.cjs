@@ -99,7 +99,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>c.offsetHeight===112&&c.scrollHeight<=c.clientHeight+1)`), 'Shorter compact cards must fit two-line headlines and remaining badges.');
     assert.equal(await evaluate(`getComputedStyle(document.getElementById('graph')).willChange`), 'auto');
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>!('status' in c.dataset))`));
-    assert.ok(await evaluate(`document.getElementById('migrate').hidden`), 'The current repository is already migrated.');
+    assert.ok(await evaluate(`!document.getElementById('migrate')`), 'Superseded schema conversion is not offered.');
     assert.ok(await evaluate(`document.querySelector('[data-retired="true"] .retired-badge') !== null`), 'Withdrawal is labeled independently of Git newness.');
     const positions = () => evaluate(`JSON.stringify([...document.querySelectorAll('#cards .card')].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.width, c.offsetHeight]))`);
     const camera = () => evaluate(`(() => { const d=document.getElementById('viewport').dataset; return { x:Number(d.cameraX),y:Number(d.cameraY),k:Number(d.scale) }; })()`);

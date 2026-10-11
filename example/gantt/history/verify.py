@@ -1,104 +1,127 @@
-"""Check the actual managed graph, CLI receipts, and (optionally) real Git stages.
+"""Verify current CLI receipts and the independent, current-schema Gantt Git bundle.
 
-Run with Python that has SpecSpec installed. Never edits nodes or the Git index.
+The surrounding SpecSpec repository's obsolete graph history is not a test corpus.
+No checkout/index changes are made in this repository; history uses a temporary clone.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import subprocess
+import tempfile
 from pathlib import Path
 
-from specspec.git import git_snapshot, repository_paths, run_git
-from specspec.workspace import load_snapshot
+from specspec.git import git_snapshot, run_git, semantic_diff, source_change_impact
+from specspec.graph import build_graph
+from specspec.model import API_VERSION, FORMAT_VERSION, ID_RE, SpecNode
+from specspec.workspace import load_snapshot, slugify
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def clone_history(root: Path, destination: Path) -> Path:
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.autocrlf=false",
+            "clone",
+            "--quiet",
+            str(root / "history/gantt.bundle"),
+            str(destination),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    return destination
+
+
+def contents(snapshot):
+    return {node.id: node.to_dict() for node in snapshot.nodes}
 
 
 def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     current = load_snapshot(root)
     current.require_valid()
     assert not current.diagnostics, current.diagnostics
-    assert sum(node.type == "manifesto" for node in current.nodes) == 1
-    assert all("status" not in node.to_dict() for node in current.nodes)
+    assert all(ID_RE.fullmatch(node.id) for node in current.nodes)
     for node in current.nodes:
         if not node.retired and node.type == "implementation":
-            assert node.sources, node.id
-            assert all((root / source["path"]).is_file() for source in node.sources)
+            assert node.sources and all((root / s["path"]).is_file() for s in node.sources)
 
     receipts = [json.loads(line) for line in (root / "history/cli.jsonl").read_text().splitlines()]
-    # Retain original API-2 receipts verbatim as historical evidence. Their labels
-    # are opaque references here: reconstruct and compare contents, never rehash.
-    marker = None
-    records = {}
+    records: dict[str, SpecNode] = {}
     recorded_graphs = {}
-    for receipt in receipts:
-        assert receipt["exit_code"] == 0 and receipt["api_version"] == 2
+    for ordinal, receipt in enumerate(receipts, 1):
+        assert receipt["exit_code"] == 0 and receipt["api_version"] == API_VERSION
         assert not receipt["diagnostics"], receipt
         argv = receipt["argv"]
-        assert argv[:2] == ["--root", "example/gantt"] and argv[-1] == "--json"
-        if "--expect" in argv:
-            assert argv[argv.index("--expect") + 1] == marker, receipt
-        if argv[2] in {"add", "update", "retire", "restore"}:
-            assert "--expect" in argv, receipt
-        if argv[2] == "init":
-            assert marker is None, "The existing graph was reinitialized."
-        action = argv[2]
-        changed = receipt["result"].get("changed_ids", [])
+        assert argv[:2] == ["--root", "."] and argv[-1] == "--json"
+        assert "--expect" not in argv and "fingerprint" not in receipt["result"]
+        action, result = argv[2], receipt["result"]
+        changed = result.get("changed_ids", [])
         if action in {"init", "add"}:
+            assert len(changed) == 1
             node_id = changed[0]
+            assert ID_RE.fullmatch(node_id)
+            assert node_id.casefold() not in {key.casefold() for key in records}
+            if action == "init":
+                assert not records, "An existing graph was reinitialized."
             node_type = (
                 "manifesto"
                 if action == "init"
                 else (argv[argv.index("--type") + 1] if "--type" in argv else "requirement")
             )
-            records[node_id] = {
-                "id": node_id,
-                "type": node_type,
-                "retired": False,
-                "body": receipt["stdin"].replace("\r\n", "\n"),
-                "parents": sorted(argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"),
-                "sources": json.loads(argv[argv.index("--sources") + 1])
-                if "--sources" in argv
-                else [],
-                "extensions": {},
-            }
+            summary = argv[argv.index("--slug") + 1] if "--slug" in argv else "project-manifesto"
+            records[node_id] = SpecNode(
+                node_id,
+                node_type,
+                False,
+                [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"],
+                receipt["stdin"],
+                f"_specspec/{node_id}{slugify(summary)}.md",
+                FORMAT_VERSION if node_type == "manifesto" else None,
+                json.loads(argv[argv.index("--sources") + 1]) if "--sources" in argv else [],
+            )
         elif action == "update":
-            node = dict(records[argv[3]])
+            node = records[argv[3]]
             if "--body" in argv:
-                node["body"] = receipt["stdin"].replace("\r\n", "\n")
+                node.body = receipt["stdin"]
             if "--parent" in argv or "--clear-parents" in argv:
-                node["parents"] = sorted(
-                    argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"
-                )
+                node.parents = [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"]
             if "--sources" in argv:
-                node["sources"] = json.loads(argv[argv.index("--sources") + 1])
-            records[argv[3]] = node
+                node.sources = json.loads(argv[argv.index("--sources") + 1])
         elif action in {"retire", "restore"}:
+            assert set(changed) == set(argv[3:-1])
             for node_id in changed:
-                records[node_id] = {**records[node_id], "retired": action == "retire"}
-        marker = receipt["result"].get("fingerprint", marker)
-        recorded_graphs[marker] = dict(records)
-
-    def contents(snapshot):
-        result = {}
-        for node in snapshot.nodes:
-            data = node.semantic()
-            data.pop("format_version", None)  # A later format migration preserves the example.
-            result[node.id] = data
-        return result
-
-    def normalized(records):
-        return {
-            key: {
-                **data,
-                "sources": sorted(data["sources"], key=lambda s: (s["path"], s.get("symbol", ""))),
+                records[node_id].retired = action == "retire"
+        graph, diagnostics = build_graph(list(records.values()))
+        assert not diagnostics, diagnostics
+        if action == "context":
+            selected = argv[3]
+            assert result["selected"] == selected
+            assert set(result["required_ids"]) == graph.closure(selected, ancestors=True) | {
+                selected
             }
-            for key, data in records.items()
+        elif action == "impact":
+            assert result["id"] == argv[3]
+            assert set(result["affected"]) == graph.closure(argv[3])
+        elif action == "validate":
+            assert result["node_count"] == len(records)
+        assert action in {
+            "init",
+            "add",
+            "update",
+            "retire",
+            "restore",
+            "context",
+            "impact",
+            "validate",
         }
-
-    assert normalized(records) == contents(current), (
-        "CLI receipts do not describe the current graph contents."
+        recorded_graphs[ordinal] = {key: node.to_dict() for key, node in records.items()}
+    assert recorded_graphs[len(receipts)] == contents(current), (
+        "Receipts differ from the working graph."
     )
 
     revisions = json.loads((root / "history/revisions.json").read_text())
@@ -106,68 +129,83 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     assert all(len(r["withdrawn_ids"]) * 2 >= r["live_before"] for r in revisions[1:])
     checked = []
     if history:
-        _, spec_prefix = repository_paths(root)
-        project_prefix = spec_prefix.removesuffix("_specspec")
-        previous_implementation = None
-        for record in revisions:
-            spec_ref = record["spec_commit"]
-            implementation_ref = record.get("implementation_commit")
-            assert implementation_ref, (
-                "Finish/stamp the implementation commit before history audit."
-            )
-            run_git(root, "merge-base", "--is-ancestor", record["predecessor_commit"], spec_ref)
-            run_git(root, "merge-base", "--is-ancestor", spec_ref, implementation_ref)
-            run_git(root, "merge-base", "--is-ancestor", implementation_ref, "HEAD")
-            spec = git_snapshot(root, spec_ref)
-            implementation = git_snapshot(root, implementation_ref)
-            before = git_snapshot(root, record["predecessor_commit"], allow_empty=True)
-            for snapshot in (spec, implementation):
-                snapshot.require_valid()
-                assert not snapshot.diagnostics
-            assert before.valid and not before.diagnostics
-            if before.nodes:
-                before.require_valid()
-            else:
-                assert previous_implementation is None, (
-                    "Only the first stage may start without a graph."
+        with tempfile.TemporaryDirectory(prefix="specspec-gantt-history-") as directory:
+            fixture = clone_history(root, Path(directory) / "project")
+            # Every maintained commit is current-schema or the explicit empty predecessor.
+            commits = run_git(fixture, "rev-list", "--reverse", "HEAD").decode().splitlines()
+            assert len(commits) == 8, commits
+            for index, ref in enumerate(commits):
+                snapshot = git_snapshot(fixture, ref, allow_empty=index == 0)
+                assert snapshot.valid and not snapshot.diagnostics
+                if index:
+                    snapshot.require_valid()
+                    assert snapshot.format_version == FORMAT_VERSION
+            assert git_snapshot(fixture, staged=True).valid
+            assert contents(load_snapshot(fixture)) == contents(current)
+            previous_implementation = None
+            for record in revisions:
+                predecessor, spec_ref, code_ref = (
+                    record["predecessor_commit"],
+                    record["spec_commit"],
+                    record["implementation_commit"],
                 )
-            assert contents(spec) == normalized(recorded_graphs[record["spec_fingerprint"]])
-            assert contents(implementation) == normalized(
-                recorded_graphs[record["implementation_fingerprint"]]
-            )
-            assert sum(not node.retired for node in spec.nodes) == record["spec_live_count"]
-            assert not any(
-                not node.retired and node.type == "implementation" for node in spec.nodes
-            )
-            old = {n.id: n for n in before.nodes}
-            new = {n.id: n for n in spec.nodes}
-            assert old.keys() <= new.keys(), "History was deleted instead of withdrawn."
-            assert old.keys() <= {n.id for n in current.nodes}
-            withdrawn = {n.id for n in spec.nodes if n.retired and not old[n.id].retired}
-            assert withdrawn == set(record["withdrawn_ids"])
-            assert sum(not n.retired for n in before.nodes) == record["live_before"]
-            for node_id in withdrawn:
-                # Withdrawal changes only the flag, not the old explanation or links.
-                left, right = old[node_id].semantic(), new[node_id].semantic()
-                left["retired"] = True
-                assert left == right, node_id
-            if previous_implementation:
-                assert record["predecessor_commit"] == previous_implementation
-            else:
-                paths = run_git(
-                    root, "ls-tree", "-r", "--name-only", spec_ref, "--", project_prefix
+                run_git(fixture, "merge-base", "--is-ancestor", predecessor, spec_ref)
+                run_git(fixture, "merge-base", "--is-ancestor", spec_ref, code_ref)
+                run_git(fixture, "merge-base", "--is-ancestor", code_ref, "HEAD")
+                before = git_snapshot(fixture, predecessor, allow_empty=True)
+                spec, implementation = (
+                    git_snapshot(fixture, spec_ref),
+                    git_snapshot(fixture, code_ref),
                 )
-                assert f"{project_prefix}model.js".encode() not in paths
-                assert f"{project_prefix}app.js".encode() not in paths
-            # Every implementation is actual runnable code, not only a prose plan.
-            assert run_git(root, "show", f"{implementation_ref}:{project_prefix}model.js")
-            assert run_git(root, "show", f"{implementation_ref}:{project_prefix}index.html")
-            assert run_git(
-                root, "show", f"{implementation_ref}:{project_prefix}test/model.test.cjs"
-            )
-            assert any(not n.retired and n.type == "implementation" for n in implementation.nodes)
-            previous_implementation = implementation_ref
-            checked.append(record["key"])
+                assert contents(spec) == recorded_graphs[record["spec_receipt"]]
+                assert contents(implementation) == recorded_graphs[record["implementation_receipt"]]
+                assert sum(not n.retired for n in spec.nodes) == record["spec_live_count"]
+                assert not any(not n.retired and n.type == "implementation" for n in spec.nodes)
+                old, new = {n.id: n for n in before.nodes}, {n.id: n for n in spec.nodes}
+                assert old.keys() <= new.keys() <= records.keys()
+                withdrawn = {key for key in old if not old[key].retired and new[key].retired}
+                assert withdrawn == set(record["withdrawn_ids"])
+                assert sum(not n.retired for n in before.nodes) == record["live_before"]
+                for node_id in withdrawn:
+                    left, right = old[node_id].semantic(), new[node_id].semantic()
+                    left["retired"] = True
+                    assert left == right, node_id
+                diff = semantic_diff(before, spec)
+                assert diff["impact_complete"] and not diff["removed_edges"]
+                assert not any(change["kind"] == "removed" for change in diff["changes"])
+                assert withdrawn <= {c["id"] for c in diff["changes"] if c["kind"] == "changed"}
+                impact = source_change_impact(fixture, spec_ref, code_ref, spec, implementation)
+                assert "model.js" in {s["path"] for s in impact["source_changes"]}
+                assert impact["source_affected"]
+                if previous_implementation:
+                    assert predecessor == previous_implementation
+                else:
+                    paths = (
+                        run_git(fixture, "ls-tree", "-r", "--name-only", spec_ref)
+                        .decode()
+                        .splitlines()
+                    )
+                    assert "model.js" not in paths and "app.js" not in paths
+                for path in ["model.js", "index.html", "test/model.test.cjs"]:
+                    assert run_git(fixture, "show", f"{code_ref}:{path}")
+                # Run each real stage's model tests from an isolated export, not checkout.
+                stage = Path(directory) / record["key"]
+                stage.mkdir()
+                for path in ["model.js", "test/model.test.cjs", "history/personal-v1.json"]:
+                    available = run_git(fixture, "ls-tree", "--name-only", code_ref, "--", path)
+                    if available:
+                        target = stage / path
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        target.write_bytes(run_git(fixture, "show", f"{code_ref}:{path}"))
+                test = subprocess.run(
+                    ["node", "--test", str(stage / "test/model.test.cjs")], capture_output=True
+                )
+                assert test.returncode == 0, test.stdout.decode() + test.stderr.decode()
+                assert any(
+                    not n.retired and n.type == "implementation" for n in implementation.nodes
+                )
+                previous_implementation = code_ref
+                checked.append(record["key"])
     return {
         "ok": True,
         "node_count": len(current.nodes),
@@ -181,7 +219,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--history", action="store_true", help="Require the full original Git history."
+        "--history", action="store_true", help="Clone and verify the compliant Git bundle."
     )
     args = parser.parse_args()
     print(json.dumps(verify(history=args.history), indent=2))

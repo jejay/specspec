@@ -3,8 +3,7 @@
   const api = acquireVsCodeApi();
   const scope = document.querySelector('meta[name="specspec-project"]')?.content || '';
   const stored = api.getState() || {};
-  // Preserve pre-extraction drafts in their original graph; never share across roots.
-  const projects = stored.projects || { [scope]: stored };
+  const projects = stored.projects || {};
   window.SpecSpecHost = Object.freeze({
     getState: () => projects[scope],
     setState: value => { projects[scope] = value; api.setState({ projects }); },

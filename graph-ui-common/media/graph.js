@@ -29,7 +29,6 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const legacyWorkspace = () => state?.snapshot.valid && !sourceInvalid && !state.readonly && state.snapshot.format_version !== 3;
   const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 3 && !state.readonly &&
     (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
@@ -69,8 +68,6 @@
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
     $('retire').title = $('restore').title = state?.document ? 'Changes the document; save the file to persist it.' : '';
-    $('migrate').hidden = !legacyWorkspace();
-    $('migrate').disabled = !legacyWorkspace() || pending || dirty || creating;
     $('save').disabled = !editable() || pending;
     const withdrawn = Boolean(graph.nodes.get(selected)?.retired);
     $('retire').hidden = withdrawn;
@@ -192,7 +189,7 @@
     card.style.setProperty('--node-accent', model.color(colorMode, node, distanceFor(id)));
     card.title = `${id}\n${node.path}\n${snapshotName(id)} revision context`;
     const heading = document.createElement('strong'); heading.textContent = title(node);
-    const metadata = document.createElement('small'); metadata.textContent = `${description(node)} · ${id.slice(0, 8)}`;
+    const metadata = document.createElement('small'); metadata.textContent = `${description(node)} · ${id}`;
     const badges = document.createElement('span'); badges.className = 'badges';
     function badge(text, className, tooltip) {
       const item = document.createElement('span'); item.className = `badge ${className}`; item.textContent = text;
@@ -341,7 +338,7 @@
       : formParents.length ? `${formParents.length} linked parent${formParents.length === 1 ? '' : 's'}` : 'No parents linked.';
     $('parent-links').replaceChildren();
     for (const id of formParents) {
-      const node = graph.nodes.get(id), text = node ? `${title(node)} · ${description(node)} · ${id.slice(0, 8)}` : id;
+      const node = graph.nodes.get(id), text = node ? `${title(node)} · ${description(node)} · ${id}` : id;
       const item = document.createElement('li'); item.dataset.parentId = id;
       const label = document.createElement('span'); label.textContent = text; item.append(label);
       if (canEdit) {
@@ -365,7 +362,7 @@
         if (node.id === selected || formParents.includes(node.id) || node.type === 'implementation'
           || (nodeType === 'implementation' && node.type !== 'requirement')) continue;
         const option = document.createElement('option'); option.value = node.id;
-        option.textContent = `${title(node)} · ${description(node)} · ${node.id.slice(0, 8)}`; $('parent-candidate').append(option);
+        option.textContent = `${title(node)} · ${description(node)} · ${node.id}`; $('parent-candidate').append(option);
       }
     }
   }
@@ -467,10 +464,6 @@
     if (!editable() || creating || dirty || pending) return;
     pending = true; updateButtons(); send({ type: action, id: selected });
   });
-  $('migrate').addEventListener('click', () => {
-    if (!legacyWorkspace() || dirty || creating || pending) return;
-    pending = true; updateButtons(); send({ type: 'migrate' });
-  });
   $('discard').addEventListener('click', () => {
     if (state?.document) send({ type: 'discard-form' });
     dirty = false;
@@ -482,8 +475,6 @@
 
   function showSnapshotNotes() {
     setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`)].filter(Boolean).join('\n'));
-    $('schema-notice').hidden = !legacyWorkspace();
-    $('schema-notice').textContent = legacyWorkspace() ? `Legacy v${state.snapshot.format_version} graph: migrate to the hash-free format before editing. Discard any dirty draft first; migration preserves node text and withdrawal history.` : '';
     const sources = state.diff?.source_changes || [];
     $('linked-sources').hidden = !sources.length;
     $('source-summary').textContent = `${sources.length} changed linked source file${sources.length === 1 ? '' : 's'} — potential review context`;
