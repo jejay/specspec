@@ -43,16 +43,19 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .link.removed { stroke-dasharray: 6 5; }
 .link.draft { stroke-dasharray: 3 4; }
 .arrow-head { fill: var(--edge-ink); }
-/* Contrast only: keep Git hue/dashes and the existing painted clearance. */
-.link.incident-highlight { stroke: color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff)); opacity: 1; }
-.arrow-head.incident-highlight { fill: color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff)); }
+/* Neutral links use theme contrast; colored links gain lightness AND chroma, not white. */
+.link.added, .arrow-head.added, .link.removed, .arrow-head.removed, .link.draft, .arrow-head.draft { --edge-hover-ink: oklch(from var(--edge-ink) min(0.95, calc(l + 0.10)) calc(c * 1.30) h); }
+.link.incident-highlight { stroke: var(--edge-hover-ink, color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff))); opacity: 1; }
+.arrow-head.incident-highlight { fill: var(--edge-hover-ink, color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff))); }
 .link.hover-darkened { stroke: color-mix(in srgb, var(--edge-ink) 35%, #000); }
 .arrow-head.hover-darkened { fill: color-mix(in srgb, var(--edge-ink) 35%, #000); }
 /* Brightness, not opacity: unrelated cards darken on light backgrounds too. */
 .card.hover-darkened { filter: brightness(.45); }
 .card { position: absolute; width: 264px; height: 112px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; border: 1px solid var(--node-accent, #8993a4); border-top: 4px solid var(--node-accent, #8993a4); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
 .card:hover, .card.node-hovered { background: color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background)); }
-#cards .card:hover, #cards .card.node-hovered { border-color: #fff; }
+/* Stronger semantic hue everywhere except the intentionally neutral manifesto. */
+#cards .card:hover, #cards .card.node-hovered { border-color: oklch(from var(--node-accent, #8993a4) min(0.95, calc(l + 0.10)) calc(c * 1.30) h); }
+#cards .card.manifesto:hover, #cards .card.manifesto.node-hovered { border-color: #fff; }
 .card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
 .card.manifesto { border-top-width: 6px; }

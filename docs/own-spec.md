@@ -175,6 +175,15 @@ theme foreground. Neutral normal links keep theme contrast emphasis; modified
 nodes do not imply a new modified-link kind. Geometry, dashes, paired ordering,
 one-hop darkening, native forms and exit restoration remain unchanged. Relative
 OKLCH constants and gamut/platform limits are separate revisable choices.
+The [implementation/evidence record](../_specspec/T5K4JZI=color-preserving-hover-implementation.md)
+links the shared CSS and regressions. Windows VS Code and Electron host suites
+passed on independent maintained-history clones, verifying computed brighter/
+higher-chroma same-hue ink, root-only white borders, yellow/type/distance borders,
+all node Git states and expanded cards, dark/light/contrast probes and restoration.
+Captured VS Code hover screenshots were inspected. Current local checks passed:
+108 shared UI, 34 VS Code, nine Electron and 111 Python tests, Ruff lint/format and
+working-graph validation. This is bounded browser/platform evidence, not a claim
+about every theme/custom palette, display gamut or platform.
 
 ## Minimum/maximum distance, spacing, and headline correction
 

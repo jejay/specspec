@@ -113,12 +113,21 @@ test('all cards share transient hover state and only expanded text gets wider', 
 test('shared CSS keeps gray cards tinted and increases corner letters without compact-card growth', () => {
   const css = readFileSync(join(__dirname, '../media/graph.css'), 'utf8');
   assert.match(css, /\.card:hover, \.card\.node-hovered \{ background: color-mix/);
-  assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ border-color: #fff/);
+  assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ border-color: oklch\(from var\(--node-accent, #8993a4\) min\(0\.95, calc\(l \+ 0\.10\)\) calc\(c \* 1\.30\) h\)/);
+  assert.match(css, /#cards \.card\.manifesto:hover, #cards \.card\.manifesto\.node-hovered \{ border-color: #fff/);
+  assert.doesNotMatch(css, /#cards \.card:hover[^}]*border-color: #fff/);
   assert.doesNotMatch(css, /\.card\.manifesto[^}]*background:/);
-  assert.doesNotMatch(css, /\.card\.manifesto[^}]*color:/);
+  assert.doesNotMatch(css, /\.card\.manifesto[^}]*(?:\{ |; )color:/);
   assert.match(css, /\.git-corner \{[^}]*font-size: 20px; font-weight: 800/);
   assert.match(css, /\.badges \{[^}]*padding-right: 26px/);
   assert.match(css, /textarea, pre \{ font-family: var\(--vscode-editor-font-family, monospace\)/);
+});
+
+test('colored incident curves and heads share hue-preserving lightness/chroma emphasis, not foreground mixing', () => {
+  const css = readFileSync(join(__dirname, '../media/graph.css'), 'utf8');
+  assert.match(css, /\.link\.added, \.arrow-head\.added, \.link\.removed, \.arrow-head\.removed, \.link\.draft, \.arrow-head\.draft \{ --edge-hover-ink: oklch\(from var\(--edge-ink\) min\(0\.95, calc\(l \+ 0\.10\)\) calc\(c \* 1\.30\) h\)/);
+  assert.match(css, /\.link\.incident-highlight \{ stroke: var\(--edge-hover-ink, color-mix[^}]*opacity: 1/);
+  assert.match(css, /\.arrow-head\.incident-highlight \{ fill: var\(--edge-hover-ink, color-mix/);
 });
 
 test('hover darkens only outside direct displayed neighbors, including the unrelated manifesto', t => {

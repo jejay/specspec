@@ -103,21 +103,37 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.ok(await evaluate(`document.querySelector('[data-retired="true"] .retired-badge') !== null`), 'Withdrawal is labeled independently of Git newness.');
     const positions = () => evaluate(`JSON.stringify([...document.querySelectorAll('#cards .card')].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.width, c.offsetHeight]))`);
     const camera = () => evaluate(`(() => { const d=document.getElementById('viewport').dataset; return { x:Number(d.cameraX),y:Number(d.cameraY),k:Number(d.scale) }; })()`);
+    const toOKLCH = `color => {
+      const probe=document.createElement('span');probe.style.color='oklch(from '+color+' l c h)';document.body.append(probe);
+      const result=getComputedStyle(probe).color;probe.remove();
+      if(!result.startsWith('oklch(')) throw new Error('Relative OKLCH is unsupported: '+result);
+      return result.match(/[\\d.e+-]+/g).slice(0,3).map(Number);
+    }`;
+    const assertStrongerHue = (actual, base, message) => {
+      assert.ok(actual[0]>base[0]+0.09, message+' must be brighter.');
+      assert.ok(actual[1]>base[1]*1.29, message+' must have stronger chroma, not wash out.');
+      const hue=Math.abs(actual[2]-base[2]);
+      assert.ok(Math.min(hue,360-hue)<0.1, message+' must retain its hue.');
+    };
     async function checkHover(id, selector, image) {
       const paint = () => evaluate(`(() => {
+        const oklch=${toOKLCH};
         const paths=[...document.querySelectorAll('#edges .link')],heads=[...document.querySelectorAll('#edges .arrow-head')];
         return paths.map(p=>{const h=heads.find(h=>h.dataset.parent===p.dataset.parent&&h.dataset.child===p.dataset.child);
           return {parent:p.dataset.parent,child:p.dataset.child,key:JSON.stringify([p.dataset.parent,p.dataset.child]),
             stroke:getComputedStyle(p).stroke,fill:getComputedStyle(h).fill,width:getComputedStyle(p).strokeWidth,
+            kind:['added','removed','draft'].find(kind=>p.classList.contains(kind))||'normal',
+            oklch:oklch(getComputedStyle(p).stroke),opacity:getComputedStyle(p).opacity,
             dash:getComputedStyle(p).strokeDasharray,d:p.getAttribute('d'),head:h.getAttribute('d'),
             highlighted:p.classList.contains('incident-highlight'),headHighlighted:h.classList.contains('incident-highlight'),
             darkened:p.classList.contains('hover-darkened'),headDarkened:h.classList.contains('hover-darkened')};});
       })()`);
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
-      const cardPaint = () => evaluate(`([...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,
+      const cardPaint = () => evaluate(`(() => {const oklch=${toOKLCH};return [...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,
         darkened:c.classList.contains('hover-darkened'),filter:getComputedStyle(c).filter,
         background:getComputedStyle(c).backgroundColor,border:getComputedStyle(c).borderTopColor,
-        hovered:c.classList.contains('node-hovered'),accent:c.style.getPropertyValue('--node-accent')})))`);
+        borderOKLCH:oklch(getComputedStyle(c).borderTopColor),accentOKLCH:oklch(c.style.getPropertyValue('--node-accent')),
+        manifesto:c.classList.contains('manifesto'),hovered:c.classList.contains('node-hovered'),accent:c.style.getPropertyValue('--node-accent')}));})()`);
       const before=await paint(), beforeCards=await cardPaint(), world=await positions(), transform=await camera();
       await evaluate(`window.__hoverPaths=[...document.querySelectorAll('#edges path')]`);
       await evaluate(`(() => {
@@ -139,7 +155,12 @@ exports.checkUI = async function checkUI(port, options = {}) {
         assert.equal(p.highlighted,related);assert.equal(p.headHighlighted,related);
         assert.equal(p.darkened,!related);assert.equal(p.headDarkened,!related);
         for(const key of ['width','dash','d','head']) assert.equal(p[key],old[key]);
-        if(related) {incident++;neighbors.add(p.parent);neighbors.add(p.child);assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);}
+        if(related) {
+          incident++;neighbors.add(p.parent);neighbors.add(p.child);
+          assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);
+          assert.equal(p.opacity,'1');
+          if(p.kind!=='normal') assertStrongerHue(p.oklch,old.oklch,p.kind+' incident curve/head');
+        }
         else {
           assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);
           assert.ok(channels(p.stroke).every((v,i)=>v<channels(old.stroke)[i]),'Non-incident ink must actually darken.');
@@ -150,7 +171,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
         const old=beforeCards.find(c=>c.id===card.id),darkened=!neighbors.has(card.id);
         assert.equal(card.darkened,darkened);assert.equal(card.filter,darkened?'brightness(0.45)':'none');
         assert.equal(card.hovered,card.id===id);
-        if(card.id===id) assert.equal(card.border,'rgb(255, 255, 255)');
+        if(card.id===id) {
+          if(card.manifesto) assert.equal(card.border,'rgb(255, 255, 255)');
+          else assertStrongerHue(card.borderOKLCH,card.accentOKLCH,'Non-manifesto border');
+        }
         assert.equal(card.accent,old.accent);
         if(card.id!==id) assert.equal(card.background,old.background);
       }
@@ -160,8 +184,35 @@ exports.checkUI = async function checkUI(port, options = {}) {
       if(image) await screenshot(image);
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
       assert.deepEqual(await paint(),before,'Exiting hover restores computed paint and SVG order.');
-      assert.ok((await cardPaint()).every(c=>!c.darkened&&!c.hovered&&c.filter==='none'),'Exiting hover removes every card filter and hover class.');
+      assert.deepEqual(await cardPaint(),beforeCards,'Exiting hover restores all card paint, including semantic borders.');
       await evaluate(`delete window.__hoverPaths`);
+    }
+    async function checkHoverPalette() {
+      // Real browser CSS probes cover every colored link kind (including draft),
+      // yellow/type/distance borders, and each node Git state without graph mutation.
+      const values=await evaluate(`(() => {
+        const oklch=${toOKLCH},results=[];
+        for(const kind of ['added','removed','draft']) {
+          const p=document.createElementNS('http://www.w3.org/2000/svg','path'),h=p.cloneNode();
+          p.setAttribute('class','link '+kind);h.setAttribute('class','arrow-head '+kind);
+          document.getElementById('edges').append(p,h);
+          const base=oklch(getComputedStyle(p).stroke);
+          p.classList.add('incident-highlight');h.classList.add('incident-highlight');
+          results.push({label:kind+' probe',base,actual:oklch(getComputedStyle(p).stroke),paired:getComputedStyle(p).stroke===getComputedStyle(h).fill});
+          p.remove();h.remove();
+        }
+        for(const accent of ['#e5be32',...window.SpecSpecGraph.DEPTH_COLORS,...Object.values(window.SpecSpecGraph.TYPE_COLORS).filter(c=>c!=='#d3d3d3')]) {
+          for(const kind of ['normal','changed','removed','added','renamed','source-changed']) for(const expanded of [false,true]) {
+            const c=document.createElement('div');c.className='card '+kind+(expanded?' expanded':'');
+            c.style.setProperty('--node-accent',accent);document.getElementById('cards').append(c);
+            const resting=getComputedStyle(c).borderTopColor;c.classList.add('node-hovered');
+            results.push({label:accent+' '+kind+(expanded?' expanded':''),base:oklch(accent),actual:oklch(getComputedStyle(c).borderTopColor),paired:true});
+            c.classList.remove('node-hovered');if(getComputedStyle(c).borderTopColor!==resting) throw new Error('Border failed to restore');c.remove();
+          }
+        }
+        return results;
+      })()`);
+      for(const value of values) {assert.ok(value.paired,'Curve/head ink must match');assertStrongerHue(value.actual,value.base,value.label);}
     }
     async function restoreActualSize(pose) {
       await evaluate(`document.getElementById('zoom-reset').click()`);
@@ -287,6 +338,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
     })()`);
     assert.ok(hoverNode);
     await checkHover(hoverNode, undefined, 'hover-overview');
+    for(const kind of ['added','changed','removed']) {
+      const id=await evaluate(`document.querySelector('#cards .card.${kind}').dataset.nodeId`);
+      await checkHover(id,undefined,'hover-'+kind);
+    }
     // CSS theme probes in the real browser; restore the installed host's theme.
     const oldStyle = await evaluate(`document.documentElement.getAttribute('style')`);
     const oldClass = await evaluate(`document.body.className`);
@@ -306,6 +361,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
             return matches&&c.style.getPropertyValue('--node-accent')==='#d3d3d3'&&getComputedStyle(swatch).backgroundColor==='rgb(211, 211, 211)';})()`));
         }
         await checkHover(hoverNode, undefined, theme==='vscode-light'?'hover-light-theme':undefined);
+        await checkHoverPalette();
         const rootId=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
         await checkHover(rootId, undefined, theme==='vscode-dark'?'hover-gray-manifesto':undefined);
       }
@@ -452,7 +508,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/white hover border, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

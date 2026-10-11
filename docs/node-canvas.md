@@ -71,9 +71,12 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   controls, drafts, and original node records for overwrite-conflict confirmation. Camera gestures are
   excluded from settings controls. Navigation alone sends no mutation commands.
 - **Connection hover** temporarily emphasizes both SVG pieces of each immediate
-  incoming/outgoing relationship. Theme-aware ink mixing and pair ordering improve
-  contrast without enlarging strokes/heads or changing routes, Git hue/dashes, or
-  layout. Delegated pointer transitions include expanded form controls; hit tests
+  incoming/outgoing relationship. Colored Git/draft ink gains lightness and chroma
+  in its own hue using relative OKLCH; mixing it with white/theme foreground washed
+  out the requested colors. Neutral normal links retain theme contrast mixing.
+  Pair ordering and full opacity improve visibility without enlarging strokes/heads
+  or changing routes, dashes, or layout. Hovered node borders likewise strengthen
+  their semantic hue; only the neutral gray manifesto gets a white hover border. Delegated pointer transitions include expanded form controls; hit tests
   reconcile redraw/camera changes, and exit/blur/touch clears emphasis. No host
   messages, canonical data, or persisted hover preferences are involved.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
