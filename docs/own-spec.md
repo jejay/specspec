@@ -126,6 +126,17 @@ theme contrast and pair ordering preserve Git hues/dashes and existing geometry.
 Leave/blur/touch clears emphasis; redraw/camera motion re-hit-tests the pointer.
 Nothing is saved in metadata or sent as a host mutation.
 
+### Neutral manifesto and hover-darkening revision
+
+The user requests a [light-gray manifesto](../_specspec/pWgqwcQ=light-gray-manifesto.md)
+and [darkening outside hovered relationships](../_specspec/RlFT4io=darken-outside-hover-neighborhood.md).
+The separate [rendering choice](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
+selects a solid neutral root in all color modes and interprets connected nodes as
+direct displayed neighbors, consistent with existing incident-link highlighting.
+Non-incident links darken even when both endpoints are neighbors. The root's base
+hue remains gray; it too darkens when unrelated to the hover. These are transient
+presentation changes, not selection, review scores, graph edits or new host forks.
+
 ## Minimum/maximum distance, spacing, and headline correction
 
 Revision-local shortest/longest directed path bounds explain semantic fills via
