@@ -11,6 +11,17 @@ function snapshot(edges, extra = []) {
   })), edges };
 }
 
+test('manifesto color is fixed light gray regardless of mode, distance or revision state', () => {
+  assert.equal(model.TYPE_COLORS.manifesto, '#d3d3d3');
+  for (const mode of ['distance', 'max-distance', 'type']) {
+    for (const distance of [undefined, 0, 1, 7, 30]) {
+      assert.equal(model.color(mode, { type: 'manifesto', retired: false }, distance), '#d3d3d3');
+    }
+    assert.notEqual(model.color(mode, { type: 'requirement' }, 1), '#d3d3d3');
+    assert.notEqual(model.color(mode, { type: 'implementation' }, 2), '#d3d3d3');
+  }
+});
+
 test('minimum and maximum distance count shortest/longest directed root paths', () => {
   const graph = snapshot([['root', 'a'], ['a', 'b'], ['b', 'c'], ['root', 'c']]);
   const before = JSON.stringify(graph), metrics = model.metrics(graph);

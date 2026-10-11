@@ -10,7 +10,7 @@
   const RANK_GAP = 140, NODE_GAP = 44;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-  const TYPE_COLORS = { manifesto: '#6699ee', requirement: '#43b5b0', implementation: '#a786eb' };
+  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: '#43b5b0', implementation: '#a786eb' };
   const DEPTH_COLORS = ['#6699ee', '#a786eb', '#43b5b0', '#dd9b48', '#dc7aab', '#84b466', '#7d9ed2'];
 
   function sameNode(left, right) {
@@ -119,6 +119,7 @@
   }
 
   function color(mode, node, distance) {
+    if (node.type === 'manifesto') return TYPE_COLORS.manifesto;
     if (mode === 'type') return TYPE_COLORS[node.type] || '#929baa';
     return Number.isInteger(distance) ? DEPTH_COLORS[distance % DEPTH_COLORS.length] : '#929baa';
   }

@@ -110,10 +110,14 @@ exports.checkUI = async function checkUI(port, options = {}) {
           return {parent:p.dataset.parent,child:p.dataset.child,key:JSON.stringify([p.dataset.parent,p.dataset.child]),
             stroke:getComputedStyle(p).stroke,fill:getComputedStyle(h).fill,width:getComputedStyle(p).strokeWidth,
             dash:getComputedStyle(p).strokeDasharray,d:p.getAttribute('d'),head:h.getAttribute('d'),
-            highlighted:p.classList.contains('incident-highlight'),headHighlighted:h.classList.contains('incident-highlight')};});
+            highlighted:p.classList.contains('incident-highlight'),headHighlighted:h.classList.contains('incident-highlight'),
+            darkened:p.classList.contains('hover-darkened'),headDarkened:h.classList.contains('hover-darkened')};});
       })()`);
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
-      const before=await paint(), world=await positions(), transform=await camera();
+      const cardPaint = () => evaluate(`([...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,
+        darkened:c.classList.contains('hover-darkened'),filter:getComputedStyle(c).filter,
+        background:getComputedStyle(c).backgroundColor,accent:c.style.getPropertyValue('--node-accent')})))`);
+      const before=await paint(), beforeCards=await cardPaint(), world=await positions(), transform=await camera();
       await evaluate(`window.__hoverPaths=[...document.querySelectorAll('#edges path')]`);
       await evaluate(`(() => {
         const card=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});
@@ -124,21 +128,36 @@ exports.checkUI = async function checkUI(port, options = {}) {
         target.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse',clientX:x,clientY:y}));
       })()`);
       const after=await paint(), byKey=new Map(after.map(p=>[p.key,p]));
+      const neighbors=new Set([id]);
+      const channels = color => color.startsWith('color(srgb')
+        ? color.match(/[\d.]+/g).slice(0,3).map(Number)
+        : color.match(/[\d.]+/g).slice(0,3).map(n=>Number(n)/255);
       let incident=0;
       for(const old of before) {
         const p=byKey.get(old.key),related=old.parent===id||old.child===id;
         assert.equal(p.highlighted,related);assert.equal(p.headHighlighted,related);
+        assert.equal(p.darkened,!related);assert.equal(p.headDarkened,!related);
         for(const key of ['width','dash','d','head']) assert.equal(p[key],old[key]);
-        if(related) {incident++;assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);}
-        else {assert.equal(p.stroke,old.stroke);assert.equal(p.fill,old.fill);}
+        if(related) {incident++;neighbors.add(p.parent);neighbors.add(p.child);assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);}
+        else {
+          assert.notEqual(p.stroke,old.stroke);assert.notEqual(p.fill,old.fill);assert.equal(p.stroke,p.fill);
+          assert.ok(channels(p.stroke).every((v,i)=>v<channels(old.stroke)[i]),'Non-incident ink must actually darken.');
+        }
       }
       assert.ok(incident>0);
+      for (const card of await cardPaint()) {
+        const old=beforeCards.find(c=>c.id===card.id),darkened=!neighbors.has(card.id);
+        assert.equal(card.darkened,darkened);assert.equal(card.filter,darkened?'brightness(0.45)':'none');
+        assert.equal(card.accent,old.accent);
+        if(card.id!==id) assert.equal(card.background,old.background);
+      }
       assert.ok(after.slice(-incident).every(p=>p.highlighted),'Incident SVG pairs must paint last.');
       assert.equal(await positions(),world);assert.deepEqual(await camera(),transform);
       assert.ok(await evaluate(`window.__hoverPaths.every(p=>p.isConnected)`));
       if(image) await screenshot(image);
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
       assert.deepEqual(await paint(),before,'Exiting hover restores computed paint and SVG order.');
+      assert.ok((await cardPaint()).every(c=>!c.darkened&&c.filter==='none'),'Exiting hover removes every card filter.');
       await evaluate(`delete window.__hoverPaths`);
     }
     async function restoreActualSize(pose) {
@@ -265,6 +284,29 @@ exports.checkUI = async function checkUI(port, options = {}) {
     })()`);
     assert.ok(hoverNode);
     await checkHover(hoverNode, undefined, 'hover-overview');
+    // CSS theme probes in the real browser; restore the installed host's theme.
+    const oldStyle = await evaluate(`document.documentElement.getAttribute('style')`);
+    const oldClass = await evaluate(`document.body.className`);
+    try {
+      for (const theme of ['vscode-dark', 'vscode-light', 'vscode-high-contrast', 'vscode-high-contrast-light']) {
+        const light=theme.endsWith('light');
+        await evaluate(`document.body.className=${JSON.stringify(theme)};
+          document.documentElement.style.setProperty('--vscode-editor-background',${JSON.stringify(light?'#ffffff':'#1f1f1f')});
+          document.documentElement.style.setProperty('--vscode-editor-foreground',${JSON.stringify(light?'#202020':'#cccccc')});
+          document.documentElement.style.setProperty('--vscode-foreground',${JSON.stringify(light?'#202020':'#cccccc')});`);
+        for (const mode of ['distance', 'max-distance', 'type']) {
+          await evaluate(`document.getElementById('color-mode').value=${JSON.stringify(mode)};document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+          assert.ok(await evaluate(`(() => {const c=document.querySelector('.card.manifesto'),s=getComputedStyle(c);
+            const swatch=[...document.getElementById('legend').children].find(c=>/manifesto/i.test(c.textContent)).querySelector('i');
+            return c.style.getPropertyValue('--node-accent')==='#d3d3d3'&&s.backgroundColor==='rgb(211, 211, 211)'&&s.color==='rgb(32, 32, 32)'&&getComputedStyle(swatch).backgroundColor==='rgb(211, 211, 211)';})()`));
+        }
+        await checkHover(hoverNode, undefined, theme==='vscode-light'?'hover-light-theme':undefined);
+      }
+    } finally {
+      await evaluate(`document.body.className=${JSON.stringify(oldClass)};
+        ${oldStyle===null?"document.documentElement.removeAttribute('style')":`document.documentElement.setAttribute('style',${JSON.stringify(oldStyle)})`};
+        document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'));`);
+    }
     // Test the smallest camera scale, not just normal-sized nodes. Strokes and
     // arrow direction remain visible; the world and paths' DOM identities stay.
     const pathCount=await evaluate(`document.querySelectorAll('#edges .link').length`);
@@ -287,6 +329,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     overviewCamera = await camera();
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.ok(await evaluate(`document.querySelector('#cards .expanded').contains(document.getElementById('editor'))`));
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.card.manifesto.expanded')).backgroundColor`), 'rgb(211, 211, 211)');
     assert.equal(await evaluate(`document.querySelectorAll('aside').length`), 0);
     const branch = await evaluate(`(() => { const cards = [...document.querySelectorAll('[data-relation="child"]')].sort((a,b) => Number(b.dataset.downstream)-Number(a.dataset.downstream)); return cards[0]?.dataset.nodeId; })()`);
     assert.ok(branch);
@@ -383,7 +426,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, incident curve/head hover with unchanged geometry, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, light-gray manifesto and legends, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

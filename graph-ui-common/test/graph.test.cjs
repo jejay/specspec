@@ -81,8 +81,119 @@ function assertPairedHighlights($) {
   for (const path of paths) {
     const head = heads.find(h => h.dataset.parent === path.dataset.parent && h.dataset.child === path.dataset.child);
     assert.equal(head.classList.contains('incident-highlight'), path.classList.contains('incident-highlight'));
+    assert.equal(head.classList.contains('hover-darkened'), path.classList.contains('hover-darkened'));
+    assert.ok(!path.classList.contains('incident-highlight') || !path.classList.contains('hover-darkened'));
   }
 }
+
+function assertDarkening($, cards, edges) {
+  assert.deepEqual([...$('cards').querySelectorAll('.hover-darkened')].map(c => c.dataset.nodeId).sort(), cards);
+  assert.deepEqual([...$('edges').querySelectorAll('.link.hover-darkened')].map(p => `${p.dataset.parent}>${p.dataset.child}`).sort(), edges);
+  assertPairedHighlights($);
+}
+
+test('hover darkens only outside direct displayed neighbors, including the unrelated manifesto', t => {
+  const { dom, $, card, snapshot, send } = hoverFixture(t);
+  hoverEvent(dom, card('child'));
+  assertDarkening($, ['sibling'], ['root>sibling']);
+  hoverEvent(dom, card('grand'));
+  assertDarkening($, ['root', 'sibling'], ['root>child', 'root>sibling']);
+  assert.equal(card('root').style.getPropertyValue('--node-accent'), '#d3d3d3');
+  // A link between two immediate neighbors is still non-incident.
+  const target = { ...snapshot, edges: [...snapshot.edges, ['root', 'grand']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  hoverEvent(dom, card('child'));
+  assertDarkening($, ['sibling'], ['root>grand', 'root>sibling']);
+  const isolated = { ...child, id: 'isolated', parents: [] };
+  send({ type: 'snapshot', snapshot: { ...target, nodes: [...target.nodes, isolated] }, diagnostics: [], readonly: true });
+  hoverEvent(dom, card('isolated'));
+  assert.deepEqual(highlightedEdges($), []);
+  assertDarkening($, ['child', 'grand', 'root', 'sibling'], ['child>grand', 'root>child', 'root>grand', 'root>sibling']);
+});
+
+test('hover darkening clears on exit, blur, cancel and touch and survives redraw with the same identity', t => {
+  const { dom, $, card, snapshot, send } = hoverFixture(t);
+  dom.window.document.elementFromPoint = () => card('child');
+  hoverEvent(dom, card('child'));
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
+  assertDarkening($, ['sibling'], ['root>sibling']);
+  const target = { ...snapshot, edges: [...snapshot.edges, ['sibling', 'child']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  assertDarkening($, [], ['root>sibling']);
+  const clear = [
+    () => hoverEvent(dom, card('child'), 'pointerout', $('viewport')),
+    () => $('viewport').dispatchEvent(new dom.window.Event('pointerleave')),
+    () => $('viewport').dispatchEvent(new dom.window.Event('pointercancel')),
+    () => dom.window.dispatchEvent(new dom.window.Event('blur')),
+    () => hoverEvent(dom, card('child'), 'pointerover', null, 'touch'),
+  ];
+  for (const action of clear) {
+    hoverEvent(dom, card('child')); action();
+    assertDarkening($, [], []);
+    assert.deepEqual(highlightedEdges($), []);
+  }
+  hoverEvent(dom, card('sibling'));
+  card('grand').click();
+  assertDarkening($, [], []);
+});
+
+test('historical reversed links and expanded native forms use the displayed neighborhood', t => {
+  const { dom, $, card, snapshot, send, saved, messages } = hoverFixture(t);
+  const target = { ...snapshot, nodes: [root, { ...child, parents: ['root', 'sibling'] }, snapshot.nodes[3]],
+    edges: [['root', 'child'], ['root', 'sibling'], ['sibling', 'child']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false, diff: {
+    base: snapshot, changes: [{ id: 'grand', kind: 'removed' }], added_edges: [['sibling', 'child']],
+    removed_edges: [['child', 'grand'], ['grand', 'child']],
+  } });
+  hoverEvent(dom, card('grand'));
+  assertDarkening($, ['root', 'sibling'], ['root>child', 'root>sibling', 'sibling>child']);
+  assert.ok($('edges').querySelector('.link.added.hover-darkened'));
+  assert.ok($('edges').querySelector('.link.removed.incident-highlight'));
+  card('child').click();
+  const body = $('body'); body.value = '# Retained draft'; body.dispatchEvent(new dom.window.Event('input'));
+  body.focus(); body.setSelectionRange(2, 5, 'backward');
+  const draft = saved(), count = messages.length, cards = [...$('cards').children];
+  hoverEvent(dom, card('root'));
+  assertDarkening($, ['grand'], ['child>grand', 'grand>child', 'sibling>child']);
+  hoverEvent(dom, body);
+  assertDarkening($, [], ['root>sibling']);
+  assert.deepEqual([...$('cards').children], cards);
+  assert.equal(saved(), draft); assert.equal(messages.length, count);
+  assert.equal(dom.window.document.activeElement, body);
+  assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
+});
+
+test('unsaved draft neighbors darken without changing parents or host state', t => {
+  const { dom, $, card, saved, messages } = hoverFixture(t);
+  $('new').click();
+  for (const id of ['root', 'sibling']) {
+    $('parent-candidate').value = id; $('parent-candidate').dispatchEvent(new dom.window.Event('change')); $('add-parent').click();
+  }
+  const draft = saved(), count = messages.length;
+  hoverEvent(dom, card('root'));
+  assertDarkening($, ['sibling'], ['sibling>__draft__']);
+  assert.ok($('edges').querySelector('.link.draft.hover-darkened'));
+  hoverEvent(dom, $('body'));
+  assertDarkening($, [], []);
+  assert.equal(saved(), draft); assert.equal(messages.length, count);
+});
+
+test('manifesto cards and legends stay gray across modes, focus and Git overlays', t => {
+  const { dom, $, snapshot, send } = fixture(t);
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false,
+    diff: { base: snapshot, changes: [{ id: 'root', kind: 'changed' }], added_edges: [], removed_edges: [] } });
+  for (const mode of ['distance', 'max-distance', 'type']) {
+    $('color-mode').value = mode; $('color-mode').dispatchEvent(new dom.window.Event('change'));
+    let rootCard = dom.window.document.querySelector('.card.manifesto');
+    assert.equal(rootCard.style.getPropertyValue('--node-accent'), '#d3d3d3');
+    assert.ok(rootCard.querySelector('.git-corner.changed'));
+    const swatch = [...$('legend').children].find(c => /manifesto/i.test(c.textContent)).querySelector('i');
+    assert.equal(swatch.style.backgroundColor, 'rgb(211, 211, 211)');
+    rootCard.click(); rootCard = dom.window.document.querySelector('.card.manifesto.expanded');
+    assert.equal(rootCard.style.getPropertyValue('--node-accent'), '#d3d3d3');
+    $('back').click();
+  }
+});
 
 test('hover emphasizes only direct incoming/outgoing curves and heads without mutation or geometry changes', t => {
   const { dom, $, card, messages, saved } = hoverFixture(t);
@@ -193,9 +304,11 @@ test('refresh reconciles hovered identity and camera movement rechecks the stati
   hit = 'sibling';
   $('viewport').dispatchEvent(new dom.window.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -100, clientX: 300, clientY: 200 }));
   assert.deepEqual(highlightedEdges($), ['root>sibling', 'sibling>child']);
+  assertDarkening($, ['grand'], ['child>grand', 'root>child']);
   hit = undefined;
   send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
   assert.deepEqual(highlightedEdges($), []);
+  assertDarkening($, [], []);
 });
 
 test('navigation and disappearing cards cannot retain a stale incident highlight', t => {
@@ -208,6 +321,7 @@ test('navigation and disappearing cards cannot retain a stale incident highlight
   hoverEvent(dom, card('grand'));
   send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [root, child], edges: [['root', 'child']] }, diagnostics: [], readonly: false });
   assert.deepEqual(highlightedEdges($), []);
+  assertDarkening($, [], []);
 });
 
 test('nodes are editable without approval states or an acceptance action', t => {

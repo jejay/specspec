@@ -46,11 +46,18 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 /* Contrast only: keep Git hue/dashes and the existing painted clearance. */
 .link.incident-highlight { stroke: color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff)); opacity: 1; }
 .arrow-head.incident-highlight { fill: color-mix(in srgb, var(--edge-ink) 50%, var(--vscode-editor-foreground, #fff)); }
+.link.hover-darkened { stroke: color-mix(in srgb, var(--edge-ink) 35%, #000); }
+.arrow-head.hover-darkened { fill: color-mix(in srgb, var(--edge-ink) 35%, #000); }
+/* Brightness, not opacity: unrelated cards darken on light backgrounds too. */
+.card.hover-darkened { filter: brightness(.45); }
 .card { position: absolute; width: 264px; height: 112px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; border: 1px solid var(--node-accent, #8993a4); border-top: 4px solid var(--node-accent, #8993a4); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
 .card:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background)); }
 .card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
-.card.manifesto { border-top-width: 6px; }
+.card.manifesto { border-top-width: 6px; color: #202020; }
+.card.manifesto .badge { background: #e5e5e5; }
+.card.manifesto pre { color: var(--vscode-foreground); }
+.card.manifesto small, .card.manifesto #identity, .card.manifesto .form-help { color: #4b4b4b; }
 .card.implementation { border-radius: 20px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
@@ -68,6 +75,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .retired-badge { color: #929baa; border-color: #929baa; }
 .card.expanded { height: auto; overflow: visible; padding: 18px; border-radius: 8px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .card.expanded:hover { background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
+.card.manifesto, .card.manifesto:hover { background: var(--node-accent, #d3d3d3); }
 .node-settings { width: 100%; min-width: 0; }
 h2 { margin: 0 0 8px; font-size: 18px; overflow-wrap: anywhere; }
 #identity { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--vscode-descriptionForeground); }
@@ -87,7 +95,8 @@ textarea { resize: vertical; font-family: var(--vscode-editor-font-family); }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vscode-textCodeBlock-background); padding: 8px; }
 footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscode-descriptionForeground); border-top: 1px solid var(--vscode-panel-border); }
 [hidden] { display: none !important; }
-body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); background: var(--vscode-editor-background); }
+body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); }
+body.vscode-high-contrast .card:not(.manifesto), body.vscode-high-contrast-light .card:not(.manifesto) { background: var(--vscode-editor-background); }
 @media (max-width: 700px) { .color-control { margin-left: 0; } footer { font-size: 10px; } .camera-controls { padding-inline: 6px; } }
 /* Narrow host chrome adapts, never world cards/ports/layout. */
 @media (max-width: 500px) {

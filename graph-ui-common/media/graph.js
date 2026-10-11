@@ -96,13 +96,20 @@
     return card?.parentElement === $('cards') ? card.dataset.nodeId : undefined;
   }
 
-  function updateEdgeHighlights() {
-    const plain = [], highlighted = [];
+  function updateHoverAppearance() {
+    const plain = [], highlighted = [], neighbors = new Set([hoveredNode]);
+    const hovering = hoveredNode !== undefined;
     for (const pair of drawnEdges) {
-      const incident = hoveredNode !== undefined && pair.route.edge.includes(hoveredNode);
-      pair.path.classList.toggle('incident-highlight', incident);
-      pair.head.classList.toggle('incident-highlight', incident);
+      const incident = hovering && pair.route.edge.includes(hoveredNode);
+      if (incident) pair.route.edge.forEach(id => neighbors.add(id));
+      for (const element of [pair.path, pair.head]) {
+        element.classList.toggle('incident-highlight', incident);
+        element.classList.toggle('hover-darkened', hovering && !incident);
+      }
       (incident ? highlighted : plain).push(pair);
+    }
+    for (const card of $('cards').children) {
+      card.classList.toggle('hover-darkened', hovering && !neighbors.has(card.dataset.nodeId));
     }
     // Existing pairs only: highlight crossings without touching geometry/forms.
     const fragment = document.createDocumentFragment();
@@ -112,7 +119,7 @@
 
   function setHoveredNode(id) {
     if (id === hoveredNode) return;
-    hoveredNode = id; updateEdgeHighlights();
+    hoveredNode = id; updateHoverAppearance();
   }
 
   function clearHover() { hoverPoint = undefined; setHoveredNode(undefined); }
@@ -156,8 +163,10 @@
     $('color-mode').value = colorMode;
     $('legend').replaceChildren();
     const entries = colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
-      : [...new Set([...graph.nodes.keys()].map(distanceFor).filter(Number.isInteger))]
-        .sort((a, b) => a - b).map(depth => [`${depth} hop${depth === 1 ? '' : 's'}`, model.color('distance', {}, depth)]);
+      : [['Manifesto · 0 hops', model.TYPE_COLORS.manifesto],
+        ...[...new Set([...graph.nodes.values()].filter(node => node.type !== 'manifesto')
+          .map(node => distanceFor(node.id)).filter(Number.isInteger))]
+          .sort((a, b) => a - b).map(depth => [`${depth} hop${depth === 1 ? '' : 's'}`, model.color('distance', {}, depth)])];
     for (const [label, color] of entries) {
       const item = document.createElement('span'), swatch = document.createElement('i');
       swatch.style.backgroundColor = color; item.append(swatch, document.createTextNode(label));
@@ -307,7 +316,8 @@
       return { route, path, head };
     });
     updateEdgeAppearance(camera.value().k);
-    updateEdgeHighlights();
+    // Redraw creates new cards/pairs even when hovered identity is unchanged.
+    updateHoverAppearance();
   }
 
   function updateEdgeAppearance(scale) {

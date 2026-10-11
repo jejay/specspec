@@ -27,3 +27,11 @@ expanded inputs resize; do not re-create form fields on every keystroke.
 
 Keep layout/metric helpers pure and locally bundled, test geometric endpoints,
 and verify the real VS Code webview in an isolated profile.
+
+## Manifesto fill exception
+
+The later light-gray-manifesto intention pWgqwcQ= and rendering conclusion
+6MUwTIw= replace the generic tinted fill for the manifesto only: use its fixed
+light-gray accent and solid background in all color modes, with dark root text
+and truthful legends. Keep themed Git titles/corners, native inputs and focus
+cues distinct. Other node palettes, derived metrics and routing remain unchanged.

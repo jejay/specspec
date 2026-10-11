@@ -41,7 +41,7 @@ sources:
 - path: graph-ui-common/media/graph.css
   symbol: git title/corner tokens and narrow host chrome
 - path: graph-ui-common/media/graph.css
-  symbol: incident-highlight contrast and Git ink
+  symbol: incident-highlight/hover-darkened paint, neutral manifesto and Git ink
 - path: graph-ui-common/media/graph.css
   symbol: shorter cards, empty badge rows, unhinted world text
 - path: graph-ui-common/media/graph.js
@@ -50,7 +50,7 @@ sources:
 - path: graph-ui-common/media/graph.js
   symbol: legacyWorkspace and withdrawal presentation
 - path: graph-ui-common/media/graph.js
-  symbol: trackHover, syncHover, updateEdgeHighlights
+  symbol: trackHover, syncHover, updateHoverAppearance
 - path: graph-ui-common/src/graph-vendor.js
 - path: graph-ui-common/test-host/platform.cjs
   symbol: actual Git title/corner/theme checks
@@ -373,3 +373,12 @@ hash-free-markdown-sync implementation record for the current complete evidence.
 ## Native node-file editor correction
 
 The current VS Code adapter replaces the preceding sidebar host with GraphEditors (CustomTextEditorProvider), reference-counted GraphProject document coordination and independent GraphView panels. Canonical node files open by default in the main editor, with raw text access; neighbors open their file editors and commit comparisons open independent panels. Native document saves/undo/dirty/recovery differ deliberately from Python-managed project/Electron writes. The old WebviewView conclusion is withdrawn and this live implementation is reconnected to the new native-document choice. A separate current implementation record links the non-writing planner, shared document ports, form recovery and verification boundaries. The earlier sidebar/API evidence remains history, not current hosting behavior.
+
+## Neutral root and outside-hover context revision
+
+6MUwTIw= extends the shared presentation with a fixed light-gray manifesto and
+transient darkening outside immediate displayed hover relationships. The helper
+is now updateHoverAppearance (formerly updateEdgeHighlights), reapplying card
+and paired-edge membership after redraw even with unchanged hovered identity.
+The separate current implementation record links source/tests and full Windows
+host checks; the earlier counts and contrast-only descriptions remain history.

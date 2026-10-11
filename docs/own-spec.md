@@ -136,6 +136,13 @@ direct displayed neighbors, consistent with existing incident-link highlighting.
 Non-incident links darken even when both endpoints are neighbors. The root's base
 hue remains gray; it too darkens when unrelated to the hover. These are transient
 presentation changes, not selection, review scores, graph edits or new host forks.
+The shared renderer applies darkening to existing cards/curve-head pairs and
+reconciles it after refresh and camera motion. Windows VS Code and Electron
+real-host suites passed on maintained Gantt fixtures, including normal/minimum-zoom
+computed paint, CSS dark/light/high-contrast probes and unchanged geometry. Initial
+concurrent runs timed out; isolated reruns passed without weakening assertions.
+The [implementation/evidence record](../_specspec/BbLribU=neutral-manifesto-and-hover-darkening-implementation.md)
+links current code/tests, inspected Electron images and remaining verification limits.
 
 ## Minimum/maximum distance, spacing, and headline correction
 
@@ -245,7 +252,7 @@ Startup failures appear in notifications and **View → Output → SpecSpec**.
 
 Shared/editor/desktop unit suites and optional installed-host checks are documented
 in the README and host guides. Current local checks passed: 100 Python tests,
-99 shared UI tests, 34 VS Code adapter tests, nine desktop unit tests, Ruff and
+105 shared UI tests, 34 VS Code adapter tests, nine desktop unit tests, Ruff and
 both working validators. All Gantt stages/model tests, current receipts/history
 and the installed Chromium app smoke passed. Full Windows VS Code/Electron host
 checks pass on maintained Gantt fixtures, including native node-file lifecycle.

@@ -39,3 +39,13 @@ computed paint and hover behavior in the installed VS Code browser.
 Origin: a separate presentation conclusion implementing the user's node-hover
 request; contrast mixing, event delegation, hit reconciliation, and SVG ordering
 are revisable technical choices rather than extra product requirements.
+
+## Hover-darkening extension
+
+The later user request adds darkening outside immediate displayed relationships.
+6MUwTIw= extends this conclusion with a second transient class for non-incident
+curve/head pairs and unrelated cards. Existing delegation, hit reconciliation,
+incident contrast/order and geometry/form invariants remain. Only the hovered
+card and endpoints of incident displayed links stay undarkened; links between
+neighbors still darken. This supersedes the earlier contrast-only presentation,
+not the user intention or the direction/Git cues.
