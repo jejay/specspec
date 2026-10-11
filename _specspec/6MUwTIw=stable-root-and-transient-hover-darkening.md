@@ -43,3 +43,11 @@ Origin: separate revisable choices implementing the user's two visual requests,
 following inspection of the existing shared renderer and 99-test passing baseline.
 Use the existing development Python; system Python has no specspec package.
 Leave unrelated local settings/artwork untouched; install no Git hooks.
+
+## Superseded solid-root interpretation
+
+The user clarification iktVTRU= rejects the solid pale fill/dark text paragraph
+above. xCOHepQ= replaces only that styling with shared tinted fills, theme text
+and white hover borders, and adds roomier expanded text/Git markers. The fixed
+gray semantic accent, truthful legends and transient one-hop darkening remain.
+The original solid-root reasoning is retained as history, not a live requirement.

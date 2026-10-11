@@ -21,6 +21,14 @@ sources:
 - path: electron/test-host/run.cjs
   symbol: shared canvas and desktop persistence/revisions
 ---
+## User correction after this implementation
+
+The solid gray root/dark text described below was an incorrect interpretation
+of light gray. iktVTRU= clarifies shared tinted-card styling with a white hover
+border; xCOHepQ= chooses its replacement. Prior checks/screenshots are actual
+earlier evidence, not approval of that appearance or current solid-fill behavior.
+The neutral root accent/legend and one-hop darkening remain implemented.
+
 # Render a neutral manifesto and darken outside hovered relationships
 
 Study the original intention/design documents, own-spec tour and UI/root/color/

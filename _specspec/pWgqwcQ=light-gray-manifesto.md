@@ -13,3 +13,10 @@ separate from this stable root appearance.
 
 Origin: the user's light-gray-manifesto request in this conversation. Exact shade,
 contrast and interaction with temporary hover darkening are separate conclusions.
+
+## User clarification
+
+iktVTRU= clarifies that light gray is the accent in the same tinted-card style
+as other nodes, not a solid pale fill. The background should be only modestly
+lighter than a dark canvas, and the border should turn white when hovered.
+Use the same tint distance and hover shifting as other cards.

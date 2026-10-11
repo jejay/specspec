@@ -35,3 +35,10 @@ The later light-gray-manifesto intention pWgqwcQ= and rendering conclusion
 light-gray accent and solid background in all color modes, with dark root text
 and truthful legends. Keep themed Git titles/corners, native inputs and focus
 cues distinct. Other node palettes, derived metrics and routing remain unchanged.
+
+## Shared-tint correction
+
+iktVTRU= clarifies that the preceding solid-root exception misunderstood the
+request. xCOHepQ= restores the generic tinted fill and theme text for the manifesto
+while retaining its neutral gray accent/legend. All cards share white hover
+borders and hover tint shifting; the outside-neighborhood darkening is unchanged.
