@@ -243,6 +243,26 @@ Chromium app smoke test; remote execution is not claimed. The real local browser
 passed and desktop/narrow screenshots were inspected. The example remains a bounded
 educational prototype, not a production scheduler, backup, or authentication service.
 
+## Compact identifier request and encoding investigation
+
+The user's [compact-ID intention](../_specspec/7c9750b8-c8da-46a6-9248-c409da45cf19--compact-random-node-identifiers.md)
+requests seven Base64 characters plus a final `=`, using that full identity and
+its equals sign as the filename boundary. Random-byte generation should retry
+project-local collisions. The separate [encoding/compatibility analysis](../_specspec/d3bf2d3c-0172-4f67-807c-a73047018d83--compact-id-encoding-and-compatibility-analysis.md)
+records a conflict: canonical Base64 of this shape encodes **40 bits**, not 42;
+standard Base64's `/` also conflicts with flat filenames. Padded RFC 4648
+Base64url over five random bytes is recommended, but not yet selected or implemented.
+A custom 42-bit scheme would need to describe `=` as a terminator, not standard padding.
+
+Clarification is needed on encoding priority and whether to rekey existing nodes
+or preserve their identities while changing new-node generation. Historical Git
+bytes remain untouched. The analysis covers lock-scoped live/withdrawn collision
+checks, case-insensitive filesystems, schema/legacy compatibility, Mermaid export,
+VS Code associations and potential conversion/recovery work. The [investigation
+record](../_specspec/8afe8c39-6900-4f12-a2de-0dc6e41acf20--compact-id-investigation-and-baseline.md)
+links inspected code and the passing local baseline checks. These new records use
+the current UUID writer; production ID behavior has not changed yet.
+
 ## Entry points
 
 | What to inspect | Node |
