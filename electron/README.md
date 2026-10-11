@@ -23,7 +23,10 @@ finds the nearest `_specspec/`, including `example/gantt`. A configured, trusted
 executable is run in the main process; project content cannot choose it.
 
 For an explicit interpreter and authorized initial folder (paths are interpreted
-from the Electron process's cwd, normally `electron/` under npm):
+from the Electron process's **launch directory**, normally `electron/` under npm).
+Explicit interpreter/CLI paths are made absolute at launch, before the subprocess
+cwd switches to a selected project; choosing another graph does not rebase them.
+Bare executable names such as `python`, `specspec`, and `uvx` continue to use PATH:
 
 ```sh
 # Linux, with the repository's .venv:
@@ -44,11 +47,21 @@ canonical directory is diagnosed rather than silently falling back to its parent
 Graph controls, native inline editing, cameras, min/max colors, hover, withdrawal,
 migration and revision overlays are shared. **Compare revisions** uses a native HTML
 modal with bounded base/target input; an empty target means workspace. Historical
-views are read-only. Native confirmations protect retire/restore/migrate.
+views are read-only. Native confirmations protect retire/restore/migrate and
+saving a draft over externally changed node contents.
+
+Markdown edits outside the tool are allowed. File watchers reload the graph by
+default, including canonical-directory replacement/recreation. Optional polling is
+disabled: enable with `--poll-interval-ms 5000` or `SPECSPEC_POLL_INTERVAL_MS=5000`;
+`0` turns it off. This trusted launch setting is not taken from project content.
+Events are coalesced and incomplete saves get bounded retries; unchanged data does
+not redraw. Invalid files retain the last graph marked out of date and disable
+mutations until valid. Watcher errors are visible; no hidden polling is enabled.
+Explicit Refresh remains available, particularly for filesystems that miss events.
 
 Presentation preferences and dirty drafts are scoped by project in
 `graph-presentation.json` under Electron's normal user-data directory. They retain
-original fingerprints, including after reload, and do not modify canonical metadata.
+original node contents, including after reload, and do not modify canonical metadata.
 Corrupt saved bytes remain protected with a visible error; move that file aside
 explicitly to reset. Storage has limits and never silently evicts retained drafts.
 This is not guaranteed power-loss durability or backup; export/manage the actual
@@ -73,7 +86,7 @@ for the pinned dependency trees at the time of this implementation, not a securi
 The real Windows host test uses a disposable CLI-managed/Git graph and profile,
 loopback-only Chromium debugging, and the same real canvas regression harness as
 VS Code. It checks A/M/D and live theme tokens, sandbox/no Node/blocked requests and
-popups, actual guarded saving, stale writes/drafts, reload persistence and actual
+popups, actual saving, manual-file watcher sync, invalid-file/draft preservation, reload persistence and actual
 historical/workspace switching. `SPECSPEC_SCREENSHOT_DIR` captures diagnostics;
 `SPECSPEC_PYTHON` selects the test interpreter. No real project is mutated or hook
 installed by these tests. DOM-dispatched tests/screenshots are not exhaustive manual,

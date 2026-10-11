@@ -32,7 +32,7 @@ def test_example_graph_is_independent_and_usable_as_complete_agent_context():
     required = graph.closure(implementation.id, ancestors=True) | {implementation.id}
     assert set(envelope["result"]["required_ids"]) == required
     assert required <= {n["id"] for n in envelope["result"]["nodes"]}
-    assert envelope["result"]["fingerprint"] == example.fingerprint
+    assert "fingerprint" not in envelope["result"]
 
 
 def test_example_receipts_and_all_three_real_git_stage_pairs_are_verified():
@@ -64,12 +64,12 @@ def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index
 
     node = next(n for n in original.nodes if n.type == "requirement" and not n.retired)
     file = nested / node.path
-    file.write_bytes(original.files[node.path] + b"\nAn intentionally unmanaged fixture edit.\n")
+    file.write_bytes(original.files[node.path].replace(b"parents:", b"unknown:"))
     assert invoke(nested, "validate")[0] == 1
     assert invoke(nested, "hook", "check")[0] == 0, "Unstaged corruption is not in the index."
     git(tmp_path, "add", "example/gantt/" + node.path)
     code, envelope = invoke(nested, "hook", "check")
-    assert code == 1 and any(d["code"] == "INTEGRITY" for d in envelope["diagnostics"])
+    assert code == 1 and any(d["code"] == "SCHEMA" for d in envelope["diagnostics"])
     assert invoke(tmp_path, "hook", "check")[0] == 0, "The parent graph was not corrupted."
     assert load_snapshot(GANTT).files == original.files
 

@@ -6,7 +6,6 @@ parents:
 - ee57a451-059d-426b-868e-e898c2503082
 - a723adc8-d69d-4e60-8b4f-0997ab8f4d1d
 - 51c3e963-674e-4d5d-bd7a-b8d63649e1c8
-managed_hash: 9f74c3e124b36a304c78fc3d1f4d061c32fb59aeffade4df2c8105e69bb727f8
 ---
 # Emphasize incident SVG pairs without changing graph geometry
 
@@ -34,7 +33,7 @@ Hover sends no host/CLI messages, changes no world positions or camera, recreate
 no edges/forms, and does not consume native text-selection or scrolling events.
 Test exact incident membership, both curves and heads, isolated nodes, nested form
 transitions, refresh/camera reconciliation, read-only historical and draft links,
-Git styling, DOM identity, and unchanged form fingerprints/caret. Verify actual
+Git styling, DOM identity, and unchanged form draft baselines/caret. Verify actual
 computed paint and hover behavior in the installed VS Code browser.
 
 Origin: a separate presentation conclusion implementing the user's node-hover

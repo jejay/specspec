@@ -3,7 +3,6 @@ id: a1595f98-cae9-4593-aae9-baff7789b435
 type: requirement
 parents:
 - c1d04e2d-2e56-4096-9549-b66141b46ebd
-managed_hash: 79885875b2bb04e7d1821301fb20be37ecf46cd7f5879778f41a9a8f4d7d2c0c
 ---
 # Simplify the puppy to monochrome face contours
 

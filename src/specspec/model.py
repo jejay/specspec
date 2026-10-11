@@ -1,19 +1,16 @@
-"""Plain data structures and stable semantic fingerprints."""
+"""Plain data structures and normalized semantic records."""
 
 from __future__ import annotations
 
-import hashlib
-import json
 import re
 from dataclasses import dataclass, field
 from typing import Any
 
 ID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
-HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
-FORMAT_VERSION = 2
-API_VERSION = 2
+FORMAT_VERSION = 3
+API_VERSION = 3
 MAX_FILE_BYTES = 1024 * 1024
 
 
@@ -37,12 +34,6 @@ class SpecError(Exception):
         super().__init__("; ".join(d.message for d in diagnostics))
 
 
-def canonical_bytes(value: Any) -> bytes:
-    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode(
-        "utf-8"
-    )
-
-
 @dataclass
 class SpecNode:
     id: str
@@ -54,10 +45,6 @@ class SpecNode:
     format_version: int | None = None
     sources: list[dict[str, str]] = field(default_factory=list)
     extensions: dict[str, Any] = field(default_factory=dict)
-    managed_hash: str = ""
-    # Read-only v1 provenance, used solely to verify its original integrity hash.
-    # Never exposed as a current status or written by the v2 serializer.
-    legacy_status: str | None = None
 
     def semantic(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -73,18 +60,10 @@ class SpecNode:
             data["format_version"] = self.format_version
         return data
 
-    def digest(self) -> str:
-        projection = self.semantic()
-        if self.legacy_status is not None:
-            # v1 hashes must be checked before discarding its approval metadata.
-            projection.pop("retired")
-            projection["status"] = self.legacy_status
-        return hashlib.sha256(canonical_bytes(projection)).hexdigest()
-
     def to_dict(self) -> dict[str, Any]:
-        return {**self.semantic(), "path": self.path, "managed_hash": self.managed_hash}
+        return {**self.semantic(), "path": self.path}
 
-    def frontmatter(self, *, refresh_hash: bool = True) -> dict[str, Any]:
+    def frontmatter(self) -> dict[str, Any]:
         result: dict[str, Any] = {
             "id": self.id,
             "type": self.type,
@@ -100,12 +79,4 @@ class SpecNode:
             result["sources"] = self.sources
         if self.extensions:
             result["extensions"] = self.extensions
-        result["managed_hash"] = self.digest() if refresh_hash else "0" * 64
         return result
-
-
-def fingerprint(nodes: list[SpecNode]) -> str:
-    projection = [node.semantic() for node in sorted(nodes, key=lambda n: n.id)]
-    return hashlib.sha256(
-        canonical_bytes({"canonical_version": 2, "nodes": projection})
-    ).hexdigest()

@@ -2,7 +2,7 @@
 const { spawn } = require('node:child_process');
 const { mkdtempSync, existsSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
-const { join, resolve } = require('node:path');
+const { join, resolve, relative } = require('node:path');
 const { createServer } = require('node:net');
 const { checkUI, CDP } = require('../../graph-ui-common/test-host/ui.cjs');
 const { fixture } = require('../../graph-ui-common/test-host/fixture.cjs');
@@ -17,8 +17,9 @@ async function run() {
   const port = await new Promise(resolve => { const server = createServer(); server.listen(0, '127.0.0.1', () => { const p = server.address().port; server.close(() => resolve(p)); }); });
   const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
   const executable = process.env.SPECSPEC_DESKTOP_EXECUTABLE || require('electron');
-  const child = spawn(executable, [...(process.env.SPECSPEC_DESKTOP_EXECUTABLE ? [] : [resolve(__dirname, '..')]), '--project', project.root, '--python', python, '--profile', profile,
-    `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const launchDirectory = resolve(__dirname, '..');
+  const child = spawn(executable, [...(process.env.SPECSPEC_DESKTOP_EXECUTABLE ? [] : [launchDirectory]), '--project', project.root, '--python', relative(launchDirectory, python), '--profile', profile,
+    `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1'], { cwd: launchDirectory, env, stdio: ['ignore', 'pipe', 'pipe'] });
   child.stdout.on('data', d => process.stdout.write(d)); child.stderr.on('data', d => process.stderr.write(d));
   const exit = new Promise((resolve, reject) => { child.on('error', reject); child.on('close', resolve); });
   const timer = setTimeout(() => child.kill(), 180_000);
@@ -46,7 +47,7 @@ async function run() {
       assert.ok(!await evaluate(`document.getElementById('revision').textContent.includes('read-only')`));
     } finally { client.close(); }
     project.cli(['validate','--warnings-as-errors','--json']);
-    console.log('SPECSPEC_ELECTRON_HOST_OK: real canvas, themed A/M/D, sandbox/blocked network, actual guarded save/stale rejection, persisted draft reload and historical/workspace switching.'); ok = true;
+    console.log('SPECSPEC_ELECTRON_HOST_OK: real canvas, themed A/M/D, sandbox/blocked network, actual save, watcher-only manual/invalid-file sync, persisted draft reload and historical/workspace switching.'); ok = true;
   } finally {
     clearTimeout(timer); child.kill(); await exit;
     if (ok) { project.cleanup(); rmSync(profile, { recursive: true, force: true, maxRetries: 30, retryDelay: 200 }); }

@@ -5,7 +5,6 @@ parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 48f77f19-391f-46d0-b06f-ec7530be4575
 - 51c3e963-674e-4d5d-bd7a-b8d63649e1c8
-managed_hash: a548925e9aa9764ec06c058150ee8a792cde5f2eda36c434dc4c7cb8939ec8de
 ---
 # Make graph colors convey selectable meaning
 

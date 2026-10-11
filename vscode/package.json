@@ -49,6 +49,14 @@
           "scope": "machine-overridable",
           "description": "Python CLI executable; executed without a shell."
         },
+        "specspec.pollIntervalMs": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 2147483647,
+          "scope": "resource",
+          "description": "Optional graph polling interval in milliseconds. 0 disables polling (default); file watchers remain enabled."
+        },
         "specspec.args": {
           "type": "array",
           "items": {

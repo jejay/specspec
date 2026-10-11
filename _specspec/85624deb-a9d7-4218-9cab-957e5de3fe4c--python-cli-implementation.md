@@ -21,26 +21,22 @@ sources:
   symbol: withdrawal_command
 - path: tests/test_migration.py
   symbol: test_cli_migration_and_withdrawal_filters_have_no_approval_commands
-managed_hash: fd67f506f95d85b68e105b5babf9a9bdfa6eab85af0757cb9cb8fda8ac1490f9
 ---
-# Package the approval-free Python CLI and JSON interface
+# Package the hash-free Python CLI and JSON interface
 
-Hatchling packages src/specspec and exposes specspec.cli:main. Click commands call
-the shared model, graph, workspace, and Git backend. JSON API version two exposes
-retired booleans, graph format versions, fingerprints, and structured diagnostics,
-never proposed/accepted node status. There is no accept command or status filter.
+Hatchling packages src/specspec and exposes specspec.cli:main. Click delegates to
+the shared model/graph/workspace/Git backend. JSON API 3 exposes normalized node
+records, withdrawal booleans, graph format versions and structured diagnostics,
+without managed_hash or fingerprint fields. --expect is removed from every command
+and the library; there is no accept command, status filter or approval step.
 
-add and update save nodes without approval stages. retire and restore are explicit
-withdrawal batches; list offers live/retired filters. migrate converts a validated
-legacy graph with optimistic concurrency and the normal journal/recovery workflow.
-All normal mutation commands reject unmigrated workspaces with actionable guidance.
+add/update, explicit withdrawal batches, live/retired listing, complete ancestor
+context and byte budgets remain. migrate converts valid v1/v2 files to v3 without
+checking obsolete hashes. Body input uses UTF-8 stdin/files. Normal tool writes
+reject unmigrated workspaces with guidance, but valid manual edits are readable
+and usable before/after migration. CLI export/show/list/context/impact/validation
+and staged checks emit no fingerprints.
 
-Context export includes complete ancestors and optional live children/siblings,
-using sibling_ids instead of proposal_ids. It deduplicates and measures the actual
-serialized response, including API/envelope/omission metadata, against byte budgets.
-Retired context remains available explicitly. Binding text uses UTF-8 stdin/file input.
-
-CLI tests exercise conversion, idempotence, removed approval commands/filters,
-withdrawal/restoration, sibling context, UTF-8/CRLF, and byte-budget boundaries.
-Local isolated pipx/uvx launches were smoke-tested in the preceding implementation;
-no new publication or PyPI release is claimed.
+Tests cover hash-free outputs, removed options, manual changes, legacy conversion,
+idempotence, withdrawal, parent-before-child context, UTF-8/CRLF and exact budgets.
+No new distribution publication or production correctness claim is made.

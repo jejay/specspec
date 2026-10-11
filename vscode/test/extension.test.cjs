@@ -6,7 +6,7 @@ const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
 const extensionPath = require.resolve('../out/extension.js');
-const snapshot = { fingerprint: 'current', format_version: 2, nodes: [], edges: [], valid: true };
+const snapshot = { format_version: 3, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
 
 function fixture(t, options = {}) {
@@ -14,7 +14,7 @@ function fixture(t, options = {}) {
   mkdirSync(join(root, '_specspec'));
   mkdirSync(join(root, 'vscode'));
   const uri = path => ({ scheme: 'file', fsPath: resolve(path) });
-  const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0 };
+  const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [] };
   const context = { extensionUri: uri(join(root, 'vscode')), extensionMode: 2, subscriptions: [] };
   const output = { appendLine: line => calls.logs.push(line), show() {}, dispose() {} };
   let current = options.snapshot || snapshot;
@@ -26,8 +26,14 @@ function fixture(t, options = {}) {
     workspace: {
       isTrusted: options.trusted !== false,
       workspaceFolders: options.empty ? [] : [{ uri: uri(join(root, options.subfolder ? 'vscode' : '')) }],
-      createFileSystemWatcher: () => ({ dispose() {}, onDidChange: () => noopDisposable, onDidCreate: () => noopDisposable, onDidDelete: () => noopDisposable }),
-      onDidChangeConfiguration: () => noopDisposable,
+      createFileSystemWatcher: pattern => {
+        const watcher = { pattern, dispose() { this.disposed = true; },
+          onDidChange(fn) { this.change = fn; return noopDisposable; },
+          onDidCreate(fn) { this.create = fn; return noopDisposable; },
+          onDidDelete(fn) { this.delete = fn; return noopDisposable; } };
+        calls.watchers.push(watcher); return watcher;
+      },
+      onDidChangeConfiguration: fn => { calls.configure = fn; return noopDisposable; },
       getConfiguration: () => ({
         get: (name, fallback) => options.settings?.[name] ?? fallback,
         inspect: name => options.settings?.[name] !== undefined ? { globalValue: options.settings[name] } : {},
@@ -68,8 +74,8 @@ function fixture(t, options = {}) {
               messages.push(value);
               if (value.type === 'snapshot') {
                 if (options.renderError) listener({ type: 'client-error', message: 'Renderer crashed' });
-                else listener({ type: 'rendered', renderToken: value.renderToken,
-                  nodeCount: options.wrongCount ? 999 : value.snapshot.nodes.length });
+                else listener({ type: 'rendered', renderToken: value.renderToken, view: 'overview',
+                  visibleIds: value.snapshot.nodes.map(n => n.id), nodeCount: options.wrongCount ? 999 : value.snapshot.nodes.length });
               }
               return true;
             },
@@ -88,8 +94,8 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args });
     if (options.cliError) throw new Error('Cannot run Python backend');
-    if (args[0] === 'migrate') current = { ...current, format_version: 2, fingerprint: 'migrated' };
-    return { api_version: 2, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+    if (args[0] === 'migrate') current = { ...current, format_version: 3 };
+    return { api_version: 3, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
       base: current, target: current, changes: [], added_edges: [], removed_edges: [],
       base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
     } : current };
@@ -110,7 +116,7 @@ function fixture(t, options = {}) {
     rmSync(root, { recursive: true, force: true });
     delete require.cache[extensionPath];
   });
-  return { root, uri, calls, context, workspace: vscode.workspace };
+  return { root, uri, calls, context, workspace: vscode.workspace, change: value => { current = value; } };
 }
 
 async function waitFor(check) {
@@ -121,34 +127,30 @@ async function waitFor(check) {
   assert.ok(check(), 'The serialized graph action did not complete.');
 }
 
-test('legacy migration is explicitly confirmed and uses the displayed fingerprint', async t => {
+test('legacy migration is explicitly confirmed without hash expectations', async t => {
   const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
-  calls.panels[0].send({ type: 'migrate', expect: 'current' });
-  await waitFor(() => calls.panels[0].messages.at(-1).snapshot?.fingerprint === 'migrated');
+  calls.panels[0].send({ type: 'migrate' });
+  await waitFor(() => calls.panels[0].messages.at(-1).snapshot?.format_version === 3);
   const mutation = calls.cli.find(call => call.args[0] === 'migrate');
-  assert.deepEqual(mutation.args, ['migrate', '--expect', 'current', '--json']);
+  assert.deepEqual(mutation.args, ['migrate', '--json']);
   assert.match(calls.warnings[0], /whole graph/);
-  assert.equal(calls.panels[0].messages.at(-1).snapshot.format_version, 2);
+  assert.equal(calls.panels[0].messages.at(-1).snapshot.format_version, 3);
   assert.equal(calls.panels[0].messages.at(-1).force, false);
 });
 
-test('cancelled or stale migration cannot invoke a writer', async t => {
+test('cancelled migration cannot invoke a writer', async t => {
   const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 } });
   await calls.commands.get('specspec.openGraph')();
-  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  calls.panels[0].send({ type: 'migrate' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'cancelled');
-  assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
-  calls.panels[0].send({ type: 'migrate', expect: 'old' });
-  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
-  assert.match(calls.panels[0].messages.at(-1).message, /stale/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
 });
 
 test('ordinary writes cannot silently migrate a legacy workspace', async t => {
   const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
-  calls.panels[0].send({ type: 'add', expect: 'current', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
+  calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /Migrate/);
   assert.ok(!calls.cli.some(call => ['add', 'migrate'].includes(call.args[0])));
@@ -160,11 +162,11 @@ test('withdrawal and restoration are guarded commands and acceptance messages ar
   await calls.commands.get('specspec.openGraph')();
   for (const action of ['restore', 'retire']) {
     const count = calls.panels[0].messages.filter(message => message.type === 'snapshot').length;
-    calls.panels[0].send({ type: action, id: 'node', expect: 'current' });
+    calls.panels[0].send({ type: action, id: 'node' });
     await waitFor(() => calls.panels[0].messages.filter(message => message.type === 'snapshot').length > count);
-    assert.deepEqual(calls.cli.find(call => call.args[0] === action).args, [action, 'node', '--expect', 'current', '--json']);
+    assert.deepEqual(calls.cli.find(call => call.args[0] === action).args, [action, 'node', '--json']);
   }
-  calls.panels[0].send({ type: 'accept', id: 'node', expect: 'current' });
+  calls.panels[0].send({ type: 'accept', id: 'node' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /Unknown graph action/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'accept'));
@@ -174,7 +176,7 @@ test('historical legacy comparisons cannot invoke migration', async t => {
   const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true, revisions: ['HEAD', 'HEAD'] });
   await calls.commands.get('specspec.compareRevisions')();
   await waitFor(() => calls.panels[0].messages.at(-1).readonly === true);
-  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  calls.panels[0].send({ type: 'migrate' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /read-only/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
@@ -184,7 +186,7 @@ test('losing trust prevents a previously loaded migration from executing', async
   const { calls, workspace } = fixture(t, { snapshot: { ...snapshot, format_version: 1 }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
   workspace.isTrusted = false;
-  calls.panels[0].send({ type: 'migrate', expect: 'current' });
+  calls.panels[0].send({ type: 'migrate' });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /trust/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'migrate'));
@@ -195,7 +197,8 @@ test('empty development windows use a filesystem folder picker and load the grap
   const result = await calls.commands.get('specspec.openGraph')();
   assert.equal(calls.dialogs, 1);
   assert.equal(calls.picks, 0);
-  assert.equal(result.fingerprint, 'current');
+  assert.equal(result.format_version, 3);
+  assert.equal('fingerprint' in result, false);
   assert.equal(calls.cli[0].root, root);
   assert.equal(calls.panels[0].messages.at(-1).type, 'snapshot');
   assert.deepEqual(calls.errors, []);
@@ -271,11 +274,33 @@ test('development interpreter avoids PATH while explicit CLI settings override i
 test('Activity Bar activation auto-loads its graph without creating an editor tab', async t => {
   const {calls}=fixture(t);assert.equal(calls.panels.length,0);
   const view = { show(){}, onDidDispose(){return noopDisposable;}, webview:{options:{},cspSource:'local',asWebviewUri:v=>v.fsPath,
-    onDidReceiveMessage(fn){this.listener=fn;return noopDisposable;},postMessage(value){calls.iconSnapshot=value;if(value.type==='snapshot')this.listener({type:'rendered',renderToken:value.renderToken,nodeCount:value.snapshot.nodes.length});return Promise.resolve(true);},
+    onDidReceiveMessage(fn){this.listener=fn;return noopDisposable;},postMessage(value){calls.iconSnapshot=value;if(value.type==='snapshot')this.listener({type:'rendered',renderToken:value.renderToken,view:'overview',visibleIds:value.snapshot.nodes.map(n=>n.id),nodeCount:value.snapshot.nodes.length});return Promise.resolve(true);},
     set html(value){this.listener({type:'ready'});}}};
   calls.provider.resolveWebviewView(view);await waitFor(()=>calls.iconSnapshot?.type==='snapshot');
   assert.equal(calls.panels.length,0,'No createWebviewPanel/editor tab API is used.');
   calls.provider.dispose();
+});
+
+test('watchers include directory replacement, refresh external changes, and polling defaults off', async t => {
+  const f = fixture(t); await f.calls.commands.get('specspec.openGraph')();
+  assert.equal(f.calls.watchers[0].pattern.pattern, '_specspec{,/**}');
+  const count = f.calls.cli.length; await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, count);
+  f.change({ ...snapshot, nodes: [{ id: 'manual', type: 'requirement', body: '# Manually edited', parents: [], sources: [] }] });
+  f.calls.watchers[0].change(); f.calls.watchers[0].create(); f.calls.watchers[0].delete();
+  await waitFor(() => f.calls.panels[0].messages.at(-1).snapshot?.nodes.length === 1);
+  f.calls.panels[0].dispose(); assert.equal(f.calls.watchers[0].disposed, true);
+});
+
+test('polling setting changes take effect and disposal stops old-root timers', async t => {
+  const settings = { pollIntervalMs: 0 }, f = fixture(t, { settings });
+  await f.calls.commands.get('specspec.openGraph')(); const first = f.calls.cli.length;
+  settings.pollIntervalMs = 10; f.calls.configure({ affectsConfiguration: () => true });
+  await waitFor(() => f.calls.cli.length > first);
+  settings.pollIntervalMs = 0; f.calls.configure({ affectsConfiguration: () => true });
+  await new Promise(r => setTimeout(r, 260)); const off = f.calls.cli.length;
+  await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, off);
+  settings.pollIntervalMs = 10; f.calls.configure({ affectsConfiguration: () => true }); f.calls.panels[0].dispose();
+  await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, off);
 });
 
 test('Select Project resolves a nested graph in the same Activity Bar view', async t => {

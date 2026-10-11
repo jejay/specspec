@@ -8,7 +8,7 @@ Build a Python 3.11+ package with a `specspec` console entry point, a reusable l
 
 ```text
 src/specspec/
-  model.py        # Strict node schema, diagnostics, canonical fingerprints
+  model.py        # Strict node schema, diagnostics, normalized records
   format.py       # Frontmatter parsing and targeted serialization
   graph.py        # Structural checks, traversal, deterministic ordering
   workspace.py    # Discovery, snapshots, managed mutations, recovery
@@ -57,7 +57,7 @@ Use lowercase UUIDv4 IDs from `uuid.uuid4()`. Frontmatter is authoritative, with
 
 Search upward for the nearest `_specspec` directory, stopping even when it is invalid. Support an explicit project-root override. Keep all operation state outside `_specspec`; do not introduce a configuration file or node subdirectory.
 
-Version 2 frontmatter (version 1 remains a read/migration compatibility format):
+Version 3 frontmatter (versions 1/2 remain read/migration compatibility formats):
 
 | Field | Rule |
 | --- | --- |
@@ -65,10 +65,9 @@ Version 2 frontmatter (version 1 remains a read/migration compatibility format):
 | `type` | `manifesto`, `requirement`, or `implementation`. |
 | `retired` | Optional strict boolean; true means withdrawn, not unreviewed. No approval `status` field. |
 | `parents` | Required array of unique IDs; order is non-semantic. |
-| `format_version` | Required integer `2` on the manifesto only. |
+| `format_version` | Required integer `3` on the manifesto only. |
 | `sources` | Optional implementation-only `{path, symbol?}` entries. |
 | `extensions` | Optional namespaced JSON-compatible metadata mapping. |
-| `managed_hash` | Required SHA-256 content-integrity marker maintained by the tool. |
 
 Store incoming relationships in `parents`, avoiding writes to parent files when a child is added. Require requirement parents for implementations as part of the rooted node grammar.
 
@@ -86,21 +85,22 @@ Use deterministic Kahn ordering and iterative traversal. Return a concrete cycle
 
 Calculate closures on demand and rebuild from files on every invocation initially. The core graph checks are linear; deterministic heap ordering adds `O(V log V)`. A daemon or persisted index is unnecessary until measured latency justifies one.
 
-## 4. Managed edits and integrity
+## 4. Tool-driven edits and permitted manual changes
 
-`managed_hash` covers a canonical JSON projection of ID, type, withdrawal flag, sorted parents, format metadata, source references, extensions, and binding Markdown. Normalize line endings, but not other Markdown whitespace. Exclude the marker itself and the filename. Use the version-two canonicalization for new writes. For legacy reads, verify the original version-one projection, including its old status, before normalizing away approval metadata. Never refresh a historical hash.
-
-A body or metadata edit outside the tool normally produces an integrity mismatch even if the graph remains structurally valid. Tool mutations recompute the marker automatically. YAML formatting alone and slug renames do not invalidate semantic integrity.
-
-This detects accidental unmanaged changes; it is **not** an authenticated signature. A user can recompute the hash or bypass a local hook. Repository protection and CI are needed where enforcement matters. Do not claim that the marker proves who approved content.
-
-Require valid input snapshots for mutations. Do not automatically bless manual changes by refreshing hashes during validation. A future explicit import/repair workflow may acknowledge and review such changes separately.
+The user's later consenting-adults correction removes `managed_hash`, graph
+fingerprints, `--expect` and hash verification. CLI/UI edits remain recommended;
+manual Markdown changes are permitted and validated on schema/graph consistency,
+not provenance. API/format 3 contains no replacement marker or fingerprint.
+Older v1/v2 readers recognize obsolete hash fields only as ignored metadata and
+normalize approval fields away. Git compares semantic records and raw bytes directly.
+Require valid input/candidate graphs for tool mutations; no special repair or
+acknowledgement workflow is required merely because an edit was manual.
 
 ### Transaction strategy
 
 Use `.specspec-local/` at the project root for a lock, staged replacement files, and a recovery journal; ignore it in Git. Reject symlinked state directories and verify same-filesystem staging before replacement.
 
-Under the lock, load and validate the workspace, construct the candidate graph, check an optional expected snapshot fingerprint, and validate the result. Journal original and replacement bytes before touching canonical files. Compare original byte hashes immediately before applying replacements and validate afterwards.
+Under the lock, load and validate the workspace, construct the candidate graph and validate the result without snapshot hashes. Journal original and replacement bytes before touching canonical files. Compare original file bytes directly immediately before applying replacements and validate afterwards.
 
 Batch replacement is not filesystem-atomic. Interrupted operations remain explicit and block further mutations. Provide `recover` to restore original files only if each current file matches a known original or replacement state. Refuse to overwrite intervening external edits. Detect unclean locks and incomplete journals on reads; do not discard recovery data as cache.
 
@@ -114,7 +114,7 @@ Remove approval statuses, scores, parent-approval rules, and the accept command.
 
 Keep a strict optional retired boolean for withdrawal and retained history. Explicit retire/restore batches name their nodes; live nodes cannot depend on withdrawn parents, and the manifesto cannot be withdrawn. Restoration does not claim review or approval. Keep withdrawal controls separate from content saves.
 
-Expose a guarded migrate command: validate a v1 graph and its original hashes, convert the complete graph to v2 through the existing journal/lock transaction, preserve identities/text/links/references/extensions/unaffected comments, and map only legacy retirement to a flag. Ordinary writes to a legacy workspace require this explicit conversion. Historical v1 revisions remain readable, normalized to the approval-free model without changing stored bytes. Interrupted conversion recovers the complete original schema. Existing v2 migration is a no-op.
+Expose a migrate command: validate a v1/v2 graph's actual contents, convert the complete graph to v3 through the existing journal/lock transaction, preserve identities/text/links/references/extensions/unaffected comments, and map only legacy retirement to a flag. Ordinary writes to a legacy workspace require this explicit conversion. Historical v1/v2 revisions remain readable with obsolete hashes ignored, normalized to the approval-free model without changing stored bytes. Interrupted conversion recovers the complete original schema. Migration removes obsolete hash/approval metadata; an existing v3 migration is a no-op.
 
 Explicit choice groups remain separate work; the earlier approval-receipt candidate is withdrawn, not a required future workflow.
 
@@ -127,7 +127,7 @@ specspec [--root <project>] add --type requirement --parent <id> --slug <text> -
 specspec [--root <project>] update <id> --body <file> [--parent <id> ...]
 specspec [--root <project>] retire <id>...
 specspec [--root <project>] restore <id>...
-specspec [--root <project>] migrate [--expect <fingerprint>]
+specspec [--root <project>] migrate
 specspec [--root <project>] list [--live | --retired] [--json]
 specspec [--root <project>] show <id> [--ancestors] [--descendants] [--json]
 specspec [--root <project>] context <id> [--max-bytes <n>] [--json]
@@ -139,15 +139,15 @@ specspec [--root <project>] hook check [--json]
 specspec [--root <project>] recover
 ```
 
-Mutation commands accept `--expect <snapshot-fingerprint>` for optimistic concurrency and `--json`. Body input may use `-` for stdin so the extension needs no temporary node files. Parent changes are explicit full replacements, not additions inferred from text.
+Mutation commands accept `--json`, without fingerprints or `--expect`. Body input may use `-` for stdin so the extension needs no temporary node files. Parent changes are explicit full replacements, not additions inferred from text.
 
-Version-two JSON envelopes contain `api_version: 2`, `ok`, `result`, and `diagnostics`. Diagnostics have stable codes, severity, paths, optional node IDs, and corrective messages. Exit codes: `0` success, `1` invalid specification or rejected mutation, `2` invocation/I/O failure. Keep prose and terminal decoration out of JSON stdout.
+Version-three JSON envelopes contain `api_version: 3`, `ok`, `result`, and `diagnostics`. Diagnostics have stable codes, severity, paths, optional node IDs, and corrective messages. Exit codes: `0` success, `1` invalid specification or rejected mutation, `2` invocation/I/O failure. Keep prose and terminal decoration out of JSON stdout.
 
 ## 7. Git hook and revision diffs
 
 ### Hook validation
 
-Validate the **index**, not the worktree. Load staged files with `git ls-files --stage -z` and `git cat-file`; reject conflicted stages, symlink modes, nested paths, bad schemas, structural failures, and integrity mismatches. Partially staged files must be checked in precisely the form that will be committed.
+Validate the **index**, not the worktree. Load staged files with `git ls-files --stage -z` and `git cat-file`; reject conflicted stages, symlink modes, nested paths, bad schemas and structural failures, not manual-edit provenance. Partially staged files must be checked in precisely the form that will be committed.
 
 Source existence checks are advisory worktree checks and should not decide index consistency. Invoke Git without a shell and parse filenames with NUL delimiters.
 
@@ -177,9 +177,9 @@ Selecting a node replaces the overview with a neighborhood view: direct parents 
 
 Explain minimum/maximum manifesto distance through the selected color legend rather than repeating hop labels on compact parents or the expanded card. Show each child’s **downstream node count**: all distinct reachable descendants at every depth, excluding the child itself. This incorporates grandchildren and every deeper generation as potential impact context, not a promise that every edit invalidates those nodes. Deduplicate IDs within each child’s subgraph; different children’s totals may overlap and are not additive. Use target metrics for surviving nodes and base metrics for removed nodes, never the potentially cyclic revision union.
 
-Show only linked parents in the editable parent list, with explicit removal and a separate “Add parent” candidate picker; choosing a candidate alone must not change the links. The manifesto displays no parents and offers no parent-editing controls. Text and parent changes call `update`; withdrawal and restoration use their dedicated commands; there is no acceptance action. New-node creation uses `add`. Send the displayed snapshot fingerprint with each mutation and reload on stale-context errors.
+Show only linked parents in the editable parent list, with explicit removal and a separate “Add parent” candidate picker; choosing a candidate alone must not change the links. The manifesto displays no parents and offers no parent-editing controls. Text and parent changes call `update`; withdrawal and restoration use their dedicated commands; there is no acceptance action. New-node creation uses `add`. Keep original node contents with drafts and ask confirmation before overwriting externally changed node contents. Unrelated graph changes do not prevent saving. Re-read and validate current files before mutations; deleted-node drafts stay copyable rather than being recreated.
 
-Use full IDs in messages, not webview-generated filesystem paths. The host validates messages against the current graph before invoking the CLI. Disable mutation commands for historical comparison views and untrusted workspaces. Watch canonical files and refresh after changes; serialize tool writes and retain unsaved form content when a reload is needed.
+Use full IDs in messages, not webview-generated filesystem paths. The host validates messages against the current graph before invoking the CLI. Disable mutation commands for historical comparison views and untrusted workspaces. Watch canonical files and refresh after changes; coalesce events, retry incomplete saves a bounded number of times, serialize reads/writes, and retain unsaved form content/caret/camera. Compare loaded records directly to skip unchanged redraws. Invalid files retain the last valid graph visibly marked out of date and disable mutations until a valid reload; never rewrite external changes. VS Code uses its filesystem watcher; Electron watches the project parent and canonical directory, reattaching on directory replacement. Optional polling uses a configurable millisecond interval defaulting to 0/off (`specspec.pollIntervalMs`, `--poll-interval-ms` / `SPECSPEC_POLL_INTERVAL_MS`). Dispose timers/watchers on closure/project switches and report watcher errors without secretly enabling polling. Explicit refresh remains; watcher-only delivery on every mounted/network filesystem and race-free writes against noncooperating editors are not guaranteed.
 
 ### Colors and arrows
 
@@ -195,13 +195,13 @@ Camera-compensate stroke width to a 1.6-screen-pixel floor and arrow length to a
 
 Hovering a node emphasizes its displayed immediate incoming/outgoing curve/head pairs in both overview and focused views, including historical and draft links. Delegate hover-capable pointer transitions through the viewport so moving between controls inside one card does not flicker. Keep hovered identity/last pointer position only in transient memory; reconcile against the actual hit-tested card after redraw or camera movement and clear on exit, blur, cancellation, or touch.
 
-Toggle the existing SVG pair's emphasis class, mix its Git-colored ink with theme foreground for contrast, and paint incident pairs last. Restore paint/order on exit. Do not change paths, stroke/head dimensions, dashes, world positions, camera, native form DOM, or persisted drafts/fingerprints. SVG remains non-interactive. Hover emits no host or mutation messages. Verify exact edge membership, unchanged geometry/DOM identity, form interactions, and actual computed paint at normal/minimum zoom.
+Toggle the existing SVG pair's emphasis class, mix its Git-colored ink with theme foreground for contrast, and paint incident pairs last. Restore paint/order on exit. Do not change paths, stroke/head dimensions, dashes, world positions, camera, native form DOM, or persisted drafts/original node records. SVG remains non-interactive. Hover emits no host or mutation messages. Verify exact edge membership, unchanged geometry/DOM identity, form interactions, and actual computed paint at normal/minimum zoom.
 
 ### Spatial camera
 
 Use d3-zoom to transform cards and SVG together inside a clipped viewport. Keep native headlines/forms and remove permanent `will-change: transform` promotion from the world, letting browser text rasterization follow the current scale instead of enlarging a cached low-scale surface. This improved the inspected same-pose 250% before/after rendering in Windows VS Code; font antialiasing remains browser/OS/device-dependent. Do not change font sizes, duplicate text overlays, or counter-scale individual nodes. Allow unconstrained panning and bounded 12–250% magnification; layout and metrics never depend on the camera. Middle-drag/background drag pans, wheel/pinch zooms at the pointer, and buttons/keyboard actions offer framing and actual-size recovery. Preserve separate overview and per-node focus cameras across back/refresh. Do not refit on window resize; explicit framing only changes the camera.
 
-Exclude native settings/text-control gestures, preserve the same form DOM, caret and original draft fingerprint, and honor reduced-motion preferences for animated framing/zoom controls. Use an adaptive grid and a navigation strip outside the clipping area so controls do not cover save/review actions. Bundle pinned libraries locally with generated license notices; CSP continues to prohibit remote/executable project content. [Library rationale and limits](docs/node-canvas.md) explain why this slice uses Dagre/D3 rather than a computational node engine.
+Exclude native settings/text-control gestures, preserve the same form DOM, caret and original draft node record, and honor reduced-motion preferences for animated framing/zoom controls. Use an adaptive grid and a navigation strip outside the clipping area so controls do not cover save/review actions. Bundle pinned libraries locally with generated license notices; CSP continues to prohibit remote/executable project content. [Library rationale and limits](docs/node-canvas.md) explain why this slice uses Dagre/D3 rather than a computational node engine.
 
 Requested behavior and the separately reasoned layout/counting/routing choices are separately represented in the [UI intentions and conclusions](docs/own-spec.md#neighborhood-ui-revision) and [origin-density/connection correction](docs/own-spec.md#origin-density-and-connection-correction).
 
@@ -217,15 +217,15 @@ Current scope is a functional graph editor, graph-diff overlay, relational LR la
 
 Use canonical project-relative POSIX paths with an optional descriptive symbol. Reject absolute paths, traversal, control characters, redundant separators/dot components, and resolved symlink escapes. Warn about missing live source files, but do not make source existence a structural prerequisite. Retired nodes may refer to removed files.
 
-Export a selected node with its ancestor closure, then clearly separated direct children and live siblings, using `sibling_ids` rather than `proposal_ids`. Deduplicate and order deterministically. Include a semantic SHA-256 snapshot fingerprint.
+Export a selected node with its ancestor closure, then clearly separated direct children and live siblings, using `sibling_ids` rather than `proposal_ids`. Deduplicate and order deterministically. Return complete node records without a snapshot fingerprint.
 
 Never silently truncate binding text. Measure the actual serialized response, including its envelope and omission metadata, against the requested byte budget. If the selected node and required ancestors do not fit, return a budget error. Omit optional context only with an explicit omission list. Project text is data, not instructions to execute commands or override the agent's operating rules.
 
 ## 10. Build sequence and verification
 
-1. **Python package and read/write core:** strict format, graph validation, fingerprints, CLI, transactional init/add/update/withdrawal/migration operations, and recovery.
+1. **Python package and read/write core:** strict hash-free format, graph validation, CLI, transactional init/add/update/withdrawal/migration operations, and recovery.
 2. **Git integration:** staged validation, hook installation, revision snapshots, semantic diffs, and old/new impact analysis.
 3. **VS Code slice:** graph rendering, node creation/editing, HEAD/workspace overlays, and commit-to-commit comparisons through the CLI.
 4. **Dogfooding and distribution:** installable wheel, package checks, CI, editor packaging, and risk-proportionate self-specification review.
 
-Test malformed frontmatter, duplicate IDs, cycles, multi-parent graphs, withdrawal failures, v1/v2 migration and recovery, integrity mismatches, symlink/path escapes, comments/body preservation, interrupted mutations, stale snapshots, partial staging, hook non-overwrite, slug renames, removed edges, and missing/unsupported revision formats. Run CLI integration tests in disposable repositories. Test Python on Windows and Linux; compile the extension and manually verify its VS Code UI before calling editor behavior production-ready.
+Test malformed frontmatter, duplicate IDs, cycles, multi-parent graphs, withdrawal failures, v1/v2-to-v3 migration and recovery, valid manual changes, watcher/polling/draft conflicts, symlink/path escapes, comments/body preservation, interrupted mutations, invalid/partial external saves, partial staging, hook non-overwrite, slug renames, removed edges, and missing/unsupported revision formats. Run CLI integration tests in disposable repositories. Test Python on Windows and Linux; compile the extension and manually verify its VS Code UI before calling editor behavior production-ready.

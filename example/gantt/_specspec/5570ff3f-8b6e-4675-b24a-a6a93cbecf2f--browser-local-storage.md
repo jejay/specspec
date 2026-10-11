@@ -4,7 +4,6 @@ type: requirement
 parents:
 - 26975140-2b52-49b6-a1d2-884ae040ff11
 - 928060fa-c02d-46dd-b823-b002bcf41353
-managed_hash: 45d8333c9d4d8fc73c4c6381d2b0f69be6b23a9233ddc35c83852a254075f796
 ---
 # Use localStorage with an explicit failure boundary
 

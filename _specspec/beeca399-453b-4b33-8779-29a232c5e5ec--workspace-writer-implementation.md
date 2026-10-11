@@ -7,39 +7,28 @@ parents:
 - ca580dc7-c7fa-48bc-91b1-59243144a0bf
 sources:
 - path: src/specspec/workspace.py
-  symbol: initialize
-- path: src/specspec/workspace.py
-  symbol: mutate
-- path: src/specspec/workspace.py
-  symbol: recover
+  symbol: mutate, migrate, recover
+- path: tests/test_core.py
 - path: tests/test_additional.py
-- path: tests/test_recovery.py
-- path: tests/test_transactions.py
-- path: src/specspec/workspace.py
-  symbol: migrate
-- path: src/specspec/workspace.py
-  symbol: set_retired
 - path: tests/test_migration.py
-  symbol: test_interrupted_migration_recovers_the_complete_original_schema
-managed_hash: 8a6e40753b511a6cc35eec224010fd2e92530e0083484dbf41f42b366f58584c
+- path: tests/test_markdown.py
 ---
-# Apply, migrate, and recover validated workspace edits
+# Apply, migrate and recover validated edits without content hashes
 
-initialize creates a format-two graph without approval statuses. mutate requires a
-valid current-schema workspace, checks expected fingerprints and original bytes,
-and journals replacements under the workspace lock before canonical writes.
-set_retired changes withdrawal explicitly; ordinary content edits have no acceptance
-transition or parent-review prerequisite.
+initialize writes format-three files. mutate locks tool writers, validates current
+and candidate graphs, compares original file bytes and journals replacements before
+writing. Manual changes are permitted; neither reads nor writes calculate or check
+managed_hash/fingerprints. Withdrawal remains explicit, not an approval transition.
 
-migrate validates original v1 integrity under the same lock, then converts all nodes
-through one recoverable batch. It preserves identities, paths, body bytes, parents,
-sources, extensions, and unaffected comments, maps withdrawal, and discards obsolete
-approval metadata. Ordinary writes to legacy workspaces require explicit migration;
-a repeated v2 migration makes no canonical changes. No read refreshes hashes.
+migrate accepts structurally valid v1/v2 data even after manual changes, ignores
+obsolete markers and converts the complete graph to v3 in one recoverable batch.
+Preserve IDs, paths, body bytes, parents, sources, extensions and comments while
+removing old hashes/approval fields. Ordinary tool writes require explicit conversion
+first; repeated v3 migration is a no-op. Both repository working graphs were migrated
+through the CLI rather than hand-editing canonical files.
 
-Tests inject interruption into both ordinary batches and migration. recover restores
-only known original/replacement bytes, including the complete original schema after
-partial conversion, and refuses intervening edits. Verification also covers competing
-writers, stale fingerprints, unsafe state, and corrupt input that must not be blessed.
-Process-interruption recovery is not a claim of full power-loss durability or immunity
-to adversarial filesystem races.
+Tests inject interrupted writes/migration; recover restores only known original or
+replacement bytes and refuses intervening edits. Competing tool writers, unsafe
+state, schema failures and original-byte races remain checked. Noncooperating editors
+can still race an atomic replacement; full power-loss/adversarial race protection is
+not claimed. There is no snapshot expectation parameter or stored content marker.

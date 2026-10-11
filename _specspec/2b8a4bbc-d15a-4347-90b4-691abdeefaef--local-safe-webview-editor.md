@@ -4,7 +4,6 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 6c457b0a-654e-4545-a4b4-667f467be4f3
-managed_hash: ab85a687167119b3cb4a8f7a5981543906ed994b0f3d1cb418bb8e338ed87adf
 ---
 # Render and edit through a local VS Code webview
 
@@ -13,7 +12,7 @@ text APIs for project content and no remote renderer. Provide binding-text, pare
 and source-reference forms backed by the Python CLI. Save nodes without an approval
 stage; withdrawal/restoration remain separate confirmed actions, not acceptance.
 Offer the guarded CLI migration for a legacy workspace, keeping its forms read-only
-until conversion and preserving any existing dirty draft with its original fingerprint.
+until conversion and preserving any existing dirty draft with its original node contents.
 
 Make historical comparisons read-only, prohibit tool execution in untrusted
 workspaces, and retain unsaved form content on refresh/errors. Subscribe to Git

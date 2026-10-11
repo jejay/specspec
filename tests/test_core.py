@@ -11,7 +11,7 @@ from click.testing import CliRunner
 from specspec.cli import main
 from specspec.format import parse_node, read_document, serialize
 from specspec.graph import build_graph
-from specspec.model import SpecError, fingerprint
+from specspec.model import SpecError
 from specspec.workspace import (
     add_node,
     discover_root,
@@ -30,7 +30,10 @@ def test_flat_init(workspace):
     assert snapshot.graph.order == [manifesto]
     assert all(path.is_file() and path.suffix == ".md" for path in (root / "_specspec").iterdir())
     assert not (root / "_specspec" / "specspec.yaml").exists()
-    assert snapshot.nodes[0].format_version == 2
+    assert snapshot.nodes[0].format_version == 3
+    assert "fingerprint" not in snapshot.to_dict()
+    assert all("managed_hash" not in node.to_dict() for node in snapshot.nodes)
+    assert all(b"managed_hash:" not in raw for raw in snapshot.files.values())
 
 
 def test_diamond_and_implementation(workspace):
@@ -77,43 +80,40 @@ def test_cycles_and_forbidden_parent_types_leave_files_unchanged(workspace):
         add_node(root, "requirement", [implementation], "No\n", "bad")
 
 
-def test_integrity_is_not_refreshed_on_read(workspace):
+def test_manual_body_edits_are_valid_and_reads_do_not_rewrite_files(workspace):
     root, manifesto = workspace
     snapshot = load_snapshot(root)
     path = root / snapshot.nodes[0].path
     modified = path.read_bytes().replace(b"intentions", b"conclusions")
     path.write_bytes(modified)
     snapshot = load_snapshot(root)
-    assert not snapshot.valid
-    assert "INTEGRITY" in {diagnostic.code for diagnostic in snapshot.diagnostics}
+    assert snapshot.valid
     assert path.read_bytes() == modified
-    with pytest.raises(SpecError):
-        update_node(root, manifesto, body="Attempt\n")
+    update_node(root, manifesto, body="Attempt\n")
+    assert load_snapshot(root).graph.nodes[manifesto].body == "Attempt\n"
 
 
-def test_stale_snapshot_and_round_trip_body_comments(workspace):
+def test_unconditional_updates_round_trip_body_comments(workspace):
     root, manifesto = workspace
     snapshot = load_snapshot(root)
     path = root / snapshot.nodes[0].path
     raw = path.read_bytes().replace(b"type: manifesto", b"type: manifesto # keep this comment")
     path.write_bytes(raw)
-    assert load_snapshot(root).fingerprint == snapshot.fingerprint
-    changed = update_node(
-        root, manifesto, body="# New\r\n\r\nKeep whitespace.  \r\n", expect=snapshot.fingerprint
-    )
+    assert load_snapshot(root).nodes[0].semantic() == snapshot.nodes[0].semantic()
+    changed = update_node(root, manifesto, body="# New\r\n\r\nKeep whitespace.  \r\n")
     assert b"# keep this comment" in path.read_bytes()
     assert path.read_bytes().endswith(b"# New\r\n\r\nKeep whitespace.  \r\n")
-    with pytest.raises(SpecError, match="refresh"):
-        update_node(root, manifesto, body="Stale\n", expect=snapshot.fingerprint)
     assert load_snapshot(root).files == changed.files
+    update_node(root, manifesto, body="Next edit\n")
+    assert load_snapshot(root).nodes[0].body == "Next edit\n"
 
 
-def test_slug_rename_preserves_fingerprint(workspace):
+def test_slug_rename_preserves_semantics(workspace):
     root, _ = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
     (root / node.path).rename(root / "_specspec" / f"{node.id}--renamed.md")
-    assert load_snapshot(root).fingerprint == snapshot.fingerprint
+    assert load_snapshot(root).nodes[0].semantic() == node.semantic()
     assert load_snapshot(root).valid
 
 
@@ -142,8 +142,9 @@ def test_nearest_workspace_does_not_fall_back(workspace):
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\ntype: manifesto"),
         lambda raw: raw.replace(b"parents: []", b"parents: &alias []"),
         lambda raw: raw.replace(b"parents: []", b"parents: !!seq []"),
-        lambda raw: raw.replace(b"format_version: 2", b"format_version: true"),
-        lambda raw: raw.replace(b"format_version: 2", b"format_version: 999"),
+        lambda raw: raw.replace(b"format_version: 3", b"format_version: true"),
+        lambda raw: raw.replace(b"format_version: 3", b"format_version: 999"),
+        lambda raw: raw.replace(b"parents: []", b"parents: []\nmanaged_hash: obsolete"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nretired: 42"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nstatus: accepted"),
         lambda raw: raw.replace(b"parents: []", b"parents: []\nunknown: true"),
@@ -219,7 +220,15 @@ def test_cli_end_to_end_and_budget(tmp_path):
     assert result.exit_code == 0, result.output
     node_id = json.loads(result.output)["result"]["changed_ids"][0]
     assert runner.invoke(main, [*prefix, "accept", node_id, "--json"]).exit_code == 2
-    assert json.loads(result.output)["api_version"] == 2
+    assert json.loads(result.output)["api_version"] == 3
+    assert (
+        runner.invoke(
+            main,
+            [*prefix, "update", node_id, "--body", "-", "--expect", "anything"],
+            input="Text\n",
+        ).exit_code
+        == 2
+    )
     result = runner.invoke(main, [*prefix, "context", node_id, "--json"])
     assert len(json.loads(result.output)["result"]["nodes"]) == 2
     result = runner.invoke(main, [*prefix, "context", node_id, "--max-bytes", "10", "--json"])
@@ -271,16 +280,16 @@ def test_long_chain_has_no_recursion_limit():
     assert len(graph.cycle()) == 1201
 
 
-def test_serialization_and_parent_order_fingerprint(workspace):
+def test_serialization_and_parent_order_semantics(workspace):
     root, manifesto = workspace
     _, one = add_node(root, "requirement", [manifesto], "One\n", "one")
     _, two = add_node(root, "requirement", [manifesto], "Two\n", "two")
     snapshot, child = add_node(root, "requirement", [one, two], "Child\n", "child")
     node = snapshot.graph.nodes[child]
     reordered = replace(node, parents=list(reversed(node.parents)))
-    assert fingerprint([node]) == fingerprint([reordered])
+    assert node.semantic() == reordered.semantic()
     raw = serialize(node)
     metadata, body = read_document(raw, node.path)
     parsed = parse_node(metadata, body, node.path)
-    assert parsed.digest() == parsed.managed_hash
+    assert "managed_hash" not in metadata
     assert parsed.semantic() == node.semantic()

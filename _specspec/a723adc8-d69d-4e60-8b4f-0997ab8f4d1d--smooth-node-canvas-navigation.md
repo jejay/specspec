@@ -4,7 +4,6 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - ee57a451-059d-426b-868e-e898c2503082
-managed_hash: 377d339d9a960d64f18a95fbee6768d6dd3291fab8c4c4a0ff3eabc5e35c006d
 ---
 # Navigate a node canvas with smooth panning and zooming
 

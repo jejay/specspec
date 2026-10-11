@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const { readFileSync, writeFileSync } = require('node:fs');
+const { join } = require('node:path');
 function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
   return {
@@ -25,6 +27,36 @@ function platformChecks(fixture, host) {
       console.log(`${host}: real A/M/D title/corner paint and live theme tokens passed.`);
     },
     after: async ({ evaluate, screenshot, delay }) => {
+      const waitFor = async expression => {
+        for (let i = 0; i < 300; i++) { if (await evaluate(expression)) return; await delay(100); }
+        assert.ok(await evaluate(expression), JSON.stringify(await evaluate(`({message:document.getElementById('message').textContent,body:document.getElementById('body').value})`)));
+      };
+      // Real manual Markdown writes, with no Refresh click, CLI mutation or polling.
+      await evaluate(`document.getElementById('discard').click();document.getElementById('back').click();document.querySelector('[data-node-id="${modified}"]').click()`);
+      const node = fixture.cli(['show', modified, '--json']).node, path = join(fixture.root, node.path);
+      const raw = readFileSync(path), prefix = raw.subarray(0, raw.length - Buffer.byteLength(node.body));
+      const manual = Buffer.concat([prefix, Buffer.from('# Manual watcher-only update\n')]);
+      writeFileSync(path, manual);
+      await waitFor(`document.getElementById('body').value==='# Manual watcher-only update\\n'`);
+      await evaluate(`document.getElementById('body').value='# Retained external draft';document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
+      const baseline = await evaluate(`window.SpecSpecHost.getState().originalNode`);
+      const external = Buffer.concat([prefix, Buffer.from('# External watcher update\n')]);
+      writeFileSync(path, external);
+      await waitFor(`/changed outside/.test(document.getElementById('message').textContent)`);
+      assert.equal(await evaluate(`document.getElementById('body').value`), '# Retained external draft');
+      assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().originalNode`), baseline);
+      assert.deepEqual(await evaluate(`[document.getElementById('body').selectionStart,document.getElementById('body').selectionEnd]`), [2,8]);
+      const invalid = Buffer.from(external.toString().replace('parents:', 'broken:'));
+      writeFileSync(path, invalid);
+      await waitFor(`/out of date/.test(document.getElementById('message').textContent)&&document.getElementById('save').disabled`);
+      assert.deepEqual(readFileSync(path), invalid, 'Invalid external files must not be rewritten.');
+      assert.equal(await evaluate(`document.getElementById('body').value`), '# Retained external draft');
+      writeFileSync(path, external);
+      await waitFor(`!document.getElementById('save').disabled`);
+      await screenshot(`${host}-watcher-retained-draft`);
+      await evaluate(`document.getElementById('discard').click()`);
+      assert.equal(await evaluate(`document.getElementById('body').value`), '# External watcher update\n');
+      console.log(`${host}: watcher-only manual/invalid-file sync, native draft/caret preservation and recovery passed.`);
       if (host !== 'electron') return;
       assert.deepEqual(await evaluate(`[typeof require,typeof process]`),['undefined','undefined']);
       assert.deepEqual(await evaluate(`Object.keys(window.SpecSpecNative).sort()`),['getState','onMessage','postMessage','revisionResult','setState']);
@@ -37,22 +69,20 @@ function platformChecks(fixture, host) {
       assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`));
       assert.ok(fixture.cli(['show',modified,'--json']).node.body.includes('Saved from real Electron UI'));
       await evaluate(`document.getElementById('body').value='# Retained stale desktop draft';document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
-      const old = await evaluate(`window.SpecSpecHost.getState().formFingerprint`);
-      const s = fixture.cli(['list','--json']);
-      fixture.cli(['update',modified,'--expect',s.fingerprint,'--body','-','--json'],'# External fixture update\n');
-      await delay(1000);
+      const old = await evaluate(`window.SpecSpecHost.getState().originalNode`);
+      fixture.cli(['update',modified,'--body','-','--json'],'# External fixture update\n');
+      await waitFor(`/changed outside/.test(document.getElementById('message').textContent)`);
       assert.equal(await evaluate(`document.getElementById('body').value`),'# Retained stale desktop draft');
-      assert.equal(await evaluate(`window.SpecSpecHost.getState().formFingerprint`),old);
+      assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().originalNode`),old);
       for(let i=0;i<100;i++){if(await evaluate(`!document.getElementById('save').disabled`))break;await delay(80);}
       assert.ok(await evaluate(`!document.getElementById('save').disabled`));
-      await evaluate(`window.__staleError='';window.SpecSpecHost.onMessage(m=>{if(m.type==='error')window.__staleError=m.message});document.getElementById('editor').requestSubmit(document.getElementById('save'))`);
-      for(let i=0;i<100;i++){if(await evaluate(`/stale|changed/i.test(window.__staleError)`))break;await delay(80);}
-      assert.match(await evaluate(`window.__staleError`),/stale|changed/i);
+      // Actual overwrite dialogs are tested through the shared host session,
+      // not auto-accepted by this native-window smoke harness.
       assert.equal(fixture.cli(['show',modified,'--json']).node.body,'# External fixture update\n');
       await screenshot('electron-stale-draft');
       await evaluate(`location.reload()`);await delay(1200);
       // The harness context is refreshed on a reload only in a separate test phase.
-      console.log('Electron real UI save and stale-fingerprint rejection passed; persisted state written for reload checks.');
+      console.log('Electron real UI save and retained external-change draft passed; persisted state written for reload checks.');
     },
   };
 }

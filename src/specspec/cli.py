@@ -76,9 +76,6 @@ def guarded(function):
 
 
 json_option = click.option("--json", "as_json", is_flag=True, help="Emit the versioned JSON API.")
-expect_option = click.option(
-    "--expect", help="Reject if the displayed snapshot fingerprint is stale."
-)
 
 
 def root_path(explicit: Path | None) -> Path:
@@ -156,7 +153,7 @@ def validate(root: Path | None, as_json: bool, warnings_as_errors: bool) -> None
     snapshot = load_snapshot(root_path(root))
     ok = snapshot.valid and not (warnings_as_errors and snapshot.diagnostics)
     emit(
-        {"node_count": len(snapshot.nodes), "fingerprint": snapshot.fingerprint},
+        {"node_count": len(snapshot.nodes)},
         snapshot.diagnostics,
         as_json=as_json,
         ok=ok,
@@ -176,7 +173,6 @@ def validate(root: Path | None, as_json: bool, warnings_as_errors: bool) -> None
 @click.option("--slug", required=True)
 @click.option("--body", required=True, help="Markdown body file, or - for stdin.")
 @click.option("--sources", help="JSON array of implementation source references.")
-@expect_option
 @json_option
 @click.pass_obj
 @guarded
@@ -187,7 +183,6 @@ def add(
     slug: str,
     body: str,
     sources: str | None,
-    expect: str | None,
     as_json: bool,
 ) -> None:
     """Create a node without an approval stage."""
@@ -197,7 +192,6 @@ def add(
         list(parents),
         read_body(body),
         slug,
-        expect,
         source_input(sources),
     )
     mutation_output(snapshot, [node_id], as_json)
@@ -209,7 +203,6 @@ def add(
 @click.option("--parent", "parents", multiple=True, help="Replace the complete parent list.")
 @click.option("--clear-parents", is_flag=True)
 @click.option("--sources", help="Replace source references with this JSON array.")
-@expect_option
 @json_option
 @click.pass_obj
 @guarded
@@ -220,7 +213,6 @@ def update(
     parents: tuple[str, ...],
     clear_parents: bool,
     sources: str | None,
-    expect: str | None,
     as_json: bool,
 ) -> None:
     """Edit binding text or relationships through validated writes."""
@@ -237,7 +229,6 @@ def update(
         body=read_body(body) if body is not None else None,
         parents=parent_list,
         sources=source_input(sources),
-        expect=expect,
     )
     mutation_output(snapshot, [node_id], as_json)
 
@@ -245,14 +236,11 @@ def update(
 def withdrawal_command(name: str, retired: bool):
     @main.command(name=name)
     @click.argument("ids", nargs=-1, required=True)
-    @expect_option
     @json_option
     @click.pass_obj
     @guarded
-    def command(root: Path | None, ids: tuple[str, ...], expect: str | None, as_json: bool) -> None:
-        mutation_output(
-            set_retired(root_path(root), list(ids), retired, expect), list(ids), as_json
-        )
+    def command(root: Path | None, ids: tuple[str, ...], as_json: bool) -> None:
+        mutation_output(set_retired(root_path(root), list(ids), retired), list(ids), as_json)
 
     command.help = (
         "Withdraw nodes, retaining their history."
@@ -267,15 +255,14 @@ withdrawal_command("restore", False)
 
 
 @main.command(name="migrate")
-@expect_option
 @json_option
 @click.pass_obj
 @guarded
-def migrate_command(root: Path | None, expect: str | None, as_json: bool) -> None:
-    """Convert a validated v1 graph to the approval-free v2 schema."""
+def migrate_command(root: Path | None, as_json: bool) -> None:
+    """Convert a validated v1/v2 graph to the hash-free v3 schema."""
     project = root_path(root)
     before = load_snapshot(project)
-    snapshot = migrate_workspace(project, expect)
+    snapshot = migrate_workspace(project)
     ids = [
         node.id
         for node in snapshot.nodes
@@ -291,7 +278,7 @@ def migrate_command(root: Path | None, expect: str | None, as_json: bool) -> Non
 @click.pass_obj
 @guarded
 def list_nodes(root: Path | None, only_retired: bool, only_live: bool, as_json: bool) -> None:
-    """List nodes and their current snapshot fingerprint."""
+    """List nodes in the current specification graph."""
     if only_retired and only_live:
         raise SpecError([Diagnostic("ARGUMENT", "Do not combine --retired and --live.")], 2)
     snapshot = load_snapshot(root_path(root))
@@ -325,7 +312,6 @@ def show(
         {
             "node": node.to_dict(),
             "related": [graph.nodes[key].to_dict() for key in graph.order if key in related],
-            "fingerprint": snapshot.fingerprint,
         },
         snapshot.diagnostics,
         as_json=as_json,
@@ -345,7 +331,6 @@ def impact(root: Path | None, node_id: str, as_json: bool) -> None:
         {
             "id": node_id,
             "affected": sorted(snapshot.require_valid().closure(node_id)),
-            "fingerprint": snapshot.fingerprint,
         },
         snapshot.diagnostics,
         as_json=as_json,
@@ -381,7 +366,6 @@ def context(
     optional = (children | siblings) - required
     result = {
         "selected": node_id,
-        "fingerprint": snapshot.fingerprint,
         "required_ids": sorted(required),
         "child_ids": sorted(children),
         "sibling_ids": sorted(siblings),
@@ -503,7 +487,7 @@ def hook_install(root: Path | None, as_json: bool) -> None:
 def hook_check(root: Path | None, as_json: bool) -> None:
     snapshot = git_snapshot(root_path(root), staged=True)
     emit(
-        {"node_count": len(snapshot.nodes), "fingerprint": snapshot.fingerprint},
+        {"node_count": len(snapshot.nodes)},
         snapshot.diagnostics,
         as_json=as_json,
         ok=snapshot.valid,

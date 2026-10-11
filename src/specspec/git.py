@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
-from .workspace import SPEC_DIR, Snapshot, byte_hash, snapshot_from_files
+from .workspace import SPEC_DIR, Snapshot, snapshot_from_files
 
 
 def run_git(root: Path, *args: str) -> bytes:
@@ -124,7 +124,7 @@ def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
             else "changed",
         }
         for path in sorted(base.files.keys() | target.files.keys())
-        if byte_hash(base.files.get(path, b"")) != byte_hash(target.files.get(path, b""))
+        if base.files.get(path) != target.files.get(path)
         or (path in base.files) != (path in target.files)
     ]
     return {

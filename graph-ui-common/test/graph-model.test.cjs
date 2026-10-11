@@ -90,7 +90,22 @@ test('render acknowledgements verify complete focused or total membership', () =
   assert.equal(model.renderMatches(state, { ...report, visibleIds: ['a'], nodeCount: 1 }), false);
   assert.equal(model.renderMatches(state, { ...report, view: 'overview' }), false);
   assert.ok(model.renderMatches(state, { view: 'overview', visibleIds: ['root', 'a', 'b', 'c'], nodeCount: 4 }));
+  assert.equal(model.renderMatches(state, { nodeCount: 4 }), false, 'API 3 requires full membership, not legacy counts.');
   assert.ok(model.renderMatches(state, { view: 'focus', creating: true, draftParents: ['root'], visibleIds: ['root'], nodeCount: 2 }));
+});
+
+test('draft baseline comparison uses normalized contents, not paths or hashes', () => {
+  const node = { id: 'a', type: 'requirement', retired: false, body: '# Body\r\n', parents: ['b', 'c'],
+    sources: [{ path: 'b.py', symbol: 'two' }, { path: 'a.py' }], extensions: { 'example:note': { b: 2, a: 1 } } };
+  const reordered = { ...node, body: '# Body\n', path: 'renamed.md', parents: ['c', 'b'],
+    sources: [...node.sources].reverse(), extensions: { 'example:note': { a: 1, b: 2 } } };
+  assert.equal(model.sameNode(node, reordered), true);
+  for (const changes of [{ body: '# Changed' }, { parents: ['b'] }, { retired: true }, { sources: [] }]) {
+    assert.equal(model.sameNode(node, { ...reordered, ...changes }), false);
+  }
+  for (const bad of [undefined, {}, { ...node, parents: 5 }, { ...node, body: 5 }, { ...node, sources: ['not a source'] }]) {
+    assert.equal(model.sameNode(bad, node), false);
+  }
 });
 
 test('side ports use measured card borders and splines retain horizontal endpoint tangents', () => {

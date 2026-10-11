@@ -5,7 +5,6 @@ parents:
 - 6f69c873-0ab4-450b-b306-791102affe95
 - 65f28474-18be-46f8-89f6-b9ce30a0ec96
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
-managed_hash: 66dc95d093e780c8d42c04f8e720c0e20cf281c0fc49cd54e52c492312409c54
 ---
 # Host the canvas in a retained Activity Bar webview view
 

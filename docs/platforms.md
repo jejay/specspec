@@ -6,7 +6,7 @@ The user wants the same SpecSpec graph experience in VS Code and a standalone
 Linux/Windows window, later usable in Claude Code or Codex workflows; a left-side
 Activity Bar entry; a dachshund brand/minimal icon; and clearer themed Git titles
 and A/M/D corner cues. Keep native editing, managed writes, revision context,
-drafts/fingerprints, and viewport-independent geometry. These are outcomes, not
+drafts/original node contents, and viewport-independent geometry. These are outcomes, not
 an instruction to adopt React, expose a web server, or embed agent credentials.
 
 ## Revisable conclusions
@@ -24,7 +24,7 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   nested-project drafts. Open Graph focuses the container, with explicit project
   selection and historical comparison commands.
 - Electron: isolated/sandboxed renderer, fixed narrow preload API, sender-checked
-  main-process IPC, explicit local project authorization, shell-free Python API 2,
+  main-process IPC, explicit local project authorization, shell-free Python API 3,
   bounded process/render checks, no remote navigation/popups/renderer filesystem.
   No bundled Python, installer/signing/updater, secret integration or production
   security certification in the initial slice.
@@ -47,7 +47,9 @@ are inspected separately for shared bytes/offline assets/licenses. Electron's
 first runtime install may download the pinned framework; the application renderer
 has no remote dependencies or requests.
 
-Real desktop checks include an actual UI save, backend stale-fingerprint rejection,
+Earlier desktop checks included an actual UI save and the now-withdrawn backend
+stale-fingerprint rejection; the hash-free revision replaces that gate with watcher
+synchronization and same-node overwrite confirmation. Current checks cover
 retained/reloaded native drafts and actual historical/workspace switching. The
 historical test polls completion rather than assuming a Git diff completes in five
 seconds. Root selection/authorization/native confirmations are covered by adapter
@@ -55,6 +57,18 @@ and shared-session tests, not a claim of exhaustive manual dialog workflows. The
 same Chromium harness now selects the renderer's main-world port (not Electron's
 isolated preload world) and tests only actually visible hover targets in the clipped
 sidebar, while checking geometry/metrics for every displayed node/edge.
+
+## Hash-free Markdown synchronization revision
+
+The user's later correction permits manual changes, removes fingerprint/managed_hash
+gates, and asks for file-watcher synchronization with configurable default-off
+polling. Both hosts use API 3. VS Code watches canonical-directory/file changes;
+Electron watches the parent and canonical directory and reattaches on replacement.
+`specspec.pollIntervalMs` / `--poll-interval-ms` (or `SPECSPEC_POLL_INTERVAL_MS`) use
+milliseconds with zero as default. The shared session coalesces events, retries
+incomplete reads, compares records directly, and retains invalid views/drafts.
+Watchers are OS/filesystem-dependent hints; no universal delivery/race guarantee
+or silent fallback polling is claimed. See README for the conflict/recovery policy.
 
 ## Milestones and verification boundaries
 

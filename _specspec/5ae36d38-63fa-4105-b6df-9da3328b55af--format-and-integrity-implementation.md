@@ -2,40 +2,33 @@
 id: 5ae36d38-63fa-4105-b6df-9da3328b55af
 type: implementation
 parents:
-- 9e4eeace-d288-49bb-8365-6af0372daf5c
+- 93224022-0c11-4260-b09e-2925b7aacf0f
 - ca580dc7-c7fa-48bc-91b1-59243144a0bf
 sources:
-- path: src/specspec/format.py
-  symbol: parse_node
-- path: src/specspec/format.py
-  symbol: serialize
 - path: src/specspec/model.py
-  symbol: SpecNode.digest
-- path: src/specspec/workspace.py
-  symbol: snapshot_from_files
-- path: tests/test_additional.py
-- path: tests/test_api.py
+  symbol: SpecNode.semantic
+- path: src/specspec/format.py
+  symbol: parse_node, serialize
 - path: tests/test_core.py
+- path: tests/test_markdown.py
 - path: tests/test_migration.py
-  symbol: test_legacy_reader_checks_original_hashes_without_exposing_approval
-- path: tests/fixtures/README.md
-  symbol: original v1 fixture provenance
-managed_hash: 7b1916c23fbad1515163ac8804d77886352136cce31262d5c48f63125b7b7073
+  symbol: test_legacy_reader_ignores_hashes_without_exposing_approval
 ---
-# Parse, round-trip, and fingerprint approval-free canonical content
+# Parse and round-trip hash-free Markdown with readable legacy revisions
 
-format.py scans strict frontmatter and writes format-two nodes through ruamel.yaml,
-retaining unaffected comments and binding body bytes. There is no status field;
-retired is an optional strict boolean withdrawal flag. The manifesto carries format
-version two. model.py exposes approval-free semantic records and snapshot hashes.
+format.py validates typed frontmatter and serializes format-three nodes through
+ruamel.yaml, preserving unaffected comments and body bytes. model.py contains
+plain normalized records, not hash algorithms, stored markers or fingerprints.
+There is no status or managed_hash field in current files/JSON. retired is a strict
+optional withdrawal boolean; the manifesto declares format_version: 3.
 
-The legacy reader verifies each version-one managed hash with its original status
-projection before normalizing accepted/proposed away and mapping retirement to a
-boolean. Legacy provenance is private integrity context, not a current JSON status.
-snapshot_from_files validates hashes without changing canonical bytes. The writer
-rejects raw legacy records rather than generating an invalid mixed-version graph.
+Legacy v1/v2 readers ignore obsolete managed_hash values (including missing/stale
+markers), normalize old approval fields away and retain withdrawal. No original
+hash verification, provenance rejection, read-time rewrite or hash recomputation
+remains. Workspace mutation still validates actual graph/schema consistency;
+explicit migrate removes old metadata in one journaled transaction.
 
-Tests include original tool-managed v1 fixtures, malformed metadata, strict boolean
-library inputs, UUIDs, source-path safety, CRLF/comments, unmanaged changes, and
-identity/body/link/source/extension preservation during conversion. A valid digest
-is content integrity, not a confidence score or evidence of review.
+Python regressions cover valid manual body/parent/withdrawal edits, strict invalid
+metadata, safe paths, UUIDs, optional sources/extensions, CRLF/comments, readable
+manually edited legacy Git blobs, marker removal, and stable identities/links/body
+bytes during conversion. These are consistency tests, not correctness or review proof.

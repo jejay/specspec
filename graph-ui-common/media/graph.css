@@ -18,6 +18,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .legend-help { color: var(--vscode-descriptionForeground); }
 #message { white-space: pre-wrap; padding: 0 14px; margin: 0; font-size: 12px; color: var(--vscode-editorWarning-foreground); }
 #message:not(:empty) { padding-bottom: 10px; }
+#sync-notice { margin: 0; padding: 6px 14px; font-size: 12px; color: var(--vscode-editorWarning-foreground, #e2c08d); border-block: 1px solid currentColor; }
 #linked-sources { margin: 0 14px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
 #linked-sources summary { cursor: pointer; }
 #source-files { max-height: 110px; overflow: auto; margin: 6px 0; padding-left: 22px; }

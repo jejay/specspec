@@ -27,7 +27,6 @@ sources:
   symbol: independent contexts, history and exact nested indexes
 - path: .github/workflows/ci.yml
   symbol: both graph checks, full history and app browser/model jobs
-managed_hash: d774163a1e5d87d5095065146d5c64ec7d25072dd4fdaae78c6d0c5f1e72b6b8
 ---
 # Implement and audit the spec-aware planning example
 
@@ -63,3 +62,29 @@ no files are pushed, and unrelated logos/original intention/license stay unchang
 This is a bounded educational example, not production scheduling, durable backup,
 exhaustive manual/accessibility/platform/performance proof, or cryptographic proof
 that a fictional dialogue constitutes a real user's review.
+
+
+## Hash-free Markdown synchronization revision
+
+The later manual-edit intention and separate hash-free/watcher conclusion supersede
+all earlier API-2/fingerprint/stale-hash claims in this record. Current code uses
+API/format 3, no managed_hash or fingerprint gate, and permits valid manual edits.
+Original detailed test counts and packaged-host evidence above remain historical,
+not claims of re-running every old package or platform against this revision.
+
+GraphSession coalesces watcher events, retries failed reads twice, compares records
+directly and validates current files before UI writes. Render sequence/full-membership
+checks remain without fingerprint acknowledgements. Dirty drafts retain original
+node records/caret/camera; unrelated changes permit saving, same-node overwrites ask
+confirmation, and deletion/invalid files preserve copyable drafts. Invalid reloads
+mark the last valid graph out of date and disable mutations until a valid reload.
+VS Code watches directory/files; Electron's shared GraphWatcher also watches the
+parent and reattaches after canonical-directory recreation. Optional configurable
+polling defaults to zero/off and is disposed with sessions. No silent fallback,
+universal event-delivery guarantee or adversarial race-free writes are claimed.
+
+The independent Gantt working graph was migrated without changing body/relationship
+semantics. Its original CLI receipts/Git commits are retained verbatim. The history
+verifier now reconstructs records and compares actual contents directly; archived
+hash strings are opaque receipt labels, not a current hash algorithm or edit gate.
+See the separate current implementation record for source links and final checks.

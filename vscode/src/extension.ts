@@ -99,7 +99,7 @@ class GraphHost {
     this.session = new GraphSession({
       cli: (args: string[], input?: string) => this.cli(args, input), authorized: () => vscode.workspace.isTrusted,
       post: (message: unknown) => this.panel.webview.postMessage(message), log: (message: string) => this.output.appendLine(message),
-      renderMatches: presentation.renderMatches,
+      renderMatches: presentation.renderMatches, sameNode: presentation.sameNode,
       confirm: async (message: string) => (await vscode.window.showWarningMessage(message, { modal: true }, 'Confirm')) === 'Confirm',
       revisions: async (base: string, target: string) => {
         const a = await vscode.window.showInputBox({ prompt: 'Base commit/ref', value: base }); if (!a) return;
@@ -110,11 +110,17 @@ class GraphHost {
     this.disposables.push(panel.webview.onDidReceiveMessage(message => {
       if (message?.type === 'select-project') selectProject(); else this.session.receive(message);
     }));
-    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '_specspec/*'));
+    // Include the directory itself to catch removal/recreation as well as node saves.
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '_specspec{,/**}'));
     this.disposables.push(watcher, watcher.onDidChange(() => this.session.scheduleRefresh()),
       watcher.onDidCreate(() => this.session.scheduleRefresh()), watcher.onDidDelete(() => this.session.scheduleRefresh()));
+    const configurePolling = () => {
+      try { this.session.configurePolling(vscode.workspace.getConfiguration('specspec', root).get<number>('pollIntervalMs', 0)); }
+      catch (error) { this.session.warn(error); }
+    };
+    configurePolling();
     this.disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('specspec', root)) this.session.scheduleRefresh();
+      if (event.affectsConfiguration('specspec', root)) { configurePolling(); this.session.scheduleRefresh(); }
     }));
     const resource = (name: string) => panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', name)).toString();
     panel.webview.html = graphHtml(resource, panel.webview.cspSource, randomBytes(16).toString('hex'), { scope: root.fsPath });

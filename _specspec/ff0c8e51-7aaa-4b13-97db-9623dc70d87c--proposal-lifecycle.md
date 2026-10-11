@@ -4,7 +4,6 @@ type: requirement
 parents:
 - c0943883-e3cb-4de9-8c5e-6aeb4a37dd06
 - 003d697b-4104-4fdf-8e05-0db572c436d0
-managed_hash: 4d9ab01d0d1af3d822e269094347290ca03952e42157aa9514435c92f8335544
 retired: true
 ---
 # Represent proposal selection separately from graph position

@@ -52,8 +52,8 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
                 reject(new Error(errors || output || `CLI exited with ${code} without JSON.`));
                 return;
             }
-            if (envelope.api_version !== 2 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
-                reject(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 2; upgrade the Python CLI.'));
+            if (envelope.api_version !== 3 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
+                reject(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 3; upgrade the Python CLI.'));
                 return;
             }
             if (code !== 0 || !envelope.ok) {

@@ -7,7 +7,6 @@ parents:
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
 - 48f77f19-391f-46d0-b06f-ec7530be4575
 - 5b93cd32-168c-488f-b4f9-caf03fe2652d
-managed_hash: 93b2953990d8bc341667a9c42b11e252657f9dc996dadd641ae639a6f9b57903
 retired: true
 ---
 # Use UUID identities and strict version-one frontmatter

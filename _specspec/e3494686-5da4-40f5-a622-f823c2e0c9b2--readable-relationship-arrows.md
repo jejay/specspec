@@ -4,7 +4,6 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
-managed_hash: 5facbab34b785d21dc3620a91ac9a11d8b85ba36361fa15b74179af901598a80
 ---
 # Draw clearly connected and directional relationship arrows
 

@@ -39,19 +39,17 @@ def test_repository_graph_is_usable_as_agent_context():
     required = graph.closure(implementation.id, ancestors=True) | {implementation.id}
     assert set(context["required_ids"]) == required
     assert required <= {node["id"] for node in context["nodes"]}
-    assert context["fingerprint"] == snapshot.fingerprint
+    assert "fingerprint" not in context
 
 
-def test_repository_integrity_detects_a_manual_edit_without_touching_files():
+def test_repository_accepts_manual_edits_without_touching_files():
     before = load_snapshot(ROOT)
     node = next(node for node in before.nodes if node.type == "requirement")
     edited = dict(before.files)
     edited[node.path] += b"\nAn unmanaged change.\n"
     candidate = snapshot_from_files(ROOT, edited)
-    assert not candidate.valid
-    assert any(
-        item.code == "INTEGRITY" and item.node_id == node.id for item in candidate.diagnostics
-    )
+    assert candidate.valid
+    assert candidate.graph.nodes[node.id].body.endswith("An unmanaged change.\n")
     assert load_snapshot(ROOT).files == before.files
 
 
@@ -71,9 +69,9 @@ def test_actual_repository_graph_passes_staged_validation_in_a_disposable_repo(t
 
     # Deliberately corrupt only the disposable copy, then stage that exact blob.
     node = next(node for node in original.nodes if node.type == "requirement")
-    (tmp_path / node.path).write_bytes(original.files[node.path] + b"\nAn unmanaged change.\n")
+    (tmp_path / node.path).write_bytes(original.files[node.path].replace(b"parents:", b"unknown:"))
     git(tmp_path, "add", "_specspec")
     result = CliRunner().invoke(main, args)
     assert result.exit_code == 1
-    assert any(item["code"] == "INTEGRITY" for item in json.loads(result.output)["diagnostics"])
+    assert any(item["code"] == "SCHEMA" for item in json.loads(result.output)["diagnostics"])
     assert load_snapshot(ROOT).files == original.files

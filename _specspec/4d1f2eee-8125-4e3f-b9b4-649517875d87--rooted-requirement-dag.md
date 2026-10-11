@@ -3,7 +3,6 @@ id: 4d1f2eee-8125-4e3f-b9b4-649517875d87
 type: requirement
 parents:
 - c0943883-e3cb-4de9-8c5e-6aeb4a37dd06
-managed_hash: 880c6258dabb7a799ae0b0e124a88a97b7fbecdf97e3b6f10d753cee0f2a69e3
 ---
 # Represent justifications with a rooted requirement DAG
 

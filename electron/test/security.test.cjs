@@ -27,13 +27,13 @@ test('sandbox defaults and narrow bounded commands never expose arbitrary CLI/sp
   for (const v of [null, [], 'save', { type: 'spawn' }, { type: 'accept' }, { type: 'save', body: 'a'.repeat(3 * 1024 * 1024) }]) assert.ok(!validMessage(v));
   const cycle = { type: 'save' }; cycle.self = cycle; assert.ok(!validMessage(cycle));
 });
-test('project-scoped persisted native drafts retain original fingerprints independently', t => {
+test('project-scoped persisted native drafts retain original contents independently', t => {
   const dir = mkdtempSync(join(tmpdir(), 'specspec-state-')); t.after(() => rmSync(dir, { recursive: true, force: true }));
   const path = join(dir, 'state.json'), store = new PresentationStore(path);
-  store.set('/root/a', { dirty: true, formFingerprint: 'old-a', draft: { body: '# A' } });
-  store.set('/root/b', { dirty: true, formFingerprint: 'old-b', draft: { body: '# B' } }); store.flush();
+  store.set('/root/a', { dirty: true, originalNode: { body: '# Original A' }, draft: { body: '# A' } });
+  store.set('/root/b', { dirty: true, originalNode: { body: '# Original B' }, draft: { body: '# B' } }); store.flush();
   const restored = new PresentationStore(path);
-  assert.equal(restored.get('/root/a').formFingerprint, 'old-a'); assert.equal(restored.get('/root/b').draft.body, '# B');
+  assert.equal(restored.get('/root/a').originalNode.body, '# Original A'); assert.equal(restored.get('/root/b').draft.body, '# B');
   assert.equal(restored.get('/unknown'), undefined);
 });
 test('malformed presentation bytes remain protected rather than overwritten', t => {

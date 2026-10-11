@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import hashlib
 import json
 import os
 import shutil
@@ -17,7 +16,7 @@ from typing import Any
 
 from .format import parse_node, read_document, serialize
 from .graph import Graph, build_graph
-from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode, fingerprint
+from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
 
 SPEC_DIR = "_specspec"
 STATE_DIR = ".specspec-local"
@@ -35,10 +34,6 @@ class Snapshot:
     def valid(self) -> bool:
         return not any(d.severity == "error" for d in self.diagnostics)
 
-    @property
-    def fingerprint(self) -> str:
-        return fingerprint(self.nodes)
-
     def require_valid(self) -> Graph:
         if not self.valid or self.graph is None:
             raise SpecError(
@@ -52,7 +47,6 @@ class Snapshot:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "fingerprint": self.fingerprint,
             "format_version": self.format_version,
             "nodes": [node.to_dict() for node in sorted(self.nodes, key=lambda n: n.id)],
             "edges": self.graph.edges() if self.graph else [],
@@ -143,11 +137,11 @@ def snapshot_from_files(
         return Snapshot(root, files, [], errors, None)
     manifesto_path, manifesto_data = manifestos[0]
     version = manifesto_data.get("format_version")
-    if type(version) is not int or version not in {1, FORMAT_VERSION}:
+    if type(version) is not int or version not in {1, 2, FORMAT_VERSION}:
         errors.append(
             Diagnostic(
                 "VERSION",
-                f"Manifesto must declare supported format_version: 1 or {FORMAT_VERSION}.",
+                f"Manifesto must declare supported format_version: 1, 2 or {FORMAT_VERSION}.",
                 manifesto_path,
             )
         )
@@ -167,15 +161,6 @@ def snapshot_from_files(
                 duplicates = True
             seen[node.id] = path
             nodes.append(node)
-            if node.managed_hash != node.digest():
-                errors.append(
-                    Diagnostic(
-                        "INTEGRITY",
-                        "Unmanaged content change detected; restore it and edit through specspec.",
-                        path,
-                        node.id,
-                    )
-                )
         except SpecError as error:
             errors.extend(error.diagnostics)
     graph = None
@@ -333,23 +318,14 @@ def mutate(
     root: Path,
     operation: Callable[[Snapshot], dict[str, bytes]],
     *,
-    expect: str | None = None,
     allow_legacy: bool = False,
 ) -> Snapshot:
     with workspace_lock(root) as state:
         before = load_snapshot(root, ignore_state=True)
         before.require_valid()
-        if expect is not None and expect != before.fingerprint:
-            raise SpecError(
-                [Diagnostic("STALE", "Graph changed since it was displayed; refresh and retry.")]
-            )
         if before.format_version != FORMAT_VERSION and not allow_legacy:
             raise SpecError(
-                [
-                    Diagnostic(
-                        "MIGRATION", "Run specspec migrate --expect <fingerprint> before editing."
-                    )
-                ]
+                [Diagnostic("MIGRATION", "Run specspec migrate before editing this older format.")]
             )
         changes = operation(before)
         if not changes:
@@ -411,12 +387,11 @@ def add_node(
     parents: list[str],
     body: str,
     slug: str,
-    expect: str | None = None,
     sources: list[dict[str, str]] | None = None,
 ) -> tuple[Snapshot, str]:
     node = new_node(node_type, parents, body, slug)
     node.sources = sources or []
-    result = mutate(root, lambda _: {node.path: serialize(node)}, expect=expect)
+    result = mutate(root, lambda _: {node.path: serialize(node)})
     return result, node.id
 
 
@@ -434,7 +409,6 @@ def update_node(
     body: str | None = None,
     parents: list[str] | None = None,
     sources: list[dict[str, str]] | None = None,
-    expect: str | None = None,
 ) -> Snapshot:
     def operation(before: Snapshot) -> dict[str, bytes]:
         old = require_node(before, node_id)
@@ -446,10 +420,10 @@ def update_node(
         )
         return {node.path: serialize(node, before.files[node.path])}
 
-    return mutate(root, operation, expect=expect)
+    return mutate(root, operation)
 
 
-def set_retired(root: Path, ids: list[str], retired: bool, expect: str | None = None) -> Snapshot:
+def set_retired(root: Path, ids: list[str], retired: bool) -> Snapshot:
     def operation(before: Snapshot) -> dict[str, bytes]:
         changes: dict[str, bytes] = {}
         for node_id in ids:
@@ -457,11 +431,11 @@ def set_retired(root: Path, ids: list[str], retired: bool, expect: str | None = 
             changes[node.path] = serialize(node, before.files[node.path])
         return changes
 
-    return mutate(root, operation, expect=expect)
+    return mutate(root, operation)
 
 
-def migrate(root: Path, expect: str | None = None) -> Snapshot:
-    """Validate v1 integrity, then journal the entire approval-free conversion."""
+def migrate(root: Path) -> Snapshot:
+    """Validate graph consistency, then journal the entire hash-free conversion."""
 
     def operation(before: Snapshot) -> dict[str, bytes]:
         if before.format_version == FORMAT_VERSION:
@@ -471,14 +445,13 @@ def migrate(root: Path, expect: str | None = None) -> Snapshot:
                 replace(
                     node,
                     format_version=FORMAT_VERSION if node.type == "manifesto" else None,
-                    legacy_status=None,
                 ),
                 before.files[node.path],
             )
             for node in before.nodes
         }
 
-    return mutate(root, operation, expect=expect, allow_legacy=True)
+    return mutate(root, operation, allow_legacy=True)
 
 
 def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
@@ -542,7 +515,3 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
             load_snapshot(root, ignore_state=True).require_valid()
         cleanup(state)
         return {"restored": sorted(originals)}
-
-
-def byte_hash(raw: bytes) -> str:
-    return hashlib.sha256(raw).hexdigest()

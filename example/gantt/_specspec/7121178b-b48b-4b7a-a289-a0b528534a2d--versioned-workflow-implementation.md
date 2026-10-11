@@ -17,7 +17,6 @@ sources:
   symbol: actual predecessor/spec/implementation hashes
 - path: history/verify.py
   symbol: read-only receipt and Git-stage checks
-managed_hash: ef3920fa0e16b868d1fa44dc348ca8e909b4ffc9045697ce98215369ec6988cc
 ---
 # Record real CLI edits and sequential Git experiments
 

@@ -27,20 +27,79 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             assert all((root / source["path"]).is_file() for source in node.sources)
 
     receipts = [json.loads(line) for line in (root / "history/cli.jsonl").read_text().splitlines()]
-    fingerprint = None
+    # Retain original API-2 receipts verbatim as historical evidence. Their labels
+    # are opaque references here: reconstruct and compare contents, never rehash.
+    marker = None
+    records = {}
+    recorded_graphs = {}
     for receipt in receipts:
         assert receipt["exit_code"] == 0 and receipt["api_version"] == 2
         assert not receipt["diagnostics"], receipt
         argv = receipt["argv"]
         assert argv[:2] == ["--root", "example/gantt"] and argv[-1] == "--json"
         if "--expect" in argv:
-            assert argv[argv.index("--expect") + 1] == fingerprint, receipt
+            assert argv[argv.index("--expect") + 1] == marker, receipt
         if argv[2] in {"add", "update", "retire", "restore"}:
             assert "--expect" in argv, receipt
         if argv[2] == "init":
-            assert fingerprint is None, "The existing graph was reinitialized."
-        fingerprint = receipt["result"].get("fingerprint", fingerprint)
-    assert fingerprint == current.fingerprint, "CLI receipts do not describe the current graph."
+            assert marker is None, "The existing graph was reinitialized."
+        action = argv[2]
+        changed = receipt["result"].get("changed_ids", [])
+        if action in {"init", "add"}:
+            node_id = changed[0]
+            node_type = (
+                "manifesto"
+                if action == "init"
+                else (argv[argv.index("--type") + 1] if "--type" in argv else "requirement")
+            )
+            records[node_id] = {
+                "id": node_id,
+                "type": node_type,
+                "retired": False,
+                "body": receipt["stdin"].replace("\r\n", "\n"),
+                "parents": sorted(argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"),
+                "sources": json.loads(argv[argv.index("--sources") + 1])
+                if "--sources" in argv
+                else [],
+                "extensions": {},
+            }
+        elif action == "update":
+            node = dict(records[argv[3]])
+            if "--body" in argv:
+                node["body"] = receipt["stdin"].replace("\r\n", "\n")
+            if "--parent" in argv or "--clear-parents" in argv:
+                node["parents"] = sorted(
+                    argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"
+                )
+            if "--sources" in argv:
+                node["sources"] = json.loads(argv[argv.index("--sources") + 1])
+            records[argv[3]] = node
+        elif action in {"retire", "restore"}:
+            for node_id in changed:
+                records[node_id] = {**records[node_id], "retired": action == "retire"}
+        marker = receipt["result"].get("fingerprint", marker)
+        recorded_graphs[marker] = dict(records)
+
+    def contents(snapshot):
+        result = {}
+        for node in snapshot.nodes:
+            data = node.semantic()
+            data.pop("format_version", None)  # A later format migration preserves the example.
+            result[node.id] = data
+        return result
+
+    def normalized(records):
+        return {
+            key: {
+                **data,
+                "sources": sorted(data["sources"], key=lambda s: (s["path"], s.get("symbol", ""))),
+            }
+            for key, data in records.items()
+        }
+
+    assert normalized(records) == contents(current), (
+        "CLI receipts do not describe the current graph contents."
+    )
 
     revisions = json.loads((root / "history/revisions.json").read_text())
     assert len(revisions) == 3
@@ -72,8 +131,10 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 assert previous_implementation is None, (
                     "Only the first stage may start without a graph."
                 )
-            assert spec.fingerprint == record["spec_fingerprint"]
-            assert implementation.fingerprint == record["implementation_fingerprint"]
+            assert contents(spec) == normalized(recorded_graphs[record["spec_fingerprint"]])
+            assert contents(implementation) == normalized(
+                recorded_graphs[record["implementation_fingerprint"]]
+            )
             assert sum(not node.retired for node in spec.nodes) == record["spec_live_count"]
             assert not any(
                 not node.retired and node.type == "implementation" for node in spec.nodes

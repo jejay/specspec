@@ -81,6 +81,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     try {
       const { windowId } = await active.send('Browser.getWindowForTarget');
       await active.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
+      await active.send('Page.bringToFront');
       await delay(400);
     } catch { /* Some installed hosts do not expose window bounds. */ }
     await options.before?.({ evaluate, screenshot, delay });
@@ -136,7 +137,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
       await evaluate(`delete window.__hoverPaths`);
     }
     async function restoreActualSize(pose) {
-      await evaluate(`document.getElementById('zoom-reset').click()`); await delay(250);
+      await evaluate(`document.getElementById('zoom-reset').click()`);
+      // Background hosts can throttle animation frames; wait for actual completion
+      // before a synthetic drag interrupts the reset transition.
+      for (let i = 0; i < 100; i++) { if (Math.abs((await camera()).k - 1) < 0.001) break; await delay(50); }
       const now=await camera(),dx=pose.x-now.x,dy=pose.y-now.y;
       await evaluate(`(() => { const v=document.getElementById('viewport'),r=v.getBoundingClientRect(),x=r.left+10,y=r.top+10;
         v.dispatchEvent(new MouseEvent('mousedown',{view:window,bubbles:true,cancelable:true,button:1,clientX:x,clientY:y}));

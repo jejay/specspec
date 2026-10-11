@@ -3,7 +3,6 @@ id: f0d0d18b-b52e-4eef-ab13-da7bedfd07a2
 type: requirement
 parents:
 - b8983d8c-3dc0-4588-b74f-17721bfc4f5c
-managed_hash: 128fa6654e17b31fcf6e0441449c484cb7aa5ad4d7257974e6126e2be8c72977
 ---
 # Distribute the command-line tool as an isolated Python application
 

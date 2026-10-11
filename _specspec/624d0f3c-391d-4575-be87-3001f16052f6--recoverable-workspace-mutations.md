@@ -3,18 +3,18 @@ id: 624d0f3c-391d-4575-be87-3001f16052f6
 type: requirement
 parents:
 - 003d697b-4104-4fdf-8e05-0db572c436d0
-- 9e4eeace-d288-49bb-8365-6af0372daf5c
-managed_hash: 75ec9511293d96e5650b9f75b72ec8056b6da4e1bcc00b7b4ae2e08077968315
+- 93224022-0c11-4260-b09e-2925b7aacf0f
 ---
-# Validate and journal managed graph mutations
+# Validate and journal tool-driven graph mutations
 
-Validate the current and candidate snapshots under a workspace lock. Support an
-expected semantic fingerprint and compare original file bytes before replacement.
-Stage replacements and record recoverable original/replacement states outside
-`_specspec`, in the ignored `.specspec-local` directory.
+Validate current and candidate snapshots under a workspace lock. Compare original
+file bytes before replacement, without fingerprints or stored content markers.
+Stage replacements and journal original/replacement states outside _specspec in
+the ignored .specspec-local directory. Manual edits are allowed, not recommended.
 
-Interrupted batches block further edits until recovery. Recovery must not overwrite
-intervening external edits. Process-interruption recovery is not a claim of full
-power-loss durability or adversarial filesystem race protection.
+Interrupted batches block further tool writes until recovery. Recovery must not
+overwrite intervening external edits. Process-interruption recovery is not a claim
+of full power-loss durability or adversarial filesystem race protection.
 
-Origin: [CONCLUSION_SPEC.md](../CONCLUSION_SPEC.md), transaction strategy.
+Origin: CONCLUSION_SPEC.md transaction strategy, revised by the user's hash-removal
+request. Byte checks protect a transaction, not the provenance of a prior edit.

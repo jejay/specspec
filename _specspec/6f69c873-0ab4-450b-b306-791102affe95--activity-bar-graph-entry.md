@@ -4,7 +4,6 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - ee57a451-059d-426b-868e-e898c2503082
-managed_hash: acef28ea61ef57a3d492021273c4cc5e2dd9610965692a0fcd201fb500546328
 ---
 # Reach the graph from the VS Code Activity Bar
 

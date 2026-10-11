@@ -6,7 +6,7 @@
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
   let colorMode = ['type', 'max-distance'].includes(restored.colorMode) ? restored.colorMode : 'distance';
-  let dirty = false, pending = false, creating = false, formFingerprint, formParents = [];
+  let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
   let layoutFrame, layout, layoutKey, cameraScene;
   let drawnEdges = [], hoveredNode, hoverPoint;
   const cameraAPI = window.SpecSpecCamera;
@@ -28,29 +28,32 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const legacyWorkspace = () => state?.snapshot.valid && !state.readonly && state.snapshot.format_version === 1;
-  const editable = () => state?.snapshot.valid && state.snapshot.format_version === 2 && !state.readonly && (creating || Boolean(currentNode()));
+  const legacyWorkspace = () => state?.snapshot.valid && !sourceInvalid && !state.readonly && state.snapshot.format_version !== 3;
+  const editable = () => state?.snapshot.valid && !sourceInvalid && state.snapshot.format_version === 3 && !state.readonly && (creating || Boolean(currentNode()));
+  const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
+  const draftCard = () => creating || orphaned();
   const description = node => `${node.type}${node.retired ? ' · retired' : ''}`;
-  const formNodeType = () => creating ? $('node-type').value : graph.nodes.get(selected)?.type;
+  const formNodeType = () => creating ? $('node-type').value : originalNode?.type || graph.nodes.get(selected)?.type;
   const parentsEditable = () => editable() && !pending && formNodeType() !== 'manifesto';
   const contextFor = id => currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
   const snapshotName = id => currentNodeById(id) ? 'target' : 'base';
   const distanceFor = id => (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
 
   function saveDraft() {
-    host.setState({ selected, view, colorMode, cameras: { ...cameras }, dirty, creating, formFingerprint, draft: dirty || creating ? {
+    host.setState({ selected, view, colorMode, cameras: { ...cameras }, dirty, creating, originalNode, draft: dirty || creating ? {
       body: $('body').value, sources: $('sources').value, slug: $('slug').value,
       nodeType: $('node-type').value, parents: [...formParents],
     } : undefined });
   }
 
   function updateButtons() {
+    $('sync-notice').hidden = !sourceInvalid;
     $('back').hidden = view !== 'focus';
     $('back').disabled = pending;
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || state.snapshot.format_version !== 2 || state.readonly || pending;
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 3 || state.readonly || pending;
     $('migrate').hidden = !legacyWorkspace();
     $('migrate').disabled = !legacyWorkspace() || pending || dirty || creating;
     $('save').disabled = !editable() || pending;
@@ -60,6 +63,11 @@
     $('retire').disabled = !editable() || creating || dirty || pending || currentNode()?.type === 'manifesto' || withdrawn;
     $('restore').disabled = !editable() || creating || dirty || pending || !withdrawn;
     for (const id of elements) $(id).disabled = !editable() || pending;
+    for (const id of ['body', 'sources']) {
+      // Keep retained text selectable/copyable when files are invalid or deleted.
+      $(id).readOnly = sourceInvalid || orphaned();
+      if (sourceInvalid || orphaned()) $(id).disabled = pending;
+    }
     $('parent-candidate').disabled = !parentsEditable();
     $('add-parent').disabled = !parentsEditable() || !$('parent-candidate').value;
     for (const button of $('parent-links').querySelectorAll('button')) button.disabled = !parentsEditable();
@@ -122,7 +130,7 @@
   window.addEventListener('blur', clearHover);
 
   function neighbors() {
-    if (creating) return { parents: formParents.filter(id => graph.nodes.has(id)), children: [] };
+    if (draftCard()) return { parents: formParents.filter(id => graph.nodes.has(id)), children: [] };
     const parents = new Set(), children = new Set();
     for (const { edge: [a, b] } of graph.edges) {
       if (b === selected && graph.nodes.has(a)) parents.add(a);
@@ -190,16 +198,16 @@
 
   function draw() {
     if (!state) return;
-    if (!creating && !graph.nodes.has(selected)) view = 'overview';
-    // Move the SAME form DOM, preserving values, handlers and draft fingerprint.
+    if (!draftCard() && !graph.nodes.has(selected)) view = 'overview';
+    // Move the SAME form DOM, preserving values, handlers and draft baseline.
     const activeInput = document.activeElement;
     const caret = activeInput?.tagName === 'TEXTAREA' ? [activeInput.selectionStart, activeInput.selectionEnd, activeInput.selectionDirection] : undefined;
     $('detail-parking').append($('node-details'));
     $('cards').replaceChildren();
     const kinds = changes(), related = neighbors();
-    const ids = view === 'overview' ? [...graph.nodes.keys()] : creating
+    const ids = view === 'overview' ? [...graph.nodes.keys()] : draftCard()
       ? related.parents : model.focusIds(graph.nodes, graph.edges, selected);
-    const focalId = creating ? '__draft__' : selected;
+    const focalId = draftCard() ? '__draft__' : selected;
     for (const id of ids) {
       if (view === 'focus' && id === selected) continue;
       const role = view === 'focus' ? related.parents.includes(id)
@@ -207,8 +215,8 @@
       $('cards').append(compactCard(id, kinds.get(id), role));
     }
     if (view === 'focus') {
-      const card = document.createElement('article'), node = graph.nodes.get(selected);
-      card.className = `card expanded ${creating ? $('node-type').value : node.type} ${kinds.get(selected) || ''}`;
+      const card = document.createElement('article'), node = originalNode && orphaned() ? originalNode : graph.nodes.get(selected);
+      card.className = `card expanded ${creating ? $('node-type').value : node?.type || 'requirement'} ${kinds.get(selected) || ''}`;
       card.dataset.nodeId = focalId; card.dataset.retired = String(Boolean(!creating && node?.retired));
       card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected)));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
@@ -218,14 +226,14 @@
       activeInput.focus({ preventScroll: true });
       if (caret) activeInput.setSelectionRange(...caret);
     }
-    send({ type: 'rendered', renderToken: state.renderToken, view, selectedId: selected, creating: creating && view === 'focus',
-      visibleIds: ids, draftParents: creating && view === 'focus' ? [...related.parents] : undefined,
-      nodeCount: $('cards').children.length, fingerprint: state.snapshot.fingerprint });
+    send({ type: 'rendered', renderToken: state.renderToken, view, selectedId: selected, creating: draftCard() && view === 'focus',
+      visibleIds: ids, draftParents: draftCard() && view === 'focus' ? [...related.parents] : undefined,
+      nodeCount: $('cards').children.length });
   }
 
   function applyLayout() {
     if (!state || !$('cards').children.length) return;
-    const focalId = creating ? '__draft__' : selected;
+    const focalId = draftCard() ? '__draft__' : selected;
     const sizes = new Map(), visible = new Map();
     for (const card of $('cards').children) {
       const expanded = card.classList.contains('expanded');
@@ -236,14 +244,14 @@
         height: card.offsetHeight || card.scrollHeight || (expanded ? 720 : model.CARD_HEIGHT) });
       visible.set(card.dataset.nodeId, graph.nodes.get(card.dataset.nodeId) || { id: focalId });
     }
-    const edges = (creating && view === 'focus' ? neighbors().parents.map(id => ({ edge: [id, focalId], kind: 'draft' })) : graph.edges)
+    const edges = (draftCard() && view === 'focus' ? neighbors().parents.map(id => ({ edge: [id, focalId], kind: 'draft' })) : graph.edges)
       .filter(({ edge: [a, b] }) => visible.has(a) && visible.has(b));
     // Overview/current focus ranks follow the target; a removed selected node
     // follows its base context. Extra revision links remain visible but don't
     // push surviving ranks toward a sink or make the ranking graph cyclic.
     const revision = view === 'focus' && !creating && !currentNode() && state.diff ? state.diff.base : state.snapshot;
     const primary = { ids: new Set(revision.nodes.map(node => node.id)), edges: new Set(revision.edges.map(edge => JSON.stringify(edge))) };
-    if (creating && view === 'focus') {
+    if (draftCard() && view === 'focus') {
       primary.ids.add(focalId); edges.forEach(item => primary.edges.add(JSON.stringify(item.edge)));
     }
     const key = JSON.stringify([[...sizes].sort(([a], [b]) => a.localeCompare(b)), edges,
@@ -369,7 +377,7 @@
     }
     if (dirty && !force && !confirm('Discard unsaved form changes before opening another node?')) return;
     rememberCamera();
-    creating = false; dirty = false; selected = id; formFingerprint = state.snapshot.fingerprint;
+    creating = false; dirty = false; selected = id; originalNode = currentNodeById(id);
     view = graph.nodes.has(id) ? 'focus' : 'overview'; loadForm(); draw(); saveDraft();
   }
 
@@ -400,13 +408,13 @@
   });
 
   $('new').addEventListener('click', () => {
-    if (!state || pending || state.readonly || state.snapshot.format_version !== 2) return;
+    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 3) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
     rememberCamera(); delete cameras.draft;
-    creating = true; dirty = false; selected = undefined; view = 'focus'; formFingerprint = state.snapshot.fingerprint;
+    creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
-    $('identity').textContent = 'The CLI will generate its ID and integrity marker.'; $('focus-context').textContent = 'Unsaved new node';
+    $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'Unsaved new node';
     $('type-label').hidden = false; $('slug-label').hidden = false;
     $('node-type').value = 'requirement'; $('slug').value = ''; $('body').value = ''; $('sources').value = '[]';
     $('sources-label').hidden = true; $('before-section').hidden = true;
@@ -430,21 +438,21 @@
   $('editor').addEventListener('submit', event => {
     event.preventDefault(); if (!editable() || pending) return;
     pending = true; updateButtons();
-    send({ type: creating ? 'add' : 'save', id: selected, expect: formFingerprint,
+    send({ type: creating ? 'add' : 'save', id: selected, originalNode,
       body: $('body').value, parents: [...formParents], sources: $('sources').value, slug: $('slug').value, nodeType: $('node-type').value });
   });
   for (const action of ['restore', 'retire']) $(action).addEventListener('click', () => {
     if (!editable() || creating || dirty || pending) return;
-    pending = true; updateButtons(); send({ type: action, id: selected, expect: formFingerprint });
+    pending = true; updateButtons(); send({ type: action, id: selected });
   });
   $('migrate').addEventListener('click', () => {
     if (!legacyWorkspace() || dirty || creating || pending) return;
-    pending = true; updateButtons(); send({ type: 'migrate', expect: state.snapshot.fingerprint });
+    pending = true; updateButtons(); send({ type: 'migrate' });
   });
   $('discard').addEventListener('click', () => {
     dirty = false;
     if (creating) { rememberCamera(); creating = false; selected = undefined; view = 'overview'; draw(); saveDraft(); }
-    else { formFingerprint = state.snapshot.fingerprint; loadForm(); draw(); saveDraft(); }
+    else { originalNode = currentNode(); loadForm(); draw(); saveDraft(); }
   });
   for (const action of ['refresh', 'compare', 'workspace']) $(action).addEventListener('click', () => send({ type: action }));
   $('project').addEventListener('click', () => send({ type: 'select-project' }));
@@ -452,7 +460,7 @@
   function showSnapshotNotes() {
     setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`)].filter(Boolean).join('\n'));
     $('schema-notice').hidden = !legacyWorkspace();
-    $('schema-notice').textContent = legacyWorkspace() ? 'Legacy v1 graph: migrate to remove approval metadata before editing. Discard any dirty draft first; migration preserves node text and withdrawal history.' : '';
+    $('schema-notice').textContent = legacyWorkspace() ? `Legacy v${state.snapshot.format_version} graph: migrate to the hash-free format before editing. Discard any dirty draft first; migration preserves node text and withdrawal history.` : '';
     const sources = state.diff?.source_changes || [];
     $('linked-sources').hidden = !sources.length;
     $('source-summary').textContent = `${sources.length} changed linked source file${sources.length === 1 ? '' : 's'} — potential review context`;
@@ -461,17 +469,18 @@
   }
 
   host.onMessage(message => {
-    if (message.type === 'notice') { setMessage(message.message); return; }
-    if (message.type === 'error') { pending = false; setMessage(message.message); updateButtons(); return; }
+    if (message.type === 'notice' || message.type === 'sync-warning') { setMessage(message.message); return; }
+    if (message.type === 'sync-error') { sourceInvalid = true; pending = false; setMessage(message.message); updateButtons(); return; }
+    if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Displayed graph is out of date; editing is disabled.\n${message.message}` : message.message); updateButtons(); return; }
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;
-    state = message; pending = false; graph = model.displayGraph(state);
+    state = message; sourceInvalid = false; pending = false; graph = model.displayGraph(state);
     targetMetrics = model.metrics(state.snapshot); baseMetrics = state.diff ? model.metrics(state.diff.base) : undefined;
     $('revision').textContent = state.diff ? `${state.diff.base_ref} → ${state.diff.target_ref}${state.readonly ? ' (read-only)' : ''}` : 'Workspace';
     showSnapshotNotes();
     if (message.force) { select(message.selectedId || selected, true); return; }
     if (!restored.used && restored.draft && (restored.dirty || restored.creating)) {
-      restored.used = true; dirty = Boolean(restored.dirty); creating = Boolean(restored.creating); formFingerprint = restored.formFingerprint;
+      restored.used = true; dirty = Boolean(restored.dirty); creating = Boolean(restored.creating); originalNode = restored.originalNode;
       if (!creating) loadForm();
       $('editor').hidden = false; $('body').value = restored.draft.body; $('sources').value = restored.draft.sources;
       $('slug').value = restored.draft.slug; $('node-type').value = restored.draft.nodeType;
@@ -479,10 +488,15 @@
       if (creating) { $('title').textContent = 'New node'; $('identity').textContent = 'Restored unsaved draft'; }
       populateParents(restored.draft.parents, formNodeType());
       $('sources-label').hidden = formNodeType() !== 'implementation';
-    } else if (dirty || creating) {
-      setMessage('Graph refreshed. Draft retained with its original fingerprint; discard it to load the latest node before saving.');
-    } else {
-      formFingerprint = state.snapshot.fingerprint; loadForm();
+    } else if (!dirty && !creating) {
+      originalNode = currentNode(); loadForm();
+    }
+    if (dirty || creating) {
+      const warning = orphaned() ? 'The edited node was deleted. Draft retained for copying or discarding; saving is disabled.'
+        : !creating && !model.sameNode(originalNode, currentNode()) ? 'This node changed outside your draft. Draft retained; saving will ask before overwriting current contents.'
+          : 'Graph refreshed. Unsaved draft retained.';
+      setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`), warning].filter(Boolean).join('\n'));
+      if (orphaned()) { $('editor').hidden = false; $('title').textContent = 'Deleted node draft'; $('identity').textContent = selected || ''; }
     }
     draw(); saveDraft();
   });

@@ -13,7 +13,6 @@ sources:
   symbol: 20 model regressions and seeded DAG reference
 - path: history/personal-v1.json
   symbol: actual archived stage-two export
-managed_hash: 6b772e885f461f1604b773030985a671d6ffbd08321fd4b4ce1254c5bad59942
 ---
 # Implement validated forecasts and immutable what-if baselines
 

@@ -28,7 +28,7 @@ function fixture(t, options = {}) {
     dom.window.close();
     assert.deepEqual(messages.filter(message => message.type === 'client-error'), [], 'Renderer errors must not be mistaken for successful DOM tests.');
   });
-  const snapshot = { fingerprint: 'version-1', format_version: 2, valid: true, nodes: [root, child], edges: [['root', 'child']] };
+  const snapshot = { format_version: 3, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
@@ -99,7 +99,7 @@ test('hovering inside an expanded form does not flicker or disturb native drafts
   assert.deepEqual(highlightedEdges($), ['child>grand', 'root>child']);
   assertPairedHighlights($);
   assert.equal(saved(), draft);
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, child);
   assert.equal(messages.length, count);
   assert.equal(dom.window.document.activeElement, body);
   assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
@@ -169,7 +169,7 @@ test('refresh reconciles hovered identity and camera movement rechecks the stati
   let hit = 'child';
   dom.window.document.elementFromPoint = (x, y) => { assert.deepEqual([x, y], [120, 180]); return hit ? card(hit) : $('viewport'); };
   hoverEvent(dom, card('child'));
-  const target = { ...snapshot, fingerprint: 'new', nodes: snapshot.nodes.map(n => n.id === 'child' ? { ...n, parents: ['root', 'sibling'] } : n), edges: [...snapshot.edges, ['sibling', 'child']] };
+  const target = { ...snapshot, nodes: snapshot.nodes.map(n => n.id === 'child' ? { ...n, parents: ['root', 'sibling'] } : n), edges: [...snapshot.edges, ['sibling', 'child']] };
   send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
   assert.deepEqual(highlightedEdges($), ['child>grand', 'root>child', 'sibling>child']);
   hit = 'sibling';
@@ -214,7 +214,7 @@ test('withdrawal and restoration send guarded actions, not acceptance', t => {
   dom.window.document.querySelector('[data-node-id="child"]').click();
   $('retire').click();
   assert.equal(messages.at(-1).type, 'retire');
-  assert.equal(messages.at(-1).expect, snapshot.fingerprint);
+  assert.equal('expect' in messages.at(-1), false);
   assert.equal($('save').disabled, true);
   const target = { ...snapshot, nodes: [root, { ...child, retired: true }] };
   send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false, force: true, selectedId: 'child' });
@@ -223,7 +223,7 @@ test('withdrawal and restoration send guarded actions, not acceptance', t => {
   assert.equal($('restore').hidden, false);
   $('restore').click();
   assert.equal(messages.at(-1).type, 'restore');
-  assert.equal(messages.at(-1).expect, snapshot.fingerprint);
+  assert.equal('expect' in messages.at(-1), false);
 });
 
 test('a legacy workspace is readable but only explicit migration can write', t => {
@@ -239,39 +239,39 @@ test('a legacy workspace is readable but only explicit migration can write', t =
   assert.equal($('retire').disabled, true);
   $('migrate').click();
   assert.equal(messages.at(-1).type, 'migrate');
-  assert.equal(messages.at(-1).expect, snapshot.fingerprint);
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'migrated' }, diagnostics: [], readonly: false });
+  assert.equal('expect' in messages.at(-1), false);
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.equal($('migrate').hidden, true);
   assert.equal($('body').disabled, false);
   assert.equal($('body').value, child.body);
 });
 
-test('legacy histories cannot migrate and dirty drafts retain their original fingerprint', t => {
+test('legacy histories cannot migrate and dirty drafts retain their original contents', t => {
   const { dom, snapshot, send, $, saved } = fixture(t);
   dom.window.document.querySelector('[data-node-id="child"]').click();
   $('body').value = '# Still my draft\n'; $('body').dispatchEvent(new dom.window.Event('input'));
   send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: false });
   assert.equal($('migrate').disabled, true);
   assert.equal($('body').value, '# Still my draft\n');
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, child);
   send({ type: 'snapshot', snapshot: { ...snapshot, format_version: 1 }, diagnostics: [], readonly: true });
   assert.equal($('migrate').hidden, true);
   assert.equal($('save').disabled, true);
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'migrated' }, diagnostics: [], readonly: false });
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.equal($('body').value, '# Still my draft\n');
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, child);
 });
 
 test('restored obsolete status colors fall back to distance without losing a draft or camera', t => {
   const { $, saved } = fixture(t, { restored: {
     colorMode: 'status', selected: 'child', view: 'focus', dirty: true,
-    formFingerprint: 'original', creating: false,
+    originalNode: child, creating: false,
     cameras: { 'focus:child': { x: 30, y: -50, k: 0.8 } },
     draft: { body: '# My draft\n', sources: '[]', slug: '', nodeType: 'requirement', parents: ['root'] },
   } });
   assert.equal(saved().colorMode, 'distance');
   assert.equal($('body').value, '# My draft\n');
-  assert.equal(saved().formFingerprint, 'original');
+  assert.equal(saved().originalNode, child);
   assert.deepEqual({ ...saved().cameras['focus:child'] }, { x: 30, y: -50, k: 0.8 });
 });
 
@@ -287,7 +287,7 @@ test('graph renders and new-node creation goes through a typed message', t => {
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
   const message = messages.at(-1);
   assert.equal(message.type, 'add');
-  assert.equal(message.expect, 'version-1');
+  assert.equal('expect' in message, false);
   assert.equal(message.body, '# New\n');
   assert.deepEqual([...message.parents], ['root']);
   assert.equal($('save').disabled, true);
@@ -328,7 +328,7 @@ test('parent list displays actual links; adding and removing are explicit draft 
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'branch');
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
   assert.deepEqual([...messages.at(-1).parents], ['branch']);
-  assert.equal(messages.at(-1).expect, 'version-1');
+  assert.equal(messages.at(-1).originalNode, child);
 });
 
 test('switching a new node to implementation removes its manifesto parent from the draft', t => {
@@ -348,35 +348,35 @@ test('switching a new node to implementation removes its manifesto parent from t
   assert.deepEqual([...messages.at(-1).parents], ['child']);
 });
 
-test('parent drafts survive refresh and can be discarded without adopting a newer fingerprint', t => {
+test('parent drafts survive refresh and can be discarded without losing the original contents', t => {
   const { dom, messages, snapshot, send, $ } = fixture(t);
   dom.window.document.querySelector('.card.requirement').click();
   $('parent-links').querySelector('button').click();
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'version-2' }, diagnostics: [], readonly: false });
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.equal($('parent-links').children.length, 0);
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
   assert.deepEqual([...messages.at(-1).parents], []);
-  assert.equal(messages.at(-1).expect, 'version-1');
+  assert.equal(messages.at(-1).originalNode, child);
   send({ type: 'error', message: 'Graph is stale' });
   $('discard').click();
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'root');
 });
 
-test('restored parent drafts use their original fingerprint and do not turn candidates into links', t => {
+test('restored parent drafts retain original contents and do not turn candidates into links', t => {
   const { dom, messages, $ } = fixture(t, { restored: {
-    selected: 'child', dirty: true, creating: false, formFingerprint: 'old-version',
+    selected: 'child', dirty: true, creating: false, originalNode: child,
     draft: { body: '# Unsaved\n', sources: '[]', slug: '', nodeType: 'requirement', parents: [] },
   } });
   assert.equal($('parent-links').children.length, 0);
   assert.ok([...$('parent-candidate').options].some(option => option.value === 'root'));
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
-  assert.equal(messages.at(-1).expect, 'old-version');
+  assert.equal(messages.at(-1).originalNode, child);
   assert.deepEqual([...messages.at(-1).parents], []);
 });
 
 test('old invalid manifesto parent drafts cannot restore editable root links', t => {
   const { dom, messages, $ } = fixture(t, { restored: {
-    selected: 'root', dirty: true, creating: false, formFingerprint: 'old-version',
+    selected: 'root', dirty: true, creating: false, originalNode: root,
     draft: { body: '# Unsaved purpose\n', sources: '[]', slug: '', nodeType: 'requirement', parents: ['child'] },
   } });
   assert.equal($('body').value, '# Unsaved purpose\n');
@@ -386,20 +386,66 @@ test('old invalid manifesto parent drafts cannot restore editable root links', t
   assert.deepEqual([...messages.at(-1).parents], []);
 });
 
-test('external refresh preserves unsaved text and its original fingerprint', t => {
+test('external refresh preserves unsaved text and its original contents', t => {
   const { dom, messages, snapshot, send, $ } = fixture(t);
   dom.window.document.querySelector('.card.requirement').click();
   $('body').value = '# Unsaved\n';
   $('body').dispatchEvent(new dom.window.Event('input'));
   assert.equal($('retire').disabled, true);
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'version-2' }, diagnostics: [], readonly: false });
+  send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [root, { ...child, body: '# External\n' }] }, diagnostics: [], readonly: false });
   assert.equal($('body').value, '# Unsaved\n');
+  assert.match($('message').textContent, /changed outside/);
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
-  assert.equal(messages.at(-1).expect, 'version-1');
-  send({ type: 'error', message: 'Graph is stale' });
+  assert.equal(messages.at(-1).originalNode, child);
+  send({ type: 'error', message: 'Save failed' });
   assert.equal($('body').value, '# Unsaved\n');
   $('discard').click();
-  assert.equal($('body').value, '# Child\n');
+  assert.equal($('body').value, '# External\n');
+});
+
+test('invalid external files keep the last graph and draft selectable until a valid refresh', t => {
+  const { dom, snapshot, send, $, saved } = fixture(t);
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  const body = $('body'); body.value = '# Retained'; body.dispatchEvent(new dom.window.Event('input'));
+  body.focus(); body.setSelectionRange(2, 6);
+  const cards = $('cards').children.length, camera = $('graph').style.transform;
+  send({ type: 'sync-error', message: 'Files are invalid; displayed graph is out of date. YAML: incomplete' });
+  assert.equal($('cards').children.length, cards); assert.equal($('body'), body);
+  assert.equal(body.value, '# Retained'); assert.equal(body.disabled, false); assert.equal(body.readOnly, true);
+  assert.equal($('save').disabled, true); assert.equal($('new').disabled, true);
+  assert.match($('message').textContent, /out of date/); assert.equal(saved().originalNode, child);
+  $('back').click(); $('resume').click();
+  assert.equal($('sync-notice').hidden, false, 'Invalid-data warning survives draft navigation and notices.');
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
+  assert.equal($('sync-notice').hidden, true);
+  assert.equal(body.readOnly, false); assert.equal($('save').disabled, false);
+  assert.equal(body.value, '# Retained'); assert.equal($('graph').style.transform, camera);
+  assert.deepEqual([body.selectionStart, body.selectionEnd], [2, 6]);
+});
+
+test('deleted edited nodes retain a visible copyable draft without inventing a canonical node', t => {
+  const { dom, snapshot, send, $, saved, messages } = fixture(t);
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  const body = $('body'); body.value = '# Deleted draft'; body.dispatchEvent(new dom.window.Event('input'));
+  const target = { ...snapshot, nodes: [root], edges: [] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  assert.equal($('body'), body); assert.equal(body.value, '# Deleted draft');
+  assert.equal($('save').disabled, true); assert.equal(body.disabled, false);
+  assert.ok($('cards').contains(body)); assert.match($('message').textContent, /deleted/);
+  assert.equal(saved().originalNode, child); assert.ok(model.renderMatches({ snapshot: target }, messages.at(-1)));
+  $('back').click(); $('resume').click(); assert.equal(body.value, '# Deleted draft');
+  $('discard').click(); assert.equal(saved().dirty, false); assert.equal(saved().view, 'overview');
+});
+
+test('pre-hash-removal drafts keep their text but do not manufacture an original node record', t => {
+  const { $, saved, messages, dom } = fixture(t, { restored: {
+    selected: 'child', dirty: true, formFingerprint: 'obsolete',
+    draft: { body: '# Legacy draft', sources: '[]', parents: ['root'], slug: '', nodeType: 'requirement' },
+  } });
+  assert.equal($('body').value, '# Legacy draft'); assert.equal(saved().originalNode, undefined);
+  assert.equal('formFingerprint' in saved(), false); assert.match($('message').textContent, /changed outside/);
+  $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
+  assert.equal(messages.at(-1).originalNode, undefined); assert.equal('expect' in messages.at(-1), false);
 });
 
 test('historical and removed nodes are read-only, with old text visible', t => {
@@ -472,7 +518,7 @@ test('back and resume preserve the same dirty form and switching nodes requires 
   assert.equal($('body'), body);
   assert.equal($('body').value, '# Draft\n');
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
-  assert.equal(messages.at(-1).expect, 'version-1');
+  assert.equal(messages.at(-1).originalNode, child);
   assert.equal(messages.at(-1).body, '# Draft\n');
 });
 
@@ -546,7 +592,7 @@ test('minimum/maximum distance modes have exact labels, different fills/legends,
   assert.ok(messages.every(m => ['ready', 'rendered'].includes(m.type)));
 });
 
-test('distance switches and refreshed path bounds retain the same dirty form, caret, fingerprint and camera', t => {
+test('distance switches and refreshed path bounds retain the same dirty form, caret, baseline and camera', t => {
   const { dom, $, card, snapshot, send, saved } = distanceFixture(t);
   card('child').click();
   const body = $('body'); body.value = '# Draft'; body.dispatchEvent(new dom.window.Event('input'));
@@ -556,13 +602,13 @@ test('distance switches and refreshed path bounds retain the same dirty form, ca
   assert.equal($('body'), body);
   assert.equal(dom.window.document.activeElement, body);
   assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, snapshot.nodes[1]);
   assert.equal($('graph').style.transform, camera);
   // Bounds come from the whole snapshot: b remains at distance two in this focus.
   assert.equal(card('b').dataset.maxDistance, '2');
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'new' }, diagnostics: [], readonly: false });
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.equal(saved().colorMode, 'max-distance');
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, snapshot.nodes[1]);
   assert.equal($('body').value, '# Draft');
   assert.deepEqual([body.selectionStart, body.selectionEnd], [2, 5]);
 });
@@ -570,12 +616,12 @@ test('distance switches and refreshed path bounds retain the same dirty form, ca
 test('maximum-distance preference restores without rebasing a draft or camera', t => {
   const { $, saved } = fixture(t, { restored: {
     colorMode: 'max-distance', selected: 'child', view: 'focus', dirty: true,
-    formFingerprint: 'old', cameras: { 'focus:child': { x: 40, y: -70, k: 1.6 } },
+    originalNode: child, cameras: { 'focus:child': { x: 40, y: -70, k: 1.6 } },
     draft: { body: '# Restored', sources: '[]', slug: '', nodeType: 'requirement', parents: ['root'] },
   } });
   assert.equal($('color-mode').value, 'max-distance');
   assert.equal(saved().colorMode, 'max-distance');
-  assert.equal(saved().formFingerprint, 'old');
+  assert.equal(saved().originalNode, child);
   assert.equal($('body').value, '# Restored');
   assert.deepEqual({ ...saved().cameras['focus:child'] }, { x: 40, y: -70, k: 1.6 });
 });
@@ -614,7 +660,7 @@ test('high zoom keeps native headline/form identity, intrinsic size, caret and u
   assert.equal(card.style.width, width);
   assert.equal(dom.window.getComputedStyle(headline).fontSize, '18px');
   assert.deepEqual([body.selectionStart, body.selectionEnd], [2, 7]);
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, child);
   assert.equal(dom.window.document.querySelector('#cards canvas, #cards img'), null);
   assert.ok(messages.every(m => ['ready', 'rendered'].includes(m.type)));
 });
@@ -686,17 +732,17 @@ test('middle-button and background drag pan without selecting nodes or clamping 
   assert.equal(Number($('viewport').dataset.cameraX), moved + 120);
 });
 
-test('refresh retains native textarea focus, selection and the original draft fingerprint', t => {
+test('refresh retains native textarea focus, selection and the original draft baseline', t => {
   const { dom, snapshot, send, $, saved } = fixture(t);
   dom.window.document.querySelector('[data-node-id="child"]').click();
   $('body').value = '# Draft in progress'; $('body').dispatchEvent(new dom.window.Event('input'));
   $('body').focus(); $('body').setSelectionRange(3, 8, 'backward');
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'version-2' }, diagnostics: [], readonly: false });
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.equal(dom.window.document.activeElement, $('body'));
   assert.equal($('body').selectionStart, 3);
   assert.equal($('body').selectionEnd, 8);
   assert.equal($('body').selectionDirection, 'backward');
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, child);
 });
 
 test('form scrolling, text selection and keyboard editing never initiate camera gestures', t => {
@@ -712,7 +758,7 @@ test('form scrolling, text selection and keyboard editing never initiate camera 
   assert.equal($('body').disabled, false);
 });
 
-test('overview and focused cameras survive back, resume and refresh with the draft fingerprint', t => {
+test('overview and focused cameras survive back, resume and refresh with the draft baseline', t => {
   const { dom, snapshot, send, $, saved } = fixture(t, { restored: {
     view: 'overview', cameras: { overview: { x: -275, y: 45, k: 0.75 } },
   } });
@@ -726,9 +772,9 @@ test('overview and focused cameras survive back, resume and refresh with the dra
   assert.deepEqual(cameraValue().overview, overview);
   $('resume').click();
   assert.deepEqual(cameraValue()['focus:child'], focused);
-  send({ type: 'snapshot', snapshot: { ...snapshot, fingerprint: 'version-2' }, diagnostics: [], readonly: false });
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   assert.deepEqual(cameraValue()['focus:child'], focused);
-  assert.equal(saved().formFingerprint, 'version-1');
+  assert.equal(saved().originalNode, child);
   assert.equal($('body').value, '# Draft');
 });
 
@@ -820,10 +866,10 @@ test('Git refresh changes presentation without rebasing a dirty draft or its nat
   const {dom,snapshot,send,$,saved,messages}=fixture(t);
   dom.window.document.querySelector('[data-node-id="child"]').click();const body=$('body');
   body.value='# Dirty';body.dispatchEvent(new dom.window.Event('input'));body.focus();body.setSelectionRange(1,4,'backward');
-  const camera=$('graph').style.transform,old=saved().formFingerprint;
-  send({type:'snapshot',snapshot:{...snapshot,fingerprint:'new'},readonly:false,diagnostics:[],diff:{base:snapshot,target:snapshot,changes:[{id:'child',kind:'changed'}],added_edges:[],removed_edges:[]}});
+  const camera=$('graph').style.transform,old=saved().originalNode;
+  send({type:'snapshot',snapshot,readonly:false,diagnostics:[],diff:{base:snapshot,target:snapshot,changes:[{id:'child',kind:'changed'}],added_edges:[],removed_edges:[]}});
   assert.equal($('body'),body);assert.equal(body.value,'# Dirty');assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[1,4,'backward']);
-  assert.equal(saved().formFingerprint,old);assert.equal($('graph').style.transform,camera);
+  assert.equal(saved().originalNode,old);assert.equal($('graph').style.transform,camera);
   assert.equal(dom.window.document.querySelector('.expanded .git-corner').textContent,'M');
   assert.ok(!messages.some(m=>['save','add','retire','restore'].includes(m.type)));
 });

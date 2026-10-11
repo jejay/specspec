@@ -28,9 +28,9 @@ material uncertainty and conflicts rather than manufacturing agreement.
 
 ## Changes
 
-- Do not edit node Markdown/frontmatter directly or recompute integrity hashes
-  outside the tool. Use `add`, `update`, `retire`, `restore`, and `migrate`.
-- Use `--expect <fingerprint>` when applying changes against a displayed snapshot.
+- Use `add`, `update`, `retire`, `restore`, and `migrate` for canonical graph changes
+  in this checkout. The product permits manual Markdown edits, but CLI/UI editing
+  remains recommended. Format/API 3 has no hashes, fingerprints, or `--expect`.
 - Record a separate conclusion when a change introduces a meaningful choice.
   Do not rewrite its parent intention to make a chosen implementation inevitable.
 - Do not introduce approval statuses, acceptance scores, or parent-review gates.
@@ -59,9 +59,10 @@ explicitly authorized commit, stage the complete intended graph change and use
 `hook check` to validate that exact index; working-tree validation cannot
 substitute for staged validation.
 
-The current writer uses format/API version 2. Older Git revisions remain readable;
-convert a valid v1 workspace with `migrate --expect <fingerprint>` before editing.
-Migration verifies its original integrity and journals the whole conversion.
+The current writer uses format/API version 3. Older Git revisions remain readable;
+convert a valid v1/v2 workspace with `migrate` before tool-driven editing.
+Migration validates actual graph consistency, ignores obsolete hashes and journals
+removal of legacy metadata across the whole graph.
 
 If an edit is interrupted, retain `.specspec-local/` and run `recover`. Remove a
 stale lock with `recover --force-lock` only after confirming no writer is running.

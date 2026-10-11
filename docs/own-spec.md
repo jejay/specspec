@@ -2,7 +2,8 @@
 
 This checkout is a ready-to-use example. Its working graph is in [`_specspec/`](../_specspec/);
 do **not** run `init` here. Canonical nodes and schema conversion are maintained
-through the Python CLI, not handwritten frontmatter or ad hoc hash updates.
+through the Python CLI in this checkout. Manual Markdown edits are permitted by
+the product; there are no content markers or fingerprints in the current schema.
 
 ## Review is a spectrum, not a node workflow
 
@@ -24,7 +25,38 @@ is the original, unchanged source. [`CONCLUSION_SPEC.md`](../CONCLUSION_SPEC.md)
 records technical reasoning, not an approval queue. Git shows newness and changes
 relative to the selected base; linked-source impact is informational review context.
 
-## Approval-free schema revision
+## Manual Markdown and watcher synchronization correction
+
+The user's [manual-edit intention](../_specspec/5c2b23ba-7bbc-4458-b63e-808e58cd7059--editable-markdown-and-live-sync.md)
+explicitly removes fingerprints and `managed_hash`: the CLI/UI remain recommended,
+but consenting adults may edit Markdown directly. Actual schema/DAG checks remain.
+The separate [hash-free/watcher conclusion](../_specspec/93224022-0c11-4260-b09e-2925b7aacf0f--hash-free-schema-and-watcher-reconciliation.md)
+chooses format/API 3 and direct record/byte comparisons, not replacement hashes.
+The old content-integrity conclusion is withdrawn after reconnecting live dependents.
+The [current implementation/evidence record](../_specspec/7408785c-616b-4729-89c6-0c9987c96d16--hash-free-markdown-sync-implementation.md)
+links the backend, shared session, both watcher adapters, polling configuration and tests.
+
+Both working graphs were converted through `migrate`. Old v1/v2 Git revisions
+remain readable with obsolete hashes ignored; history/receipts are not rewritten.
+Migration preserves IDs, body bytes, links, sources, extensions and comments while
+removing hash/approval metadata. The CLI has no `--expect` or fingerprint output.
+Tool locks, original-byte replacement checks, journal/recovery, read-only history
+and workspace authorization remain transaction/consistency protections.
+
+Both hosts synchronize through coalesced filesystem events and bounded read retries.
+Electron watches the parent too, reattaching after canonical-directory replacement.
+Optional polling defaults to **0/off**: VS Code `specspec.pollIntervalMs`, Electron
+`--poll-interval-ms` or `SPECSPEC_POLL_INTERVAL_MS`. No implicit polling fallback is
+installed. Unchanged records don't redraw; explicit Refresh remains available.
+Watcher-only delivery is not guaranteed for every mounted/network filesystem.
+
+Clean forms refresh. Dirty forms/caret/cameras and original node records survive;
+unrelated changes don't block saving. Same-node overwrites ask confirmation. Deleted
+node drafts remain visible/copyable. Invalid files keep the last valid graph marked
+out of date and disable mutations until valid, without rewriting external files.
+Arbitrary editors need not honor locks; universal race-free writes are not claimed.
+
+## Approval-free schema revision (preceding design)
 
 The separate [Git-newness and withdrawal conclusion](../_specspec/ca580dc7-c7fa-48bc-91b1-59243144a0bf--git-newness-and-withdrawal-schema.md)
 chooses format/API version 2, an explicit managed migration, and a withdrawal flag:
@@ -36,11 +68,11 @@ chooses format/API version 2, an explicit managed migration, and a withdrawal fl
 - A live node cannot depend on a retired parent; the manifesto cannot be retired.
   These are withdrawal/structure rules, not review obligations.
 - Git added/changed/removed/renamed labels and source-impact hints stay derived.
-- Old version-one Git revisions remain readable. Their original hashes are checked
-  before approval fields are normalized away. No historical bytes are rewritten.
-- `migrate --expect <fingerprint>` converts a valid v1 workspace in one journaled
-  transaction, preserving IDs, paths, body bytes, links, sources, extensions, and
-  unaffected comments. Ordinary writes require the explicit conversion first.
+- Old version-one Git revisions remain readable. Approval fields are normalized
+  away without changing historical bytes. The later v3 reader ignores old hashes.
+- `migrate` now converts a valid v1/v2 workspace to v3 in one journaled transaction,
+  preserving IDs, paths, body bytes, links, sources, extensions, and unaffected
+  comments. Ordinary tool writes require explicit conversion first.
 
 The repository's current graph was converted through that command. It retains
 withdrawn explanations of the old [approval lifecycle](../_specspec/ff0c8e51-7aaa-4b13-97db-9623dc70d87c--proposal-lifecycle.md),
@@ -182,7 +214,7 @@ weekday prerequisite forecasting, explicit baseline comparison, protected local
 storage, and previewed JSON conversion. Narrative stages are not node approval stages.
 
 Actual CLI receipts and a full-history verifier check original bodies/parents/sources,
-fingerprints, ancestor ordering, large withdrawal sets, no code in the first spec
+original receipt relationships/content, ancestor ordering, large withdrawal sets, no code in the first spec
 commit, and runnable files in every implementation commit. Both nested and parent
 index snapshots are validated before each authorized commit. CI now checks both
 working graphs, the original stage history, model tests, and an isolated installed-
@@ -197,7 +229,8 @@ educational prototype, not a production scheduler, backup, or authentication ser
 | Project purpose | [Manifesto](../_specspec/b8983d8c-3dc0-4588-b74f-17721bfc4f5c--specspec-manifesto.md) |
 | Review budget and implementation risk | [Risk-proportionate review](../_specspec/a3cad33b-c1f9-4903-8394-9e6cd3cc5b73--risk-proportionate-review.md) |
 | User-controlled exploration | [Revisable conclusions](../_specspec/c0943883-e3cb-4de9-8c5e-6aeb4a37dd06--revisable-conclusions.md) |
-| Current file/API/migration choice | [Approval-free schema](../_specspec/ca580dc7-c7fa-48bc-91b1-59243144a0bf--git-newness-and-withdrawal-schema.md) |
+| Current hash-free file/API/sync choice | [Hash-free/watcher conclusion](../_specspec/93224022-0c11-4260-b09e-2925b7aacf0f--hash-free-schema-and-watcher-reconciliation.md) |
+| Preceding approval-free choice | [Approval-free schema](../_specspec/ca580dc7-c7fa-48bc-91b1-59243144a0bf--git-newness-and-withdrawal-schema.md) |
 | Managed writes | [Recoverable mutations](../_specspec/624d0f3c-391d-4575-be87-3001f16052f6--recoverable-workspace-mutations.md) |
 | Shared backend | [Python JSON backend](../_specspec/6c457b0a-654e-4545-a4b4-667f467be4f3--shared-python-json-backend.md) |
 | Git code and tests | [Git adapter](../_specspec/cc058342-0f01-4dc1-99bc-439b445c5a04--git-adapter-implementation.md) |
@@ -221,7 +254,7 @@ python -m specspec diff --base HEAD --json
 Prepare replacement body text outside `_specspec`, then apply it through the CLI:
 
 ```sh
-python -m specspec update <node-id> --body <body-file> --expect <displayed-fingerprint>
+python -m specspec update <node-id> --body <body-file>
 python -m specspec validate --warnings-as-errors
 python -m specspec diff --base HEAD --json
 ```
@@ -243,7 +276,7 @@ checkout. Legacy revisions render through the normalized model, read-only.
 
 CI validates this repository graph with warnings as errors. Repository tests
 exercise the real graph without freezing its UUIDs, counts, or design choices.
-Migration tests use original tool-managed v1 fixture blobs, check their old hashes,
+Migration tests use original v1 fixture blobs and v2 inputs, ignore obsolete hashes,
 exercise interrupted conversion/recovery, and compare staged/historical v1 and v2
 snapshots in disposable repositories. No test installs hooks in this checkout.
 
@@ -281,14 +314,14 @@ launches retain workspace trust; trust this repository when prompted.
 Stop old sessions before relaunching changed code. Empty windows offer a folder
 picker, subfolders resolve the nearest project, and startup errors appear in
 notifications and **View → Output → SpecSpec**. CLI and extension must both use
-JSON API 2. Legacy workspaces offer a confirmed **Migrate specification** action,
-but history is never migrated and dirty drafts never silently rebase.
+JSON API 3. Legacy workspaces offer a confirmed **Migrate specification** action,
+but history is never migrated and dirty drafts retain their original node records.
 
 Click a node to edit inside its expanded neighborhood card. **Save node** writes
 without approval metadata. **Retire**/**Restore** change withdrawal only. Distance is explained by color/legend, without on-node hop labels; child cards
 show all-depth downstream impact.
 **Total graph**/**Resume draft** preserve the same form, caret, and original
-fingerprint. **Color by** selects minimum distance, maximum distance, or existing node type. Git badges and
+node contents. **Color by** selects minimum distance, maximum distance, or existing node type. Git badges and
 withdrawn labels are separate; green arrows mean added relationships, not approval.
 
 Arrangement remains relation-derived and viewport-independent. Middle/background

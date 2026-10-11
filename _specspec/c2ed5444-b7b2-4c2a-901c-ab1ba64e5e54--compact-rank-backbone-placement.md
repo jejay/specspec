@@ -5,7 +5,6 @@ parents:
 - cbcde9ec-5c0b-480e-9401-cf50a4bfeb96
 - 4254f33d-ce29-4e33-830e-28a8edd2a51c
 - fbaee7c1-4c20-47ab-afd2-ae0503d428b5
-managed_hash: 5792b539457ba10cb392f10784195b4350356934d2985aa7d5ec5700142dd873
 ---
 # Compact placement without discarding multi-parent relationships
 

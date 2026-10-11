@@ -61,26 +61,26 @@ specspec update <requirement-id> --body revised-requirement.md
 specspec context <requirement-id> --json
 ```
 
-`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `retire` and `restore` take multiple explicitly named IDs; withdrawal dependency rules apply to the resulting batch. There is no approval status or `accept` command. Mutations support `--expect <fingerprint>` and `--json`.
+`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `retire` and `restore` take multiple explicitly named IDs; withdrawal dependency rules apply to the resulting batch. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
 
-Do not edit `_specspec` files directly. The CLI validates the candidate graph and maintains integrity hashes. Read commands never refresh these hashes. An unmanaged body/metadata edit causes validation failure; restore the file from Git or undo the edit and apply it through `update`.
+The CLI and graph editor are recommended, but manual `_specspec` Markdown edits are allowed. Validation checks actual schema and graph consistency, not how the files were edited. There are no stored `managed_hash` markers or graph fingerprints. Valid manual changes need no repair or provenance acknowledgement.
 
 The flat `_specspec` directory contains nodes only. Global `format_version` metadata belongs on the manifesto. Runtime locks, staging files, and recovery journals live in the ignored `.specspec-local` directory. Do not delete an unfinished journal: run `specspec recover`. Use `recover --force-lock` only after confirming that no writer is running.
 
 ## Schema and withdrawal
 
-Format 2 has no `status` field. Ordinary nodes have no stored review stage; optional `retired: true` marks a withdrawn explanation retained as history. The manifesto cannot be retired, and live nodes cannot depend on retired parents. `specspec restore ID` reverses withdrawal; it does not declare approval.
+Format 3 has no `managed_hash` or `status` field. Ordinary nodes have no stored review stage; optional `retired: true` marks a withdrawn explanation retained as history. The manifesto cannot be retired, and live nodes cannot depend on retired parents. `specspec restore ID` reverses withdrawal; it does not declare approval.
 
-Version-one graphs and old Git revisions remain readable. The reader verifies the original hashes, maps legacy retirement to withdrawal, and does not expose proposed/accepted labels. Convert an older workspace explicitly before editing:
+Version-one/two graphs and old Git revisions remain readable. The reader ignores obsolete hash fields, maps legacy retirement to withdrawal, and does not expose proposed/accepted labels. Convert an older workspace explicitly before editing:
 
 ```sh
 specspec list --json
-specspec migrate --expect <displayed-fingerprint> --json
+specspec migrate --json
 specspec list --live --json
 specspec list --retired --json
 ```
 
-Migration journals the complete conversion, preserves IDs, paths, body bytes, dependencies, references, extensions, and unaffected comments, and refuses stale or unmanaged input. An interrupted conversion uses the normal `recover` workflow. Repeating migration is a no-op. The shared JSON API is now **version 2**; upgrade the CLI and extension together.
+Migration journals the complete conversion, preserves IDs, paths, body bytes, dependencies, references, extensions, and unaffected comments, and rejects structurally invalid input. An interrupted conversion uses the normal `recover` workflow. Repeating migration is a no-op. The shared JSON API is now **version 3**, without fingerprints or managed hashes; upgrade the CLI and extension together.
 
 ## Git
 
@@ -92,9 +92,9 @@ specspec diff --base HEAD --json
 specspec diff --base <older-commit> --target <newer-commit> --json
 ```
 
-The pre-commit hook validates the **staged** node blobs, including integrity and graph relationships. It does not confuse unstaged edits with the contents being committed. Installation refuses existing hooks and respects `core.hooksPath`; chain `specspec --root <project> hook check` manually when another hook already exists. The installed hook uses the Python environment from installation, which must remain available; reinstall it after moving environments.
+The pre-commit hook validates the **staged** node blobs, including schema and graph relationships. It does not confuse unstaged edits with the contents being committed. Installation refuses existing hooks and respects `core.hooksPath`; chain `specspec --root <project> hook check` manually when another hook already exists. The installed hook uses the Python environment from installation, which must remain available; reinstall it after moving environments.
 
-Hooks and integrity hashes guard against accidents, not adversarial modification or proof of review. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
+Hooks guard against inconsistent graphs, not manual edits, adversarial modification, or proof of review. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
 
 ## VS Code extension
 
@@ -135,7 +135,11 @@ Click a node to open its **neighborhood view**: compact parents to the left, com
 
 Nodes no longer repeat hop-distance labels; the selected color legend explains that context. Child cards still show **N downstream**: the entire reachable descendant subgraph, including every deeper generation, excluding that child and deduplicating shared nodes. Different child totals may overlap; this is potential-impact context rather than guaranteed invalidation.
 
-The webview supports node creation, binding-text/parent/source editing, explicit withdrawal/restoration, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. It uses the Python CLI for all writes. Historical comparison views are read-only. Legacy workspaces offer **Migrate specification** before editing; dirty drafts must be discarded first and never silently acquire a newer fingerprint. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
+The webview supports node creation, binding-text/parent/source editing, explicit withdrawal/restoration, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. It uses the Python CLI for all writes. Historical comparison views are read-only. Legacy workspaces offer **Migrate specification** before editing; dirty drafts must be discarded first and never silently lose their original node contents. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
+
+**Markdown synchronization:** both hosts reload on file-watcher notifications, coalescing bursts and briefly retrying incomplete saves. Polling is **off by default**. Enable it in VS Code with `"specspec.pollIntervalMs": 5000`, or in Electron with `--poll-interval-ms 5000` / `SPECSPEC_POLL_INTERVAL_MS=5000`; `0` disables it. Watchers remain enabled. Explicit Refresh is always available; watcher-only delivery depends on the OS/filesystem and is not guaranteed on every network/mounted drive.
+
+Clean forms update automatically. Dirty drafts keep their text, caret, camera, and original node record; unrelated changes don't block saving. Saving over an externally changed node asks for confirmation. Deleted-node drafts remain copyable. Invalid files leave the last valid graph clearly marked out of date, with mutations disabled until a valid reload; they are never silently repaired. CLI transactions still use locks, original-byte checks and recovery, without assuming external editors honor locks.
 
 Layout and navigation reuse locally bundled Dagre and D3 libraries, not a Blender engine port or a remote renderer. `npm run compile` builds the offline browser bundle and its license notices. See [the library rationale](docs/node-canvas.md).
 
@@ -147,7 +151,7 @@ Run `npm --prefix graph-ui-common test` for the shared renderer/session/camera/l
 guarded host-session source. VS Code and the initial [Electron adapter](electron/README.md)
 build the same offline assets. No React rewrite, renderer fork, or duplicate canonical
 mutation engine is introduced. Drafts/cameras are scoped per project; a renderer reload
-retains original draft fingerprints.
+retains the original node contents alongside each draft, without hashes.
 
 ```sh
 npm --prefix graph-ui-common ci

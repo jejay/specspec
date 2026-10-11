@@ -11,7 +11,6 @@ sources:
   symbol: seven manual-plan tests
 - path: history/personal-v1.json
   symbol: real version-one demo export
-managed_hash: 683503c6edb8704663f8ff0f3e3afec2c4a70ec272939aef2d23527bf28b5822
 retired: true
 ---
 # Implement independent inclusive calendar dates

@@ -44,7 +44,6 @@ sources:
   symbol: common real-host tests
 - path: electron/test-host/run.cjs
   symbol: desktop lifecycle/mutation evidence
-managed_hash: 90f22a2394339856f18e42be0d91fd07e08c639847aaf6b9e10019d6b876835e
 ---
 # Check and document this repository's approval-free graph
 
@@ -155,3 +154,29 @@ original checkpoints, not current totals or an implicit approval ceremony.
 
 
 Final artifact checks passed: the self-contained 83-KiB VSIX and Windows portable ASAR contain current shared renderer/template/session bytes, branded assets and project/dependency licenses, without test screenshots, private diagnostics or node_modules. The actual portable executable passed the full real canvas/save/stale/reload/history checks. Final VS Code verified a 66-node target plus one removed overlay (67 displayed). Camera return assertions compare the most recent explicit framing, preserving strict geometry checks despite progress chrome changing available height. The desktop read test waits for completed-render acknowledgement before inspecting canonical files during a journaled write, and polls real revision/reload completion rather than assuming short fixed delays. These corrections strengthen the harness, not canonical review policy.
+
+
+## Hash-free Markdown synchronization revision
+
+The later manual-edit intention and separate hash-free/watcher conclusion supersede
+all earlier API-2/fingerprint/stale-hash claims in this record. Current code uses
+API/format 3, no managed_hash or fingerprint gate, and permits valid manual edits.
+Original detailed test counts and packaged-host evidence above remain historical,
+not claims of re-running every old package or platform against this revision.
+
+GraphSession coalesces watcher events, retries failed reads twice, compares records
+directly and validates current files before UI writes. Render sequence/full-membership
+checks remain without fingerprint acknowledgements. Dirty drafts retain original
+node records/caret/camera; unrelated changes permit saving, same-node overwrites ask
+confirmation, and deletion/invalid files preserve copyable drafts. Invalid reloads
+mark the last valid graph out of date and disable mutations until a valid reload.
+VS Code watches directory/files; Electron's shared GraphWatcher also watches the
+parent and reattaches after canonical-directory recreation. Optional configurable
+polling defaults to zero/off and is disposed with sessions. No silent fallback,
+universal event-delivery guarantee or adversarial race-free writes are claimed.
+
+The independent Gantt working graph was migrated without changing body/relationship
+semantics. Its original CLI receipts/Git commits are retained verbatim. The history
+verifier now reconstructs records and compares actual contents directly; archived
+hash strings are opaque receipt labels, not a current hash algorithm or edit gate.
+See the separate current implementation record for source links and final checks.

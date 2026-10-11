@@ -12,7 +12,6 @@ sources:
   symbol: resvg 256px original-brand render
 - path: branding/README.md
   symbol: derivation, resvg commands and original preservation
-managed_hash: 15b9eea5ee848eba7fbb9419e7f2215f8adea732b5be8d4a785e02cb8276ba74
 ---
 # Import the brand and render a minimal themed dog icon
 

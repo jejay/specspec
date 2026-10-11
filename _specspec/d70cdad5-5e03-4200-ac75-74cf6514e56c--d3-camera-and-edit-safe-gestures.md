@@ -5,7 +5,6 @@ parents:
 - 18d1da0d-8bc3-4d58-8720-8ce194a74d1b
 - a723adc8-d69d-4e60-8b4f-0997ab8f4d1d
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
-managed_hash: c0dac805e887eeaf93899f0bc0947cb208b22b4a6f0ce2b75970ce31b2110f98
 ---
 # Use a separate D3 camera for an unbounded editing surface
 
@@ -16,7 +15,7 @@ wheel/pinch zoom, middle-button pan, background drag, and explicit zoom/frame
 controls. Provide keyboard equivalents without stealing native text editing.
 
 Preserve independent overview/focus camera state in the webview, alongside drafts
-and their original fingerprints. Back restores the overview camera; refresh and
+and their original node contents. Back restores the overview camera; refresh and
 resizing must not silently refit or reset navigation. Explicit framing is a camera
 action, not graph reflow. Adapt smooth transitions to reduced-motion preferences.
 

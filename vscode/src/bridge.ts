@@ -18,7 +18,6 @@ export interface SpecNode {
 }
 
 export interface Snapshot {
-  fingerprint: string;
   format_version: number | null;
   nodes: SpecNode[];
   edges: [string, string][];

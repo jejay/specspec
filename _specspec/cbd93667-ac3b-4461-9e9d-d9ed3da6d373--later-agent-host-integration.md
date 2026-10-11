@@ -4,7 +4,6 @@ type: requirement
 parents:
 - 5563649e-f76e-4c59-8e1d-52f60be938ee
 - c0943883-e3cb-4de9-8c5e-6aeb4a37dd06
-managed_hash: 21369a9a512cea0e574e1cfe441f752e991ca174d1c15fb1a72efd0696979752
 ---
 # Leave room for later Claude Code and Codex integration
 

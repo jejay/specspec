@@ -13,7 +13,6 @@ sources:
 - path: tests/test_core.py
 - path: tests/test_core.py
   symbol: test_withdrawal_batches_are_explicit_and_are_not_approval
-managed_hash: 5dae50d9b12b8f31c526e3e61e24daf83814c734c81cc8eb216f5459f2fdca1d
 ---
 # Index and validate the requirement DAG without approval gates
 

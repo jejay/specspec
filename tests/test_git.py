@@ -31,7 +31,7 @@ def test_index_validation_checks_partial_staging(workspace):
     node = load_snapshot(root).graph.nodes[manifesto]
     path = root / node.path
     valid_bytes = path.read_bytes()
-    path.write_bytes(valid_bytes.replace(b"intentions", b"conclusions"))
+    path.write_bytes(valid_bytes.replace(b"parents: []", b"parents: invalid"))
     # Unstaged corruption must not break validation of the already valid index.
     assert git_snapshot(root, staged=True).valid
     git(root, "add", "_specspec")
@@ -39,7 +39,7 @@ def test_index_validation_checks_partial_staging(workspace):
     # A repaired worktree must not mask a corrupt staged version.
     path.write_bytes(valid_bytes)
     staged = git_snapshot(root, staged=True)
-    assert any(d.code == "INTEGRITY" for d in staged.diagnostics)
+    assert any(d.code == "SCHEMA" for d in staged.diagnostics)
 
 
 def test_commit_diffs_removed_edges_and_renames(workspace):
@@ -103,13 +103,15 @@ def test_hook_installer_preserves_hooks_and_respects_config(workspace):
     git(root, "commit", "--allow-empty", "-m", "Hook passed")
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    (root / node.path).write_bytes(snapshot.files[node.path].replace(b"intentions", b"edited"))
+    (root / node.path).write_bytes(
+        snapshot.files[node.path].replace(b"parents: []", b"parents: invalid")
+    )
     git(root, "add", "_specspec")
     result = subprocess.run(
         ["git", "-C", str(root), "commit", "-m", "Should fail"], capture_output=True
     )
     assert result.returncode != 0
-    assert b"INTEGRITY" in result.stderr + result.stdout
+    assert b"SCHEMA" in result.stderr + result.stdout
 
 
 def test_nested_project_paths(workspace):

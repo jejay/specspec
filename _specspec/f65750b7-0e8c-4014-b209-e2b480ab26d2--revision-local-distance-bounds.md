@@ -6,7 +6,6 @@ parents:
 - 2f6ee5bd-9014-4a0c-8677-53ecbab93f92
 - 4d1f2eee-8125-4e3f-b9b4-649517875d87
 - 51c3e963-674e-4d5d-bd7a-b8d63649e1c8
-managed_hash: 0e9cdf1672f8f839b9798f3a72ecc9e845a3d8b24e919fdf71c8b0d3f0bdda0a
 ---
 # Derive minimum and maximum directed path lengths per revision
 
@@ -29,7 +28,7 @@ maximum preference, retaining node-type coloring and obsolete-status fallback.
 Use one palette indexed by the selected distance and explain shortest/longest paths
 in the legend. Remove all on-node hop-distance badges/text, including focused
 parent and expanded cards. Retain downstream, Git, and withdrawn labels. No color
-switch changes node records, drafts/caret/fingerprints, camera, routing, or positions.
+switch changes node records, drafts/caret/original node contents, camera, routing, or positions.
 
 Test unequal paths, multiple parents, deep iterative traversal, repeated edges,
 unreachable/defensive cycles, revision isolation, both legends/preferences,

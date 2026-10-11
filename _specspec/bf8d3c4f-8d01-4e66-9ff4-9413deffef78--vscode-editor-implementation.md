@@ -99,7 +99,6 @@ sources:
   symbol: Activity Bar mask
 - path: graph-ui-common/media/graph.css
   symbol: git title/corner tokens and narrow host chrome
-managed_hash: 4d55ed544ec9b741a0591a555f7bf3e2a1fc4e29dfda23e36888fb1ad23b8723
 ---
 # Display, navigate, edit, and compare graphs through the CLI
 
@@ -321,3 +320,41 @@ sidebar hover and complete geometry/path metrics. Sidebar and miniature icon
 screenshots were inspected. Prior 51-node/full-editor-tab evidence remains historical,
 not a claim that today's surface or counts were tested then. Native project/revision
 pickers and complete manual workflows remain distinct from dispatched tests.
+
+
+## Hash-free Markdown synchronization revision
+
+The later manual-edit intention and separate hash-free/watcher conclusion supersede
+all earlier API-2/fingerprint/stale-hash claims in this record. Current code uses
+API/format 3, no managed_hash or fingerprint gate, and permits valid manual edits.
+Original detailed test counts and packaged-host evidence above remain historical,
+not claims of re-running every old package or platform against this revision.
+
+GraphSession coalesces watcher events, retries failed reads twice, compares records
+directly and validates current files before UI writes. Render sequence/full-membership
+checks remain without fingerprint acknowledgements. Dirty drafts retain original
+node records/caret/camera; unrelated changes permit saving, same-node overwrites ask
+confirmation, and deletion/invalid files preserve copyable drafts. Invalid reloads
+mark the last valid graph out of date and disable mutations until a valid reload.
+VS Code watches directory/files; Electron's shared GraphWatcher also watches the
+parent and reattaches after canonical-directory recreation. Optional configurable
+polling defaults to zero/off and is disposed with sessions. No silent fallback,
+universal event-delivery guarantee or adversarial race-free writes are claimed.
+
+The independent Gantt working graph was migrated without changing body/relationship
+semantics. Its original CLI receipts/Git commits are retained verbatim. The history
+verifier now reconstructs records and compares actual contents directly; archived
+hash strings are opaque receipt labels, not a current hash algorithm or edit gate.
+See the separate current implementation record for source links and final checks.
+
+
+## Installed VS Code recheck before the authorized commit
+
+The user requested another real VS Code run after the earlier executable-update
+block. All 29 editor adapter tests and the installed Windows host smoke now pass,
+including complete 69-node target/70-node display rendering, watcher-only manual
+Markdown synchronization, deliberate invalid-file diagnostics/recovery without
+rewriting those files, and preserved drafts/caret/camera/native controls. Both real
+working graphs are valid with warnings as errors; deliberately malformed fixtures
+are disposable and restored. No Linux/macOS or remote-CI run is inferred. See the
+hash-free-markdown-sync implementation record for the current complete evidence.

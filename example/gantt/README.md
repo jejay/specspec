@@ -84,7 +84,10 @@ python -m specspec --root example/gantt diff --base f54142a --target 95be927 --j
 
 From this folder an installed `specspec` discovers its nearest `_specspec/`, not the
 parent graph. Open **this folder** in VS Code to explore it with SpecSpec. Canonical
-Markdown is CLI-managed; don't reinitialize it or edit frontmatter/hash fields.
+Markdown editing through the CLI/UI is recommended; don't reinitialize this graph.
+The working graph is now format 3 with no hashes. Manual edits are allowed if schema
+and relationships remain valid. Archived API-2 receipts retain their original hash
+strings and --expect arguments as historical evidence, not current requirements.
 
 ## Checks
 

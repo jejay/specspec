@@ -24,7 +24,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 
 ## Separation of responsibilities
 
-- **Python** validates schemas, withdrawal, links, fingerprints, and writes.
+- **Python** validates schemas, withdrawal, links, and writes.
 - **Dagre** produces a left-to-right presentation from stable ordered IDs,
   intrinsic sizes, and relationships; no viewport size. Reversed input and its
   RL longest-path ranker produce **earliest source ranks**, rather than drawing
@@ -68,7 +68,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   replacing native text. Browser/OS antialiasing and large-graph performance remain
   platform-dependent; this is not a universal text-quality/performance proof.
 - **Native forms** retain text editing, selection, scrolling, resize, keyboard
-  controls, drafts, and original stale-context fingerprints. Camera gestures are
+  controls, drafts, and original node records for overwrite-conflict confirmation. Camera gestures are
   excluded from settings controls. Navigation alone sends no mutation commands.
 - **Connection hover** temporarily emphasizes both SVG pieces of each immediate
   incoming/outgoing relationship. Theme-aware ink mixing and pair ordering improve

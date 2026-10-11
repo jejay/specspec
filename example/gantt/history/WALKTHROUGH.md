@@ -3,7 +3,9 @@
 All commands below are from the SpecSpec repository root with the development
 Python environment active. These are inspection commands; canonical changes have
 already happened. The recorded CLI argv/stdin in `cli.jsonl` are receipts, **not** a
-script to replay against an existing graph. IDs and fingerprints are real snapshots.
+script to replay against an existing graph. IDs and API-2 fingerprint strings are
+original historical receipts. The current format/API 3 uses no hashes or --expect;
+the verifier reconstructs node contents directly, without calculating fingerprints.
 
 ## Find the commits
 
@@ -59,16 +61,17 @@ cloud, authentication, or resource-optimization evidence.
 ## How the managed edits were performed
 
 For a new project, the agent starts with a supplied manifesto body and `init`.
-For each intention or separate conclusion it displays a fresh snapshot, then:
+For each intention or separate conclusion it reads the graph context, then uses
+these current hash-free commands (the archived API-2 receipts used --expect):
 
 ```sh
 # Illustrative placeholders, not commands to paste into this existing example:
 python -m specspec --root <project> add --parent <id> --slug <summary> \
-  --body <body-file> --expect <displayed-fingerprint> --json
+  --body <body-file> --json
 python -m specspec --root <project> context <new-id> --json
 python -m specspec --root <project> impact <obsolete-intention-id> --json
 python -m specspec --root <project> retire <complete-obsolete-dependent-set> \
-  --expect <fresh-fingerprint> --json
+  --json
 ```
 
 Meaningful choices have their own requirement nodes and explanatory origins;

@@ -13,12 +13,12 @@ function open(t, scope, get, set) {
 test('the VS Code port preserves dirty drafts across project switches without sharing them', t => {
   let saved;
   const a = open(t, '/a', () => saved, value => { saved = value; });
-  a.setState({ dirty: true, formFingerprint: 'old-a', draft: { body: '# A' } });
+  a.setState({ dirty: true, originalNode: { id: 'a', body: '# Original A' }, draft: { body: '# A' } });
   const b = open(t, '/b', () => saved, value => { saved = value; }); assert.equal(b.getState(), undefined);
-  b.setState({ dirty: true, formFingerprint: 'old-b', draft: { body: '# B' } });
+  b.setState({ dirty: true, originalNode: { id: 'b', body: '# Original B' }, draft: { body: '# B' } });
   const again = open(t, '/a', () => saved, value => { saved = value; });
-  assert.equal(again.getState().formFingerprint, 'old-a'); assert.equal(again.getState().draft.body, '# A');
-  assert.equal(saved.projects['/b'].formFingerprint, 'old-b');
+  assert.equal(again.getState().originalNode.body, '# Original A'); assert.equal(again.getState().draft.body, '# A');
+  assert.equal(saved.projects['/b'].originalNode.body, '# Original B');
 });
 test('pre-extraction single-project drafts keep their old fingerprint through port migration', t => {
   let saved = { dirty: true, formFingerprint: 'legacy', draft: { body: '# Unfinished' } };

@@ -5,8 +5,9 @@ Do not initialize it again, create a nested repository, or edit canonical Markdo
 Run the installed CLI from here, or `python -m specspec --root example/gantt ...`
 from the repository root. The parent project's agent instructions also apply.
 
-Read `_specspec` via `list`, `context`, and `impact` before changing code. Use fresh
-`--expect` fingerprints with `add`, `update`, and `retire`. Intentions and conclusions
+Read `_specspec` via `list`, `context`, and `impact` before changing code. Use
+`add`, `update`, and `retire` for this checkout; format/API 3 has no `--expect` or
+fingerprints. Manual changes are permitted by the product, not recommended. Intentions and conclusions
 are distinguished by reasoning/relationships, not approval statuses. Withdraw the
 complete obsolete dependent branch, retaining its explanations and original IDs.
 

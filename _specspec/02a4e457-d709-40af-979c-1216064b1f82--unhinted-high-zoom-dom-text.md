@@ -5,7 +5,6 @@ parents:
 - a723adc8-d69d-4e60-8b4f-0997ab8f4d1d
 - d70cdad5-5e03-4200-ac75-74cf6514e56c
 - 2b8a4bbc-d15a-4347-90b4-691abdeefaef
-managed_hash: 3ed7359ab283f84720950bd6575a5cce751de268088017357fe379ddf5197355
 ---
 # Let native headline text rasterize at the current camera scale
 

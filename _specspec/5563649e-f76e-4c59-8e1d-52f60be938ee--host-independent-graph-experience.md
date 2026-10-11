@@ -4,7 +4,6 @@ type: requirement
 parents:
 - adb5a4c8-f9c5-4bcc-b38b-8584d469cf25
 - 003d697b-4104-4fdf-8e05-0db572c436d0
-managed_hash: bfda54bc417b3989989beaf3e4266a5356e0cf5230d44677c27923b0a81cd80a
 ---
 # Use the same graph experience in editors and standalone windows
 

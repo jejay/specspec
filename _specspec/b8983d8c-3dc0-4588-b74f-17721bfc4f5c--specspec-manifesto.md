@@ -2,8 +2,7 @@
 id: b8983d8c-3dc0-4588-b74f-17721bfc4f5c
 type: manifesto
 parents: []
-format_version: 2
-managed_hash: 83724d64e210e37965b18a2723ad2fe28d86f1c3f5f2aaf061d2c81845908e1b
+format_version: 3
 ---
 # Keep intentions distinct from revisable conclusions
 

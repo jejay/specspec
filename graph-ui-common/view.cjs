@@ -17,6 +17,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <span id="revision"></span></header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>
+    <p id="sync-notice" role="status" hidden>Displayed graph is out of date. Fix the Markdown files and refresh; graph changes are disabled.</p>
     <p id="schema-notice" class="form-help" hidden></p>
     <details id="linked-sources" hidden><summary id="source-summary"></summary><ul id="source-files"></ul></details>
     <div class="canvas-shell"><main id="viewport" tabindex="0" aria-label="Specification node canvas" aria-describedby="canvas-help"><div id="graph">

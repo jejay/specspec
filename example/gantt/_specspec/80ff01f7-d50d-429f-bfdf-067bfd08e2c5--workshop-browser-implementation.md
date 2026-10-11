@@ -17,7 +17,6 @@ sources:
   symbol: isolated real Chromium UI/file/storage smoke test
 - path: package.json
   symbol: zero-install test scripts
-managed_hash: eedc3a57e8337e900b392b26eaeb90b8681143ba4c47fba06b76fb6500b7f234
 ---
 # Implement a native local Gantt editor with real browser evidence
 

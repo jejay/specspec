@@ -7,7 +7,6 @@ parents:
 - cb024fe9-de72-4b31-87d6-4d461c8b370c
 - 5570ff3f-8b6e-4675-b24a-a6a93cbecf2f
 - 24a54dea-6e0b-4a6c-8f62-4f760769dc5d
-managed_hash: aa88178ffe1a04908ea31672a4610b042449b803560588fbe7e0a8db0c36a43b
 ---
 # Use a native local DOM chart and forms
 

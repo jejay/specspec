@@ -1,23 +1,28 @@
 /* Local desktop host. All canonical operations remain in the shared Python bridge. */
 const { app, BrowserWindow, dialog, ipcMain, protocol, Menu } = require('electron');
 const { join, resolve } = require('node:path');
-const { readFileSync, watch } = require('node:fs');
+const { readFileSync } = require('node:fs');
 const { randomBytes } = require('node:crypto');
 const { APP_URL, assetName, trustedSender, validMessage, webPreferences } = require('./security.cjs');
 const { PresentationStore } = require('./store.cjs');
-const { GraphSession } = require('./build/common/host/session.cjs');
+const { resolveExecutable } = require('./launch.cjs');
+const { GraphSession, pollInterval } = require('./build/common/host/session.cjs');
+const { GraphWatcher } = require('./build/common/host/watch.cjs');
 const { invoke } = require('./build/common/host/cli.cjs');
 const { findProjectRoot } = require('./build/common/host/project.cjs');
 const { graphHtml } = require('./build/common/view.cjs');
-const { renderMatches } = require('./build/media/graph-model.js');
+const { renderMatches, sameNode } = require('./build/media/graph-model.js');
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'specspec', privileges: { standard: true, secure: true, supportFetchAPI: false } }]);
 const option = name => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 if (option('--profile')) app.setPath('userData', resolve(option('--profile')));
 let window, root, graph, store, watcher, generation = randomBytes(16).toString('hex');
 let selection = Promise.resolve(); const prompts = new Map();
-const python = option('--python') || process.env.SPECSPEC_PYTHON;
-const command = python || process.env.SPECSPEC_COMMAND || 'specspec';
+const launchDirectory = process.cwd();
+const polling = pollInterval(Number(option('--poll-interval-ms') ?? process.env.SPECSPEC_POLL_INTERVAL_MS ?? 0));
+const pythonSetting = option('--python') || process.env.SPECSPEC_PYTHON;
+const python = pythonSetting ? resolveExecutable(pythonSetting, launchDirectory) : undefined;
+const command = python || resolveExecutable(process.env.SPECSPEC_COMMAND || 'specspec', launchDirectory);
 const prefix = python ? ['-m', 'specspec'] : JSON.parse(process.env.SPECSPEC_ARGS || '[]');
 if (!Array.isArray(prefix) || prefix.some(v => typeof v !== 'string')) throw new Error('SPECSPEC_ARGS must be a JSON string array.');
 function post(value) { if (window && !window.isDestroyed()) window.webContents.send('specspec:host', value); }
@@ -41,13 +46,13 @@ async function loadProject(next) {
     graph = new GraphSession({
       authorized: () => root === scope && !window.isDestroyed(),
       cli: (args, input) => { console.log(`CLI: ${command} ${[...prefix, ...args].join(' ')}`); return invoke(command, prefix, scope, args, input); },
-      post, log: text => console.log(text), renderMatches, revisions,
+      post, log: text => console.log(text), renderMatches, sameNode, revisions,
       confirm: async message => (await dialog.showMessageBox(window, { type: 'warning', message,
         buttons: ['Cancel', 'Confirm'], defaultId: 0, cancelId: 0, noLink: true })).response === 1,
     });
-    // Canonical file notifications supplement explicit refresh; no auto-stage/commit.
-    try { watcher = watch(join(root, '_specspec'), () => graph?.scheduleRefresh()); watcher.on('error', error); }
-    catch (failure) { error(failure); }
+    const session = graph;
+    session.configurePolling(polling);
+    watcher = new GraphWatcher(scope, () => session.scheduleRefresh(), failure => session.warn(failure));
     window.setTitle(`SpecSpec — ${root}`);
   } else { graph = undefined; window.setTitle('SpecSpec — Open a project'); }
   await window.loadURL(APP_URL);

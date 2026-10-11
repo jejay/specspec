@@ -7,7 +7,6 @@ parents:
 - fc2a2b2f-a7b0-4980-87d9-4f57101445a2
 - 24a54dea-6e0b-4a6c-8f62-4f760769dc5d
 - 928060fa-c02d-46dd-b823-b002bcf41353
-managed_hash: 459ef17c5d3be439e584f17bd39e85495f4169ab1461f1c91130af1e4871e69c
 ---
 # Version the workshop file and preview legacy conversion
 

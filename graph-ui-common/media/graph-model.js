@@ -13,6 +13,19 @@
   const TYPE_COLORS = { manifesto: '#6699ee', requirement: '#43b5b0', implementation: '#a786eb' };
   const DEPTH_COLORS = ['#6699ee', '#a786eb', '#43b5b0', '#dd9b48', '#dc7aab', '#84b466', '#7d9ed2'];
 
+  function sameNode(left, right) {
+    if ([left, right].some(node => !node || typeof node.body !== 'string'
+      || !Array.isArray(node.parents) || !Array.isArray(node.sources)
+      || node.sources.some(source => !source || typeof source.path !== 'string'))) return false;
+    const sorted = value => Array.isArray(value) ? value.map(sorted)
+      : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])])) : value;
+    const contents = node => ({ id: node.id, type: node.type, retired: Boolean(node.retired),
+      body: node.body?.replace(/\r\n/g, '\n'), parents: [...(node.parents || [])].sort(),
+      sources: [...(node.sources || [])].sort((a, b) => compare(a.path, b.path) || compare(a.symbol || '', b.symbol || '')),
+      extensions: node.extensions || {}, format_version: node.format_version });
+    return JSON.stringify(sorted(contents(left))) === JSON.stringify(sorted(contents(right)));
+  }
+
   function displayGraph(state) {
     const nodes = new Map([...(state.diff?.base.nodes || []), ...state.snapshot.nodes].map(node => [node.id, node]));
     const added = new Set((state.diff?.added_edges || []).map(edge => JSON.stringify(edge)));
@@ -36,7 +49,6 @@
 
   function renderMatches(state, message) {
     const { nodes, edges } = displayGraph(state);
-    if (message.view === undefined) return message.nodeCount === nodes.size;
     if (!Array.isArray(message.visibleIds) || new Set(message.visibleIds).size !== message.visibleIds.length
       || message.visibleIds.some(id => !nodes.has(id))) return false;
     let expected;
@@ -254,5 +266,5 @@
 
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, DEPTH_COLORS,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS,
-    displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
+    sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
 });

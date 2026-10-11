@@ -14,7 +14,6 @@ from ruamel.yaml.tokens import AliasToken, AnchorToken, TagToken
 
 from .model import (
     FORMAT_VERSION,
-    HASH_RE,
     ID_RE,
     MAX_FILE_BYTES,
     NODE_TYPES,
@@ -32,7 +31,6 @@ FIELDS = {
     "format_version",
     "sources",
     "extensions",
-    "managed_hash",
 }
 
 
@@ -126,8 +124,11 @@ def parse_node(
         if not condition:
             errors.append(Diagnostic("SCHEMA", message, path))
 
-    check(type(version) is int and version in {1, FORMAT_VERSION}, "Unsupported format version.")
+    check(type(version) is int and version in {1, 2, FORMAT_VERSION}, "Unsupported format version.")
     fields = (FIELDS - {"retired"}) | {"status"} if version == 1 else FIELDS
+    if version in {1, 2}:
+        # Obsolete markers are ignored, not checked or exposed in the current API.
+        fields = fields | {"managed_hash"}
     check(all(isinstance(key, str) for key in data), "Frontmatter keys must be strings.")
     check(not (set(data) - fields), f"Unknown fields: {sorted(str(k) for k in set(data) - fields)}")
     node_id = data.get("id")
@@ -163,11 +164,6 @@ def parse_node(
         )
     else:
         check("format_version" not in data, "format_version belongs on the manifesto only.")
-    managed_hash = data.get("managed_hash")
-    check(
-        isinstance(managed_hash, str) and bool(HASH_RE.fullmatch(managed_hash)),
-        "managed_hash must be a SHA-256 hex digest; use the tool to create or edit nodes.",
-    )
     check(isinstance(body, str) and bool(body.strip()), "Node body must be non-empty text.")
     sources = data.get("sources", [])
     check(isinstance(sources, list), "sources must be an array.")
@@ -224,19 +220,14 @@ def parse_node(
         format_version,
         normalized_sources,
         extensions,
-        managed_hash,
-        legacy_status,
     )
 
 
 def serialize(node: SpecNode, original: bytes | None = None) -> bytes:
-    if node.legacy_status is not None:
-        raise SpecError([Diagnostic("MIGRATION", "Run specspec migrate before editing v1 nodes.")])
     data = read_document(original, node.path)[0] if original is not None else {}
     # Keep round-trip comments on untouched fields and omit empty optional fields.
-    # Validate caller-supplied data before hashing/sorting it (library callers
-    # can pass malformed inputs just as CLI callers can).
-    desired = parse_node(node.frontmatter(refresh_hash=False), node.body, node.path).frontmatter()
+    # Library callers can pass malformed inputs just as CLI callers can.
+    desired = parse_node(node.frontmatter(), node.body, node.path).frontmatter()
     for key in list(data):
         if key not in desired:
             del data[key]
