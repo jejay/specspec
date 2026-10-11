@@ -4,22 +4,22 @@ type: implementation
 parents:
 - 6MUwTIw=
 sources:
+- path: electron/test-host/run.cjs
+  symbol: shared canvas and desktop persistence/revisions
 - path: graph-ui-common/media/graph-model.js
   symbol: TYPE_COLORS, color
+- path: graph-ui-common/media/graph.css
+  symbol: shared card tints/text and hover-darkened paint
 - path: graph-ui-common/media/graph.js
   symbol: drawLegend, updateHoverAppearance, drawEdges, syncHover
-- path: graph-ui-common/media/graph.css
-  symbol: manifesto fill/text and hover-darkened card/curve/head paint
+- path: graph-ui-common/test-host/ui.cjs
+  symbol: checkHover paint and root dark/light/contrast CSS probes
 - path: graph-ui-common/test/graph-model.test.cjs
   symbol: fixed manifesto color regression
 - path: graph-ui-common/test/graph.test.cjs
   symbol: darkening membership, redraw, forms, history, drafts and legends
-- path: graph-ui-common/test-host/ui.cjs
-  symbol: checkHover paint and root dark/light/contrast CSS probes
 - path: vscode/test-host/run.cjs
   symbol: maintained Gantt and native document verification
-- path: electron/test-host/run.cjs
-  symbol: shared canvas and desktop persistence/revisions
 ---
 ## User correction after this implementation
 

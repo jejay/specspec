@@ -130,9 +130,14 @@ Nothing is saved in metadata or sent as a host mutation.
 
 The user requests a [light-gray manifesto](../_specspec/pWgqwcQ=light-gray-manifesto.md)
 and [darkening outside hovered relationships](../_specspec/RlFT4io=darken-outside-hover-neighborhood.md).
-The separate [rendering choice](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
-selects a solid neutral root in all color modes and interprets connected nodes as
-direct displayed neighbors, consistent with existing incident-link highlighting.
+The initial [rendering choice](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
+misinterpreted gray as a solid pale root. The [user correction](../_specspec/iktVTRU=consistent-gray-cards-and-roomier-markdown.md)
+and [shared-tint/readability choice](../_specspec/xCOHepQ=shared-card-tints-and-80-column-editing.md)
+keep the gray accent but restore ordinary theme text and shared card tints: the
+root is only modestly lighter than a dark canvas, with a white hover border like
+other cards. Expanded Markdown/revision-text areas are 860 world units wide for
+typical 80-column text; compact cards stay 264×112 with larger/heavier Git corners.
+Connected nodes still mean direct displayed neighbors, matching incident highlighting.
 Non-incident links darken even when both endpoints are neighbors. The root's base
 hue remains gray; it too darkens when unrelated to the hover. These are transient
 presentation changes, not selection, review scores, graph edits or new host forks.
@@ -142,7 +147,13 @@ real-host suites passed on maintained Gantt fixtures, including normal/minimum-z
 computed paint, CSS dark/light/high-contrast probes and unchanged geometry. Initial
 concurrent runs timed out; isolated reruns passed without weakening assertions.
 The [implementation/evidence record](../_specspec/BbLribU=neutral-manifesto-and-hover-darkening-implementation.md)
-links current code/tests, inspected Electron images and remaining verification limits.
+retains the earlier actual evidence with an explicit solid-root correction.
+Current host checks verify the shared tinted root/white border, 80-column text at
+13/14/16px fonts, enlarged Git-letter clearance and the existing routing/navigation
+invariants. The first screenshot-enabled VS Code run passed the full canvas but
+timed out in native-document checks; its unchanged isolated rerun passed.
+The [current implementation record](../_specspec/AXhpgds=shared-gray-tints-wide-text-and-bold-git-corners.md)
+links shared code, test evidence and font/platform limits.
 
 ## Minimum/maximum distance, spacing, and headline correction
 
@@ -252,7 +263,7 @@ Startup failures appear in notifications and **View → Output → SpecSpec**.
 
 Shared/editor/desktop unit suites and optional installed-host checks are documented
 in the README and host guides. Current local checks passed: 100 Python tests,
-105 shared UI tests, 34 VS Code adapter tests, nine desktop unit tests, Ruff and
+107 shared UI tests, 34 VS Code adapter tests, nine desktop unit tests, Ruff and
 both working validators. All Gantt stages/model tests, current receipts/history
 and the installed Chromium app smoke passed. Full Windows VS Code/Electron host
 checks pass on maintained Gantt fixtures, including native node-file lifecycle.

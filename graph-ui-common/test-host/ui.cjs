@@ -116,7 +116,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
       const cardPaint = () => evaluate(`([...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,
         darkened:c.classList.contains('hover-darkened'),filter:getComputedStyle(c).filter,
-        background:getComputedStyle(c).backgroundColor,accent:c.style.getPropertyValue('--node-accent')})))`);
+        background:getComputedStyle(c).backgroundColor,border:getComputedStyle(c).borderTopColor,
+        hovered:c.classList.contains('node-hovered'),accent:c.style.getPropertyValue('--node-accent')})))`);
       const before=await paint(), beforeCards=await cardPaint(), world=await positions(), transform=await camera();
       await evaluate(`window.__hoverPaths=[...document.querySelectorAll('#edges path')]`);
       await evaluate(`(() => {
@@ -148,6 +149,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
       for (const card of await cardPaint()) {
         const old=beforeCards.find(c=>c.id===card.id),darkened=!neighbors.has(card.id);
         assert.equal(card.darkened,darkened);assert.equal(card.filter,darkened?'brightness(0.45)':'none');
+        assert.equal(card.hovered,card.id===id);
+        if(card.id===id) assert.equal(card.border,'rgb(255, 255, 255)');
         assert.equal(card.accent,old.accent);
         if(card.id!==id) assert.equal(card.background,old.background);
       }
@@ -157,7 +160,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
       if(image) await screenshot(image);
       await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
       assert.deepEqual(await paint(),before,'Exiting hover restores computed paint and SVG order.');
-      assert.ok((await cardPaint()).every(c=>!c.darkened&&c.filter==='none'),'Exiting hover removes every card filter.');
+      assert.ok((await cardPaint()).every(c=>!c.darkened&&!c.hovered&&c.filter==='none'),'Exiting hover removes every card filter and hover class.');
       await evaluate(`delete window.__hoverPaths`);
     }
     async function restoreActualSize(pose) {
@@ -298,9 +301,13 @@ exports.checkUI = async function checkUI(port, options = {}) {
           await evaluate(`document.getElementById('color-mode').value=${JSON.stringify(mode)};document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
           assert.ok(await evaluate(`(() => {const c=document.querySelector('.card.manifesto'),s=getComputedStyle(c);
             const swatch=[...document.getElementById('legend').children].find(c=>/manifesto/i.test(c.textContent)).querySelector('i');
-            return c.style.getPropertyValue('--node-accent')==='#d3d3d3'&&s.backgroundColor==='rgb(211, 211, 211)'&&s.color==='rgb(32, 32, 32)'&&getComputedStyle(swatch).backgroundColor==='rgb(211, 211, 211)';})()`));
+            const probe=document.createElement('span');probe.style.background=${JSON.stringify(theme.includes('contrast')?'var(--vscode-editor-background)':'color-mix(in srgb, #d3d3d3 15%, var(--vscode-editor-background))')};probe.style.color='var(--vscode-foreground)';document.body.append(probe);
+            const matches=s.backgroundColor===getComputedStyle(probe).backgroundColor&&s.color===getComputedStyle(probe).color;probe.remove();
+            return matches&&c.style.getPropertyValue('--node-accent')==='#d3d3d3'&&getComputedStyle(swatch).backgroundColor==='rgb(211, 211, 211)';})()`));
         }
         await checkHover(hoverNode, undefined, theme==='vscode-light'?'hover-light-theme':undefined);
+        const rootId=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
+        await checkHover(rootId, undefined, theme==='vscode-dark'?'hover-gray-manifesto':undefined);
       }
     } finally {
       await evaluate(`document.body.className=${JSON.stringify(oldClass)};
@@ -329,7 +336,26 @@ exports.checkUI = async function checkUI(port, options = {}) {
     overviewCamera = await camera();
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.ok(await evaluate(`document.querySelector('#cards .expanded').contains(document.getElementById('editor'))`));
-    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.card.manifesto.expanded')).backgroundColor`), 'rgb(211, 211, 211)');
+    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`), 860);
+    const textFit = await evaluate(`(() => {
+      const body=document.getElementById('body'),pre=document.getElementById('before'),section=document.getElementById('before-section');
+      const original={value:body.value,text:pre.textContent,hidden:section.hidden,bodyFont:body.style.fontSize,preFont:pre.style.fontSize};
+      const results=[];
+      try {
+        section.hidden=false;
+        for(const size of [13,14,16]) {
+          body.style.fontSize=pre.style.fontSize=size+'px';
+          const span=document.createElement('span');span.style.cssText='position:absolute;white-space:pre;';span.style.font=getComputedStyle(body).font;span.textContent='M'.repeat(80);body.parentElement.append(span);
+          const inkWidth=span.offsetWidth;span.remove();
+          const s=getComputedStyle(body),available=body.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight);
+          pre.textContent='M';const height=pre.offsetHeight;pre.textContent='M'.repeat(80);
+          results.push({size,available,inkWidth,editorFits:inkWidth<=available,displayFits:pre.offsetHeight===height&&pre.scrollWidth<=pre.clientWidth});
+        }
+      } finally {body.value=original.value;pre.textContent=original.text;section.hidden=original.hidden;body.style.fontSize=original.bodyFont;pre.style.fontSize=original.preFont;}
+      return results;
+    })()`);
+    assert.ok(textFit.every(r=>r.editorFits&&r.displayFits),`80-column text must fit editor and display: ${JSON.stringify(textFit)}`);
+    await screenshot('roomier-markdown-root');
     assert.equal(await evaluate(`document.querySelectorAll('aside').length`), 0);
     const branch = await evaluate(`(() => { const cards = [...document.querySelectorAll('[data-relation="child"]')].sort((a,b) => Number(b.dataset.downstream)-Number(a.dataset.downstream)); return cards[0]?.dataset.nodeId; })()`);
     assert.ok(branch);
@@ -426,7 +452,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, light-gray manifesto and legends, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/white hover border, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

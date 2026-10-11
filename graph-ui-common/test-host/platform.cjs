@@ -8,9 +8,17 @@ function platformChecks(fixture, host) {
       const check = () => evaluate(`(() => {
         const cases=${JSON.stringify([[added,'A'],[modified,'M'],[removed,'D']])};
         return cases.map(([id,letter])=>{const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===id),mark=c?.querySelector('.git-corner'),head=c?.querySelector('strong,h2');
-          return {letter:mark?.textContent,expected:letter,title:getComputedStyle(head).color,marker:getComputedStyle(mark).color,label:mark?.getAttribute('aria-label')};});
+          const s=getComputedStyle(mark),box=mark.getBoundingClientRect(),bounds=c.getBoundingClientRect();
+          const overlaps=[head,c.querySelector('small'),...c.querySelectorAll('.badge')].filter(Boolean).some(e=>{const r=e.getBoundingClientRect();return r.left<box.right&&r.right>box.left&&r.top<box.bottom&&r.bottom>box.top;});
+          return {letter:mark?.textContent,expected:letter,title:getComputedStyle(head).color,marker:s.color,label:mark?.getAttribute('aria-label'),
+            size:s.fontSize,weight:s.fontWeight,width:c.offsetWidth,height:c.offsetHeight,
+            fits:box.left>=bounds.left&&box.right<=bounds.right&&box.top>=bounds.top&&box.bottom<=bounds.bottom&&!overlaps};});
       })()`);
-      for (const c of await check()) { assert.equal(c.letter,c.expected); assert.equal(c.title,c.marker); assert.match(c.label,/comparison base/); }
+      for (const c of await check()) {
+        assert.equal(c.letter,c.expected); assert.equal(c.title,c.marker); assert.match(c.label,/comparison base/);
+        assert.equal(c.size,'20px'); assert.equal(c.weight,'800');
+        assert.equal(c.width,264); assert.equal(c.height,112); assert.ok(c.fits,'Enlarged Git letters must fit without colliding or growing cards.');
+      }
       const world = await evaluate(`document.getElementById('graph').style.transform`);
       // Simulate live theme customizations without writing real VS Code settings.
       await evaluate(`document.documentElement.style.setProperty('--vscode-gitDecoration-addedResourceForeground','#12aa66');document.documentElement.style.setProperty('--vscode-editorGutter-modifiedBackground','#32aaff');document.documentElement.style.setProperty('--vscode-gitDecoration-deletedResourceForeground','#fa5555')`);

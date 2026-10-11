@@ -87,10 +87,39 @@ function assertPairedHighlights($) {
 }
 
 function assertDarkening($, cards, edges) {
+  assert.ok($('cards').querySelectorAll('.node-hovered').length <= 1);
+  assert.ok(!cards.some(id => $('cards').querySelector(`[data-node-id="${id}"]`).classList.contains('node-hovered')));
   assert.deepEqual([...$('cards').querySelectorAll('.hover-darkened')].map(c => c.dataset.nodeId).sort(), cards);
   assert.deepEqual([...$('edges').querySelectorAll('.link.hover-darkened')].map(p => `${p.dataset.parent}>${p.dataset.child}`).sort(), edges);
   assertPairedHighlights($);
 }
+
+test('all cards share transient hover state and only expanded text gets wider', t => {
+  const { dom, $, card } = hoverFixture(t);
+  assert.equal(model.CARD_WIDTH, 264); assert.equal(model.CARD_HEIGHT, 112);
+  assert.equal(model.DETAIL_WIDTH, 860);
+  for (const id of ['root', 'child', 'grand']) {
+    hoverEvent(dom, card(id));
+    assert.deepEqual([...$('cards').querySelectorAll('.node-hovered')].map(c => c.dataset.nodeId), [id]);
+    assert.equal(card(id).style.width, '264px'); assert.equal(card(id).style.height, '112px');
+    card(id).click(); hoverEvent(dom, $('body'));
+    assert.equal(card(id).style.width, '860px'); assert.ok(card(id).classList.contains('node-hovered'));
+    $('viewport').dispatchEvent(new dom.window.Event('pointerleave'));
+    assert.equal($('cards').querySelector('.node-hovered'), null);
+    $('back').click();
+  }
+});
+
+test('shared CSS keeps gray cards tinted and increases corner letters without compact-card growth', () => {
+  const css = readFileSync(join(__dirname, '../media/graph.css'), 'utf8');
+  assert.match(css, /\.card:hover, \.card\.node-hovered \{ background: color-mix/);
+  assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ border-color: #fff/);
+  assert.doesNotMatch(css, /\.card\.manifesto[^}]*background:/);
+  assert.doesNotMatch(css, /\.card\.manifesto[^}]*color:/);
+  assert.match(css, /\.git-corner \{[^}]*font-size: 20px; font-weight: 800/);
+  assert.match(css, /\.badges \{[^}]*padding-right: 26px/);
+  assert.match(css, /textarea, pre \{ font-family: var\(--vscode-editor-font-family, monospace\)/);
+});
 
 test('hover darkens only outside direct displayed neighbors, including the unrelated manifesto', t => {
   const { dom, $, card, snapshot, send } = hoverFixture(t);

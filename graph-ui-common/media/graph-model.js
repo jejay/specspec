@@ -6,7 +6,7 @@
   else root.SpecSpecGraph = api;
 })(globalThis, vendor => {
   'use strict';
-  const CARD_WIDTH = 264, CARD_HEIGHT = 112, DETAIL_WIDTH = 620;
+  const CARD_WIDTH = 264, CARD_HEIGHT = 112, DETAIL_WIDTH = 860;
   const RANK_GAP = 140, NODE_GAP = 44;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;

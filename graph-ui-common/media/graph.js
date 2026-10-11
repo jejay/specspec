@@ -109,6 +109,7 @@
       (incident ? highlighted : plain).push(pair);
     }
     for (const card of $('cards').children) {
+      card.classList.toggle('node-hovered', card.dataset.nodeId === hoveredNode);
       card.classList.toggle('hover-darkened', hovering && !neighbors.has(card.dataset.nodeId));
     }
     // Existing pairs only: highlight crossings without touching geometry/forms.

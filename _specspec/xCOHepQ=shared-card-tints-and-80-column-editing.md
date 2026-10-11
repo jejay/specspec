@@ -18,7 +18,7 @@ root-only color-shifting rule. Keep contrast-theme resting background/borders
 shared too, with the white hover border. Leave existing relationship emphasis,
 non-neighbor darkening, palette metrics and truthful gray legends intact.
 
-Increase fixed expanded world width from 620 to 820 units, leaving compact cards
+Increase fixed expanded world width from 620 to 860 units, leaving compact cards
 264 by 112. Give textarea and revision pre text the same host editor monospace
 font (fallback monospace) and editor font size (fallback 13px). Verify 80-column
 ASCII at representative 13/14/16px fonts in the installed browser, both editor and
@@ -39,3 +39,7 @@ expanded width, native editor/caret/geometry, actual 80-column fitting and enlar
 Git corners. Record the earlier solid-gray evidence as superseded history, not
 proof the user requested that appearance. No host renderer fork, canonical UI
 metadata, text reformatting, or permanent compositor hint is introduced.
+
+Width tuning: use 860 rather than the initial 820-unit candidate to retain margin
+for textarea padding and a vertical scrollbar at representative 16px monospace
+fonts. Actual 80-column fit passes in both installed host browsers.
