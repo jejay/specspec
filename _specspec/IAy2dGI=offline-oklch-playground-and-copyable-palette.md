@@ -32,3 +32,10 @@ matching. These are suggestions, not an approval or production mutation. Validat
 Verify default output matches current table, interpolation/gamut behavior, exports,
 reset, invalid edits and actual standalone browser startup. Perception/display and
 hover gamut limits remain revisable; this tool does not certify accessibility.
+
+## Manifesto sample shape
+
+Dn6Ult8= changes production node roundness only. Follow AZbsoEA= for a 150px
+square/50%-radius gray manifesto preview, preserving the standalone palette,
+selection priority, exports and parameter defaults. Other distance samples remain
+generic tinted cards, not an additional production node-type configuration.

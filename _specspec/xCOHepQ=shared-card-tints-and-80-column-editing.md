@@ -44,3 +44,12 @@ metadata, text reformatting, or permanent compositor hint is introduced.
 Width tuning: use 860 rather than the initial 820-unit candidate to retain margin
 for textarea padding and a vertical scrollbar at representative 16px monospace
 fonts. Actual 80-column fit passes in both installed host browsers.
+
+## Later type-shape revision
+
+Dn6Ult8= changes roundness only, with AZbsoEA= choosing type radii
+and a genuinely circular manifesto in compact/expanded views. The earlier all-card
+compact dimensions and expanded outer width above remain the original sizing
+choice; they now apply to ordinary Requirement/Implementation cards. The manifesto
+uses a square outline fitted around its unchanged native editor content budget.
+Colors, text, hover, Git cues and existing actual checks are not retroactively changed.

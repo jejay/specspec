@@ -21,6 +21,14 @@ sources:
 - path: electron/test-host/run.cjs
   symbol: installed shared canvas and desktop checks
 ---
+## Later node-shape revision
+
+Dn6Ult8= requests sharper implementations, slightly rounder requirements and a
+full-circle manifesto. AZbsoEA= chooses type radii and a content-fitting circular
+editor. Original all-card dimensions and actual checks below remain historical;
+ordinary cards retain those sizes and only the manifesto gets a circular outline.
+The native form content budget, palette, text and Git/hover behavior are unchanged.
+
 ## Later hover-scope correction
 
 The all-card white borders and tests below describe the c2d8e15 implementation,
