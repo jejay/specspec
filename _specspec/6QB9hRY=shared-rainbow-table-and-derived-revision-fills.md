@@ -3,18 +3,19 @@ id: 6QB9hRY=
 type: requirement
 parents:
 - Rg30CXs=
-- qnGsij4=
 - bLBNk80=
+- qnGsij4=
+- l3vgxN4=
 ---
-# Share a thirteen-step violet-to-red table and comparison-derived fills
+# Share a nine-step violet-to-red table and comparison-derived fills
 
-Use thirteen sRGB hex swatches sampled from OKLCH L=0.73, C=0.11, H=300 down to
-30 in 22.5-degree steps, rounded to bytes. They are in sRGB gamut, with broadly
-similar lightness/chroma to the existing gentle colors. Violet, indigo, blue,
-azure, sky, cyan, teal, green, lime, yellow, amber, orange and red are ordered
+Use nine sRGB hex swatches sampled from OKLCH L=0.73, C=0.12, H=300 down to
+30 in 33.75-degree steps, rounded to bytes. They are in sRGB gamut, with broadly
+the same lightness feel and about 9% more chroma than the thirteen-color table.
+Violet, blue, azure, cyan, teal, green, yellow, amber/orange and red are ordered
 rainbow entries, not confidence levels. These colors/constants are revisable.
 
-For min/max distance, one hop uses violet and (distance-1) modulo thirteen cycles
+For min/max distance, one hop uses violet and (distance-1) modulo nine cycles
 the table; gray manifesto zero stays outside the spectrum. Unknown/invalid paths
 use neutral gray. Type mode uses table teal for requirements and violet for
 implementations, with light-gray manifesto. Derived metrics stay revision-local.
@@ -43,3 +44,12 @@ Verify palette hue order/lightness/chroma and wrap, type/status table membership
 all comparison kinds including root changes, no comparison, drafts, restoration,
 revision switching and actual host fill/hover/legend paint. No schema change or
 example-history rewrite, approval status, host/domain-rule fork or new Git writer.
+
+## Nine-color tuning after user feedback
+
+l3vgxN4= requests fewer, slightly stronger colors. Keep L=.73, increase C=.11
+to .12 and spread nine hues evenly over the same violet-to-red range. Remap type
+teal/violet to indices 4/0; revision green/blue/red/amber to 5/1/8/7, with R sharing
+blue. The prior thirteen-color selection and actual checks remain in Flf59Uc= as
+history, not the current palette. Cycle after nine hops, not thirteen. This tuning
+changes only shared palette samples/indices, not fill modes or interaction rules.

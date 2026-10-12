@@ -23,6 +23,13 @@ sources:
 - path: docs/own-spec.md
   symbol: shared rainbow and Git/Revision Status tour
 ---
+## Later nine-color tuning
+
+l3vgxN4= supersedes the thirteen swatches/counts below, not the revision-mode
+behavior or earlier actual evidence. 6QB9hRY= now chooses nine slightly stronger
+colors and remaps shared-table indices; the separate tuning record documents
+current code and checks.
+
 # Render a shared rainbow spectrum and comparison-status fills
 
 Implement Rg30CXs= through the revisable choice 6QB9hRY= in the common renderer,
