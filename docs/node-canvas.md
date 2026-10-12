@@ -83,7 +83,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   messages, canonical data, or persisted hover preferences are involved.
 - **Node colors** share the user's exact seven-color playground table, with
   confirmed parameters L=.69, C=.12, hue 320 → 20. Distance one starts at the first
-  swatch, seven ends at the last, then repeats. Type mode uses teal/purple;
+  swatch, seven ends at the last, then repeats. Type mode uses yellow-green/purple; Added uses the teal-green closer to its text cue;
   gray manifesto zero remains outside both distance/type palettes. Git/Revision
   Status instead uses rainbow green A, blue M/R, red D and amber source impact,
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;

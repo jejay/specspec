@@ -48,13 +48,18 @@
     const parameters = validate(input);
     const samples = Array.from({ length: parameters.count }, (_, i) => sample(parameters.lightness, parameters.chroma,
       parameters.startHue + (parameters.endHue-parameters.startHue)*i/(parameters.count-1)));
-    const nearest = hue => samples.reduce((best, s, i) => {
+    const nearest = (hue, used = new Set()) => {
+      const available = samples.flatMap((s,i) => used.has(i) ? [] : [i]);
+      const candidates = available.length ? available : samples.map((s,i) => i);
       const distance = h => { const d = Math.abs(h-hue)%360; return Math.min(d, 360-d); };
-      return distance(s.hue) < distance(samples[best].hue) ? i : best;
-    }, 0);
+      return candidates.reduce((best,i) => distance(samples[i].hue) < distance(samples[best].hue) ? i : best);
+    };
+    // Reserve the Added green near the default Git text #81b88b (~149.5° OKLCH).
+    // Requirement gets an unused green-family swatch; narrow palettes may reuse.
+    const roles = { implementation: nearest(300), added: nearest(149.5), changed: nearest(264),
+      removed: nearest(30), renamed: nearest(264), 'source-changed': nearest(75) };
     return { kind: 'specspec-rainbow-palette', version: 1, parameters, colors: samples.map(s => s.hex),
-      mappings: { requirement: nearest(165), implementation: nearest(300), added: nearest(142.5), changed: nearest(264),
-        removed: nearest(30), renamed: nearest(264), 'source-changed': nearest(75) },
+      mappings: { requirement: nearest(165, new Set(Object.values(roles))), ...roles },
       gamutReducedIndices: samples.flatMap((s,i) => s.gamutReduced ? [i] : []), samples };
   }
   function css(result) {

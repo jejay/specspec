@@ -12,8 +12,13 @@ Adjust:
 
 Defaults reproduce the user's adopted seven-color palette: L=.69, C=.12, hue 320 → 20.
 View plain swatches and hoverable tinted nodes on dark/light canvases. The suggested
-node-type/Git choices are nearest-hue table entries; small/narrow palettes may map
-several meanings to the same color. These suggestions do not change SpecSpec.
+Git choices are nearest-hue table entries: Added targets the default green text
+cue (#81b88b, OKLCH hue ≈149.5°) before assigning Requirement. Other role hue
+targets are unchanged. Requirement receives an unused swatch nearest hue 165°
+after the other roles; if none remains, it reuses the nearest swatch. At the
+defaults, Added is color 4 (#37b390) and Requirement color 5 (#92a64b).
+Small/narrow palettes may map several meanings to the same color. The fixed
+reference is not live host-theme matching. These suggestions do not change SpecSpec.
 
 Choose **Parameters JSON** (enough), **Full palette JSON**, or **CSS variables**,
 then **Copy result** and paste it back to the assistant. If clipboard access is

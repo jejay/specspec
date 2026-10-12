@@ -45,6 +45,8 @@ if (process.versions.electron) {
       await screenshot('rainbow-playground-controls');
       assert.equal(await evaluate(`location.protocol`),'file:');
       assert.equal(await evaluate(`document.getElementById('swatches').children.length`),7);
+      assert.ok(await evaluate(`document.getElementById('mappings').textContent.includes('Requirement · color 5 · #92a64b')&&document.getElementById('mappings').textContent.includes('A · Added · color 4 · #37b390')`));
+      assert.ok(await evaluate(`document.getElementById('mapping-logic').textContent.includes('Requirement gets a leftover')`));
       assert.ok(await evaluate(`getComputedStyle(document.querySelector('.node')).backgroundColor.startsWith('color(srgb')`),'Tint preview uses the real browser CSS');
       await evaluate(`document.getElementById('count').value='12';document.getElementById('count').dispatchEvent(new Event('input',{bubbles:true}))`);
       assert.equal(await evaluate(`document.getElementById('swatches').children.length`),12);
@@ -56,8 +58,10 @@ if (process.versions.electron) {
       assert.ok(await evaluate(`document.getElementById('copy').disabled&&document.getElementById('swatches').children.length===12`));
       await evaluate(`document.getElementById('reset').click()`);
       assert.deepEqual(await evaluate(`JSON.parse(document.getElementById('result').value).colors`),require('../media/graph-model.js').RAINBOW_COLORS);
+      assert.deepEqual(await evaluate(`JSON.parse(document.getElementById('result').value).mappings`),{requirement:4,implementation:0,added:3,changed:1,removed:6,renamed:1,'source-changed':5});
       await evaluate(`document.getElementById('format').value='css';document.getElementById('format').dispatchEvent(new Event('change'))`);
       assert.ok(await evaluate(`document.getElementById('result').value.includes('--rainbow-7: #dc7b7c')`));
+      assert.ok(await evaluate(`document.getElementById('result').value.includes('--palette-requirement: var(--rainbow-5)')&&document.getElementById('result').value.includes('--palette-added: var(--rainbow-4)')`));
       await evaluate(`document.getElementById('theme').value='light';document.getElementById('theme').dispatchEvent(new Event('change'))`);
       assert.equal(await evaluate(`getComputedStyle(document.getElementById('preview')).backgroundColor`),'rgb(255, 255, 255)');
       // No automated writes to the user's clipboard: exercise the manual fallback.

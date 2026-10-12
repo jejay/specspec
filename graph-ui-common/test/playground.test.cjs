@@ -22,7 +22,7 @@ test('standalone generator defaults exactly match the production rainbow and map
   assert.deepEqual(result.colors,model.RAINBOW_COLORS);
   assert.deepEqual(result.parameters,{count:7,lightness:0.69,chroma:0.12,startHue:320,endHue:20});
   assert.deepEqual(result.colors,['#bc82c9','#7e97e6','#1facce','#37b390','#92a64b','#ca8d3e','#dc7b7c']);
-  assert.deepEqual(result.mappings,{requirement:3,implementation:0,added:4,changed:1,removed:6,renamed:1,'source-changed':5});
+  assert.deepEqual(result.mappings,{requirement:4,implementation:0,added:3,changed:1,removed:6,renamed:1,'source-changed':5});
   assert.deepEqual(result.gamutReducedIndices,[]);
   assert.equal(palette.css(result),`:root {
   --rainbow-1: #bc82c9;
@@ -32,9 +32,9 @@ test('standalone generator defaults exactly match the production rainbow and map
   --rainbow-5: #92a64b;
   --rainbow-6: #ca8d3e;
   --rainbow-7: #dc7b7c;
-  --palette-requirement: var(--rainbow-4);
+  --palette-requirement: var(--rainbow-5);
   --palette-implementation: var(--rainbow-1);
-  --palette-added: var(--rainbow-5);
+  --palette-added: var(--rainbow-4);
   --palette-changed: var(--rainbow-2);
   --palette-removed: var(--rainbow-7);
   --palette-renamed: var(--rainbow-2);
@@ -43,6 +43,27 @@ test('standalone generator defaults exactly match the production rainbow and map
   for(const [kind,index] of Object.entries(result.mappings)) {
     assert.equal(result.colors[index],kind in model.TYPE_COLORS ? model.TYPE_COLORS[kind] : model.REVISION_COLORS[kind]);
   }
+});
+
+test('Added keeps the text-green priority and Requirement uses an available leftover or explicit reuse fallback', () => {
+  const distance=(h,target)=>{const d=Math.abs(h-target)%360;return Math.min(d,360-d);};
+  for(let count=2;count<=32;count++) {
+    for(const [startHue,endHue] of [[320,20],[20,320],[160,180],[350,360],[120,170]]) {
+      const result=palette.generate({...palette.DEFAULTS,count,startHue,endHue});
+      const {requirement,added,...other}=result.mappings;
+      assert.equal(distance(result.samples[added].hue,149.5),Math.min(...result.samples.map(s=>distance(s.hue,149.5))));
+      const used=new Set([added,...Object.values(other)]);
+      const free=result.samples.map((s,i)=>i).filter(i=>!used.has(i));
+      const candidates=free.length?free:result.samples.map((s,i)=>i);
+      assert.ok(candidates.includes(requirement));
+      assert.equal(distance(result.samples[requirement].hue,165),Math.min(...candidates.map(i=>distance(result.samples[i].hue,165))));
+      assert.equal(result.mappings.renamed,result.mappings.changed);
+      assert.ok(Object.values(result.mappings).every(i=>Number.isInteger(i)&&i>=0&&i<count));
+    }
+  }
+  const narrow=palette.generate({...palette.DEFAULTS,count:2,startHue:120,endHue:170});
+  assert.equal(narrow.mappings.added,1); // Closer to #81b88b than the yellow-green.
+  assert.equal(narrow.mappings.requirement,1); // Both entries already used: reuse is unavoidable.
 });
 
 test('count/hue endpoints interpolate linearly in either direction, with no implicit shortest sweep', () => {
@@ -77,6 +98,9 @@ test('generator rejects missing, non-finite and out-of-range parameters', () => 
 test('page updates slider/number inputs, previews and all export formats, with reset and theme switching', t => {
   const {dom,$,input}=page(t);
   assert.equal($('swatches').children.length,7);assert.equal($('nodes').children.length,8);
+  assert.match($('mappings').textContent,/Requirement · color 5 · #92a64b/);
+  assert.match($('mappings').textContent,/A · Added · color 4 · #37b390/);
+  assert.match($('mapping-logic').textContent,/Requirement gets a leftover/);
   input('count','6');assert.equal($('swatches').children.length,6);
   assert.equal(JSON.parse($('result').value).parameters.count,6);
   const slider=dom.window.document.querySelector('[data-for="chroma"]');slider.value='0.2';

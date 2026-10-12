@@ -194,13 +194,15 @@ with more intermediate colors and a similar gentle feel. The [separate choice](.
 now adopts the [user's exact playground result](../_specspec/gfAxHps=user-selected-seven-color-palette.md):
 `#bc82c9`, `#7e97e6`, `#1facce`, `#37b390`, `#92a64b`, `#ca8d3e`, `#dc7b7c`.
 The user's full JSON confirms seven samples at OKLCH L=.69/C=.12, hue 320 → 20,
-with no gamut reductions. The playground reproduces all hex bytes and mappings.
-Zero-based indices: requirement 3, implementation 0, added 4, changed/renamed 1,
-removed 6 and source-only affected 5. Do not silently retune the explicit colors.
+with no gamut reductions. The playground reproduces all hex bytes. The user's
+[later correction](../_specspec/B87C_kI=added-green-first-and-leftover-requirement.md)
+swaps only Requirement/Added: Added takes color 4, closer to its green text cue,
+and Requirement the leftover color 5. Current zero-based indices: requirement 4,
+implementation 0, added 3, changed/renamed 1, removed 6 and source-only affected 5. Do not silently retune the explicit colors.
 One hop starts at the first swatch; seven reaches the last; eight restarts the table.
 The prior [nine-color tuning](../_specspec/l3vgxN4=nine-more-distinct-rainbow-colors.md)
 and thirteen-color choice remain history, not the current count/parameters.
-Node types reuse teal/purple entries. Unknown paths are
+Node types reuse yellow-green/purple entries. Unknown paths are
 neutral, and distance/type manifesto accents remain light gray outside the cycle.
 
 **Git/Revision Status** uses the selected comparison: A green, M/R blue, D red,
@@ -226,12 +228,19 @@ links the earlier nine-color palette/mappings and its actual historical checks.
 At that checkpoint, a screenshot-enabled VS Code attempt failed on a non-top-level
 CDP capture target; its unchanged full rerun without screenshots passed. Those
 115 common/34 VS Code/nine Electron/111 Python counts remain earlier evidence.
-The [current selected-palette record](../_specspec/X8Rqyk8=user-selected-seven-color-palette-implementation.md)
+The [initial seven-color selected-palette record](../_specspec/X8Rqyk8=user-selected-seven-color-palette-implementation.md)
 links the exact seven colors/mappings, matching CSS/JSON export regression and
-adopted playground defaults. Current 127 common/34 VS Code/nine Electron/111 Python
+adopted playground defaults. At that checkpoint, 127 common/34 VS Code/nine Electron/111 Python
 tests, Ruff and validators passed, as did the standalone file:// browser check
 and complete Windows host suites after explicit builds and direct Node runners.
 Electron revision-palette and playground-default screenshots were inspected.
+The [Added-first implementation record](../_specspec/f8y57wo=added-green-priority-and-leftover-requirement-implementation.md)
+records the subsequent two-index swap, fixed-text-hue priority, leftover/reuse
+selection rule and current regressions. Its 128 common/34 VS Code/nine Electron
+checks, standalone browser and complete direct host runners passed; 111 Python
+tests passed on an unchanged sequential rerun after an initial concurrent run
+hit the outer tool deadline. Ruff and working validators passed. The playground
+shows and explains Requirement color 5 / Added color 4 without changing swatches.
 Constants and bounded host evidence remain revisable, not accessibility/display
 or every-platform certification.
 
@@ -247,7 +256,11 @@ reduce chroma at fixed hue/lightness, rather than silently clipping RGB. Copy
 parameters JSON (sufficient), full palette JSON or CSS variables back to the
 assistant. Clipboard rejection falls back to selected text for manual copy.
 There is no automatic palette import, graph mutation or filesystem/browser-storage
-persistence. Suggested hue-based type/Git mappings remain suggestions.
+persistence. Added targets the default text cue (#81b88b, hue ≈149.5°); other
+roles keep their hue targets. Requirement gets the unused swatch nearest green
+(hue 165°) after the other roles, or reuses the nearest if no entry remains.
+The preview explains this priority and that host themes may differ. Suggested
+mappings remain suggestions, not live host-theme detection.
 The [implementation/evidence record](../_specspec/mtuhTCk=offline-rainbow-playground-implementation.md)
 links the small tool, focused regressions and actual standalone file:// browser
 verification. This is a parameter experiment, not universal display/accessibility

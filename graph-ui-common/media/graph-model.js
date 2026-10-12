@@ -13,8 +13,8 @@
   // Exact user-selected playground output: seven colors, L=.69, C=.12, H=320..20.
   const RAINBOW_COLORS = ['#bc82c9', '#7e97e6', '#1facce', '#37b390', '#92a64b', '#ca8d3e', '#dc7b7c'];
   const NEUTRAL_COLOR = '#929baa';
-  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[3], implementation: RAINBOW_COLORS[0] };
-  const REVISION_COLORS = { added: RAINBOW_COLORS[4], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[6], renamed: RAINBOW_COLORS[1], 'source-changed': RAINBOW_COLORS[5], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
+  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[4], implementation: RAINBOW_COLORS[0] };
+  const REVISION_COLORS = { added: RAINBOW_COLORS[3], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[6], renamed: RAINBOW_COLORS[1], 'source-changed': RAINBOW_COLORS[5], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
   const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Unchanged', uncompared: 'No comparison', draft: 'Unsaved draft' };
   const COLOR_MODES = ['distance', 'max-distance', 'type', 'git-revision'];
 

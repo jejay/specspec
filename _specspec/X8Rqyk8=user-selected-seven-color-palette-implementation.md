@@ -30,8 +30,8 @@ B87C_kI= swaps the two role indices without changing the seven hex values or
 parameters. The original mapping/export regression and actual check counts below
 remain historical evidence. Current production and playground put Requirement at
 color 5 and Added at color 4, with Added prioritized near the default green text
-cue and Requirement using an available leftover. The later implementation record
-will document current tests; this does not retroactively change earlier results.
+cue and Requirement using an available leftover. f8y57wo=
+documents current tests; this does not retroactively change earlier results.
 
 # Apply the user's exact seven-color playground output
 
