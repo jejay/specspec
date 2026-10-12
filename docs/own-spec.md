@@ -191,9 +191,11 @@ about every theme/custom palette, display gamut or platform.
 The [user request](../_specspec/Rg30CXs=rainbow-node-palette-and-revision-color-mode.md)
 orders spectrum colors from violet through blue/cyan/green/yellow/orange to red,
 with more intermediate colors and a similar gentle feel. The [separate choice](../_specspec/6QB9hRY=shared-rainbow-table-and-derived-revision-fills.md)
-uses 13 in-gamut sRGB swatches sampled at OKLCH lightness .73/chroma .11, hue 300
-through 30 in 22.5-degree steps. One hop starts violet; thirteen reaches red;
-fourteen restarts violet. Node types reuse teal/violet entries. Unknown paths are
+now uses nine in-gamut sRGB swatches sampled at OKLCH lightness .73/chroma .12,
+hue 300 through 30 in 33.75-degree steps. The [user's follow-up](../_specspec/l3vgxN4=nine-more-distinct-rainbow-colors.md)
+finds thirteen colors too close and requests nine with slightly stronger saturation.
+Lightness stays unchanged; chroma increases about 9%. One hop starts violet;
+nine reaches red; ten restarts violet. Node types reuse teal/violet entries. Unknown paths are
 neutral, and distance/type manifesto accents remain light gray outside the cycle.
 
 **Git/Revision Status** uses the selected comparison: A green, M/R blue, D red,
@@ -212,11 +214,16 @@ palette lightness/chroma/hue, cyclic indexing, shared-table mappings, root statu
 changes and mode switches, historical/removed/source-only/withdrawal distinctions,
 no comparison and drafts. Real Windows host paint checks include a CLI-modified
 root in an independent disposable Gantt clone and all dark/light/contrast probes.
-The [implementation/evidence record](../_specspec/Flf59Uc=rainbow-and-revision-colors-implementation.md)
-links the shared model/renderer/template/CSS and regressions. All 115 common,
+The [initial implementation/evidence record](../_specspec/Flf59Uc=rainbow-and-revision-colors-implementation.md)
+links the shared model/renderer/template/CSS and earlier thirteen-color regressions.
+The [nine-color tuning record](../_specspec/ezKCR3w=nine-color-rainbow-tuning-implementation.md)
+links the revised palette/mappings and current checks. The screenshot-enabled VS
+Code attempt failed on a non-top-level CDP capture target; its unchanged full
+rerun without screenshots passed. Electron passed with inspected screenshots.
+All 115 common,
 34 VS Code, nine Electron and 111 Python tests passed, as did Ruff and working
-validators. Both complete Windows host suites passed sequentially with inspected
-screenshots. Constants and bounded host evidence remain revisable, not
+validators. Both complete Windows host suites ultimately passed sequentially;
+the current tuning screenshots are from Electron. Constants and bounded host evidence remain revisable, not
 accessibility/display or every-platform certification.
 
 ## Minimum/maximum distance, spacing, and headline correction

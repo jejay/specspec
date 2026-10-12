@@ -10,11 +10,11 @@
   const RANK_GAP = 140, NODE_GAP = 44;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-  // Soft, closely spaced violet -> red hues: OKLCH L=.73, C=.11, H=300..30.
-  const RAINBOW_COLORS = ['#b298e3', '#97a1ec', '#77abec', '#57b3e1', '#3dbace', '#3fbeb4', '#5cbe96', '#7eb979', '#9fb260', '#bba851', '#d09d53', '#de9464', '#e48d7e'];
+  // Nine distinct violet -> red hues: same OKLCH L=.73, slightly stronger C=.12.
+  const RAINBOW_COLORS = ['#b396e8', '#85a5f3', '#4bb4e6', '#1dbec4', '#51bf95', '#8db765', '#bca846', '#dc9651', '#e98a7a'];
   const NEUTRAL_COLOR = '#929baa';
-  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[6], implementation: RAINBOW_COLORS[0] };
-  const REVISION_COLORS = { added: RAINBOW_COLORS[7], changed: RAINBOW_COLORS[2], removed: RAINBOW_COLORS[12], renamed: RAINBOW_COLORS[2], 'source-changed': RAINBOW_COLORS[10], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
+  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[4], implementation: RAINBOW_COLORS[0] };
+  const REVISION_COLORS = { added: RAINBOW_COLORS[5], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[8], renamed: RAINBOW_COLORS[1], 'source-changed': RAINBOW_COLORS[7], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
   const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Unchanged', uncompared: 'No comparison', draft: 'Unsaved draft' };
   const COLOR_MODES = ['distance', 'max-distance', 'type', 'git-revision'];
 

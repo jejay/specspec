@@ -522,7 +522,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.equal(await evaluate(`window.SpecSpecHost.getState().colorMode`),'git-revision');
     await screenshot('git-revision-colors');
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
-    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),'#77abec');
+    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),await evaluate(`window.SpecSpecGraph.REVISION_COLORS.changed`));
     await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     await checkHover(await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`),'#body','hover-revision-expanded-root');
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
@@ -534,7 +534,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, thirteen-step violet-to-red spectrum and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, nine-step slightly more saturated violet-to-red spectrum and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;
