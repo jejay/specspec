@@ -27,6 +27,13 @@ sources:
 - path: docs/own-spec.md
   symbol: type roundness and circular manifesto
 ---
+## Later zero-radius correction
+
+ejSVfuc= sets Implementation corners to 0px, compact and expanded. The 7px
+choice and actual checks below describe the initial shape implementation, not
+current Implementation roundness. Requirement/circle/content/route choices remain
+in scope; new checks belong to the later zero-radius evidence record.
+
 # Render sharper implementations, rounder requirements and a true circular manifesto
 
 Implement Dn6Ult8= through AZbsoEA= in the shared renderer for both hosts. CSS now

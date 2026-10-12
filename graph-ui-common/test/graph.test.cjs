@@ -184,7 +184,7 @@ test('type radii survive expansion and circle sizing preserves native content, c
   const implementation={...child,id:'implementation',type:'implementation',parents:['child']};
   send({type:'snapshot',snapshot:{...snapshot,nodes:[root,child,implementation],edges:[['root','child'],['child','implementation']]},diagnostics:[],readonly:false});
   const card=id=>dom.window.document.querySelector(`[data-node-id="${id}"]`);
-  for(const [id,radius] of [['root','50%'],['child','24px'],['implementation','7px']]) {
+  for(const [id,radius] of [['root','50%'],['child','24px'],['implementation','0px']]) {
     assert.equal(dom.window.getComputedStyle(card(id)).borderRadius,radius);
     const accent=card(id).style.getPropertyValue('--node-accent');
     card(id).click();assert.equal(dom.window.getComputedStyle(card(id)).borderRadius,radius);

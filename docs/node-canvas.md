@@ -59,7 +59,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 - **Compact spacing** uses ordinary 112-unit-high cards instead of 128, with rank gap 140
   instead of 128 and sibling gap 44 instead of 36. This opens the gaps modestly
   while reducing vertical pitch 164 → 156. Widths/routing margins stay unchanged.
-- **Type shapes** use 7px implementation corners (the former Requirement shape),
+- **Type shapes** use completely square 0px implementation corners,
   24px requirement corners (slightly rounder than the former 20px Implementation),
   and a true square/50%-radius manifesto, including expanded editing. Compact
   manifesto diameter is 264; expanded diameter is the 822px-wide native form's

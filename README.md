@@ -136,7 +136,7 @@ The editor is a **left-to-right node canvas**. Dagre derives positions from rela
 
 Native headlines remain text rather than scaled bitmap overlays. The graph no longer carries a permanent compositor-promotion hint, which visibly improved settled headline sharpness at 250% zoom in the installed Windows VS Code check.
 
-**Node shapes** do not change colors: implementations use the sharpest 7px corners, requirements rounder 24px corners, and the manifesto is a true circle. Its compact outline is 264×264; its expanded circle grows around the existing native editor rather than clipping fields or reducing the text width.
+**Node shapes** do not change colors: implementations use completely square 0px corners, requirements rounder 24px corners, and the manifesto is a true circle. Its compact outline is 264×264; its expanded circle grows around the existing native editor rather than clipping fields or reducing the text width.
 
 Curved connections run directly from right to left card boundaries, including circular arcs, without round endpoint dots. They retain a minimum visible stroke thickness when zoomed out. Arrowheads join a smooth, tangent-aligned approach; the line stops at the head base instead of sticking through its tip. Ordinary expanded cards distribute attachments over their height rather than bunching links near the title; manifesto ports span its middle arc to clear thick low-zoom strokes.
 

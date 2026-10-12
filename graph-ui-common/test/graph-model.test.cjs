@@ -158,6 +158,10 @@ test('circle and rounded-corner ports attach at the actual outline, retaining cl
   assert.equal(model.sideBoundary(rounded,16,true),264-inset);
   assert.equal(model.sideBoundary(rounded,56,false),0);
   assert.equal(model.sideBoundary({...rounded,radius:7},16,true),264);
+  for(const y of [0,4,16,56,108,112]) {
+    assert.equal(model.sideBoundary({...rounded,radius:0},y,false),0);
+    assert.equal(model.sideBoundary({...rounded,radius:0},y,true),264);
+  }
   const nodes=new Map([['root',{type:'manifesto'}],['child0',{type:'requirement'}]]);
   const layout=model.layoutGraph(nodes,[records[0]],new Map([['root',{width:264,height:264,shape:'circle'}],['child0',{width:264,height:112,radius:24}]]));
   assert.equal(layout.positions.get('root').shape,'circle');assert.equal(layout.positions.get('child0').radius,24);

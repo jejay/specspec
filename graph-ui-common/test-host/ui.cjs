@@ -315,7 +315,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         });
       })()`);
       for(const s of shapes) {
-        assert.equal(s.radius,{manifesto:'50%',requirement:'24px',implementation:'7px'}[s.type],JSON.stringify(s));
+        assert.equal(s.radius,{manifesto:'50%',requirement:'24px',implementation:'0px'}[s.type],JSON.stringify(s));
         if(s.type==='manifesto') {
           assert.equal(s.w,s.h);assert.ok(s.square&&s.contentFits&&s.markerFits,JSON.stringify(s));
           if(s.expanded){assert.equal(s.formWidth,822);assert.ok(Math.abs(s.w-s.expected)<=1,JSON.stringify(s));}
@@ -367,9 +367,13 @@ exports.checkUI = async function checkUI(port, options = {}) {
       const inside=(b,q)=>{
         if(!(q.x>b.x+1&&q.x<b.x+b.w-1&&q.y>b.y+1&&q.y<b.y+b.h-1))return false;
         if(b.circle)return ((q.x-b.x-b.w/2)/(b.w/2-1))**2+((q.y-b.y-b.h/2)/(b.h/2-1))**2<1;
-        const r=Math.min(b.radius,b.w/2,b.h/2),cx=Math.max(b.x+r,Math.min(b.x+b.w-r,q.x)),cy=Math.max(b.y+r,Math.min(b.y+b.h-r,q.y));
+        const r=Math.min(b.radius,b.w/2,b.h/2);
+        if(r===0)return true; // The preceding inset bounding check covers a square.
+        const cx=Math.max(b.x+r,Math.min(b.x+b.w-r,q.x)),cy=Math.max(b.y+r,Math.min(b.y+b.h-r,q.y));
         return Math.hypot(q.x-cx,q.y-cy)<r-1;
       };
+      const square={x:0,y:0,w:20,h:20,circle:false,radius:0};
+      if(!inside(square,{x:10,y:10})||inside(square,{x:21,y:10}))throw new Error('Square collision mask must include its interior, not its exterior.');
       const collisions=[];
       for(const path of document.querySelectorAll('#edges .link')) {
         const length=path.getTotalLength();

@@ -194,7 +194,8 @@ The [user's shape request](../_specspec/Dn6Ult8=sharp-implementations-rounder-re
 swaps type roundness without swapping any colors: implementations are sharpest,
 requirements a little rounder than implementations were, and the manifesto a
 full circle. The [separate choice](../_specspec/AZbsoEA=type-radii-and-content-fitting-circular-manifesto.md)
-uses 7px Implementation and 24px Requirement corners in compact/expanded views.
+uses completely square 0px Implementation and 24px Requirement corners in
+compact/expanded views, following the user's [zero-radius correction](../_specspec/ejSVfuc=zero-radius-implementation-corners.md).
 A compact manifesto is 264×264 with 50% radius; its expanded circle fits the
 unchanged 822px-wide native form via its rectangle diagonal plus 48px. The same
 form DOM remains editable with the original typical 80-column budget. This
@@ -205,13 +206,20 @@ attachments span the middle 40% vertically to clear thick low-zoom departure ink
 Color roles, shared tints, white/colored-root hover exceptions and renderer-only
 labels remain unchanged. The standalone palette tool's gray sample is circular
 too, without modifying parameters or exports. No node schema/history rewrite.
-The [implementation/evidence record](../_specspec/YHSK9DA=type-roundness-and-circular-manifesto-implementation.md)
+The [initial shape implementation/evidence record](../_specspec/YHSK9DA=type-roundness-and-circular-manifesto-implementation.md)
 links shared CSS, measured native circle fitting, pure outline routing and current
-checks. All 131 common/34 VS Code/nine Electron/111 Python tests, Ruff and working
+checks at the earlier 7px Implementation radius. Its 131 common/34 VS Code/nine
+Electron/111 Python tests, Ruff and working
 validators passed. Full direct Windows host suites and standalone file:// checks
 passed; compact/expanded Electron, VS Code root and playground screenshots were
 inspected. Earlier universal 264×112/860-width assertions are now conditional on
 ordinary node types, with stricter circle/content/arc checks, not erased evidence.
+The [zero-radius implementation record](../_specspec/3fkcZww=zero-radius-implementation-corners-implementation.md)
+records the subsequent 0px correction and zero-radius collision checks. Current
+131 common/34 VS Code/nine Electron tests, Ruff and validators passed. Complete
+Electron and VS Code host suites passed; VS Code required an unchanged standalone
+rerun after the combined command hit its outer deadline. The earlier Python and
+playground checks are not claimed as fresh runs for this CSS-only correction.
 
 ## Shared rainbow table and Git/Revision Status
 

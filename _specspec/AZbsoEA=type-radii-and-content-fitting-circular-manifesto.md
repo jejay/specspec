@@ -3,14 +3,15 @@ id: AZbsoEA=
 type: requirement
 parents:
 - Dn6Ult8=
-- xCOHepQ=
 - qf5-4sc=
+- xCOHepQ=
+- ejSVfuc=
 ---
 # Use type radii and fit the native manifesto editor inside a true circle
 
-Use the former Requirement radius 7px for Implementation cards and increase the
-former Implementation radius 20px to 24px for Requirement cards, in compact and
-expanded states. Remove the generic expanded-radius override. Keep ordinary
+Use 0px for Implementation cards, following ejSVfuc='s explicit correction,
+and 24px for Requirement cards (slightly rounder than the former 20px
+Implementation), in compact and expanded states. Remove the generic expanded-radius override. Keep ordinary
 compact cards 264 by 112 and ordinary expanded cards 860 wide with intrinsic height.
 
 Make compact manifesto cards 264 by 264 with 50% radius, centered inset content
@@ -46,3 +47,7 @@ minimum-zoom departure stroke outside the curved border at the existing 3-unit
 gap. Ordinary rectangular forms keep full-height port distribution. The standalone
 playground also shows its gray manifesto sample as a 150px circle, without changing
 parameters, swatches, mappings, exports or distance sample shapes.
+
+The initial 7px Implementation choice and actual checks in YHSK9DA= remain
+historical. ejSVfuc= changes only that radius; the circle/content/port choices
+above remain unchanged.

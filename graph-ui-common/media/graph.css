@@ -64,7 +64,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.manifesto:not(.expanded) > .badges { justify-content: center; padding-right: 0; }
 .card.manifesto .git-corner { right: 22%; bottom: 14%; }
 .card.requirement { border-radius: 24px; }
-.card.implementation { border-radius: 7px; }
+.card.implementation { border-radius: 0px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
 /* Temporary label ring: equal on all sides, inside the existing box. No layout change. */
