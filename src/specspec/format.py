@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 import math
 from collections.abc import Mapping
-from pathlib import PurePosixPath, PureWindowsPath
+from pathlib import PurePosixPath
 from typing import Any
 
 from ruamel.yaml import YAML
@@ -22,6 +22,8 @@ from .model import (
     SpecError,
     SpecNode,
 )
+from .source_schema import MAX_REFERENCES, validate_source
+from .source_schema import safe_source_path as safe_source_path
 
 FIELDS = {
     "id",
@@ -103,18 +105,6 @@ def json_value(value: Any) -> Any:
     raise ValueError("Metadata must contain only JSON-compatible values and string keys.")
 
 
-def safe_source_path(value: str) -> bool:
-    posix = PurePosixPath(value)
-    windows = PureWindowsPath(value)
-    return (
-        bool(value)
-        and value == posix.as_posix()
-        and not any(ord(character) < 32 or ord(character) == 127 for character in value)
-        and "\\" not in value
-        and not (posix.is_absolute() or windows.drive or ".." in posix.parts or value in {".", ""})
-    )
-
-
 def parse_node(
     data: Mapping[str, Any], body: str, path: str, *, version: int = FORMAT_VERSION
 ) -> SpecNode:
@@ -156,23 +146,15 @@ def parse_node(
     check(isinstance(sources, list), "sources must be an array.")
     if "sources" in data:
         check(node_type == "implementation", "sources is allowed only on implementation nodes.")
-    normalized_sources: list[dict[str, str]] = []
+    normalized_sources: list[dict[str, Any]] = []
     if isinstance(sources, list):
+        check(len(sources) <= MAX_REFERENCES, "Too many source references.")
         for source in sources:
-            if not isinstance(source, Mapping):
-                check(False, "Each source must be a mapping.")
-                continue
-            source_path = source.get("path")
-            check(set(source) <= {"path", "symbol"}, "Unknown source reference field.")
-            check(
-                isinstance(source_path, str) and safe_source_path(source_path),
-                "Source paths must be project-relative POSIX paths without traversal.",
-            )
-            check(
-                "symbol" not in source or isinstance(source["symbol"], str),
-                "Source symbol must be a string.",
-            )
-            normalized_sources.append(dict(source))
+            try:
+                validate_source(source)
+                normalized_sources.append(json_value(source))
+            except ValueError as error:
+                check(False, str(error))
     extensions = data.get("extensions", {})
     try:
         check(isinstance(extensions, Mapping), "extensions must be a mapping.")

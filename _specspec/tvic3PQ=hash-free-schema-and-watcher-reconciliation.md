@@ -43,3 +43,11 @@ and atomic replacement reduce but do not eliminate every filesystem race.
 
 Origin: a revisable technical conclusion implementing the user's new intention;
 versioning, conflict confirmation and watcher adapters do not rewrite its outcome.
+
+## Current source-address refinement
+
+jsIUeP0=/VnSF9BE= supersede format/API 3 with current-only format/API 4.
+Structured Git blob IDs are source snapshot addresses, not restored managed_hash,
+fingerprints, edit-provenance or approval gates. Optional hook check --sources
+checks exact-index source regions and object retention without writes/staging.
+Default graph hook, watcher/native persistence and byte transactions stay in scope.

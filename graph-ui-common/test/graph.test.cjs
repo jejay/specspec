@@ -28,7 +28,7 @@ function fixture(t, options = {}) {
     dom.window.close();
     assert.deepEqual(messages.filter(message => message.type === 'client-error'), [], 'Renderer errors must not be mistaken for successful DOM tests.');
   });
-  const snapshot = { format_version: 3, valid: true, nodes: [root, child], edges: [['root', 'child']] };
+  const snapshot = { format_version: 4, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
@@ -53,6 +53,34 @@ test('canonical compact IDs retain equals signs in cards, parent pickers and sav
   const save = messages.at(-1);
   assert.equal(save.type, 'save'); assert.equal(save.id, shortChild.id);
   assert.deepEqual(Array.from(save.parents), [shortRoot.id]);
+});
+
+test('blob source links capture into the native form and preview literal resolved ranges without writes', t => {
+  const {dom,$,messages,snapshot,send}=fixture(t);
+  const reference={path:'code.js',blob:'a'.repeat(40),mode:'strict',ranges:[[2,4],[9,10]]};
+  const impl={...child,id:'impl',type:'implementation',sources:[reference]};
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root,impl],edges:[['root','impl']]},diagnostics:[],readonly:false});
+  dom.window.document.querySelector('[data-node-id="impl"]').click();
+  assert.equal($('source-tools').hidden,false);assert.match($('source-links').textContent,/anchor 2–4, 9–10.*strict/);
+  $('source-links').querySelector('button').click();
+  assert.equal(messages.at(-1).type,'source-view');assert.deepEqual(JSON.parse(messages.at(-1).reference),reference);
+  $('source-path').value='code.js';$('source-ranges').value='2:4, 9:10';$('source-mode').value='expanding';$('source-staged').checked=true;$('capture-source').click();
+  const capture=messages.at(-1);assert.equal(capture.type,'source-capture');assert.deepEqual(Array.from(capture.ranges),['2:4','9:10']);assert.equal(capture.staged,true);
+  const body=$('body');body.focus();body.setSelectionRange(1,3);const value=body.value;
+  send({type:'source-captured',id:'impl',reference:{...reference,mode:'expanding'}});
+  assert.equal(JSON.parse($('sources').value).length,2);assert.equal(body.value,value);assert.equal($('body'),body);
+  assert.equal(messages.some(m=>m.type==='save'||m.type==='add'),false);
+  send({type:'source-preview',resolution:{path:'moved.js',target:'HEAD',mode:'strict',outcome:'conflict',ranges:[[20,21]]},original:true,chunks:[{start:2,selected:[2,3],lines:['<img onerror="bad()">','literal']} ]});
+  assert.match($('source-preview-title').textContent,/moved.js.*HEAD/);assert.match($('source-preview-status').textContent,/Original anchored/);
+  assert.match($('source-preview-code').textContent,/> 2: <img/);assert.equal($('source-preview-code').querySelector('img'),null);
+  $('close-source-preview').click();assert.equal($('source-preview').hasAttribute('open'),false);
+});
+
+test('historical source hints remain navigable while capture is disabled', t => {
+  const {dom,$,snapshot,send}=fixture(t);const impl={...child,type:'implementation',sources:[{path:'code.js'}]};
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root,impl]},diagnostics:[],readonly:true});
+  dom.window.document.querySelector('[data-node-id="child"]').click();assert.equal($('capture-source').disabled,true);
+  assert.equal($('source-links').querySelector('button').disabled,false);
 });
 
 function hoverFixture(t) {

@@ -2,7 +2,7 @@
 id: XV5_rPQ=
 type: manifesto
 parents: []
-format_version: 3
+format_version: 4
 ---
 # Keep intentions distinct from revisable conclusions
 

@@ -9,7 +9,7 @@ add nested `.git` here or reinitialize the graph. The parent's instructions appl
 when editing its tracked fixture; in a standalone clone, use that clone's own index.
 
 Read `_specspec` via `list`, `context`, and `impact` before changing code. Use
-`add`, `update`, and `retire` for this checkout; format/API 3 has no `--expect` or
+`add`, `update`, and `retire` for this checkout; format/API 4 has no `--expect` or
 fingerprints. Manual changes are permitted by the product, not recommended. Intentions and conclusions
 are distinguished by reasoning/relationships, not approval statuses. Withdraw the
 complete obsolete dependent branch, retaining its explanations and original IDs.

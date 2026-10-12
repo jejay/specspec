@@ -33,7 +33,7 @@ class CDP {
     await this.ready;
     const id = ++this.next;
     const result = new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, timeoutMs);
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method} ${String(params.expression || '').slice(0, 400)}`)); }, timeoutMs);
       this.pending.set(id, { resolve, reject, timer });
     });
     this.socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
@@ -89,6 +89,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
       await active.send('Page.bringToFront');
       await delay(400);
     } catch { /* Some installed hosts do not expose window bounds. */ }
+    // Geometry/gesture checks use a deterministic supported accessibility profile.
+    // Normal-motion behavior remains covered by camera tests; do not rely on
+    // background-host animation timing to reach a pose before sampling ink.
+    await active.send('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]}, context.session);
     await options.before?.({ evaluate, screenshot, delay });
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
@@ -258,6 +262,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
       for(const value of values) {assert.ok(value.paired,'Curve/head ink must match');assertStrongerHue(value.actual,value.base,value.label);}
     }
     async function restoreActualSize(pose) {
+      // Deterministic restoration uses the existing accessibility branch, not a
+      // weakened pose assertion or production camera change. Other probes retain
+      // normal motion; background Electron animation frames can be throttled.
+      await active.send('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]}, context.session);
       await evaluate(`document.getElementById('zoom-reset').click()`);
       // Background hosts can throttle animation frames; wait for actual completion
       // before a synthetic drag interrupts the reset transition.
@@ -328,6 +336,12 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await evaluate(`document.querySelector('[data-node-id="'+${JSON.stringify(implementation)}+'"]').click()`);await delay(100);
     await checkShapes();await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     await screenshot('node-shapes-expanded-implementation');
+    assert.ok(await evaluate(`document.querySelector('#source-links button')`),'Implementation source hints are navigable.');
+    await evaluate(`document.querySelector('#source-links button').click()`);
+    for(let i=0;i<100;i++){if(await evaluate(`document.getElementById('source-preview').open`))break;await delay(100);}
+    assert.ok(await evaluate(`document.getElementById('source-preview').open&&document.getElementById('source-preview-code').textContent.length>0`),'Actual source blob/working region preview loads: '+JSON.stringify(await evaluate(`({message:document.getElementById('message').textContent,open:document.getElementById('source-preview').open,identity:document.getElementById('identity').textContent,source:document.getElementById('source-links').textContent})`)));
+    assert.ok(await evaluate(`!document.getElementById('source-preview-code').querySelector('script,img,iframe')`),'Code preview stays literal.');
+    await screenshot('source-region-preview');await evaluate(`document.getElementById('close-source-preview').click()`);
     await evaluate(`document.getElementById('back').click()`);await checkShapes();
     const initialPositions = await positions();
     assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link:not(.removed)')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`), 'Target relationships progress LR; removed references are overlays and may share or reverse columns.');

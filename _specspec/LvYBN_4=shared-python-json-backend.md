@@ -10,7 +10,7 @@ parents:
 
 Expose graph operations through a reusable Python library and versioned JSON CLI.
 Host adapters invoke the CLI without a shell; they do not implement separate schema
-validation, withdrawal rules or Markdown mutation planning. API 3 exposes api_version,
+validation, withdrawal rules or Markdown mutation planning. API 4 exposes api_version,
 ok, result and structured diagnostics, with stable exit codes and actionable errors,
 without fingerprints or managed hashes. Editors refresh through watchers and optional
 polling, re-read before mutations, and preserve drafts across external changes.

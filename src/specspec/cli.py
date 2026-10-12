@@ -12,9 +12,10 @@ import click
 
 from . import __version__
 from .editor import MAX_REQUEST_BYTES, editor_request
-from .format import safe_source_path
 from .git import git_snapshot, install_hook, semantic_diff, source_change_impact
 from .model import API_VERSION, Diagnostic, SpecError
+from .source_commands import register as register_sources
+from .source_schema import MAX_REFERENCES, validate_source
 from .workspace import (
     Snapshot,
     add_node,
@@ -89,20 +90,17 @@ def read_body(path: str) -> str:
     return Path(path).read_bytes().decode("utf-8")
 
 
-def source_input(value: str | None) -> list[dict[str, str]] | None:
+def source_input(value: str | None) -> list[dict[str, Any]] | None:
     if value is None:
         return None
     try:
         sources = json.loads(value)
         if not isinstance(sources, list):
             raise ValueError("Expected an array.")
+        if len(sources) > MAX_REFERENCES:
+            raise ValueError("Too many source references.")
         for source in sources:
-            if not isinstance(source, dict) or not set(source) <= {"path", "symbol"}:
-                raise ValueError("Each source needs path and an optional symbol.")
-            if not isinstance(source.get("path"), str) or not safe_source_path(source["path"]):
-                raise ValueError("Unsafe source path.")
-            if "symbol" in source and not isinstance(source["symbol"], str):
-                raise ValueError("symbol must be a string.")
+            validate_source(source)
         return sources
     except (ValueError, TypeError) as error:
         raise SpecError([Diagnostic("SOURCES", f"Invalid sources JSON: {error}")]) from error
@@ -484,17 +482,29 @@ def hook_install(root: Path | None, as_json: bool) -> None:
 
 @hook.command(name="check")
 @json_option
+@click.option(
+    "--sources",
+    "check_sources",
+    is_flag=True,
+    help="Also check exact-index source regions and retention.",
+)
 @click.pass_obj
 @guarded
-def hook_check(root: Path | None, as_json: bool) -> None:
-    snapshot = git_snapshot(root_path(root), staged=True)
-    emit(
-        {"node_count": len(snapshot.nodes)},
-        snapshot.diagnostics,
-        as_json=as_json,
-        ok=snapshot.valid,
-    )
-    if not snapshot.valid:
+def hook_check(root: Path | None, as_json: bool, check_sources: bool) -> None:
+    project = root_path(root)
+    snapshot = git_snapshot(project, staged=True)
+    result = {"node_count": len(snapshot.nodes)}
+    diagnostics = list(snapshot.diagnostics)
+    if check_sources and snapshot.valid:
+        from .sources import check_results, resolve_nodes
+
+        result["sources"] = resolve_nodes(
+            project, [n for n in snapshot.nodes if not n.retired], staged=True, retention=True
+        )
+        diagnostics.extend(check_results(result["sources"]))
+    ok = snapshot.valid and not any(d.severity == "error" for d in diagnostics)
+    emit(result, diagnostics, as_json=as_json, ok=ok)
+    if not ok:
         raise click.exceptions.Exit(1)
 
 
@@ -509,3 +519,6 @@ def hook_check(root: Path | None, as_json: bool) -> None:
 @guarded
 def recover_command(root: Path | None, force_lock: bool, as_json: bool) -> None:
     emit(recover(root_path(root), force_lock=force_lock), as_json=as_json)
+
+
+register_sources(main, root_path, emit, guarded, json_option)

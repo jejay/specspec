@@ -21,7 +21,7 @@ in input graphs too. Cryptographic randomness is for unbiased identifier generat
 not a secret/authentication claim; local checking does not prevent branch merge
 collisions. Init has no graph to collide with.
 
-Keep the current hash-free format/API 3 shape; validate only that current schema
+Keep the current format/API 4 shape, without node fingerprints or managed hashes; validate only that current schema
 and these IDs. Remove v1/v2 normalization, obsolete hash/status recognition, the
 migrate command and host migration controls. Old UUID/old-version snapshots fail
 with diagnostics, without silent conversion or pretending to be a valid baseline.
@@ -39,3 +39,11 @@ Persisted host drafts/cameras are not silently rekeyed or claimed compatible.
 Origin: a separate implementation choice following the user's resolved encoding
 and compatibility intentions. It supersedes the previous analysis's suggestion
 to retain legacy readers and the earlier schema migration contract.
+
+## Source-region refinement
+
+jsIUeP0=/VnSF9BE= choose structured blob-addressed strict/expanding ranges and
+current-only format/API 4. Five-byte node IDs and manual-edit/writer protections
+remain. Source blob IDs identify immutable Git content, not node-integrity gates.
+All maintained Gantt history is reconstructed under current tools; API 3 is now
+obsolete. The earlier compact-ID conversion and its actual checks remain history.

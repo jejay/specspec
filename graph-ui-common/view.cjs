@@ -38,8 +38,16 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <div class="parent-add"><select id="parent-candidate" aria-label="Available parent nodes"></select>
     <button id="add-parent" type="button">Add parent</button></div></div></fieldset>
     <label id="sources-label">Source references (JSON)<textarea id="sources" rows="4" spellcheck="false"></textarea></label>
+    <section id="source-tools" hidden><h3>Source regions</h3><ul id="source-links"></ul>
+    <p class="form-help">Links identify source snapshots, not proof of implementation. Click to resolve/preview. Strict reports internal edits; expanding includes them. Separate gaps and boundary insertions are excluded.</p>
+    <label>Source path<input id="source-path" placeholder="src/example.py"></label>
+    <label>Inclusive ranges<input id="source-ranges" placeholder="100:150, 300:500"></label>
+    <label>Tracking<select id="source-mode"><option value="strict">Strict (specific)</option><option value="expanding">Expanding (broad)</option></select></label>
+    <label><input type="checkbox" id="source-staged"> Capture staged code (otherwise HEAD). Staging remains manual.</label>
+    <button type="button" id="capture-source">Append source reference to this form</button></section>
     <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="retire">Retire</button><button type="button" id="restore" hidden>Restore</button><button type="button" id="discard">Discard form edits</button></div></form>
     <section id="before-section" hidden><h3>Base revision text</h3><pre id="before"></pre></section></section></div>
+    <dialog id="source-preview" aria-labelledby="source-preview-title"><h2 id="source-preview-title">Source preview</h2><p id="source-preview-status"></p><pre id="source-preview-code" tabindex="0"></pre><button id="close-source-preview" type="button">Close</button></dialog>
     <footer>Click a node to explore and edit its neighborhood. Right-click card chrome to cycle label previews: red → blue → green → purple → turquoise → yellow → none. Preview only, not saved; persistence may come later. Fills: selected color mode. Git title/corner: A added, M modified, D deleted, R renamed. Linked-source and withdrawal cues remain separate. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
     <script nonce="${nonce}" src="${resource('host.js')}"></script>
     <script nonce="${nonce}" src="${resource('vendor/graph-vendor.js')}"></script>

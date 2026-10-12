@@ -49,6 +49,6 @@ def test_cli_outputs_have_no_content_hashes(workspace):
         )
         assert result.exit_code == 0, result.output
         envelope = json.loads(result.output)
-        assert envelope["api_version"] == 3
+        assert envelope["api_version"] == 4
         assert "fingerprint" not in envelope["result"]
         assert "managed_hash" not in result.output

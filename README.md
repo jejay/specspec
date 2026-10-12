@@ -32,6 +32,17 @@ production tooling remains current-only. The [maintenance procedure](example/gan
 explains the recurring obligation. Plausible graph emergence/revision is enough;
 [fictional AI dialogue](example/gantt/STORY.md) is optional illustration, not evidence.
 
+## Implementation source regions
+
+[Source-region guide](docs/source-regions.md): current format/API 4 supports
+whole-file hints and full Git blob anchors with multiple inclusive ranges.
+**Strict** (specific) reports internal changes; **expanding** (broad) includes them.
+Positions resolve without renumbering the spec; ambiguity/deletion/unavailable
+objects remain explicit. Both hosts offer literal source previews and capture
+into their existing forms. `sources capture/resolve/check/reanchor` and optional
+`hook check --sources` keep writes, staging and object retention deliberate.
+No node fingerprints, approval gates or automatic Git writes return.
+
 ## Install from this checkout
 
 Python 3.11+ is required. The package is not yet published to PyPI.

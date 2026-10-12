@@ -172,6 +172,23 @@ class GraphSession {
     });
   }
   async handle(message) {
+    if (['source-view', 'source-capture'].includes(message.type)) {
+      if (!this.host.authorized()) throw new Error('Project authorization is required to read sources.');
+      const nodes = new Map([...(this.lastPayload?.diff?.base.nodes || []), ...(this.snapshot?.nodes || [])].map(n => [n.id, n]));
+      const node = nodes.get(message.id);
+      if (!node || node.type !== 'implementation') throw new Error('Select an implementation source.');
+      if (message.type === 'source-view') {
+        if (typeof message.reference !== 'string' || Buffer.byteLength(message.reference, 'utf8') > 65536) throw new Error('Invalid source reference.');
+        const ref = this.snapshot.nodes.some(n => n.id === message.id) ? this.target : this.base;
+        const response = await this.cli(['sources', 'view', '--reference', message.reference, ...(ref ? ['--ref', ref] : []), '--json']);
+        await this.post({ type: 'source-preview', ...response.result }); return;
+      }
+      if (this.target || node.retired || this.sourceInvalid) throw new Error('Capture requires a live editable implementation.');
+      if (this.host.document && message.id !== this.host.document.state().nodeId) throw new Error('Capture belongs to the bound node.');
+      if (typeof message.path !== 'string' || message.path.length > 4096 || !Array.isArray(message.ranges) || message.ranges.length > 64 || message.ranges.some(r => typeof r !== 'string' || !/^\d+:\d+$/.test(r)) || !['strict', 'expanding'].includes(message.mode)) throw new Error('Invalid source capture parameters.');
+      const response = await this.cli(['sources', 'capture', message.id, message.path, ...message.ranges.flatMap(r => ['--range', r]), '--mode', message.mode, ...(message.staged === true ? ['--staged'] : []), '--preview', '--json']);
+      await this.post({ type: 'source-captured', id: message.id, reference: response.result.reference }); return;
+    }
     if (this.host.document && ['save', 'retire', 'restore'].includes(message.type)) {
       if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to edit documents.');
       if (message.id !== this.host.document.state().nodeId) throw new Error('A node-file editor can only edit its bound node.');
@@ -205,7 +222,7 @@ class GraphSession {
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
     const common = ['--json'];
-    if (current.format_version !== 3) throw new Error('Unsupported specification format.');
+    if (current.format_version !== 4) throw new Error('Unsupported specification format.');
     const nodes = new Map(current.nodes.map(n => [n.id, n])), id = message.id;
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('The node no longer exists. Unsaved text has been retained.');
     let args, input;

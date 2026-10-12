@@ -16,6 +16,7 @@ from pathlib import Path
 from specspec.git import git_snapshot, run_git, semantic_diff, source_change_impact
 from specspec.graph import build_graph
 from specspec.model import API_VERSION, FORMAT_VERSION, ID_RE, SpecNode
+from specspec.sources import check_results, resolve_nodes
 from specspec.workspace import load_snapshot, slugify
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -162,6 +163,14 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 if index:
                     snapshot.require_valid()
                     assert snapshot.format_version == FORMAT_VERSION
+                    assert not check_results(
+                        resolve_nodes(
+                            fixture,
+                            [n for n in snapshot.nodes if not n.retired],
+                            ref=ref,
+                            retention=True,
+                        )
+                    )
             assert git_snapshot(fixture, staged=True).valid
             assert contents(load_snapshot(fixture)) == contents(current)
             for path in RUNTIME_PATHS:

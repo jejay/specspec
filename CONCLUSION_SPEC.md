@@ -64,7 +64,7 @@ for portable filename safety. Frontmatter is authoritative, with a matching file
 
 Search upward for the nearest `_specspec` directory, stopping even when it is invalid. Support an explicit project-root override. Keep all operation state outside `_specspec`; do not introduce a configuration file or node subdirectory.
 
-Current format/API 3 frontmatter (the sole supported scheme):
+Current format/API 4 frontmatter (the sole supported scheme):
 
 | Field | Rule |
 | --- | --- |
@@ -72,9 +72,19 @@ Current format/API 3 frontmatter (the sole supported scheme):
 | `type` | `manifesto`, `requirement`, or `implementation`. |
 | `retired` | Optional strict boolean; true means withdrawn, not unreviewed. No approval `status` field. |
 | `parents` | Required array of unique IDs; order is non-semantic. |
-| `format_version` | Required integer `3` on the manifesto only. |
-| `sources` | Optional implementation-only `{path, symbol?}` entries. |
+| `format_version` | Required integer `4` on the manifesto only. |
+| `sources` | Optional implementation-only `{path, symbol?}` whole-file entries or `{path, symbol?, blob, mode, ranges}` Git-addressed text regions. |
 | `extensions` | Optional namespaced JSON-compatible metadata mapping. |
+
+Current format/API 4 adds strict (specific) and expanding (broad) source regions.
+Full Git blob IDs anchor known source bytes independently of an unknown future
+commit ID; inclusive regions resolve into worktree/index/revisions without spec
+renumbering. Strict reports internal edits, expanding absorbs internal edits, and
+both exclude boundaries/gaps and expose ambiguous/missing/unavailable mappings.
+Capture/reanchor are explicit; optional exact-index source checks validate retention
+without Git writes or node-integrity/approval gates. Symbols stay descriptive and
+file-level impact stays conservative. See [source regions](docs/source-regions.md).
+Every maintained Gantt revision/ref/receipt is rebuilt under this sole current schema.
 
 Store incoming relationships in `parents`, avoiding writes to parent files when a child is added. Require requirement parents for implementations as part of the rooted node grammar.
 

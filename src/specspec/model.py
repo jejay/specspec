@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -11,8 +12,8 @@ from typing import Any
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
-FORMAT_VERSION = 3
-API_VERSION = 3
+FORMAT_VERSION = 4
+API_VERSION = 4
 MAX_FILE_BYTES = 1024 * 1024
 
 
@@ -45,7 +46,7 @@ class SpecNode:
     body: str
     path: str
     format_version: int | None = None
-    sources: list[dict[str, str]] = field(default_factory=list)
+    sources: list[dict[str, Any]] = field(default_factory=list)
     extensions: dict[str, Any] = field(default_factory=dict)
 
     def semantic(self) -> dict[str, Any]:
@@ -55,7 +56,7 @@ class SpecNode:
             "retired": self.retired,
             "parents": sorted(self.parents),
             "body": self.body.replace("\r\n", "\n"),
-            "sources": sorted(self.sources, key=lambda s: (s["path"], s.get("symbol", ""))),
+            "sources": sorted(self.sources, key=lambda s: json.dumps(s, sort_keys=True)),
             "extensions": self.extensions,
         }
         if self.format_version is not None:

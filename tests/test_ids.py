@@ -133,13 +133,13 @@ def test_withdrawal_flag_is_strictly_boolean(workspace, retired):
         serialize(replace(load_snapshot(root).nodes[0], retired=retired))
 
 
-@pytest.mark.parametrize("version", [1, 2, 4, True])
+@pytest.mark.parametrize("version", [1, 2, 3, 5, True])
 def test_only_current_schema_is_readable_and_never_converted(workspace, version):
     root, _ = workspace
     before = load_snapshot(root)
     node = before.nodes[0]
     raw = before.files[node.path].replace(
-        b"format_version: 3", f"format_version: {str(version).lower()}".encode()
+        b"format_version: 4", f"format_version: {str(version).lower()}".encode()
     )
     (root / node.path).write_bytes(raw)
     assert not load_snapshot(root).valid

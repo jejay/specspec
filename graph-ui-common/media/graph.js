@@ -33,7 +33,7 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 3 && !state.readonly &&
+  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 4 && !state.readonly &&
     (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
   const draftCard = () => creating || orphaned();
@@ -67,7 +67,7 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 3 || state.readonly || pending || Boolean(state.document);
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 4 || state.readonly || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
@@ -87,7 +87,32 @@
     $('parent-candidate').disabled = !parentsEditable();
     $('add-parent').disabled = !parentsEditable() || !$('parent-candidate').value;
     for (const button of $('parent-links').querySelectorAll('button')) button.disabled = !parentsEditable();
+    $('source-tools').hidden = formNodeType() !== 'implementation';
+    $('capture-source').disabled = !editable() || pending || creating || !currentNode() || withdrawn;
+    for (const id of ['source-path', 'source-ranges', 'source-mode', 'source-staged']) $(id).disabled = $('capture-source').disabled;
   }
+
+  function sourceLinks() {
+    $('source-links').replaceChildren();
+    let references;
+    try { references = JSON.parse($('sources').value); } catch { return; }
+    if (!Array.isArray(references)) return;
+    for (const reference of references) {
+      if (!reference || typeof reference.path !== 'string') continue;
+      const item = document.createElement('li'), button = document.createElement('button'); button.type = 'button';
+      button.textContent = reference.blob ? `${reference.path} · anchor ${reference.ranges?.map(r => r.join('–')).join(', ')} · ${reference.mode}` : `${reference.path} · whole file`;
+      button.title = 'Resolve in the selected revision or working files and open literal source preview';
+      button.addEventListener('click', () => { setMessage('Resolving source region…'); send({ type: 'source-view', id: selected, reference: JSON.stringify(reference) }); });
+      item.append(button); $('source-links').append(item);
+    }
+  }
+  $('sources').addEventListener('input', sourceLinks);
+  $('capture-source').addEventListener('click', () => {
+    try { if (!Array.isArray(JSON.parse($('sources').value))) throw new Error(); }
+    catch { setMessage('Complete the source JSON before appending a captured reference.'); return; }
+    send({ type: 'source-capture', id: selected, path: $('source-path').value, ranges: $('source-ranges').value.split(/[,\s]+/).filter(Boolean), mode: $('source-mode').value, staged: $('source-staged').checked });
+  });
+  $('close-source-preview').addEventListener('click', () => { if ($('source-preview').close) $('source-preview').close(); else $('source-preview').removeAttribute('open'); });
 
   function changes() {
     const kinds = new Map((state?.diff?.changes || []).map(change => [change.id, change.kind]));
@@ -441,7 +466,7 @@
     let sameSources = false;
     try { sameSources = JSON.stringify(JSON.parse($('sources').value)) === JSON.stringify(node.sources); } catch { /* Intermediate JSON typing. */ }
     if (!sameSources) $('sources').value = JSON.stringify(node.sources, null, 2);
-    $('sources-label').hidden = node.type !== 'implementation'; populateParents(node.parents, node.type);
+    $('sources-label').hidden = node.type !== 'implementation'; sourceLinks(); populateParents(node.parents, node.type);
     const old = state.diff?.base.nodes.find(item => item.id === selected);
     $('before-section').hidden = !old; $('before').textContent = old?.body || '';
   }
@@ -488,7 +513,7 @@
   });
 
   $('new').addEventListener('click', () => {
-    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 3) return;
+    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 4) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
     rememberCamera(); delete cameras.draft; previewLabels.delete('__draft__');
@@ -545,6 +570,23 @@
   }
 
   host.onMessage(message => {
+    if (message.type === 'source-captured') {
+      if (message.id !== selected || !editable()) return;
+      try {
+        const references = JSON.parse($('sources').value); if (!Array.isArray(references)) throw new Error();
+        references.push(message.reference); $('sources').value = JSON.stringify(references, null, 2);
+        sourceLinks(); formChanged(); setMessage('Reference appended to the form. Save/stage normally; source staging remains manual.');
+      } catch { setMessage('Source JSON changed while capture was pending; complete it before capturing again.'); }
+      return;
+    }
+    if (message.type === 'source-preview') {
+      const r = message.resolution;
+      $('source-preview-title').textContent = `${r.path} · ${r.target}`;
+      $('source-preview-status').textContent = `${r.mode} · ${r.outcome} · ${r.ranges.map(p => p.join('–')).join(', ')}${message.original ? ' · Original anchored content (current mapping is not trustworthy)' : ''}${r.message ? ' · ' + r.message : ''}`;
+      $('source-preview-code').textContent = message.chunks.map(c => c.lines.map((line, i) => `${i + c.start >= c.selected[0] && i + c.start <= c.selected[1] ? '>' : ' '} ${i + c.start}: ${line}`).join('\n')).join('\n\n…\n\n');
+      if ($('source-preview').showModal) $('source-preview').showModal(); else $('source-preview').setAttribute('open', '');
+      return;
+    }
     if (message.type === 'document-status') {
       const newerSnapshot = state?.document && state.document.version > message.document.version;
       if (!newerSnapshot) { documentVersion = message.document.version; if (state) state.document = message.document; }

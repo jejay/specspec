@@ -19,7 +19,9 @@ async function run() {
   const executable = process.env.SPECSPEC_DESKTOP_EXECUTABLE || require('electron');
   const launchDirectory = resolve(__dirname, '..');
   const child = spawn(executable, [...(process.env.SPECSPEC_DESKTOP_EXECUTABLE ? [] : [launchDirectory]), '--project', project.root, '--python', relative(launchDirectory, python), '--profile', profile,
-    `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1'], { cwd: launchDirectory, env, stdio: ['ignore', 'pipe', 'pipe'] });
+    `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1',
+    // Test profile only: sample real geometry without occluded-window timer throttling.
+    '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'], { cwd: launchDirectory, env, stdio: ['ignore', 'pipe', 'pipe'] });
   child.stdout.on('data', d => process.stdout.write(d)); child.stderr.on('data', d => process.stderr.write(d));
   const exit = new Promise((resolve, reject) => { child.on('error', reject); child.on('close', resolve); });
   const timer = setTimeout(() => child.kill(), 180_000);
@@ -37,11 +39,11 @@ async function run() {
       assert.equal(await evaluate(`document.getElementById('body').value`),'# Retained stale desktop draft');
       assert.ok(await evaluate(`window.SpecSpecHost.getState().dirty`));
       await evaluate(`document.getElementById('discard').click();document.getElementById('compare').click()`);await delay(200);
-      assert.ok(await evaluate(`document.querySelector('dialog').open`));
+      assert.ok(await evaluate(`document.querySelector('dialog:not(#source-preview)').open`));
       // Exercise a real redirect in the independent history, not HEAD against itself.
       await evaluate(`const inputs=document.querySelectorAll('dialog input');inputs[0].value='stage/02-code';inputs[1].value='stage/03-spec';document.querySelector('dialog button[value="apply"]').click()`);
       for(let i=0;i<500;i++){if(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`))break;await delay(100);}
-      assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`), JSON.stringify(await evaluate(`({revision:document.getElementById('revision').textContent,message:document.getElementById('message').textContent,dialog:document.querySelector('dialog').open,returnValue:document.querySelector('dialog').returnValue})`)));
+      assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`), JSON.stringify(await evaluate(`({revision:document.getElementById('revision').textContent,message:document.getElementById('message').textContent,dialog:document.querySelector('dialog:not(#source-preview)').open,returnValue:document.querySelector('dialog:not(#source-preview)').returnValue})`)));
       assert.ok(await evaluate(`document.getElementById('save').disabled`));
       assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('stage/02-code')&&document.getElementById('revision').textContent.includes('stage/03-spec')`));
       assert.ok(await evaluate(`document.querySelectorAll('#cards .card').length>0`));

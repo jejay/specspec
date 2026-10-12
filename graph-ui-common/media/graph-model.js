@@ -26,7 +26,7 @@
       : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])])) : value;
     const contents = node => ({ id: node.id, type: node.type, retired: Boolean(node.retired),
       body: node.body?.replace(/\r\n/g, '\n'), parents: [...(node.parents || [])].sort(),
-      sources: [...(node.sources || [])].sort((a, b) => compare(a.path, b.path) || compare(a.symbol || '', b.symbol || '')),
+      sources: [...(node.sources || [])].sort((a, b) => compare(JSON.stringify(sorted(a)), JSON.stringify(sorted(b)))),
       extensions: node.extensions || {}, format_version: node.format_version });
     return JSON.stringify(sorted(contents(left))) === JSON.stringify(sorted(contents(right)));
   }

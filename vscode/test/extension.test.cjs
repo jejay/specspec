@@ -6,7 +6,7 @@ const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
 const extensionPath = require.resolve('../out/extension.js');
-const snapshot = { format_version: 3, nodes: [], edges: [], valid: true };
+const snapshot = { format_version: 4, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
 
 function fixture(t, options = {}) {
@@ -122,9 +122,9 @@ function fixture(t, options = {}) {
         changes.push({ path: n.path, before, after });
         overlaid = { ...overlaid, nodes: overlaid.nodes.map(item => item.id === n.id ? { ...item, body: request.edit.body } : item) };
       }
-      return { api_version: 3, ok: true, diagnostics: [], result: { snapshot: overlaid, diagnostics: [], changes, note: '' } };
+      return { api_version: 4, ok: true, diagnostics: [], result: { snapshot: overlaid, diagnostics: [], changes, note: '' } };
     }
-    return { api_version: 3, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+    return { api_version: 4, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
       base: current, target: current, changes: [], added_edges: [], removed_edges: [],
       base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
     } : current };
@@ -206,7 +206,7 @@ test('empty development windows use a filesystem folder picker and load the grap
   const result = await calls.commands.get('specspec.openGraph')();
   assert.equal(calls.dialogs, 1);
   assert.equal(calls.picks, 0);
-  assert.equal(result.format_version, 3);
+  assert.equal(result.format_version, 4);
   assert.equal('fingerprint' in result, false);
   assert.equal(calls.cli[0].root, root);
   assert.equal(calls.panels[0].messages.at(-1).type, 'snapshot');

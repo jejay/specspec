@@ -8,7 +8,7 @@ parents:
 - fdB9ZLM=
 sources:
 - path: graph-ui-common/host/cli.cjs
-  symbol: bounded shell-free API 3 invoke
+  symbol: bounded shell-free API 4 invoke
 - path: graph-ui-common/host/project.cjs
   symbol: nearest graph discovery
 - path: graph-ui-common/host/session.cjs

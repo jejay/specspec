@@ -1,7 +1,7 @@
 /* Fixed asset/protocol/message allowlists. No renderer-supplied executable or path. */
 const APP_URL = 'specspec://app/index.html';
 const ASSETS = new Set(['graph.js', 'graph.css', 'graph-model.js', 'graph-camera.js', 'host.js', 'host.css', 'specspec.svg', 'vendor/graph-vendor.js']);
-const ACTIONS = new Set(['ready', 'rendered', 'client-error', 'refresh', 'compare', 'workspace', 'select-project', 'save', 'add', 'retire', 'restore']);
+const ACTIONS = new Set(['ready', 'rendered', 'client-error', 'refresh', 'compare', 'workspace', 'select-project', 'save', 'add', 'retire', 'restore', 'source-view', 'source-capture']);
 function assetName(value) {
   try { const u = new URL(value); if (u.protocol !== 'specspec:' || u.hostname !== 'app' || u.port || u.username || u.password) return;
     const name = decodeURIComponent(u.pathname.slice(1)); if (name === 'index.html' || ASSETS.has(name)) return name;

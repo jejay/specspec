@@ -29,7 +29,7 @@ def test_flat_init(workspace):
     assert snapshot.graph.order == [manifesto]
     assert all(path.is_file() and path.suffix == ".md" for path in (root / "_specspec").iterdir())
     assert not (root / "_specspec" / "specspec.yaml").exists()
-    assert snapshot.nodes[0].format_version == 3
+    assert snapshot.nodes[0].format_version == 4
     assert "fingerprint" not in snapshot.to_dict()
     assert all("managed_hash" not in node.to_dict() for node in snapshot.nodes)
     assert all(b"managed_hash:" not in raw for raw in snapshot.files.values())
@@ -141,8 +141,8 @@ def test_nearest_workspace_does_not_fall_back(workspace):
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\ntype: manifesto"),
         lambda raw: raw.replace(b"parents: []", b"parents: &alias []"),
         lambda raw: raw.replace(b"parents: []", b"parents: !!seq []"),
-        lambda raw: raw.replace(b"format_version: 3", b"format_version: true"),
-        lambda raw: raw.replace(b"format_version: 3", b"format_version: 999"),
+        lambda raw: raw.replace(b"format_version: 4", b"format_version: true"),
+        lambda raw: raw.replace(b"format_version: 4", b"format_version: 999"),
         lambda raw: raw.replace(b"parents: []", b"parents: []\nmanaged_hash: obsolete"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nretired: 42"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nstatus: accepted"),
@@ -219,7 +219,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     assert result.exit_code == 0, result.output
     node_id = json.loads(result.output)["result"]["changed_ids"][0]
     assert runner.invoke(main, [*prefix, "accept", node_id, "--json"]).exit_code == 2
-    assert json.loads(result.output)["api_version"] == 3
+    assert json.loads(result.output)["api_version"] == 4
     assert (
         runner.invoke(
             main,

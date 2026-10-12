@@ -101,7 +101,7 @@ test('render acknowledgements verify complete focused or total membership', () =
   assert.equal(model.renderMatches(state, { ...report, visibleIds: ['a'], nodeCount: 1 }), false);
   assert.equal(model.renderMatches(state, { ...report, view: 'overview' }), false);
   assert.ok(model.renderMatches(state, { view: 'overview', visibleIds: ['root', 'a', 'b', 'c'], nodeCount: 4 }));
-  assert.equal(model.renderMatches(state, { nodeCount: 4 }), false, 'API 3 requires full membership, not legacy counts.');
+  assert.equal(model.renderMatches(state, { nodeCount: 4 }), false, 'API 4 requires full membership, not legacy counts.');
   assert.ok(model.renderMatches(state, { view: 'focus', creating: true, draftParents: ['root'], visibleIds: ['root'], nodeCount: 2 }));
 });
 

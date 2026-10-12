@@ -18,7 +18,7 @@ corrections rather than treating those descriptions as current contracts.
 - **Canonical data is a Markdown DAG, not a database.** Each direct
   `_specspec/<id><slug>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only format/API 3
+  potentially multiple parents, and terminal implementations. Only format/API 4
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, withdrawal, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
@@ -45,7 +45,7 @@ corrections rather than treating those descriptions as current contracts.
 
 The bridge spawns the trusted executable with argument arrays, `--root`, and
 `shell: false`. Bodies or editor requests go through UTF-8 stdin. JSON stdout has
-`{api_version: 3, ok, result, diagnostics}`; process time and output are bounded.
+`{api_version: 4, ok, result, diagnostics}`; process time and output are bounded.
 CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
 or I/O failures. An editor plan can succeed while reporting
 `snapshot.valid: false`: it preserves repairable intermediate text, not a valid
@@ -150,7 +150,9 @@ and edge additions/removals. Structural impact includes descendants from **both*
 old and new graphs, so removing an edge cannot hide its earlier dependents.
 Changed linked source paths identify implementation nodes and their ancestors,
 using references from both snapshots. Source-only impact is not node modification;
-source symbols are descriptive, not language-resolved. Impact is review context,
+source symbols are descriptive, not language-resolved. Optional blob/range
+anchors resolve locations through the shared backend; see [source regions](source-regions.md).
+Git content addresses are not node fingerprints. Impact remains file-level review context,
 not proof that every listed node is invalid.
 
 ## D. Where to work and what to check

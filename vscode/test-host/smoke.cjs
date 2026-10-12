@@ -21,7 +21,9 @@ exports.run = async function run() {
   assert.ok(snapshot.nodes.some(node => node.type === 'manifesto'));
   // Wait for external Chromium checks before this test host exits.
   if (process.env.SPECSPEC_UI_RESULT) {
-    const until = Date.now() + 80_000;
+    // Aggregate guard covers the expanded source-preview/schema-4 fixture suite;
+    // individual CDP, mapping and watcher deadlines/assertions remain unchanged.
+    const until = Date.now() + 160_000;
     while (!existsSync(process.env.SPECSPEC_UI_RESULT) && Date.now() < until) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -38,7 +40,8 @@ exports.run = async function run() {
     console.log('SPECSPEC_NATIVE_OPEN:', JSON.stringify(vscode.window.tabGroups.all.flatMap(g => g.tabs).map(t => ({ label: t.label, type: t.input?.viewType }))));
     const requestPath = process.env.SPECSPEC_NATIVE_REQUEST, responsePath = process.env.SPECSPEC_NATIVE_RESPONSE;
     let last = 0;
-    const until = Date.now() + 100_000;
+    // Aggregate native lifecycle guard; each request still has its own deadline.
+    const until = Date.now() + 160_000;
     while (!existsSync(process.env.SPECSPEC_NATIVE_RESULT) && Date.now() < until) {
       if (existsSync(requestPath)) {
         let request; try { request = JSON.parse(readFileSync(requestPath, 'utf8')); } catch {}

@@ -13,7 +13,7 @@ export interface SpecNode {
   retired: boolean;
   parents: string[];
   body: string;
-  sources: { path: string; symbol?: string }[];
+  sources: { path: string; symbol?: string; blob?: string; mode?: 'strict' | 'expanding'; ranges?: [number, number][] }[];
   path: string;
 }
 

@@ -30,7 +30,8 @@ material uncertainty and conflicts rather than manufacturing agreement.
 
 - Use `add`, `update`, `retire`, and `restore` for ordinary canonical graph changes
   in this checkout. The product permits manual Markdown edits, but CLI/UI editing
-  remains recommended. Format/API 3 has no hashes, fingerprints, or `--expect`.
+  remains recommended. Format/API 4 has no node hashes, fingerprints, or `--expect`; source blob IDs
+  are Git content addresses, not node edit gates.
   The authorized compact-ID conversion is a one-time tool-managed migration,
   not a permanent compatibility command.
 - Record a separate conclusion when a change introduces a meaningful choice.
@@ -40,7 +41,8 @@ material uncertainty and conflicts rather than manufacturing agreement.
 - Retirement means withdrawal with retained history, not insufficient review.
   Keep live nodes independent of retired parents; restoration is not approval.
 - Keep implementation explanations and `sources` references current when code
-  or verification changes. Source symbols are descriptive, not machine-resolved.
+  or verification changes. Source symbols remain descriptive. Blob/range locations are resolved through
+  the shared backend; see `docs/source-regions.md`.
 - Present specification changes, code changes, and affected nodes together.
 - Account for earlier assistant-authored work as unfinished work, not somebody
   else's edits. Before reporting completion, explicitly account for remaining

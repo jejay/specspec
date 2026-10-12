@@ -99,7 +99,7 @@ optional boolean edit. The result has `snapshot`, `diagnostics`,
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
 explicit diagnostics, not successful graph validation. Unsafe/missing files,
 identity changes, unsupported schemas, locks/recovery, and oversized requests fail.
-The planner never writes files or recreates a deleted node. API stays version 3;
+The planner never writes files or recreates a deleted node. The current planner uses API version 4;
 upgrade the development CLI and extension together to gain this new command.
 
 ## Verification

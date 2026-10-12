@@ -26,7 +26,7 @@ uniqueness or secret/authentication tokens. Mermaid uses injective ASCII-safe ID
 
 Both working graphs were converted with saved old/new mappings and original bytes
 through a temporary tool-managed migration. Current code retains **only the current
-format/API 3 schema**: no UUID reader, old hash/approval normalization or permanent
+format/API 4 schema**: no UUID reader, old hash/approval normalization or permanent
 migration command/controls. Old node files fail validation; they are not silently
 converted, accepted as a usable baseline or repaired. Rekeyed persisted host
 cameras/drafts are not claimed compatible; old drafts should be copied explicitly.
@@ -89,6 +89,24 @@ never evidence or authorization. The walkthrough documents rebuilding in a fresh
 independent repo, validating every ref and refreshing the complete bundle. Manual
 clones are explicitly recreated only after preserving local experiments. No old
 reader/converter is added to production and unrelated development history is untouched.
+
+## Git-addressed source regions
+
+The [user's intention](../_specspec/v6xn2GU=precise-and-growing-git-tracked-implementation-source-regions.md)
+asks for multiple line links that follow code and both specific and broad regions.
+The [blob-address conclusion](../_specspec/jsIUeP0=stable-blob-anchors-with-derived-source-locations.md)
+separates stable source snapshots from derived locations and commit identity.
+The [detailed contract](../_specspec/VnSF9BE=strict-and-expanding-source-range-resolution-contract.md)
+chooses strict/expanding semantics, explicit lifecycle/checks, readable previews,
+retention budgets and current-only format/API 4. These are separate revisable
+choices, not reinterpretations of the user's core outcome. See the
+[source-region guide](source-regions.md) for commands, schema, boundaries and limits.
+Source blob IDs are not node fingerprints or approval gates. File-level impact
+remains conservative; mapping content is not proof of implementation meaning.
+The entire maintained Gantt corpus—not just HEAD—is reconstructed through actual
+current CLI calls with both source modes, all refs/withdrawn nodes and new receipts.
+Existing manual clones remain preserved and may be obsolete; create a new external
+clone rather than silently resetting experiments. Earlier API-3 evidence is history.
 
 ## Engineering map and accounted-for repository inputs
 

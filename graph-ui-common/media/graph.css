@@ -84,6 +84,9 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .retired-badge { color: #929baa; border-color: #929baa; }
 .card.expanded { height: auto; overflow: visible; padding: 18px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .node-settings { width: 100%; min-width: 0; }
+#source-links button { text-align: left; overflow-wrap: anywhere; }
+#source-preview { width: min(90vw, 1100px); max-height: 85vh; color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+#source-preview-code { max-height: 65vh; overflow: auto; white-space: pre; font-family: var(--vscode-editor-font-family, monospace); }
 .card.manifesto.expanded > .node-settings { width: var(--detail-content-width, 822px); flex-shrink: 0; }
 .card.manifesto.expanded .git-corner { right: 6%; bottom: 35%; }
 h2 { margin: 0 0 8px; font-size: 18px; overflow-wrap: anywhere; }

@@ -43,3 +43,16 @@ history behavior, SHA variants, exact index versus worktree, preview/native draf
 retention and old-version rejection. Reconstruct and validate the entire Gantt
 corpus, including withdrawn nodes, tags, real receipts and runnable stages; exercise
 actual CLI and both hosts. Record actual failures/reruns and bounded uncertainty.
+
+## Reproducible real-host verification environment
+
+Use the supported reduced-motion preference for deterministic geometry/gesture
+poses in the shared real-host harness. Keep normal-motion camera unit coverage
+and production camera code unchanged; do not weaken pose, source, form or ink
+assertions. The isolated Electron test launch disables background/occluded-window
+timer throttling so intrinsic-resize observer work can complete predictably.
+VS Code's aggregate shared/native smoke guards are 160 seconds each for the
+expanded suite; individual CDP/request/watcher deadlines remain unchanged.
+These are test-environment/budget choices, not universal timing/smoothness claims.
+Record the earlier throttled camera/frame/source-preview failures and aggregate
+shutdown failures as evidence; successful reruns do not erase uncertainty.

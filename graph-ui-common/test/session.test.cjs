@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { GraphSession, pollInterval } = require('../host/session.cjs');
 const { renderMatches, sameNode } = require('../media/graph-model.js');
 const node = { id: 'node', type: 'requirement', retired: false, body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
-const snapshot = { valid: true, format_version: 3, nodes: [node], edges: [] };
+const snapshot = { valid: true, format_version: 4, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(check) { for (let i = 0; i < 100; i++) { if (check()) return; await pause(5); } assert.ok(check()); }
 function fixture(t, options = {}) {
@@ -15,7 +15,7 @@ function fixture(t, options = {}) {
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
-      return { api_version: 3, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+      return { api_version: 4, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
         base: current, target: current, changes: [], added_edges: [], removed_edges: [],
         base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
       } : current };
@@ -29,6 +29,22 @@ function fixture(t, options = {}) {
   t.after(() => s.dispose()); s.receive({ type: 'ready' });
   return { s, calls, messages, confirmations, change: value => { current = value; }, fail: value => { failure = value; }, failNext: count => { remainingFailures = count; }, revoke: () => { authorized = false; } };
 }
+test('source capture invokes only a validated preview and never a writer or Git operation', async t => {
+  const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]}});await f.s.open();
+  await f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});
+  const c=f.calls.at(-1);assert.deepEqual(c.args,['sources','capture','node','code.js','--range','2:4','--range','9:10','--mode','strict','--staged','--preview','--json']);
+  assert.equal(f.calls.some(c=>['update','add'].includes(c.args[0])),false);
+  await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['--bad'],mode:'strict'}),/Invalid/);
+  f.revoke();await assert.rejects(f.s.handle({type:'source-view',id:'node',reference:'{}'}),/authorization/);
+});
+
+test('source previews in historical views use selected code revisions but never permit capture', async t => {
+  const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]},revisions:['older','newer']});await f.s.open();await f.s.chooseRevisions();
+  await f.s.handle({type:'source-view',id:'node',reference:JSON.stringify({path:'code.js'})});
+  assert.deepEqual(f.calls.at(-1).args,['sources','view','--reference','{"path":"code.js"}','--ref','newer','--json']);
+  await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['1:2'],mode:'strict'}),/editable/);
+});
+
 const save = originalNode => ({ type: 'save', id: 'node', originalNode, parents: [], sources: '[]', body: '# Draft' });
 
 test('unsupported schema snapshots cannot invoke a writer', async t => {

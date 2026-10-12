@@ -185,7 +185,7 @@ def snapshot_from_files(
                             node.id,
                         )
                     )
-                elif not node.retired and not target.is_file():
+                elif not node.retired and "blob" not in source and not target.is_file():
                     errors.append(
                         Diagnostic(
                             "SOURCE_MISSING",
@@ -393,7 +393,7 @@ def add_node(
     parents: list[str],
     body: str,
     slug: str,
-    sources: list[dict[str, str]] | None = None,
+    sources: list[dict[str, Any]] | None = None,
 ) -> tuple[Snapshot, str]:
     node_id = ""
 
@@ -421,7 +421,7 @@ def update_node(
     *,
     body: str | None = None,
     parents: list[str] | None = None,
-    sources: list[dict[str, str]] | None = None,
+    sources: list[dict[str, Any]] | None = None,
 ) -> Snapshot:
     def operation(before: Snapshot) -> dict[str, bytes]:
         old = require_node(before, node_id)
