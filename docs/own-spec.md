@@ -107,6 +107,17 @@ The entire maintained Gantt corpus—not just HEAD—is reconstructed through ac
 current CLI calls with both source modes, all refs/withdrawn nodes and new receipts.
 Existing manual clones remain preserved and may be obsolete; create a new external
 clone rather than silently resetting experiments. Earlier API-3 evidence is history.
+The [current implementation/evidence record](../_specspec/vQFml0Y=blob-source-regions-implementation-and-current-history-evidence.md)
+uses the feature itself: a strict schema-module anchor and expanding resolver/command
+anchors from the committed implementation. Fresh checks pass: 150 Python (30 source),
+135 common UI, 34 VS Code and nine Electron tests, Ruff, both graphs, all eight
+maintained commits/refs and 123 actual API-4 receipts/source checks/model stages.
+Both Windows hosts pass source previews and complete existing suites; app/browser
+and offline playground checks passed. The inspected preview flags original code
+when current mapping conflicts. Strict pose/ink/assertions remain, while isolated
+geometry tests use reduced motion/unthrottled Electron timers and VS Code aggregate
+smoke budgets are 160/160 seconds. Earlier camera/frame/source-preview/aggregate
+failures remain recorded; this is bounded evidence, not every-platform or speed proof.
 
 ## Engineering map and accounted-for repository inputs
 
