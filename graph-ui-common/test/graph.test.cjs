@@ -114,7 +114,7 @@ test('shared CSS keeps gray cards tinted and increases corner letters without co
   const css = readFileSync(join(__dirname, '../media/graph.css'), 'utf8');
   assert.match(css, /\.card:hover, \.card\.node-hovered \{ background: color-mix/);
   assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ border-color: oklch\(from var\(--node-accent, #8993a4\) min\(0\.95, calc\(l \+ 0\.10\)\) calc\(c \* 1\.30\) h\)/);
-  assert.match(css, /#cards \.card\.manifesto:hover, #cards \.card\.manifesto\.node-hovered \{ border-color: #fff/);
+  assert.match(css, /#cards \.card\.manifesto:not\(\.revision-colored\):hover, #cards \.card\.manifesto:not\(\.revision-colored\)\.node-hovered \{ border-color: #fff/);
   assert.doesNotMatch(css, /#cards \.card:hover[^}]*border-color: #fff/);
   assert.doesNotMatch(css, /\.card\.manifesto[^}]*background:/);
   assert.doesNotMatch(css, /\.card\.manifesto[^}]*(?:\{ |; )color:/);
@@ -366,7 +366,7 @@ test('nodes are editable without approval states or an acceptance action', t => 
   const { dom, $, saved } = fixture(t);
   assert.equal($('accept'), null);
   assert.equal($('save').textContent, 'Save node');
-  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'max-distance', 'type']);
+  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'max-distance', 'type', 'git-revision']);
   assert.equal(saved().colorMode, 'distance');
   for (const card of $('cards').children) {
     assert.equal('status' in card.dataset, false);
@@ -717,7 +717,7 @@ function distanceFixture(t) {
 
 test('minimum/maximum distance modes have exact labels, different fills/legends, and no on-node hop text', t => {
   const { dom, $, card, snapshot, messages, saved } = distanceFixture(t);
-  assert.deepEqual([...$('color-mode').options].map(o => o.textContent), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type']);
+  assert.deepEqual([...$('color-mode').options].map(o => o.textContent), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type', 'Git/Revision Status']);
   const world = [...$('cards').children].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.height]);
   const camera = $('graph').style.transform, before = JSON.stringify(snapshot);
   assert.equal(card('child').style.getPropertyValue('--node-accent'), model.color('distance', child, 1));
@@ -739,6 +739,80 @@ test('minimum/maximum distance modes have exact labels, different fills/legends,
   }
   assert.equal(JSON.stringify(snapshot), before);
   assert.ok(messages.every(m => ['ready', 'rendered'].includes(m.type)));
+});
+
+test('revision fills include changed manifesto, added/removed/renamed/source-only and unchanged nodes in overview and focus', t => {
+  const { dom, $, snapshot, send, saved, messages } = fixture(t);
+  const extra=(id,fields={})=>({...child,id,body:'# '+id,...fields});
+  const old=extra('old'),added=extra('new'),renamed=extra('rename'),source=extra('source',{retired:true}),plain=extra('plain',{retired:true});
+  const base={...snapshot,nodes:[root,child,old,renamed,source,plain],edges:[...snapshot.edges,['root','old'],['root','rename'],['root','source'],['root','plain']]};
+  const target={...base,nodes:[root,child,added,renamed,source,plain],edges:base.edges.filter(e=>e[1]!=='old').concat([['root','new']])};
+  const diff={base,target,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'},{id:'old',kind:'removed'},{id:'new',kind:'added'},{id:'rename',kind:'renamed'}],source_affected:['source','child'],added_edges:[['root','new']],removed_edges:[['root','old']]};
+  send({type:'snapshot',snapshot:target,diagnostics:[],readonly:false,diff});
+  const card=id=>dom.window.document.querySelector(`[data-node-id="${id}"]`);
+  const kinds={root:'changed',child:'changed',old:'removed',new:'added',rename:'renamed',source:'source-changed',plain:'unchanged'};
+  const world=()=>[...$('cards').children].map(c=>[c.dataset.nodeId,c.style.left,c.style.top,c.style.width,c.style.height]);
+  const before=JSON.stringify(target),positions=world(),camera=$('graph').style.transform;
+  $('color-mode').value='git-revision';$('color-mode').dispatchEvent(new dom.window.Event('change'));
+  for(const [id,kind] of Object.entries(kinds)) {
+    assert.equal(card(id).style.getPropertyValue('--node-accent'),model.REVISION_COLORS[kind]);
+    assert.ok(card(id).classList.contains('revision-colored'));
+  }
+  assert.deepEqual(world(),positions);assert.equal($('graph').style.transform,camera);
+  assert.match($('legend').textContent,/A · Added.*M · Modified.*D · Deleted.*R · Renamed.*Linked source changed.*Unchanged/);
+  assert.doesNotMatch($('legend').textContent,/Manifesto|hops|No comparison/);
+  assert.equal(saved().colorMode,'git-revision');
+  assert.equal(card('source').querySelector('.git-corner'),null);
+  assert.equal(card('plain').querySelector('.git-corner'),null);
+  assert.ok(card('plain').querySelector('.retired-badge'));
+  for(const [id,kind] of Object.entries(kinds)) {
+    card(id).click();assert.equal(card(id).style.getPropertyValue('--node-accent'),model.REVISION_COLORS[kind]);
+    assert.equal(card(id).style.width,'860px');$('back').click();
+  }
+  send({type:'snapshot',snapshot:target,diagnostics:[],readonly:true,diff:{...diff,changes:[{id:'root',kind:'added'}],source_affected:[]}});
+  assert.equal(card('root').style.getPropertyValue('--node-accent'),model.REVISION_COLORS.added);
+  assert.equal(card('child').style.getPropertyValue('--node-accent'),model.REVISION_COLORS.unchanged);
+  $('color-mode').value='distance';$('color-mode').dispatchEvent(new dom.window.Event('change'));
+  assert.equal(card('root').style.getPropertyValue('--node-accent'),'#d3d3d3');
+  assert.ok(!card('root').classList.contains('revision-colored'));
+  assert.equal(JSON.stringify(target),before);
+  assert.ok(messages.every(m=>['ready','rendered'].includes(m.type)));
+});
+
+test('revision mode switches and restores without disturbing a native draft, caret, camera or original contents', t => {
+  const restored={colorMode:'git-revision',selected:'child',view:'focus',dirty:true,originalNode:child,
+    cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Draft',sources:'[]',slug:'',nodeType:'requirement',parents:['root']}};
+  const { dom, $, saved, snapshot, send }=fixture(t,{restored});
+  assert.equal($('color-mode').value,'git-revision');
+  assert.match($('legend').textContent,/No comparison/);
+  const body=$('body');body.focus();body.setSelectionRange(2,5,'backward');
+  const camera=$('graph').style.transform;
+  const diff={base:snapshot,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'}],added_edges:[],removed_edges:[]};
+  send({type:'snapshot',snapshot,diagnostics:[],readonly:false,diff});
+  for(const mode of ['distance','max-distance','type','git-revision']) {
+    $('color-mode').value=mode;$('color-mode').dispatchEvent(new dom.window.Event('change'));
+    assert.equal($('body'),body);assert.equal(body.value,'# Draft');assert.equal(dom.window.document.activeElement,body);
+    assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[2,5,'backward']);
+    assert.equal($('graph').style.transform,camera);assert.equal(saved().originalNode,child);
+  }
+  send({type:'snapshot',snapshot,diagnostics:[],readonly:false});
+  assert.match($('legend').textContent,/No revision comparison available/);
+  assert.equal(dom.window.document.querySelector('.card.expanded').style.getPropertyValue('--node-accent'),model.NEUTRAL_COLOR);
+  assert.equal(saved().colorMode,'git-revision');
+});
+
+test('unsaved new and orphaned drafts use neutral revision fills, not invented Git statuses', t => {
+  const { dom, $, snapshot, send }=fixture(t);
+  $('color-mode').value='git-revision';$('color-mode').dispatchEvent(new dom.window.Event('change'));
+  $('new').click();
+  assert.equal(dom.window.document.querySelector('.card.expanded').style.getPropertyValue('--node-accent'),model.REVISION_COLORS.draft);
+  assert.equal(dom.window.document.querySelector('.card.expanded .git-corner'),null);
+  $('discard').click();
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  $('body').value='# Keep me';$('body').dispatchEvent(new dom.window.Event('input'));
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root],edges:[]},diagnostics:[],readonly:false});
+  assert.equal(dom.window.document.querySelector('.card.expanded').style.getPropertyValue('--node-accent'),model.REVISION_COLORS.draft);
+  assert.equal($('body').value,'# Keep me');
 });
 
 test('distance switches and refreshed path bounds retain the same dirty form, caret, baseline and camera', t => {

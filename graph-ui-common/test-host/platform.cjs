@@ -32,7 +32,16 @@ function platformChecks(fixture, host) {
         await screenshot(`${host}-git-${label}`);
         await evaluate(`document.getElementById('back').click()`);
       }
-      console.log(`${host}: real A/M/D title/corner paint and live theme tokens passed.`);
+      // A real root change in the independent disposable clone exercises the new
+      // revision-mode exception, not a synthetic renderer-only status injection.
+      const root=fixture.cli(['list','--json']).nodes.find(n=>n.type==='manifesto');
+      fixture.cli(['update',root.id,'--body','-','--json'],root.body+'\nRoot revision-color fixture.\n');
+      for(let i=0;i<300;i++) {
+        if(await evaluate(`document.querySelector('#cards .card.manifesto.changed')!==null`)) break;
+        await delay(100);
+      }
+      assert.ok(await evaluate(`document.querySelector('#cards .card.manifesto.changed')!==null`));
+      console.log(`${host}: real A/M/D title/corner paint, live theme tokens and modified manifesto fixture passed.`);
     },
     after: async ({ evaluate, screenshot, delay }) => {
       const waitFor = async expression => {

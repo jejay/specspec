@@ -93,8 +93,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
     assert.equal(await evaluate(`document.getElementById('accept')`), null);
-    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'type']);
-    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type']);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'type', 'git-revision']);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type', 'Git/Revision Status']);
     assert.equal(await evaluate(`document.querySelector('.distance-badge')`), null);
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>c.offsetHeight===112&&c.scrollHeight<=c.clientHeight+1)`), 'Shorter compact cards must fit two-line headlines and remaining badges.');
     assert.equal(await evaluate(`getComputedStyle(document.getElementById('graph')).willChange`), 'auto');
@@ -133,7 +133,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         darkened:c.classList.contains('hover-darkened'),filter:getComputedStyle(c).filter,
         background:getComputedStyle(c).backgroundColor,border:getComputedStyle(c).borderTopColor,
         borderOKLCH:oklch(getComputedStyle(c).borderTopColor),accentOKLCH:oklch(c.style.getPropertyValue('--node-accent')),
-        manifesto:c.classList.contains('manifesto'),hovered:c.classList.contains('node-hovered'),accent:c.style.getPropertyValue('--node-accent')}));})()`);
+        manifesto:c.classList.contains('manifesto'),revisionColored:c.classList.contains('revision-colored'),hovered:c.classList.contains('node-hovered'),accent:c.style.getPropertyValue('--node-accent')}));})()`);
       const before=await paint(), beforeCards=await cardPaint(), world=await positions(), transform=await camera();
       await evaluate(`window.__hoverPaths=[...document.querySelectorAll('#edges path')]`);
       await evaluate(`(() => {
@@ -172,7 +172,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         assert.equal(card.darkened,darkened);assert.equal(card.filter,darkened?'brightness(0.45)':'none');
         assert.equal(card.hovered,card.id===id);
         if(card.id===id) {
-          if(card.manifesto) assert.equal(card.border,'rgb(255, 255, 255)');
+          if(card.manifesto&&!card.revisionColored) assert.equal(card.border,'rgb(255, 255, 255)');
           else assertStrongerHue(card.borderOKLCH,card.accentOKLCH,'Non-manifesto border');
         }
         assert.equal(card.accent,old.accent);
@@ -201,9 +201,9 @@ exports.checkUI = async function checkUI(port, options = {}) {
           results.push({label:kind+' probe',base,actual:oklch(getComputedStyle(p).stroke),paired:getComputedStyle(p).stroke===getComputedStyle(h).fill});
           p.remove();h.remove();
         }
-        for(const accent of ['#e5be32',...window.SpecSpecGraph.DEPTH_COLORS,...Object.values(window.SpecSpecGraph.TYPE_COLORS).filter(c=>c!=='#d3d3d3')]) {
-          for(const kind of ['normal','changed','removed','added','renamed','source-changed']) for(const expanded of [false,true]) {
-            const c=document.createElement('div');c.className='card '+kind+(expanded?' expanded':'');
+        for(const accent of ['#e5be32',...window.SpecSpecGraph.RAINBOW_COLORS,...Object.values(window.SpecSpecGraph.TYPE_COLORS).filter(c=>c!=='#d3d3d3')]) {
+          for(const kind of ['normal','changed','removed','added','renamed','source-changed']) for(const expanded of [false,true]) for(const type of ['requirement','implementation','manifesto revision-colored']) {
+            const c=document.createElement('div');c.className='card '+type+' '+kind+(expanded?' expanded':'');
             c.style.setProperty('--node-accent',accent);document.getElementById('cards').append(c);
             const resting=getComputedStyle(c).borderTopColor;c.classList.add('node-hovered');
             results.push({label:accent+' '+kind+(expanded?' expanded':''),base:oklch(accent),actual:oklch(getComputedStyle(c).borderTopColor),paired:true});
@@ -364,6 +364,23 @@ exports.checkUI = async function checkUI(port, options = {}) {
         await checkHoverPalette();
         const rootId=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
         await checkHover(rootId, undefined, theme==='vscode-dark'?'hover-gray-manifesto':undefined);
+        await evaluate(`document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+        assert.ok(await evaluate(`(() => {
+          const model=window.SpecSpecGraph,root=document.querySelector('.card.manifesto');
+          const legend=document.getElementById('legend').textContent;
+          return root.style.getPropertyValue('--node-accent')===model.REVISION_COLORS.changed
+            &&root.classList.contains('revision-colored')
+            &&[...document.querySelectorAll('#cards .card')].every(c=>{
+              const kind=['added','changed','removed','renamed','source-changed'].find(k=>c.classList.contains(k))||'unchanged';
+              const accent=model.REVISION_COLORS[kind];
+              const probe=document.createElement('span');probe.style.background=${JSON.stringify(theme.includes('contrast')?'var(--vscode-editor-background)':'color-mix(in srgb, var(--accent) 15%, var(--vscode-editor-background))')};
+              probe.style.setProperty('--accent',accent);document.body.append(probe);
+              const matches=c.style.getPropertyValue('--node-accent')===accent&&getComputedStyle(c).backgroundColor===getComputedStyle(probe).backgroundColor;probe.remove();return matches;
+            })&&legend.includes('A · Added')&&legend.includes('M · Modified')&&legend.includes('D · Deleted')
+            &&legend.includes('R · Renamed')&&!legend.includes('Manifesto · 0 hops');
+        })()`),'Revision fills/legend match comparison kinds, including the modified manifesto.');
+        await checkHover(rootId,undefined,theme==='vscode-dark'?'hover-revision-manifesto':undefined);
+        await checkHover(hoverNode);
       }
     } finally {
       await evaluate(`document.body.className=${JSON.stringify(oldClass)};
@@ -499,7 +516,16 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await screenshot('distance-maximum');
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     await screenshot('distance-minimum');
+    const statusWorld=await positions(),statusCamera=await camera();
+    await evaluate(`document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+    assert.equal(await positions(),statusWorld);assert.deepEqual(await camera(),statusCamera);
+    assert.equal(await evaluate(`window.SpecSpecHost.getState().colorMode`),'git-revision');
+    await screenshot('git-revision-colors');
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
+    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),'#77abec');
+    await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
+    await checkHover(await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`),'#body','hover-revision-expanded-root');
+    await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
     assert.equal(await evaluate(`document.getElementById('parent-add-controls').hidden`), true);
     assert.equal(await evaluate(`document.getElementById('retire').disabled`), true);
@@ -508,7 +534,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, three fill modes, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, thirteen-step violet-to-red spectrum and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

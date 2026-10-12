@@ -94,7 +94,8 @@ counts include all unique deeper descendants, excluding that child; overlapping
 totals are not additive or guarantees of invalidation/review.
 
 [Colors](../_specspec/7woeTpk=selectable-graph-colors.md) select minimum distance,
-maximum distance or existing node type. Path bounds use each complete revision,
+maximum distance, existing node type or Git/Revision Status under the later rainbow
+extension. Path bounds use each complete revision,
 not visible subsets, layout backbones or the revision union. Repeated on-node hop
 labels are removed. Withdrawal/Git/source cues remain distinct from semantic fills.
 
@@ -184,6 +185,39 @@ Captured VS Code hover screenshots were inspected. Current local checks passed:
 108 shared UI, 34 VS Code, nine Electron and 111 Python tests, Ruff lint/format and
 working-graph validation. This is bounded browser/platform evidence, not a claim
 about every theme/custom palette, display gamut or platform.
+
+## Shared rainbow table and Git/Revision Status
+
+The [user request](../_specspec/Rg30CXs=rainbow-node-palette-and-revision-color-mode.md)
+orders spectrum colors from violet through blue/cyan/green/yellow/orange to red,
+with more intermediate colors and a similar gentle feel. The [separate choice](../_specspec/6QB9hRY=shared-rainbow-table-and-derived-revision-fills.md)
+uses 13 in-gamut sRGB swatches sampled at OKLCH lightness .73/chroma .11, hue 300
+through 30 in 22.5-degree steps. One hop starts violet; thirteen reaches red;
+fourteen restarts violet. Node types reuse teal/violet entries. Unknown paths are
+neutral, and distance/type manifesto accents remain light gray outside the cycle.
+
+**Git/Revision Status** uses the selected comparison: A green, M/R blue, D red,
+source-only affected amber, unchanged neutral gray. Rename/source labels remain
+distinct; withdrawal is not deletion and direct node changes take precedence over
+source impact. No comparison is explicitly labeled and neutral; unsaved new or
+orphaned drafts do not invent Git changes. Existing themed titles/corners and edge
+colors/dashes are independent. The new mode colors the manifesto by its comparison
+kind too, in compact and expanded views, with stronger same-hue hover instead of
+the neutral-root white override. Earlier all-mode gray-root descriptions are
+superseded only for this new mode; no approval status or schema fields return.
+
+The mode persists in host state without changing metrics, geometry, camera, native
+form DOM/caret/drafts or original contents. Tests check independently converted
+palette lightness/chroma/hue, cyclic indexing, shared-table mappings, root status
+changes and mode switches, historical/removed/source-only/withdrawal distinctions,
+no comparison and drafts. Real Windows host paint checks include a CLI-modified
+root in an independent disposable Gantt clone and all dark/light/contrast probes.
+The [implementation/evidence record](../_specspec/Flf59Uc=rainbow-and-revision-colors-implementation.md)
+links the shared model/renderer/template/CSS and regressions. All 115 common,
+34 VS Code, nine Electron and 111 Python tests passed, as did Ruff and working
+validators. Both complete Windows host suites passed sequentially with inspected
+screenshots. Constants and bounded host evidence remain revisable, not
+accessibility/display or every-platform certification.
 
 ## Minimum/maximum distance, spacing, and headline correction
 

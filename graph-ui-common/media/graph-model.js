@@ -10,8 +10,13 @@
   const RANK_GAP = 140, NODE_GAP = 44;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: '#43b5b0', implementation: '#a786eb' };
-  const DEPTH_COLORS = ['#6699ee', '#a786eb', '#43b5b0', '#dd9b48', '#dc7aab', '#84b466', '#7d9ed2'];
+  // Soft, closely spaced violet -> red hues: OKLCH L=.73, C=.11, H=300..30.
+  const RAINBOW_COLORS = ['#b298e3', '#97a1ec', '#77abec', '#57b3e1', '#3dbace', '#3fbeb4', '#5cbe96', '#7eb979', '#9fb260', '#bba851', '#d09d53', '#de9464', '#e48d7e'];
+  const NEUTRAL_COLOR = '#929baa';
+  const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[6], implementation: RAINBOW_COLORS[0] };
+  const REVISION_COLORS = { added: RAINBOW_COLORS[7], changed: RAINBOW_COLORS[2], removed: RAINBOW_COLORS[12], renamed: RAINBOW_COLORS[2], 'source-changed': RAINBOW_COLORS[10], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
+  const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Unchanged', uncompared: 'No comparison', draft: 'Unsaved draft' };
+  const COLOR_MODES = ['distance', 'max-distance', 'type', 'git-revision'];
 
   function sameNode(left, right) {
     if ([left, right].some(node => !node || typeof node.body !== 'string'
@@ -118,10 +123,12 @@
     return { minDistances, maxDistances, children, descendantCount };
   }
 
-  function color(mode, node, distance) {
+  function color(mode, node, distance, revisionKind = 'uncompared') {
+    if (mode === 'git-revision') return REVISION_COLORS[revisionKind] || NEUTRAL_COLOR;
     if (node.type === 'manifesto') return TYPE_COLORS.manifesto;
-    if (mode === 'type') return TYPE_COLORS[node.type] || '#929baa';
-    return Number.isInteger(distance) ? DEPTH_COLORS[distance % DEPTH_COLORS.length] : '#929baa';
+    if (mode === 'type') return TYPE_COLORS[node.type] || NEUTRAL_COLOR;
+    return Number.isInteger(distance) && distance > 0
+      ? RAINBOW_COLORS[(distance - 1) % RAINBOW_COLORS.length] : NEUTRAL_COLOR;
   }
 
   function layoutBackbone(nodes, edges) {
@@ -265,7 +272,7 @@
       head: `M${base.x},${base.y - half}L${route.end.x},${route.end.y}L${base.x},${base.y + half}Z` };
   }
 
-  return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, DEPTH_COLORS,
+  return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS,
     sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
 });

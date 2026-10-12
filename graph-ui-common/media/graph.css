@@ -55,7 +55,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card:hover, .card.node-hovered { background: color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background)); }
 /* Stronger semantic hue everywhere except the intentionally neutral manifesto. */
 #cards .card:hover, #cards .card.node-hovered { border-color: oklch(from var(--node-accent, #8993a4) min(0.95, calc(l + 0.10)) calc(c * 1.30) h); }
-#cards .card.manifesto:hover, #cards .card.manifesto.node-hovered { border-color: #fff; }
+#cards .card.manifesto:not(.revision-colored):hover, #cards .card.manifesto:not(.revision-colored).node-hovered { border-color: #fff; }
 .card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
 .card.manifesto { border-top-width: 6px; }

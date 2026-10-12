@@ -11,7 +11,7 @@ function snapshot(edges, extra = []) {
   })), edges };
 }
 
-test('manifesto color is fixed light gray regardless of mode, distance or revision state', () => {
+test('manifesto stays light gray in distance/type modes regardless of distance or revision state', () => {
   assert.equal(model.TYPE_COLORS.manifesto, '#d3d3d3');
   for (const mode of ['distance', 'max-distance', 'type']) {
     for (const distance of [undefined, 0, 1, 7, 30]) {

@@ -12,7 +12,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <button id="compare">Compare revisions</button><button id="workspace">HEAD / workspace</button>
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
     <label class="color-control" for="color-mode">Color by <select id="color-mode">
-    <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="type">Node type</option></select></label>
+    <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="type">Node type</option><option value="git-revision">Git/Revision Status</option></select></label>
     <span id="revision"></span></header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>

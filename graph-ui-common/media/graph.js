@@ -5,7 +5,7 @@
   const restored = host.getState() || {};
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
-  let colorMode = ['type', 'max-distance'].includes(restored.colorMode) ? restored.colorMode : 'distance';
+  let colorMode = model.COLOR_MODES.includes(restored.colorMode) ? restored.colorMode : 'distance';
   let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
   let editSequence = 0, documentVersion;
   let layoutFrame, layout, layoutKey, cameraScene;
@@ -160,10 +160,15 @@
     return { parents: sorted(parents), children: sorted(children) };
   }
 
+  const revisionKind = kind => kind || (state?.diff ? 'unchanged' : 'uncompared');
+
   function drawLegend() {
     $('color-mode').value = colorMode;
     $('legend').replaceChildren();
-    const entries = colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
+    const entries = colorMode === 'git-revision'
+      ? Object.entries(model.REVISION_COLORS).filter(([kind]) => state.diff ? kind !== 'uncompared' : ['uncompared', 'draft'].includes(kind))
+        .map(([kind, color]) => [model.REVISION_LABELS[kind], color])
+      : colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
       : [['Manifesto · 0 hops', model.TYPE_COLORS.manifesto],
         ...[...new Set([...graph.nodes.values()].filter(node => node.type !== 'manifesto')
           .map(node => distanceFor(node.id)).filter(Number.isInteger))]
@@ -175,8 +180,11 @@
     }
     const explanation = document.createElement('span');
     explanation.className = 'legend-help';
-    explanation.textContent = colorMode === 'type' ? 'Existing node types · not review stages'
-      : `${colorMode === 'max-distance' ? 'Longest' : 'Shortest'} directed path from manifesto · not a confidence score`;
+    explanation.textContent = colorMode === 'git-revision'
+      ? state.diff ? 'Relative to selected comparison · withdrawal is not deletion; source impact is not M'
+        : 'No revision comparison available · neutral fills'
+      : colorMode === 'type' ? 'Existing node types · not review stages'
+      : `${colorMode === 'max-distance' ? 'Longest' : 'Shortest'} directed path from manifesto · violet → red, repeats every ${model.RAINBOW_COLORS.length} hops · not a confidence score`;
     $('legend').append(explanation);
   }
 
@@ -196,7 +204,8 @@
     card.dataset.relation = related || '';
     card.dataset.minDistance = context?.minDistances.get(id) ?? 'unknown';
     card.dataset.maxDistance = context?.maxDistances.get(id) ?? 'unknown';
-    card.style.setProperty('--node-accent', model.color(colorMode, node, distanceFor(id)));
+    card.classList.toggle('revision-colored', colorMode === 'git-revision');
+    card.style.setProperty('--node-accent', model.color(colorMode, node, distanceFor(id), revisionKind(kind)));
     card.title = `${id}\n${node.path}\n${snapshotName(id)} revision context`;
     const heading = document.createElement('strong'); heading.textContent = title(node);
     const metadata = document.createElement('small'); metadata.textContent = `${description(node)} · ${id}`;
@@ -240,7 +249,8 @@
       const card = document.createElement('article'), node = originalNode && orphaned() ? originalNode : graph.nodes.get(selected);
       card.className = `card expanded ${creating ? $('node-type').value : node?.type || 'requirement'} ${kinds.get(selected) || ''}`;
       card.dataset.nodeId = focalId; card.dataset.retired = String(Boolean(!creating && node?.retired));
-      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected)));
+      card.classList.toggle('revision-colored', colorMode === 'git-revision');
+      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
     }
     drawLegend(); updateButtons(); applyLayout();
@@ -433,7 +443,7 @@
     rememberCamera(); view = 'focus'; draw(); saveDraft();
   });
   $('color-mode').addEventListener('change', () => {
-    colorMode = ['type', 'max-distance'].includes($('color-mode').value) ? $('color-mode').value : 'distance'; draw(); saveDraft();
+    colorMode = model.COLOR_MODES.includes($('color-mode').value) ? $('color-mode').value : 'distance'; draw(); saveDraft();
   });
 
   $('new').addEventListener('click', () => {

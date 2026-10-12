@@ -76,9 +76,18 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   out the requested colors. Neutral normal links retain theme contrast mixing.
   Pair ordering and full opacity improve visibility without enlarging strokes/heads
   or changing routes, dashes, or layout. Hovered node borders likewise strengthen
-  their semantic hue; only the neutral gray manifesto gets a white hover border. Delegated pointer transitions include expanded form controls; hit tests
+  their semantic hue; only the neutral gray manifesto in distance/type modes gets
+  a white hover border. The new revision mode colors the manifesto by comparison
+  kind, retaining that hue on hover. Delegated pointer transitions include expanded form controls; hit tests
   reconcile redraw/camera changes, and exit/blur/touch clears emphasis. No host
   messages, canonical data, or persisted hover preferences are involved.
+- **Node colors** share a 13-step softly colored violet-to-red table. Distance
+  one starts violet, thirteen ends red, then repeats. Type mode uses teal/violet;
+  gray manifesto zero remains outside both distance/type palettes. Git/Revision
+  Status instead uses rainbow green A, blue M/R, red D and amber source impact,
+  including on the manifesto. Unchanged/no-comparison/draft fills are neutral;
+  source-only, rename and withdrawal labels preserve their distinct meanings.
+  Existing title/letter theme colors and connection inks stay independent.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
   layout positions, magnification, colors, or derived scores enter `_specspec`.
 
@@ -121,7 +130,7 @@ Chromium checks the real graph, focuses nodes, pans/zooms, narrows the canvas,
 resizes a textarea, samples centerlines and stroke-normal boundaries for content
 intersections, verifies actual earliest ranks and vertical origin concentration,
 checks tangent/head joins and screen
-strength at 12% zoom, three color modes and revision-local bounds, label-free
+strength at 12% zoom, four color modes and revision-local bounds, label-free
 shorter-card fit, same-pose native headline rendering at 250%, confirms circle-free endpoints, visits a real multiple-depth
 parent neighborhood, restores the overview camera, and switches semantic colors. Optional
 `SPECSPEC_SCREENSHOT_DIR` captures screenshots of overview and focused views. The
