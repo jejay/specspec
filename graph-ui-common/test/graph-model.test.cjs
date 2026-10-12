@@ -119,6 +119,50 @@ test('draft baseline comparison uses normalized contents, not paths or hashes', 
   }
 });
 
+test('expanded circle diameter contains the unchanged editor rectangle with breathing room', () => {
+  assert.equal(model.DETAIL_CONTENT_WIDTH,822);
+  for(const height of [250,720,900,1450,4000]) {
+    const diameter=model.manifestoDiameter(822,height);
+    assert.ok(Number.isInteger(diameter));
+    assert.ok(diameter/2-Math.hypot(822/2,height/2)>=24);
+    assert.ok(diameter/2-Math.hypot(822/2,height/2)<24.5);
+  }
+});
+
+test('circle and rounded-corner ports attach at the actual outline, retaining clear horizontal leads', () => {
+  const circle={x:80,y:100,width:264,height:264,shape:'circle'};
+  const boxes=new Map([['root',circle],...Array.from({length:8},(_,i)=>['child'+i,{x:600,y:i*170,width:264,height:112,radius:24}])]);
+  const records=Array.from({length:8},(_,i)=>({edge:['root','child'+i],kind:''}));
+  const routes=model.routeEdges(boxes,records);
+  assert.notEqual(routes[0].start.x,circle.x+circle.width+3);
+  for(const route of routes) {
+    assert.ok(Math.abs(Math.hypot(route.start.x-3-(circle.x+132),route.start.y-(circle.y+132))-132)<1e-8);
+    assert.ok(route.points[1].x>circle.x+circle.width);
+    assert.equal(route.points[1].y,route.start.y);
+    assert.ok(route.points.at(-2).x<boxes.get(route.edge[1]).x);
+    for(const scale of [1,0.12]) assert.ok(!model.edgeAppearance(route,scale).d.includes('NaN'));
+    // Thick minimum-zoom ink must clear even the inward edge of the departure.
+    for(const dy of [-model.MIN_STROKE_PIXELS/0.12/2,model.MIN_STROKE_PIXELS/0.12/2]) {
+      assert.ok(Math.hypot(route.start.x-(circle.x+132),route.start.y+dy-(circle.y+132))>132);
+    }
+  }
+  const reverse=model.routeEdges(boxes,[{edge:['child0','root'],kind:'removed'},{edge:['child7','root'],kind:'removed'}]);
+  for(const route of reverse) {
+    assert.ok(Math.abs(Math.hypot(route.end.x+3-(circle.x+132),route.end.y-(circle.y+132))-132)<1e-8);
+    assert.ok(route.points.at(-2).x<circle.x);
+    assert.ok(!route.d.includes('NaN'));
+  }
+  const rounded={x:0,y:0,width:264,height:112,radius:24};
+  const inset=24-Math.sqrt(24**2-8**2);
+  assert.equal(model.sideBoundary(rounded,16,false),inset);
+  assert.equal(model.sideBoundary(rounded,16,true),264-inset);
+  assert.equal(model.sideBoundary(rounded,56,false),0);
+  assert.equal(model.sideBoundary({...rounded,radius:7},16,true),264);
+  const nodes=new Map([['root',{type:'manifesto'}],['child0',{type:'requirement'}]]);
+  const layout=model.layoutGraph(nodes,[records[0]],new Map([['root',{width:264,height:264,shape:'circle'}],['child0',{width:264,height:112,radius:24}]]));
+  assert.equal(layout.positions.get('root').shape,'circle');assert.equal(layout.positions.get('child0').radius,24);
+});
+
 test('side ports use measured card borders and splines retain horizontal endpoint tangents', () => {
   const boxes = new Map([['parent', { x: 80, y: 30, width: 310, height: 154 }],
     ['child', { x: 800, y: 400, width: 620, height: 850 }]]);

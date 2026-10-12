@@ -159,23 +159,55 @@ function assertDarkening($, cards, edges) {
   assertPairedHighlights($);
 }
 
-test('all cards share transient hover state and only expanded text gets wider', t => {
+test('all types share transient hover state while the manifesto retains its square circular box', t => {
   const { dom, $, card } = hoverFixture(t);
   assert.equal(model.CARD_WIDTH, 264); assert.equal(model.CARD_HEIGHT, 112);
   assert.equal(model.DETAIL_WIDTH, 860);
   for (const id of ['root', 'child', 'grand']) {
     hoverEvent(dom, card(id));
     assert.deepEqual([...$('cards').querySelectorAll('.node-hovered')].map(c => c.dataset.nodeId), [id]);
-    assert.equal(card(id).style.width, '264px'); assert.equal(card(id).style.height, '112px');
+    assert.equal(card(id).style.width, '264px'); assert.equal(card(id).style.height, id === 'root' ? '264px' : '112px');
     card(id).click(); hoverEvent(dom, $('body'));
-    assert.equal(card(id).style.width, '860px'); assert.ok(card(id).classList.contains('node-hovered'));
+    assert.equal(card(id).style.width, id === 'root' ? `${model.manifestoDiameter(822,720)}px` : '860px');
+    if(id === 'root') assert.equal(card(id).style.height,card(id).style.width);
+    assert.ok(card(id).classList.contains('node-hovered'));
     $('viewport').dispatchEvent(new dom.window.Event('pointerleave'));
     assert.equal($('cards').querySelector('.node-hovered'), null);
     $('back').click();
   }
 });
 
-test('shared CSS keeps gray cards tinted and increases corner letters without compact-card growth', () => {
+test('type radii survive expansion and circle sizing preserves native content, colors and draft identity', t => {
+  const f=fixture(t),{dom,$,snapshot,send,saved}=f;
+  const style=dom.window.document.createElement('style');
+  style.textContent=readFileSync(join(__dirname,'../media/graph.css'),'utf8');dom.window.document.head.append(style);
+  const implementation={...child,id:'implementation',type:'implementation',parents:['child']};
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root,child,implementation],edges:[['root','child'],['child','implementation']]},diagnostics:[],readonly:false});
+  const card=id=>dom.window.document.querySelector(`[data-node-id="${id}"]`);
+  for(const [id,radius] of [['root','50%'],['child','24px'],['implementation','7px']]) {
+    assert.equal(dom.window.getComputedStyle(card(id)).borderRadius,radius);
+    const accent=card(id).style.getPropertyValue('--node-accent');
+    card(id).click();assert.equal(dom.window.getComputedStyle(card(id)).borderRadius,radius);
+    assert.equal(card(id).style.getPropertyValue('--node-accent'),accent);
+    $('back').click();
+  }
+  card('root').click();const body=$('body'),settings=$('node-details');
+  body.value='# Native circular draft';body.dispatchEvent(new dom.window.Event('input'));body.focus();body.setSelectionRange(2,8);
+  const state=saved();let height=900;
+  Object.defineProperty(settings,'offsetHeight',{get:()=>height});
+  Object.defineProperty(settings,'scrollHeight',{get:()=>height});
+  for(height of [900,1450,600]) {
+    $('color-mode').value='type';$('color-mode').dispatchEvent(new dom.window.Event('change'));
+    assert.equal(card('root').style.width,`${model.manifestoDiameter(822,height)}px`);
+    assert.equal(card('root').style.height,card('root').style.width);
+    assert.equal(card('root').style.getPropertyValue('--detail-content-width'),'822px');
+    assert.equal($('body'),body);assert.equal($('node-details'),settings);
+    assert.equal(body.value,'# Native circular draft');assert.deepEqual([body.selectionStart,body.selectionEnd],[2,8]);
+    assert.equal(saved().draft.body,state.draft.body);
+  }
+});
+
+test('shared CSS keeps gray cards tinted and increases corner letters without ordinary compact-card growth', () => {
   const css = readFileSync(join(__dirname, '../media/graph.css'), 'utf8');
   assert.match(css, /\.card:hover, \.card\.node-hovered \{ background: color-mix/);
   assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ border-color: oklch\(from var\(--node-accent, #8993a4\) min\(0\.95, calc\(l \+ 0\.10\)\) calc\(c \* 1\.30\) h\)/);
@@ -832,7 +864,7 @@ test('revision fills include changed manifesto, added/removed/renamed/source-onl
   assert.ok(card('plain').querySelector('.retired-badge'));
   for(const [id,kind] of Object.entries(kinds)) {
     card(id).click();assert.equal(card(id).style.getPropertyValue('--node-accent'),model.REVISION_COLORS[kind]);
-    assert.equal(card(id).style.width,'860px');$('back').click();
+    assert.equal(card(id).style.width,id === 'root' ? `${model.manifestoDiameter(822,720)}px` : '860px');$('back').click();
   }
   send({type:'snapshot',snapshot:target,diagnostics:[],readonly:true,diff:{...diff,changes:[{id:'root',kind:'added'}],source_affected:[]}});
   assert.equal(card('root').style.getPropertyValue('--node-accent'),model.REVISION_COLORS.added);
@@ -938,7 +970,8 @@ test('high zoom keeps native headline/form identity, intrinsic size, caret and u
   const style = dom.window.document.createElement('style');
   style.textContent = readFileSync(join(__dirname, '../media/graph.css'), 'utf8'); dom.window.document.head.append(style);
   assert.doesNotMatch(style.textContent, /will-change\s*:\s*transform/);
-  assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.card')).height, '112px');
+  assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.card.manifesto')).height, '264px');
+  assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.card.requirement')).height, '112px');
   dom.window.document.querySelector('[data-node-id="child"]').click();
   const headline = $('title'), body = $('body'), card = headline.closest('.card'), width = card.style.width;
   body.value = '# Native draft'; body.dispatchEvent(new dom.window.Event('input')); body.focus(); body.setSelectionRange(2, 7);

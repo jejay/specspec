@@ -136,7 +136,9 @@ The editor is a **left-to-right node canvas**. Dagre derives positions from rela
 
 Native headlines remain text rather than scaled bitmap overlays. The graph no longer carries a permanent compositor-promotion hint, which visibly improved settled headline sharpness at 250% zoom in the installed Windows VS Code check.
 
-Curved connections run directly from right to left card boundaries, without round endpoint dots. They retain a minimum visible stroke thickness when zoomed out. Arrowheads join a smooth, tangent-aligned approach; the line stops at the head base instead of sticking through its tip. Expanded cards distribute attachments over their height rather than bunching links near the title.
+**Node shapes** do not change colors: implementations use the sharpest 7px corners, requirements rounder 24px corners, and the manifesto is a true circle. Its compact outline is 264×264; its expanded circle grows around the existing native editor rather than clipping fields or reducing the text width.
+
+Curved connections run directly from right to left card boundaries, including circular arcs, without round endpoint dots. They retain a minimum visible stroke thickness when zoomed out. Arrowheads join a smooth, tangent-aligned approach; the line stops at the head base instead of sticking through its tip. Ordinary expanded cards distribute attachments over their height rather than bunching links near the title; manifesto ports span its middle arc to clear thick low-zoom strokes.
 
 **Hover a node** to highlight its immediate incoming and outgoing curves and arrowheads without selecting it. The hovered node and its direct connected neighbors stay undarkened; all other nodes and non-incident connections darken. This also works over expanded form controls, in historical views, and on unsaved draft links. Colored incident connections become brighter and more saturated in their own hue—not washed out toward white—while preserving Git dashes and existing geometry. The emphasis clears when you leave the node.
 

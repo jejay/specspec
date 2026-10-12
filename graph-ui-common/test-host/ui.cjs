@@ -96,7 +96,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'type', 'git-revision']);
     assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type', 'Git/Revision Status']);
     assert.equal(await evaluate(`document.querySelector('.distance-badge')`), null);
-    assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>c.offsetHeight===112&&c.scrollHeight<=c.clientHeight+1)`), 'Shorter compact cards must fit two-line headlines and remaining badges.');
+    assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>c.offsetWidth===264&&c.offsetHeight===(c.classList.contains('manifesto')?264:112)&&c.scrollHeight<=c.clientHeight+1)`), 'Ordinary compact cards stay short; the manifesto is square and all content fits.');
     assert.equal(await evaluate(`getComputedStyle(document.getElementById('graph')).willChange`), 'auto');
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>!('status' in c.dataset))`));
     assert.ok(await evaluate(`!document.getElementById('migrate')`), 'Superseded schema conversion is not offered.');
@@ -300,6 +300,35 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.ok(await evaluate(`window.__testHeadline===document.querySelector('#cards .card.manifesto strong')&&!document.querySelector('#cards canvas,#cards img')`));
       await restoreActualSize(pose);await evaluate(`delete window.__testHeadline`);
     }
+    async function checkShapes() {
+      const shapes=await evaluate(`(() => {
+        const inside=(rect,circle,gap)=>{const cx=circle.left+circle.width/2,cy=circle.top+circle.height/2,r=circle.width/2;
+          return [[rect.left,rect.top],[rect.right,rect.top],[rect.right,rect.bottom],[rect.left,rect.bottom]].every(([x,y])=>Math.hypot(x-cx,y-cy)<=r-gap);};
+        return [...document.querySelectorAll('#cards .card')].map(c=>{
+          const s=getComputedStyle(c),circle=c.classList.contains('manifesto'),expanded=c.classList.contains('expanded'),r=c.getBoundingClientRect(),scale=r.width/c.offsetWidth;
+          const form=expanded&&circle?c.querySelector('.node-settings'):null,mark=c.querySelector('.git-corner');
+          const content=[...c.children].filter(e=>e!==mark&&e.getClientRects().length);
+          return {type:circle?'manifesto':c.classList.contains('implementation')?'implementation':'requirement',expanded,radius:s.borderRadius,w:c.offsetWidth,h:c.offsetHeight,
+            square:Math.abs(r.width-r.height)<1,contentFits:!circle||content.every(e=>inside(e.getBoundingClientRect(),r,(form?12:4)*scale)),
+            markerFits:!circle||!mark||inside(mark.getBoundingClientRect(),r,4*scale),
+            formWidth:form?.offsetWidth,expected:form?window.SpecSpecGraph.manifestoDiameter(822,Math.max(form.offsetHeight,form.scrollHeight)):undefined};
+        });
+      })()`);
+      for(const s of shapes) {
+        assert.equal(s.radius,{manifesto:'50%',requirement:'24px',implementation:'7px'}[s.type],JSON.stringify(s));
+        if(s.type==='manifesto') {
+          assert.equal(s.w,s.h);assert.ok(s.square&&s.contentFits&&s.markerFits,JSON.stringify(s));
+          if(s.expanded){assert.equal(s.formWidth,822);assert.ok(Math.abs(s.w-s.expected)<=1,JSON.stringify(s));}
+          else assert.equal(s.w,264);
+        } else {assert.equal(s.w,s.expanded?860:264);if(!s.expanded)assert.equal(s.h,112);}
+      }
+    }
+    await checkShapes();await screenshot('node-shapes-compact');
+    const implementation=await evaluate(`document.querySelector('#cards .card.implementation').dataset.nodeId`);
+    await evaluate(`document.querySelector('[data-node-id="'+${JSON.stringify(implementation)}+'"]').click()`);await delay(100);
+    await checkShapes();await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
+    await screenshot('node-shapes-expanded-implementation');
+    await evaluate(`document.getElementById('back').click()`);await checkShapes();
     const initialPositions = await positions();
     assert.ok(await evaluate(`(() => { const nodes=new Map([...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c])); return [...document.querySelectorAll('#edges .link:not(.removed)')].every(p => parseFloat(nodes.get(p.dataset.parent).style.left)+nodes.get(p.dataset.parent).offsetWidth < parseFloat(nodes.get(p.dataset.child).style.left)); })()`), 'Target relationships progress LR; removed references are overlays and may share or reverse columns.');
     assert.ok(await evaluate(`getComputedStyle(document.getElementById('viewport')).overflow === 'clip'`));
@@ -334,7 +363,13 @@ exports.checkUI = async function checkUI(port, options = {}) {
     })()`);
     assert.ok(await arrowJoins(), 'Line ends must join the head base tangentially, with minimum screen strength.');
     const curveCollisions = () => evaluate(`(() => {
-      const boxes=[...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,x:parseFloat(c.style.left),y:parseFloat(c.style.top),w:c.offsetWidth,h:c.offsetHeight}));
+      const boxes=[...document.querySelectorAll('#cards .card')].map(c=>({id:c.dataset.nodeId,x:parseFloat(c.style.left),y:parseFloat(c.style.top),w:c.offsetWidth,h:c.offsetHeight,circle:c.classList.contains('manifesto'),radius:parseFloat(getComputedStyle(c).borderTopLeftRadius)}));
+      const inside=(b,q)=>{
+        if(!(q.x>b.x+1&&q.x<b.x+b.w-1&&q.y>b.y+1&&q.y<b.y+b.h-1))return false;
+        if(b.circle)return ((q.x-b.x-b.w/2)/(b.w/2-1))**2+((q.y-b.y-b.h/2)/(b.h/2-1))**2<1;
+        const r=Math.min(b.radius,b.w/2,b.h/2),cx=Math.max(b.x+r,Math.min(b.x+b.w-r,q.x)),cy=Math.max(b.y+r,Math.min(b.y+b.h-r,q.y));
+        return Math.hypot(q.x-cx,q.y-cy)<r-1;
+      };
       const collisions=[];
       for(const path of document.querySelectorAll('#edges .link')) {
         const length=path.getTotalLength();
@@ -342,7 +377,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
           const p=path.getPointAtLength(d),before=path.getPointAtLength(d-1),after=path.getPointAtLength(Math.min(length,d+1));
           const dx=after.x-before.x,dy=after.y-before.y,norm=Math.hypot(dx,dy)||1,half=parseFloat(getComputedStyle(path).strokeWidth)/2;
           const samples=[p,{x:p.x-dy/norm*half,y:p.y+dx/norm*half},{x:p.x+dy/norm*half,y:p.y-dx/norm*half}];
-          const box=boxes.find(b=>samples.some(q=>q.x>b.x+1&&q.x<b.x+b.w-1&&q.y>b.y+1&&q.y<b.y+b.h-1));
+          const box=boxes.find(b=>samples.some(q=>inside(b,q)));
           if(box) {collisions.push({parent:path.dataset.parent,child:path.dataset.child,through:box.id});break;}
         }
       }
@@ -455,7 +490,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     overviewCamera = await camera();
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.ok(await evaluate(`document.querySelector('#cards .expanded').contains(document.getElementById('editor'))`));
-    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`), 860);
+    await delay(100);await checkShapes();
     const textFit = await evaluate(`(() => {
       const body=document.getElementById('body'),pre=document.getElementById('before'),section=document.getElementById('before-section');
       const original={value:body.value,text:pre.textContent,hidden:section.hidden,bodyFont:body.style.fontSize,preFont:pre.style.fontSize};
@@ -474,7 +509,16 @@ exports.checkUI = async function checkUI(port, options = {}) {
       return results;
     })()`);
     assert.ok(textFit.every(r=>r.editorFits&&r.displayFits),`80-column text must fit editor and display: ${JSON.stringify(textFit)}`);
-    await screenshot('roomier-markdown-root');
+    await delay(100);await checkShapes();
+    const circleWidth=await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`);
+    await evaluate(`document.getElementById('body').style.height='540px'`);await delay(250);
+    await checkShapes();
+    assert.ok(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`)>circleWidth,'Resizing the native root textarea grows its circle.');
+    assert.ok(await arrowJoins());assert.deepEqual(await curveCollisions(),[]);
+    await evaluate(`document.getElementById('body').style.height=''`);await delay(250);
+    await checkShapes();assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`),circleWidth);
+    await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
+    await screenshot('roomier-markdown-root');await screenshot('node-shapes-expanded-manifesto');
     assert.equal(await evaluate(`document.querySelectorAll('aside').length`), 0);
     const branch = await evaluate(`(() => { const cards = [...document.querySelectorAll('[data-relation="child"]')].sort((a,b) => Number(b.dataset.downstream)-Number(a.dataset.downstream)); return cards[0]?.dataset.nodeId; })()`);
     assert.ok(branch);
@@ -500,7 +544,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await evaluate(`document.getElementById('body').style.height = '540px'`);
     await delay(250);
     const geometry = await evaluate(`(() => {
-      const boxes = [...document.querySelectorAll('#cards .card')].map(card => ({ id:card.dataset.nodeId, x:parseFloat(card.style.left), y:parseFloat(card.style.top), w:card.offsetWidth, h:card.offsetHeight }));
+      const boxes = [...document.querySelectorAll('#cards .card')].map(card => ({ id:card.dataset.nodeId, x:parseFloat(card.style.left), y:parseFloat(card.style.top), w:card.offsetWidth, h:card.offsetHeight, circle:card.classList.contains('manifesto'), radius:parseFloat(getComputedStyle(card).borderTopLeftRadius) }));
       return [...document.querySelectorAll('#edges .link')].map(path => {
         const p=path.getPointAtLength(0),head=[...document.querySelectorAll('#edges .arrow-head')].find(h=>h.dataset.parent===path.dataset.parent&&h.dataset.child===path.dataset.child);
         const n=head.getAttribute('d').match(/-?\\d+(?:\\.\\d+)?/g).map(Number);
@@ -508,12 +552,19 @@ exports.checkUI = async function checkUI(port, options = {}) {
       });
     })()`);
     assert.ok(geometry.length);
+    const boundary=(b,y,right)=>{
+      let inset;
+      if(b.circle)inset=b.w/2*(1-Math.sqrt(1-((y-b.y-b.h/2)/(b.h/2))**2));
+      else {const r=Math.min(b.radius,b.w/2,b.h/2),dy=Math.max(0,r-Math.min(y-b.y,b.y+b.h-y));inset=r-Math.sqrt(r*r-dy*dy);}
+      return right?b.x+b.w-inset:b.x+inset;
+    };
     for (const route of geometry) {
-      assert.ok(Math.abs(route.start.x - route.from.x - route.from.w - 3) < 1);
-      assert.ok(Math.abs(route.end.x - route.to.x + 3) < 1);
+      assert.ok(Math.abs(route.start.x - boundary(route.from,route.start.y,true) - 3) < 1);
+      assert.ok(Math.abs(route.end.x - boundary(route.to,route.end.y,false) + 3) < 1);
       assert.ok(route.start.y > route.from.y && route.start.y < route.from.y + route.from.h);
       assert.ok(route.end.y > route.to.y && route.end.y < route.to.y + route.to.h);
     }
+    await checkShapes();
     assert.ok(await arrowJoins(), 'Resized-form arrows must preserve tangent joins.');
     assert.deepEqual(await curveCollisions(), [], 'Resized-form routes must still avoid content.');
     await screenshot('origin-resized-form');
@@ -582,7 +633,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, exact user-selected seven-color spectrum, transient right-click label cycle/equal inset ring with zero persisted-state or geometry changes, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, exact user-selected seven-color spectrum, transient right-click label cycle/equal inset ring with zero persisted-state or geometry changes, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

@@ -136,8 +136,10 @@ misinterpreted gray as a solid pale root. The [user correction](../_specspec/ikt
 and [shared-tint/readability choice](../_specspec/xCOHepQ=shared-card-tints-and-80-column-editing.md)
 keep the gray accent but restore ordinary theme text and shared card tints: the
 root is only modestly lighter than a dark canvas, with a white hover border.
-White belongs only to the manifesto; other cards emphasize their semantic hue. Expanded Markdown/revision-text areas are 860 world units wide for
-typical 80-column text; compact cards stay 264×112 with larger/heavier Git corners.
+White belongs only to the manifesto; other cards emphasize their semantic hue.
+Ordinary expanded cards are 860 world units wide for typical 80-column text;
+the circular manifesto retains their 822px native content budget inside its
+larger outline. Ordinary compact cards stay 264×112 with larger/heavier Git corners.
 Connected nodes still mean direct displayed neighbors, matching incident highlighting.
 Non-incident links darken even when both endpoints are neighbors. The root's base
 hue remains gray; it too darkens when unrelated to the hover. These are transient
@@ -185,6 +187,31 @@ Captured VS Code hover screenshots were inspected. Current local checks passed:
 108 shared UI, 34 VS Code, nine Electron and 111 Python tests, Ruff lint/format and
 working-graph validation. This is bounded browser/platform evidence, not a claim
 about every theme/custom palette, display gamut or platform.
+
+## Type roundness and circular manifesto
+
+The [user's shape request](../_specspec/Dn6Ult8=sharp-implementations-rounder-requirements-and-circular-manifesto.md)
+swaps type roundness without swapping any colors: implementations are sharpest,
+requirements a little rounder than implementations were, and the manifesto a
+full circle. The [separate choice](../_specspec/AZbsoEA=type-radii-and-content-fitting-circular-manifesto.md)
+uses 7px Implementation and 24px Requirement corners in compact/expanded views.
+A compact manifesto is 264×264 with 50% radius; its expanded circle fits the
+unchanged 822px-wide native form via its rectangle diagonal plus 48px. The same
+form DOM remains editable with the original typical 80-column budget. This
+larger outer footprint is intentional, not an elongated pill or a clipped editor.
+Git letters sit inside its arc. Shape/radius-aware ports attach to actual
+boundaries, clearing the square obstacle bounds before curves turn; circle
+attachments span the middle 40% vertically to clear thick low-zoom departure ink.
+Color roles, shared tints, white/colored-root hover exceptions and renderer-only
+labels remain unchanged. The standalone palette tool's gray sample is circular
+too, without modifying parameters or exports. No node schema/history rewrite.
+The [implementation/evidence record](../_specspec/YHSK9DA=type-roundness-and-circular-manifesto-implementation.md)
+links shared CSS, measured native circle fitting, pure outline routing and current
+checks. All 131 common/34 VS Code/nine Electron/111 Python tests, Ruff and working
+validators passed. Full direct Windows host suites and standalone file:// checks
+passed; compact/expanded Electron, VS Code root and playground screenshots were
+inspected. Earlier universal 264×112/860-width assertions are now conditional on
+ordinary node types, with stricter circle/content/arc checks, not erased evidence.
 
 ## Shared rainbow table and Git/Revision Status
 

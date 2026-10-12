@@ -58,8 +58,13 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #cards .card.manifesto:not(.revision-colored):hover, #cards .card.manifesto:not(.revision-colored).node-hovered { border-color: #fff; }
 .card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
-.card.manifesto { border-top-width: 6px; }
-.card.implementation { border-radius: 20px; }
+.card.manifesto { border-top-width: 6px; border-radius: 50%; height: 264px; align-items: center; justify-content: center; }
+.card.manifesto:not(.expanded) { padding: 44px; text-align: center; }
+.card.manifesto:not(.expanded) > strong, .card.manifesto:not(.expanded) > small, .card.manifesto:not(.expanded) > .badges { width: 100%; }
+.card.manifesto:not(.expanded) > .badges { justify-content: center; padding-right: 0; }
+.card.manifesto .git-corner { right: 22%; bottom: 14%; }
+.card.requirement { border-radius: 24px; }
+.card.implementation { border-radius: 7px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
 /* Temporary label ring: equal on all sides, inside the existing box. No layout change. */
@@ -77,8 +82,10 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .git-badge.changed, .git-badge.renamed { color: var(--git-modified); border-color: var(--git-modified); }
 .git-badge.source-changed { color: var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d); border-color: currentColor; }
 .retired-badge { color: #929baa; border-color: #929baa; }
-.card.expanded { height: auto; overflow: visible; padding: 18px; border-radius: 8px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
+.card.expanded { height: auto; overflow: visible; padding: 18px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .node-settings { width: 100%; min-width: 0; }
+.card.manifesto.expanded > .node-settings { width: var(--detail-content-width, 822px); flex-shrink: 0; }
+.card.manifesto.expanded .git-corner { right: 6%; bottom: 35%; }
 h2 { margin: 0 0 8px; font-size: 18px; overflow-wrap: anywhere; }
 #identity { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--vscode-descriptionForeground); }
 label { display: block; margin: 10px 0; font-size: 12px; }

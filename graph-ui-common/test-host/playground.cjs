@@ -47,6 +47,7 @@ if (process.versions.electron) {
       assert.equal(await evaluate(`document.getElementById('swatches').children.length`),7);
       assert.ok(await evaluate(`document.getElementById('mappings').textContent.includes('Requirement · color 5 · #92a64b')&&document.getElementById('mappings').textContent.includes('A · Added · color 4 · #37b390')`));
       assert.ok(await evaluate(`document.getElementById('mapping-logic').textContent.includes('Requirement gets a leftover')`));
+      assert.ok(await evaluate(`(() => {const c=document.querySelector('.node.manifesto'),r=c.getBoundingClientRect();return getComputedStyle(c).borderRadius==='50%'&&Math.abs(r.width-r.height)<1&&c.scrollHeight<=c.clientHeight;})()`));
       assert.ok(await evaluate(`getComputedStyle(document.querySelector('.node')).backgroundColor.startsWith('color(srgb')`),'Tint preview uses the real browser CSS');
       await evaluate(`document.getElementById('count').value='12';document.getElementById('count').dispatchEvent(new Event('input',{bubbles:true}))`);
       assert.equal(await evaluate(`document.getElementById('swatches').children.length`),12);

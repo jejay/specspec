@@ -27,7 +27,10 @@
   #nodes, #mappings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 18px; }
   .node { padding: 12px; min-height: 78px; border: 1px solid var(--accent); border-top: 4px solid var(--accent); border-radius: 7px; background: color-mix(in srgb, var(--accent) 15%, var(--canvas)); }
   .node:hover { background: color-mix(in srgb, var(--accent) 24%, var(--canvas)); border-color: oklch(from var(--accent) min(.95, calc(l + .10)) calc(c * 1.30) h); }
-  .node small { display: block; font-size: 12px; } .node.manifesto { --accent: #d3d3d3; border-top-width: 6px; } .node.manifesto:hover { border-color: white; }
+  .node small { display: block; font-size: 12px; }
+  #nodes { align-items: start; }
+  .node.manifesto { --accent: #d3d3d3; border-top-width: 6px; border-radius: 50%; width: 150px; height: 150px; padding: 24px; justify-self: center; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .node.manifesto:hover { border-color: white; }
   .mapping { border-left: 7px solid var(--accent); padding-left: 9px; font-size: 13px; }
   textarea { width: 100%; padding: 12px; min-height: 220px; font: 13px/1.5 ui-monospace, monospace; resize: vertical; }
   @media (max-width: 500px) { body { padding: 12px; } }

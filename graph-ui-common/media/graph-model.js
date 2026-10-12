@@ -182,13 +182,30 @@
     const positions = new Map(), guides = new Map();
     for (const id of engine.nodes()) {
       const box = engine.node(id);
-      positions.set(id, { x: box.x - box.width / 2, y: box.y - box.height / 2, width: box.width, height: box.height });
+      positions.set(id, { x: box.x - box.width / 2, y: box.y - box.height / 2, width: box.width, height: box.height,
+        shape: sizes.get(id)?.shape, radius: sizes.get(id)?.radius });
     }
     for (const edge of engine.edges()) guides.set(edge.name, [...engine.edge(edge).points].reverse());
     return { positions, guides, width: engine.graph().width || 480, height: engine.graph().height || 320 };
   }
 
   const EDGE_LEAD = 64, MIN_STROKE_PIXELS = 1.6, MIN_ARROW_PIXELS = 6;
+  const DETAIL_CONTENT_WIDTH = DETAIL_WIDTH - 38; // Existing 18px padding + 1px side borders.
+  const manifestoDiameter = (width, height) => Math.ceil(Math.hypot(width, height) + 48);
+
+  function sideBoundary(box, y, right) {
+    let inset = 0;
+    if (box.shape === 'circle') {
+      const rx = box.width / 2, ry = box.height / 2;
+      const dy = (y - box.y - ry) / ry;
+      inset = rx * (1 - Math.sqrt(Math.max(0, 1 - dy * dy)));
+    } else {
+      const r = Math.max(0, Math.min(box.radius || 0, box.width / 2, box.height / 2));
+      const dy = Math.max(0, r - Math.min(y - box.y, box.y + box.height - y));
+      inset = r - Math.sqrt(Math.max(0, r * r - dy * dy));
+    }
+    return right ? box.x + box.width - inset : box.x + inset;
+  }
 
   function routeEdges(positions, records, guides = new Map()) {
     const edges = records.filter(({ edge: [a, b] }) => positions.has(a) && positions.has(b));
@@ -205,18 +222,24 @@
     const reverseCurve = vendor.line().x(point => point.x).y(point => point.y).curve(vendor.curveBasis);
     // Include the full intrinsic height: header-only ports make an expanded form
     // impose huge artificial bends even when Dagre has aligned node centers.
-    const port = (box, list, item) => box.y + 16 + Math.max(0, box.height - 32) * (list.indexOf(item) + 1) / (list.length + 1);
+    const port = (box, list, item) => {
+      // Circle ports span its middle arc: a 3-unit gap still clears the thick
+      // minimum-zoom stroke. Rectangular forms retain full-height distribution.
+      const margin = box.shape === 'circle' ? box.height * 0.3 : 16;
+      return box.y + margin + Math.max(0, box.height - 2 * margin) * (list.indexOf(item) + 1) / (list.length + 1);
+    };
     const column = box => boxes.filter(other => Math.abs(other.x + other.width / 2 - box.x - box.width / 2) < 1);
     return edges.map((item, index) => {
       const [a, b] = item.edge, from = positions.get(a), to = positions.get(b);
-      const start = { x: from.x + from.width + 3, y: port(from, outgoing.get(a), item) };
-      const end = { x: to.x - 3, y: port(to, incoming.get(b), item) };
+      const startY = port(from, outgoing.get(a), item), endY = port(to, incoming.get(b), item);
+      const start = { x: sideBoundary(from, startY, true) + 3, y: startY };
+      const end = { x: sideBoundary(to, endY, false) - 3, y: endY };
       // Smooth to this horizontal settling point, not into a tight bend beneath
       // the arrowhead. It covers even the largest head at the camera's 12% limit.
-      const settle = { x: end.x - EDGE_LEAD, y: end.y };
+      const settle = { x: Math.min(end.x, to.x - 3) - EDGE_LEAD, y: end.y };
       const guide = guides.get(edgeKey(item.edge)) || [];
       let points, curved;
-      const launch = { x: start.x + 16, y: start.y };
+      const launch = { x: Math.max(start.x, from.x + from.width + 3) + 16, y: start.y };
       if (settle.x > launch.x) {
         // Keep reserved lanes flat across the full width of skipped columns.
         let corridor = guide.slice(1, -1).flatMap(point => {
@@ -273,6 +296,6 @@
   }
 
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
-    EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS,
+    EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
     sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
 });

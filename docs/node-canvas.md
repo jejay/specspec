@@ -37,7 +37,8 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   Extra revision references into primary nodes are overlays, not rank constraints.
 - **D3 shape** connects parent right boundaries to child left boundaries, without
   circles. Long edges retain flat reserved lanes across skipped card-width bands.
-  Attachments span intrinsic card heights instead of a narrow title band. A short
+  Ordinary attachments span intrinsic card heights instead of a narrow title band;
+  manifesto ports span its middle arc and attach at the actual circle chord. A short
   horizontal departure prevents steep thickened curves from brushing the source;
   a tangent-aligned settling approach precedes the arrow. The line ends at its
   filled head's base, not through the tip. Forward non-backbone links choose the
@@ -55,9 +56,21 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   nodes use target/base metrics respectively, not the revision union or placement
   backbone. Legends explain the selected metric; on-node hop labels are removed.
   Downstream, Git, and withdrawn badges remain independent.
-- **Compact spacing** uses 112-unit-high cards instead of 128, with rank gap 140
+- **Compact spacing** uses ordinary 112-unit-high cards instead of 128, with rank gap 140
   instead of 128 and sibling gap 44 instead of 36. This opens the gaps modestly
   while reducing vertical pitch 164 → 156. Widths/routing margins stay unchanged.
+- **Type shapes** use 7px implementation corners (the former Requirement shape),
+  24px requirement corners (slightly rounder than the former 20px Implementation),
+  and a true square/50%-radius manifesto, including expanded editing. Compact
+  manifesto diameter is 264; expanded diameter is the 822px-wide native form's
+  rectangle diagonal plus 48px, rounded up. Center the same form DOM without
+  clipping controls or reducing the 80-column content budget. The larger outer
+  footprint is a deliberate cost of a genuinely circular editor. Arc/corner-aware
+  ports retain 3-unit clearance; circle ports span the middle 40% vertically so
+  thick minimum-zoom strokes clear the arc. Flat departure/settling segments clear
+  conservative bounding boxes before curves turn. Git markers move inside the
+  circle; palettes, tints, hover and temporary labels remain unchanged. The offline
+  playground's gray manifesto sample is likewise circular, without changing exports.
 - **D3 zoom** applies one transform to cards and SVG. The viewport clips overflow;
   panning is unconstrained and scale is 12–250%. Wheel/pinch anchoring and drag
   event handling come from the library. Framing/zoom buttons animate except under

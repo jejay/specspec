@@ -299,11 +299,22 @@
     const sizes = new Map(), visible = new Map();
     for (const card of $('cards').children) {
       const expanded = card.classList.contains('expanded');
-      card.style.width = `${expanded ? model.DETAIL_WIDTH : model.CARD_WIDTH}px`;
-      if (!expanded) card.style.height = `${model.CARD_HEIGHT}px`;
+      const circle = card.classList.contains('manifesto');
+      let width = expanded ? model.DETAIL_WIDTH : model.CARD_WIDTH;
+      let height = circle ? model.CARD_WIDTH : model.CARD_HEIGHT;
+      if (circle && expanded) {
+        card.style.setProperty('--detail-content-width', `${model.DETAIL_CONTENT_WIDTH}px`);
+        const settings = card.querySelector('.node-settings');
+        // Fixed native content width, measured intrinsic height; never viewport/zoom.
+        // The fallback is for non-layout DOM test environments only.
+        width = height = model.manifestoDiameter(model.DETAIL_CONTENT_WIDTH, Math.max(settings.offsetHeight, settings.scrollHeight) || 720);
+      }
+      card.style.width = `${width}px`;
+      card.style.height = !expanded || circle ? `${height}px` : '';
       // Intrinsic dimensions, not zoomed screen rectangles. No viewport input.
-      sizes.set(card.dataset.nodeId, { width: card.offsetWidth || (expanded ? model.DETAIL_WIDTH : model.CARD_WIDTH),
-        height: card.offsetHeight || card.scrollHeight || (expanded ? 720 : model.CARD_HEIGHT) });
+      sizes.set(card.dataset.nodeId, { width: card.offsetWidth || width,
+        height: card.offsetHeight || card.scrollHeight || (expanded ? (circle ? height : 720) : height),
+        shape: circle ? 'circle' : undefined, radius: circle ? undefined : parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0 });
       visible.set(card.dataset.nodeId, graph.nodes.get(card.dataset.nodeId) || { id: focalId });
     }
     const edges = (draftCard() && view === 'focus' ? neighbors().parents.map(id => ({ edge: [id, focalId], kind: 'draft' })) : graph.edges)

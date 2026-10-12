@@ -101,6 +101,8 @@ test('page updates slider/number inputs, previews and all export formats, with r
   assert.match($('mappings').textContent,/Requirement · color 5 · #92a64b/);
   assert.match($('mappings').textContent,/A · Added · color 4 · #37b390/);
   assert.match($('mapping-logic').textContent,/Requirement gets a leftover/);
+  const manifesto=dom.window.document.querySelector('.node.manifesto'),style=dom.window.getComputedStyle(manifesto);
+  assert.equal(style.width,'150px');assert.equal(style.height,'150px');assert.equal(style.borderRadius,'50%');
   input('count','6');assert.equal($('swatches').children.length,6);
   assert.equal(JSON.parse($('result').value).parameters.count,6);
   const slider=dom.window.document.querySelector('[data-for="chroma"]');slider.value='0.2';
