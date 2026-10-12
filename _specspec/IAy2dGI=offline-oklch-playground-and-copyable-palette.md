@@ -1,0 +1,28 @@
+---
+id: IAy2dGI=
+type: requirement
+parents:
+- XLyy460=
+- 6QB9hRY=
+---
+# Offer an offline OKLCH playground with copyable results
+
+Use tools/rainbow-playground/index.html plus local plain JS/CSS, no server, CDN,
+packages, CLI, project access or production asset dependency. Open directly from
+disk. Default to the current nine-color parameters: L=.73, C=.12, hue 300 to 30.
+Expose count, lightness, chroma and hue endpoints, a dark/light preview, reset,
+color swatches and tinted/hovered node-style samples. Interpolate linearly from
+start to end hue, not an implicit shortest-path rotation.
+
+Export parameters JSON, a complete hex palette/mapping result and optional CSS
+custom properties. Copy with Clipboard API when available, otherwise select text
+for manual copy without claiming success. No automatic graph import/apply or
+filesystem/browser-storage persistence. Parameters may be pasted to the assistant.
+
+Convert OKLCH to sRGB numerically. If a requested sample is out of gamut, reduce
+chroma at fixed lightness/hue and report that reduction; do not silently clip RGB.
+Show nearest hue-based type/Git mappings as suggestions, not an approval or
+production mutation. Validate inputs and retain the last valid preview if invalid.
+Verify default output matches current table, interpolation/gamut behavior, exports,
+reset, invalid edits and actual standalone browser startup. Perception/display and
+hover gamut limits remain revisable; this tool does not certify accessibility.
