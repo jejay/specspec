@@ -5,7 +5,7 @@
   else root.RainbowPlayground = api;
 })(globalThis, () => {
   'use strict';
-  const DEFAULTS = { count: 9, lightness: 0.73, chroma: 0.12, startHue: 300, endHue: 30 };
+  const DEFAULTS = { count: 7, lightness: 0.69, chroma: 0.12, startHue: 320, endHue: 20 };
   function validate(input) {
     const p = Object.fromEntries(Object.keys(DEFAULTS).map(key => [key, Number(input[key])]));
     if (Object.values(p).some(v => !Number.isFinite(v)) || Object.keys(DEFAULTS).some(key => input[key] === '' || input[key] == null)) throw new Error('All parameters must be numbers.');

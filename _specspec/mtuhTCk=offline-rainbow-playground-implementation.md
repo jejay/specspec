@@ -17,6 +17,13 @@ sources:
 - path: graph-ui-common/test-host/playground.cjs
   symbol: real file browser checks
 ---
+## Later user-selected defaults
+
+gfAxHps= supplies the exact seven-color CSS and JSON selection. X8Rqyk8= updates
+current tool defaults to count 7, L=.69, C=.12, hue 320 to 20 and verifies exact
+exports. The initial nine-color-default description and actual checks below are
+historical; the standalone editing/export/gamut/copy behavior remains in scope.
+
 # Build a separate offline rainbow parameter playground
 
 Implement XLyy460= through IAy2dGI= in tools/rainbow-playground. Plain local

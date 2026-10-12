@@ -12,7 +12,7 @@
   p { margin: 8px 0 18px; } .muted { color: #adb3c0; }
   .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
   label { display: block; } input[type=number], select { width: 100%; padding: 7px; margin: 4px 0; }
-  input[type=range] { width: 100%; accent-color: #b396e8; }
+  input[type=range] { width: 100%; accent-color: #bc82c9; }
   input, select, textarea, button { font: inherit; color: inherit; background: #282828; border: 1px solid #666; border-radius: 5px; }
   button { padding: 7px 14px; cursor: pointer; } button:hover { background: #383838; }
   :focus-visible { outline: 2px solid #85a5f3; outline-offset: 2px; }
@@ -39,11 +39,11 @@
 <h1>Rainbow playground</h1>
 <p class="muted">A separate, offline color experiment. Nothing is applied to SpecSpec or saved. Copy your result and paste it to the assistant.</p>
 <form id="parameters" class="controls" autocomplete="off">
-  <label>Number of colors <input id="count" type="number" min="2" max="32" step="1" value="9" required><input data-for="count" type="range" min="2" max="32" step="1" value="9" aria-label="Number of colors slider"></label>
-  <label>Lightness (OKLCH L) <input id="lightness" type="number" min="0" max="1" step="0.01" value="0.73" required><input data-for="lightness" type="range" min="0" max="1" step="0.01" value="0.73" aria-label="Lightness slider"></label>
+  <label>Number of colors <input id="count" type="number" min="2" max="32" step="1" value="7" required><input data-for="count" type="range" min="2" max="32" step="1" value="7" aria-label="Number of colors slider"></label>
+  <label>Lightness (OKLCH L) <input id="lightness" type="number" min="0" max="1" step="0.01" value="0.69" required><input data-for="lightness" type="range" min="0" max="1" step="0.01" value="0.69" aria-label="Lightness slider"></label>
   <label>Saturation / chroma (C) <input id="chroma" type="number" min="0" max="0.4" step="0.005" value="0.12" required><input data-for="chroma" type="range" min="0" max="0.4" step="0.005" value="0.12" aria-label="Chroma slider"></label>
-  <label>Start hue (degrees) <input id="startHue" type="number" min="0" max="360" step="1" value="300" required><input data-for="startHue" type="range" min="0" max="360" step="1" value="300" aria-label="Start hue slider"></label>
-  <label>End hue (degrees) <input id="endHue" type="number" min="0" max="360" step="1" value="30" required><input data-for="endHue" type="range" min="0" max="360" step="1" value="30" aria-label="End hue slider"></label>
+  <label>Start hue (degrees) <input id="startHue" type="number" min="0" max="360" step="1" value="320" required><input data-for="startHue" type="range" min="0" max="360" step="1" value="320" aria-label="Start hue slider"></label>
+  <label>End hue (degrees) <input id="endHue" type="number" min="0" max="360" step="1" value="20" required><input data-for="endHue" type="range" min="0" max="360" step="1" value="20" aria-label="End hue slider"></label>
 </form>
 <div class="actions"><button id="reset" type="button">Reset to current palette</button><label>Preview <select id="theme"><option value="dark">Dark canvas</option><option value="light">Light canvas</option></select></label></div>
 <p id="message" role="status" aria-live="polite"></p>

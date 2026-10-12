@@ -10,7 +10,7 @@ Adjust:
 - **Chroma**: a saturation-like control, 0–0.4.
 - **Start/end hue**: degrees, interpolated linearly in the given direction.
 
-Defaults reproduce the current nine-color palette: L=.73, C=.12, hue 300 → 30.
+Defaults reproduce the user's adopted seven-color palette: L=.69, C=.12, hue 320 → 20.
 View plain swatches and hoverable tinted nodes on dark/light canvases. The suggested
 node-type/Git choices are nearest-hue table entries; small/narrow palettes may map
 several meanings to the same color. These suggestions do not change SpecSpec.

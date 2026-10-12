@@ -20,7 +20,26 @@ function page(t) {
 test('standalone generator defaults exactly match the production rainbow and mappings', () => {
   const result=palette.generate(palette.DEFAULTS);
   assert.deepEqual(result.colors,model.RAINBOW_COLORS);
+  assert.deepEqual(result.parameters,{count:7,lightness:0.69,chroma:0.12,startHue:320,endHue:20});
+  assert.deepEqual(result.colors,['#bc82c9','#7e97e6','#1facce','#37b390','#92a64b','#ca8d3e','#dc7b7c']);
+  assert.deepEqual(result.mappings,{requirement:3,implementation:0,added:4,changed:1,removed:6,renamed:1,'source-changed':5});
   assert.deepEqual(result.gamutReducedIndices,[]);
+  assert.equal(palette.css(result),`:root {
+  --rainbow-1: #bc82c9;
+  --rainbow-2: #7e97e6;
+  --rainbow-3: #1facce;
+  --rainbow-4: #37b390;
+  --rainbow-5: #92a64b;
+  --rainbow-6: #ca8d3e;
+  --rainbow-7: #dc7b7c;
+  --palette-requirement: var(--rainbow-4);
+  --palette-implementation: var(--rainbow-1);
+  --palette-added: var(--rainbow-5);
+  --palette-changed: var(--rainbow-2);
+  --palette-removed: var(--rainbow-7);
+  --palette-renamed: var(--rainbow-2);
+  --palette-source-changed: var(--rainbow-6);
+}\n`);
   for(const [kind,index] of Object.entries(result.mappings)) {
     assert.equal(result.colors[index],kind in model.TYPE_COLORS ? model.TYPE_COLORS[kind] : model.REVISION_COLORS[kind]);
   }
@@ -37,7 +56,7 @@ test('out-of-gamut colors reduce chroma at fixed hue/lightness instead of silent
   const result=palette.generate({...palette.DEFAULTS,chroma:0.4});
   assert.ok(result.gamutReducedIndices.length>0);
   for(const s of result.samples) {
-    assert.equal(s.lightness,0.73);assert.equal(s.requestedChroma,0.4);
+    assert.equal(s.lightness,0.69);assert.equal(s.requestedChroma,0.4);
     assert.ok(palette.inGamut(palette.linearRGB(s.lightness,s.chroma,s.hue)));
     if(s.gamutReduced) assert.ok(s.chroma<0.4);
     assert.match(s.hex,/^#[0-9a-f]{6}$/);
@@ -57,7 +76,7 @@ test('generator rejects missing, non-finite and out-of-range parameters', () => 
 
 test('page updates slider/number inputs, previews and all export formats, with reset and theme switching', t => {
   const {dom,$,input}=page(t);
-  assert.equal($('swatches').children.length,9);assert.equal($('nodes').children.length,10);
+  assert.equal($('swatches').children.length,7);assert.equal($('nodes').children.length,8);
   input('count','6');assert.equal($('swatches').children.length,6);
   assert.equal(JSON.parse($('result').value).parameters.count,6);
   const slider=dom.window.document.querySelector('[data-for="chroma"]');slider.value='0.2';
@@ -68,8 +87,8 @@ test('page updates slider/number inputs, previews and all export formats, with r
   assert.match($('result').value,/--rainbow-6: #[0-9a-f]{6}/);
   assert.match($('result').value,/--palette-added: var\(--rainbow-\d+\)/);
   $('theme').value='light';$('theme').dispatchEvent(new dom.window.Event('change'));assert.ok($('preview').classList.contains('light'));
-  $('reset').click();assert.equal($('count').value,'9');assert.equal($('chroma').value,'0.12');
-  assert.match($('result').value,/--rainbow-1: #b396e8/);
+  $('reset').click();assert.equal($('count').value,'7');assert.equal($('lightness').value,'0.69');assert.equal($('chroma').value,'0.12');
+  assert.match($('result').value,/--rainbow-1: #bc82c9/);
 });
 
 test('invalid edits retain last valid output, disable copying, and recover with reset', t => {

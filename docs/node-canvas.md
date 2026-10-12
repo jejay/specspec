@@ -81,9 +81,9 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   kind, retaining that hue on hover. Delegated pointer transitions include expanded form controls; hit tests
   reconcile redraw/camera changes, and exit/blur/touch clears emphasis. No host
   messages, canonical data, or persisted hover preferences are involved.
-- **Node colors** share a nine-step softly colored violet-to-red table, with
-  slightly stronger chroma (.12 instead of .11) at unchanged lightness (.73).
-  Distance one starts violet, nine ends red, then repeats. Type mode uses teal/violet;
+- **Node colors** share the user's exact seven-color playground table, with
+  confirmed parameters L=.69, C=.12, hue 320 → 20. Distance one starts at the first
+  swatch, seven ends at the last, then repeats. Type mode uses teal/purple;
   gray manifesto zero remains outside both distance/type palettes. Git/Revision
   Status instead uses rainbow green A, blue M/R, red D and amber source impact,
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;

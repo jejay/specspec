@@ -191,11 +191,16 @@ about every theme/custom palette, display gamut or platform.
 The [user request](../_specspec/Rg30CXs=rainbow-node-palette-and-revision-color-mode.md)
 orders spectrum colors from violet through blue/cyan/green/yellow/orange to red,
 with more intermediate colors and a similar gentle feel. The [separate choice](../_specspec/6QB9hRY=shared-rainbow-table-and-derived-revision-fills.md)
-now uses nine in-gamut sRGB swatches sampled at OKLCH lightness .73/chroma .12,
-hue 300 through 30 in 33.75-degree steps. The [user's follow-up](../_specspec/l3vgxN4=nine-more-distinct-rainbow-colors.md)
-finds thirteen colors too close and requests nine with slightly stronger saturation.
-Lightness stays unchanged; chroma increases about 9%. One hop starts violet;
-nine reaches red; ten restarts violet. Node types reuse teal/violet entries. Unknown paths are
+now adopts the [user's exact playground result](../_specspec/gfAxHps=user-selected-seven-color-palette.md):
+`#bc82c9`, `#7e97e6`, `#1facce`, `#37b390`, `#92a64b`, `#ca8d3e`, `#dc7b7c`.
+The user's full JSON confirms seven samples at OKLCH L=.69/C=.12, hue 320 → 20,
+with no gamut reductions. The playground reproduces all hex bytes and mappings.
+Zero-based indices: requirement 3, implementation 0, added 4, changed/renamed 1,
+removed 6 and source-only affected 5. Do not silently retune the explicit colors.
+One hop starts at the first swatch; seven reaches the last; eight restarts the table.
+The prior [nine-color tuning](../_specspec/l3vgxN4=nine-more-distinct-rainbow-colors.md)
+and thirteen-color choice remain history, not the current count/parameters.
+Node types reuse teal/purple entries. Unknown paths are
 neutral, and distance/type manifesto accents remain light gray outside the cycle.
 
 **Git/Revision Status** uses the selected comparison: A green, M/R blue, D red,
@@ -217,14 +222,18 @@ root in an independent disposable Gantt clone and all dark/light/contrast probes
 The [initial implementation/evidence record](../_specspec/Flf59Uc=rainbow-and-revision-colors-implementation.md)
 links the shared model/renderer/template/CSS and earlier thirteen-color regressions.
 The [nine-color tuning record](../_specspec/ezKCR3w=nine-color-rainbow-tuning-implementation.md)
-links the revised palette/mappings and current checks. The screenshot-enabled VS
-Code attempt failed on a non-top-level CDP capture target; its unchanged full
-rerun without screenshots passed. Electron passed with inspected screenshots.
-All 115 common,
-34 VS Code, nine Electron and 111 Python tests passed, as did Ruff and working
-validators. Both complete Windows host suites ultimately passed sequentially;
-the current tuning screenshots are from Electron. Constants and bounded host evidence remain revisable, not
-accessibility/display or every-platform certification.
+links the earlier nine-color palette/mappings and its actual historical checks.
+At that checkpoint, a screenshot-enabled VS Code attempt failed on a non-top-level
+CDP capture target; its unchanged full rerun without screenshots passed. Those
+115 common/34 VS Code/nine Electron/111 Python counts remain earlier evidence.
+The [current selected-palette record](../_specspec/X8Rqyk8=user-selected-seven-color-palette-implementation.md)
+links the exact seven colors/mappings, matching CSS/JSON export regression and
+adopted playground defaults. Current 127 common/34 VS Code/nine Electron/111 Python
+tests, Ruff and validators passed, as did the standalone file:// browser check
+and complete Windows host suites after explicit builds and direct Node runners.
+Electron revision-palette and playground-default screenshots were inspected.
+Constants and bounded host evidence remain revisable, not accessibility/display
+or every-platform certification.
 
 ## Separate palette playground
 
@@ -233,7 +242,7 @@ and [offline/export choice](../_specspec/IAy2dGI=offline-oklch-playground-and-co
 add [`tools/rainbow-playground/index.html`](../tools/rainbow-playground/index.html).
 Open it directly in a browser; no server, network or installation is needed.
 Count, lightness, chroma and hue endpoints drive an interactive dark/light preview,
-with the current nine-color palette as defaults. Out-of-gamut samples explicitly
+with the user's adopted seven-color parameters as defaults. Out-of-gamut samples explicitly
 reduce chroma at fixed hue/lightness, rather than silently clipping RGB. Copy
 parameters JSON (sufficient), full palette JSON or CSS variables back to the
 assistant. Clipboard rejection falls back to selected text for manual copy.

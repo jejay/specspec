@@ -15,22 +15,22 @@ function oklch(hex) {
   return [L,Math.hypot(a,bLab),(Math.atan2(bLab,a)*180/Math.PI+360)%360];
 }
 
-test('nine slightly more saturated swatches run violet to red at distinct, even hue intervals', () => {
-  assert.equal(model.RAINBOW_COLORS.length,9);
-  assert.equal(new Set(model.RAINBOW_COLORS).size,9);
+test('seven swatches match the user selection exactly, with its requested lightness/chroma/hue sweep', () => {
+  assert.deepEqual(model.RAINBOW_COLORS,['#bc82c9','#7e97e6','#1facce','#37b390','#92a64b','#ca8d3e','#dc7b7c']);
+  assert.equal(new Set(model.RAINBOW_COLORS).size,7);
   for(const [i,color] of model.RAINBOW_COLORS.entries()) {
     assert.match(color,/^#[0-9a-f]{6}$/);
     const [l,c,h]=oklch(color);
-    assert.ok(Math.abs(l-0.73)<0.003,`Lightness ${color}: ${l}`);
+    assert.ok(Math.abs(l-0.69)<0.003,`Lightness ${color}: ${l}`);
     assert.ok(Math.abs(c-0.12)<0.003,`Chroma ${color}: ${c}`);
-    assert.ok(Math.abs(h-(300-33.75*i))<1,`Hue ${color}: ${h}`);
+    assert.ok(Math.abs(h-(320-50*i))<1,`Hue ${color}: ${h}`);
   }
 });
 
-test('distance starts at violet for one hop, ends at red and repeats the complete table', () => {
+test('distance starts at the first selected swatch for one hop and repeats the seven-entry table', () => {
   for(const mode of ['distance','max-distance']) {
     for(let distance=1;distance<=40;distance++) {
-      assert.equal(model.color(mode,{type:'requirement'},distance),model.RAINBOW_COLORS[(distance-1)%9]);
+      assert.equal(model.color(mode,{type:'requirement'},distance),model.RAINBOW_COLORS[(distance-1)%7]);
       assert.equal(model.color(mode,{type:'manifesto'},distance),'#d3d3d3');
     }
     for(const distance of [undefined,NaN,Infinity,-1,0,1.5]) {
@@ -43,16 +43,21 @@ test('node-type and colored revision swatches come from the same rainbow table',
   for(const type of ['requirement','implementation']) {
     assert.ok(model.RAINBOW_COLORS.includes(model.color('type',{type})));
   }
-  assert.equal(model.TYPE_COLORS.requirement,model.RAINBOW_COLORS[4]);
+  assert.equal(model.TYPE_COLORS.requirement,model.RAINBOW_COLORS[3]);
   assert.equal(model.TYPE_COLORS.implementation,model.RAINBOW_COLORS[0]);
   for(const kind of ['added','changed','removed','renamed','source-changed']) {
     assert.ok(model.RAINBOW_COLORS.includes(model.REVISION_COLORS[kind]));
   }
-  assert.equal(model.REVISION_COLORS.added,model.RAINBOW_COLORS[5]);
+  assert.equal(model.REVISION_COLORS.added,model.RAINBOW_COLORS[4]);
   assert.equal(model.REVISION_COLORS.changed,model.RAINBOW_COLORS[1]);
-  assert.equal(model.REVISION_COLORS.removed,model.RAINBOW_COLORS[8]);
+  assert.equal(model.REVISION_COLORS.removed,model.RAINBOW_COLORS[6]);
   assert.equal(model.REVISION_COLORS.renamed,model.REVISION_COLORS.changed);
-  assert.equal(model.REVISION_COLORS['source-changed'],model.RAINBOW_COLORS[7]);
+  assert.equal(model.REVISION_COLORS['source-changed'],model.RAINBOW_COLORS[5]);
+  assert.deepEqual(model.TYPE_COLORS,{manifesto:'#d3d3d3',requirement:'#37b390',implementation:'#bc82c9'});
+  for(const [kind,hex] of Object.entries({added:'#92a64b',changed:'#7e97e6',removed:'#dc7b7c',renamed:'#7e97e6','source-changed':'#ca8d3e'})) {
+    assert.equal(model.color('git-revision',{type:'manifesto'},0,kind),hex);
+    assert.equal(model.color('git-revision',{type:'requirement'},10,kind),hex);
+  }
 });
 
 test('revision mode includes manifesto changes, but other modes keep it gray', () => {

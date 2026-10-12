@@ -41,10 +41,10 @@ if (process.versions.electron) {
         return r.result.value;
       };
       const screenshot=async name=>{if(process.env.SPECSPEC_SCREENSHOT_DIR){mkdirSync(process.env.SPECSPEC_SCREENSHOT_DIR,{recursive:true});const image=await client.send('Page.captureScreenshot',{format:'png'});writeFileSync(join(process.env.SPECSPEC_SCREENSHOT_DIR,name+'.png'),Buffer.from(image.data,'base64'));}};
-      for(let i=0;i<100;i++){if(await evaluate(`document.getElementById('swatches')?.children.length===9`))break;await delay(50);}
+      for(let i=0;i<100;i++){if(await evaluate(`document.getElementById('swatches')?.children.length===7`))break;await delay(50);}
       await screenshot('rainbow-playground-controls');
       assert.equal(await evaluate(`location.protocol`),'file:');
-      assert.equal(await evaluate(`document.getElementById('swatches').children.length`),9);
+      assert.equal(await evaluate(`document.getElementById('swatches').children.length`),7);
       assert.ok(await evaluate(`getComputedStyle(document.querySelector('.node')).backgroundColor.startsWith('color(srgb')`),'Tint preview uses the real browser CSS');
       await evaluate(`document.getElementById('count').value='12';document.getElementById('count').dispatchEvent(new Event('input',{bubbles:true}))`);
       assert.equal(await evaluate(`document.getElementById('swatches').children.length`),12);
@@ -57,7 +57,7 @@ if (process.versions.electron) {
       await evaluate(`document.getElementById('reset').click()`);
       assert.deepEqual(await evaluate(`JSON.parse(document.getElementById('result').value).colors`),require('../media/graph-model.js').RAINBOW_COLORS);
       await evaluate(`document.getElementById('format').value='css';document.getElementById('format').dispatchEvent(new Event('change'))`);
-      assert.ok(await evaluate(`document.getElementById('result').value.includes('--rainbow-9: #e98a7a')`));
+      assert.ok(await evaluate(`document.getElementById('result').value.includes('--rainbow-7: #dc7b7c')`));
       await evaluate(`document.getElementById('theme').value='light';document.getElementById('theme').dispatchEvent(new Event('change'))`);
       assert.equal(await evaluate(`getComputedStyle(document.getElementById('preview')).backgroundColor`),'rgb(255, 255, 255)');
       // No automated writes to the user's clipboard: exercise the manual fallback.
