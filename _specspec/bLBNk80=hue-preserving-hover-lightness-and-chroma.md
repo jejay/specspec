@@ -33,3 +33,9 @@ in xCOHepQ=; c2d8e15 implemented it globally and tested it. Its parent iktVTRU=
 requested white only for the gray root. 34e72bb (2026-10-06) introduced the 50%
 edge-ink/theme-foreground mix behind the washed-out colored hover. Preserve this
 history while superseding those choices; tests passing did not validate intent.
+
+## Colored-root revision-mode extension
+
+6QB9hRY= adds revision fills, including the manifesto. In that new mode a root
+keeps stronger status-hue hover like other cards rather than becoming white. The
+neutral-gray manifesto white-hover exception remains in distance/type modes.

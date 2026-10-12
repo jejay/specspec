@@ -44,3 +44,12 @@ while retaining its neutral gray accent/legend. Cards share hover tint shifting,
 not white borders: the white override belongs only to the manifesto. The earlier
 all-card claim overgeneralized the root request; bLBNk80= restores stronger
 semantic-hue borders elsewhere. Outside-neighborhood darkening is unchanged.
+
+## Shared rainbow and revision-mode extension
+
+Rg30CXs= requests a denser violet-to-red rainbow table and a separate comparison
+fill mode. 6QB9hRY= replaces the arbitrary repeating depth palette, shares table
+entries with node types and adds Git/Revision Status fills including the root.
+The earlier fixed-gray-in-all-modes and separate-Git-fill statements apply to
+distance/type modes; themed title/corner cues and withdrawal stay separate in all
+modes. No approval-status scheme or canonical status fields return.

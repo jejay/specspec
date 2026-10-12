@@ -27,3 +27,6 @@ size in general. Keep Git meaning/colors and withdrawal/source distinctions inta
 Origin: the user's correction and two additional readability requests in this
 conversation. Exact tint, world width, font limits and marker sizes are separate
 technical choices. The previous solid-gray implementation misunderstood the intent.
+
+Later extension: Rg30CXs= explicitly colors the manifesto by comparison kind
+in Git/Revision Status mode; distance/type modes keep this neutral gray styling.
