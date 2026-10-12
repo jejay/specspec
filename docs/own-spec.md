@@ -53,6 +53,66 @@ claim that older commits used today's scheme. Tests clone the bundle temporarily
 no nested `.git` is installed and unrelated SpecSpec development commits are untouched.
 See [the history walkthrough](../example/gantt/history/WALKTHROUGH.md).
 
+### Independent example workspaces and recurring reconstruction
+
+The [user's clarification](../_specspec/TAvql3w=independent-example-repository-policy.md)
+requires serious Git/temporal and integration tests to use separate example
+repositories. The tracked `example/gantt` folder is a fixture snapshot, **not an
+independent Git workspace**: Git there selects SpecSpec development commits, and
+the UI may rightly reject their obsolete schemas. The
+[separate checkout choice](../_specspec/83D9YWw=external-example-checkouts.md)
+keeps portable artifacts in this checkout while materializing independent clones:
+
+```sh
+python example/gantt/history/checkout.py
+# Or a new external destination:
+python example/gantt/history/checkout.py ../specspec-examples/gantt
+```
+
+Default: `~/Projects/specspec-examples/gantt` (Windows:
+`~\Projects\specspec-examples\gantt`). Open the clone in either UI and compare
+`stage/01-code` → `stage/02-spec` or `stage/02-code` → `stage/03-spec`. The helper
+refuses existing folders and destinations inside this development Git worktree;
+it never resets experiments or installs hooks. Tests and CI clone the same bundle
+temporarily, including both host fixtures; they do not copy the graph into an
+invented one-commit history or depend on the manual clone/full development history.
+Small current-schema synthetic projects remain useful for focused unit tests.
+
+**Every schema change requires reconstructing the entire maintained history of
+Gantt and any additional examples as if all revisions had always used the current
+SpecSpec version.** All retained refs, nodes including withdrawn ones, filenames,
+relationships, current CLI receipts, commit ledgers and snapshot/bundle must agree.
+A new-schema HEAD over old-schema ancestors is not sufficient. Preserve believable
+graph emergence, separate conclusions, redirects and spec-before-code ordering;
+no fabricated AI conversation is required. Optional fiction remains labeled,
+never evidence or authorization. The walkthrough documents rebuilding in a fresh
+independent repo, validating every ref and refreshing the complete bundle. Manual
+clones are explicitly recreated only after preserving local experiments. No old
+reader/converter is added to production and unrelated development history is untouched.
+
+## Engineering map and accounted-for repository inputs
+
+The [architecture guide](architecture.md) and [offline SVG](architecture.svg)
+map current runtime boundaries, refreshes, managed transactions, native Save and
+source/test seams. They are descriptive engineering documentation, not another
+canonical graph or an exhaustive call graph. The [separate documentation choice](../_specspec/yJnnDfM=describe-runtime-boundaries-in-an-offline-engineering-map.md)
+keeps that distinction explicit. Native Save is not Python-journaled, Git reads
+never check out revisions and project text is rendered literally.
+
+The [input/local-state choice](../_specspec/1aSOZOs=version-original-artwork-and-keep-generated-settings-local.md)
+versions original provided SVG/PNG unchanged, keeps the branding SVG byte-identical
+and disables Git text conversion for those SVGs. Existing generated root
+`.vscode/settings.json` remains preserved locally and ignored; tracked launch,
+tasks and workspace configuration are not hidden or replaced.
+
+The [completion correction](../_specspec/DB21zn8=finish-assistant-work-as-coherent-spec-driven-changes.md)
+requires resolving the assistant's own unfinished work through coherent graph,
+implementation, verification and authorized commits—not calling its earlier edits
+another contributor's changes. Actual checks/history remain evidence, not approval. The [completion implementation
+and evidence record](../_specspec/Zhzgq8s=finish-backlog-with-linked-implementation-and-verification.md)
+links fixtures, CI, engineering artifacts, regressions and the final disposition
+of every pending assistant-authored change.
+
 ## Review is a spectrum, not a node workflow
 
 The [review intention](../_specspec/3wsnEjk=risk-proportionate-review.md) allocates
@@ -367,8 +427,8 @@ claim that native saves acquire Python locks or guarantee full-DAG consistency.
 
 ## An independent worked planning example
 
-The [Gantt app](../example/gantt/README.md) has fictional dialogue but real rewritten
-spec-before-code fixture commits. Portfolio → personal → workshop redirects withdraw
+The [Gantt app](../example/gantt/README.md) has optional fictional illustration and
+real rewritten spec-before-code fixture commits. Portfolio → personal → workshop redirects withdraw
 13/17 and 9/16 live nodes, retaining prior reasoning. The final graph has 44 nodes
 (22 live, 22 withdrawn); the app implements weekday forecasts, explicit baselines,
 protected browser storage and previewed JSON conversion. It is not a production
@@ -388,6 +448,9 @@ renames, removed/added parent edges and linked-source ancestry.
 | Compact IDs and current-only backend | [qowy5AI=](../_specspec/qowy5AI=canonical-base64url-and-current-only-backend.md) |
 | User's history/test scope correction | [Oou-SvU=](../_specspec/Oou-SvU=current-scheme-only-and-gantt-git-regressions.md) |
 | Independent compliant Git fixture | [YaXJpGE=](../_specspec/YaXJpGE=independent-current-schema-gantt-history.md) |
+| User's recurring rewrite/separation policy | [TAvql3w=](../_specspec/TAvql3w=independent-example-repository-policy.md) |
+| Safe external example workspaces | [83D9YWw=](../_specspec/83D9YWw=external-example-checkouts.md) |
+| External-workspace implementation/evidence | [oFOaAVo=](../_specspec/oFOaAVo=independent-example-workspaces-implementation.md) |
 | Writer/recovery | [6SyZ-BU=](../_specspec/6SyZ-BU=recoverable-workspace-mutations.md) |
 | Shared backend | [LvYBN_4=](../_specspec/LvYBN_4=shared-python-json-backend.md) |
 | Native documents | [GQdmCrA=](../_specspec/GQdmCrA=native-node-documents-and-independent-graph-views.md) |
@@ -434,11 +497,17 @@ sessions before relaunching changed code; trust the workspace when prompted.
 Startup failures appear in notifications and **View → Output → SpecSpec**.
 
 Shared/editor/desktop unit suites and optional installed-host checks are documented
-in the README and host guides. Current local checks passed: 100 Python tests,
-107 shared UI tests, 34 VS Code adapter tests, nine desktop unit tests, Ruff and
-both working validators. All Gantt stages/model tests, current receipts/history
+in the README and host guides. At the initial external-workspace checkpoint,
+checks passed: 111 Python tests, 107 shared UI tests, 34 VS Code adapter tests,
+nine desktop unit tests, Ruff and both working validators. All Gantt stages/model tests, current receipts/history
 and the installed Chromium app smoke passed. Full Windows VS Code/Electron host
-checks pass on maintained Gantt fixtures, including native node-file lifecycle.
+checks pass on independent maintained-history clones, including native node-file
+lifecycle and Electron's actual historical stage/02-code → stage/03-spec comparison.
+The [external-workspace record](../_specspec/oFOaAVo=independent-example-workspaces-implementation.md)
+describes the current fixture refresh and initial app-browser reload-readiness
+failure. The corrected harness waits for a new fully loaded document without
+weakening model/storage assertions; the real browser passed in disposable and
+manual clones. Runtime behavior and node schema were not changed for that fix.
 
 The first optional rekeyed-root runs hit density/hover assertions; the [separate
 fixture choice](../_specspec/3fWBW_g=maintained-gantt-host-integration-fixtures.md)
@@ -446,3 +515,19 @@ retains those observations. Moving the corpus did not weaken the assertions or
 change production layout/hover behavior; this is not a universal arbitrary-graph
 density/hover guarantee. Configured remote CI and non-Windows real-host runs are
 not claimed. Prior run counts/host checks remain historical evidence.
+
+### Backlog completion checks
+
+Fresh reconciliation checks passed: **119 Python, 131 shared UI, 34 VS Code and
+nine Electron tests**, Ruff and root/Gantt working validators. The complete bundle
+verifier checks all eight retained commits/refs, 123 actual receipts, every model
+stage and the tracked runtime; twenty final model tests and real Chromium app checks
+passed in a new external clone. Offline playground checks and both complete Windows
+host suites passed. The first new doc test failed using Windows cp1252 for UTF-8 SVG;
+explicit UTF-8 fixed that test. The first concurrent VS Code host run timed out in
+CDP interaction; its unchanged isolated rerun passed. Assertions/timeouts were not
+weakened. The architecture SVG's resvg render was inspected, original input bytes
+are preserved, and the generated local settings file remains intact and ignored.
+Exact staged root/fixture validation precedes the authorized implementation commit.
+See [the completion evidence](../_specspec/Zhzgq8s=finish-backlog-with-linked-implementation-and-verification.md)
+for scope and retained failures; this is not future-feature or every-platform proof.

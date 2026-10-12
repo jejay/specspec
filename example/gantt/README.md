@@ -1,111 +1,119 @@
 # A planning app that changes its mind
 
-A runnable spec-aware Gantt example with a clearly [simulated user/AI dialogue](STORY.md),
-two substantial redirects, a separate `_specspec/` graph and real spec-before-code
-Git stages. Its **maintained history has been rebuilt with current SpecSpec tooling**.
-The independent [Git bundle](history/gantt.bundle) is the rigorous versioning test
-corpus, not the surrounding SpecSpec repository's evolving historical schemas.
+A runnable Gantt example with an independent `_specspec` graph and plausible
+spec-before-code development through two substantial redirects. The existing
+[fictional story](STORY.md) is optional illustration, not required evidence or
+actual authorization. The final graph has **44 nodes: 22 live, 22 withdrawn**.
+
+## Use the independent repository, not this tracked snapshot, for Git
+
+`example/gantt` in the SpecSpec checkout is a tracked fixture snapshot. **Git in
+this folder uses the surrounding development repository**, whose old schemas are
+intentionally unsupported. This explains failed UI comparisons of its old commits.
+Do not install nested `.git` metadata here or resurrect legacy schema readers.
+
+The [complete Git bundle](history/gantt.bundle) holds a separate rewritten,
+current-schema history. From the SpecSpec root, with development Python active:
+
+```sh
+python example/gantt/history/checkout.py
+# Or choose a new external folder:
+python example/gantt/history/checkout.py ../specspec-examples/gantt
+```
+
+Default: `~/Projects/specspec-examples/gantt` (Windows:
+`~\Projects\specspec-examples\gantt`). Existing destinations are never overwritten.
+Open **that clone** as the project in VS Code/Electron. From the clone:
+
+```sh
+git rev-parse --show-toplevel
+python -m specspec validate --warnings-as-errors
+python -m specspec diff --base stage/01-code --target stage/02-spec --json
+python -m specspec diff --base stage/02-code --target stage/03-spec --json
+```
+
+Use the same tags in **Compare Revisions**. The clone has its own Git root, index,
+ancestry and worktree; it never depends on SpecSpec's obsolete historical schemas.
+See the [history/maintenance walkthrough](history/WALKTHROUGH.md).
+
+| Stage | Spec / code tags | Change |
+| --- | --- | --- |
+| 01 | `stage/01-spec` / `stage/01-code` | Portfolio, weekday forecasts, owners/rollups; cloud/leveling remain candidates |
+| 02 | `stage/02-spec` / `stage/02-code` | Personal manual dates/weekends/priorities; **13/17 live nodes withdrawn** |
+| 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/16 live nodes withdrawn** |
+
+Every spec checkpoint precedes its code. Withdrawn branches retain identity, body,
+parents and sources. `history/cli.jsonl` records actual reconstructed CLI executions;
+`history/revisions.json` records actual fixture commits and receipt ordinals.
+These are real executions in an intentionally synthetic history, not a claim that
+untouched original commits used today's encoding. No approval workflow is involved.
+
+**Whenever the node schema changes, rewrite the entire maintained example history
+as if every revision had always used the current SpecSpec version.** Updating only
+HEAD is insufficient. Refresh all refs, ledgers, receipts, snapshot and bundle;
+validate every revision with current tools. The walkthrough gives the maintenance
+procedure. Existing manual clones must be explicitly recreated after preserving
+local work. Unrelated SpecSpec development history is never rewritten.
 
 ## Run the final app
 
-Open `index.html`, or use a stable local origin for predictable browser-local storage:
+From your independent clone, open `index.html`, or serve a stable local origin:
 
 ```sh
-python -m http.server 8000 --bind 127.0.0.1 --directory example/gantt
+python -m http.server 8000 --bind 127.0.0.1
 # Visit http://127.0.0.1:8000
 ```
 
 Capture a baseline, select Prepare materials, change its duration from 3 to 6
 workdays and save. The workshop finish moves from April 20 to April 21; the baseline
 remains unchanged. Add/edit/remove tasks and prerequisites with native forms.
-Cycles and deleting a referenced prerequisite are rejected without losing drafts.
-Export JSON or preview `history/personal-v1.json`; conversion explains changed
-weekend/end-date semantics and lost priorities before explicit Apply.
+Cycles and deleting a referenced prerequisite preserve drafts. Export JSON or
+preview `history/personal-v1.json`; conversion explains changed weekend/end-date
+semantics and lost priorities before explicit Apply.
 
 Forecasts use Monday–Friday workdays and optional earliest bounds. No holidays,
 partial days, resource leveling, portfolios, accounts or synchronization. Finish
 deltas count calendar days. Limits: 100 tasks, durations 1–60 workdays, dates
-2000–2100, common chart horizon 730 days. Baselines are snapshots, not approval.
+2000–2100, chart horizon 730 days. Baselines are snapshots, not approval.
 
-Valid edits autosave locally. Storage denial is visible; corrupt or old application
-JSON bytes remain protected until explicit Apply/reset and can be downloaded.
-Browser storage is not durable backup or sync; file-origin support varies. There
-is no runtime API, CDN, remote script or application build dependency.
+Valid edits autosave locally. Corrupt/old application JSON stays protected until
+explicit Apply/reset and can be downloaded. Storage denial is visible. Browser
+storage is not durable backup or sync; file-origin support varies. There is no
+runtime API, CDN, remote script or app build dependency. App JSON v1 conversion
+is unrelated to obsolete SpecSpec node schemas.
 
-## Three maintained development directions
+## Explore and check
 
-Clone the history before running Git comparisons:
+From the clone:
 
 ```sh
-git clone example/gantt/history/gantt.bundle ../gantt-history
-python -m specspec --root ../gantt-history diff \
-  --base stage/01-code --target stage/02-spec --json
-python -m specspec --root ../gantt-history diff \
-  --base stage/02-code --target stage/03-spec --json
+python -m specspec list --live --json
+python -m specspec list --retired --json
+python -m specspec context <full-id> --json
+npm test
+npm run test:browser
 ```
 
-| Stage | Spec / code tags | Change |
-| --- | --- | --- |
-| 01 | `stage/01-spec` / `stage/01-code` | Portfolio, weekday forecasts, owners/rollups; cloud/leveling remain candidates |
-| 02 | `stage/02-spec` / `stage/02-code` | Personal manual calendar dates/weekends/priorities; **13/17 live nodes withdrawn** |
-| 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/16 live nodes withdrawn** |
+IDs are canonical padded Base64url over five random bytes, including `=`; filenames
+are `<id><slug>.md`. Manual Markdown is permitted and validated; CLI/UI editing is
+recommended. Do not reinitialize the graph. Node 22+ is needed for the installed
+Chromium browser harness; no app dependencies or browser downloads are required.
+`GANTT_BROWSER` selects the installed browser; `GANTT_SCREENSHOT_DIR` saves screenshots.
+Tests use loopback and disposable profiles, not personal data.
 
-Each spec checkpoint precedes its runnable implementation. The first has no app
-code; later specs retain the previous prototype. The final graph has **44 nodes:
-22 live, 22 withdrawn**. Withdrawn reasoning retains identity, body, parents and
-sources across each redirect. New workshop reasoning is separately justified.
-No approval stages, confidence scores or installed hooks are involved.
-
-- `history/cli.jsonl`: actual current CLI argv/stdin/results from reconstruction.
-- `history/revisions.json`: real fixture commit IDs, receipt ordinals and withdrawal sets.
-- `history/gantt.bundle`: complete standalone current-schema Git history.
-- [History walkthrough](history/WALKTHROUGH.md): clone, diff and optional worktrees.
-
-This is an intentional rewritten fixture, not a claim that the original older
-commits used today's encoding. It preserves app evolution while removing obsolete
-SpecSpec machinery. No nested `.git` is installed in this checkout and unrelated
-SpecSpec commits are not rewritten. Persisted app JSON conversion remains tested;
-it is distinct from unsupported obsolete SpecSpec node schemes.
-
-## Explore the working graph
-
-Install the development package from the parent checkout, then:
+From the SpecSpec checkout, verify the portable fixture independently:
 
 ```sh
-python -m specspec --root example/gantt validate --warnings-as-errors
-python -m specspec --root example/gantt list --live --json
-python -m specspec --root example/gantt list --retired --json
-python -m specspec --root example/gantt context <full-id> --json
-```
-
-IDs are canonical padded Base64url over five random bytes (40 bits), including `=`.
-The same equals sign separates the ID from the filename summary. Manual Markdown
-edits are allowed and structurally validated; CLI/UI editing remains recommended.
-Do not reinitialize the graph. Open this folder in VS Code for its independent view.
-
-## Checks
-
-```sh
-npm --prefix example/gantt test
-npm --prefix example/gantt run test:browser
-python example/gantt/history/verify.py
 python example/gantt/history/verify.py --history
+python -m pytest tests/test_example_checkout.py tests/test_gantt_example.py tests/test_gantt_git.py
 ```
 
-Node 22+ is needed for the optional installed-Chromium browser harness. No npm
-install or browser download is needed. `GANTT_BROWSER` selects Chrome/Chromium/Edge;
-`GANTT_SCREENSHOT_DIR` saves optional screenshots. Tests use loopback and disposable
-profiles. Previous real Windows browser evidence covers forecasts/baselines,
-responsive native caret/drafts, cycles/deletion, literal text, downloads/upload,
-preview/cancel/v1 conversion and protected/denied storage. That is not exhaustive
-accessibility/browser-matrix/performance/security evidence or a remote CI claim.
+Tests/CI clone the bundle, not your manual workspace. Current snapshot/runtime/test
+consistency is checked. Historical checks do not modify this checkout's index or
+history. Existing Windows browser evidence is bounded prototype verification,
+not exhaustive accessibility/platform/performance/security proof or a remote CI claim.
 
-Before an authorized parent-checkout commit, validate both exact staged graphs:
-
-```sh
-python -m specspec hook check
-python -m specspec --root example/gantt hook check
-```
-
-Tests clone the maintained history temporarily; normal working files still belong
-to the parent checkout's Git index. No local hook is installed automatically.
+Before an authorized SpecSpec-checkout commit, validate both **exact staged** graphs
+from its root: `python -m specspec hook check` and
+`python -m specspec --root example/gantt hook check`. In an independent example
+repository, only its own `hook check` applies. No hooks are installed automatically.

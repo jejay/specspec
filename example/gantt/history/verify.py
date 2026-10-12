@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -18,23 +19,25 @@ from specspec.model import API_VERSION, FORMAT_VERSION, ID_RE, SpecNode
 from specspec.workspace import load_snapshot, slugify
 
 ROOT = Path(__file__).resolve().parents[1]
+RUNTIME_PATHS = (
+    "app.js",
+    "model.js",
+    "index.html",
+    "styles.css",
+    "package.json",
+    "test/model.test.cjs",
+    "test/browser.cjs",
+    "history/personal-v1.json",
+)
 
 
 def clone_history(root: Path, destination: Path) -> Path:
     subprocess.run(
-        [
-            "git",
-            "-c",
-            "core.autocrlf=false",
-            "clone",
-            "--quiet",
-            str(root / "history/gantt.bundle"),
-            str(destination),
-        ],
+        [sys.executable, str(root / "history/checkout.py"), str(destination)],
         check=True,
         capture_output=True,
     )
-    return destination
+    return destination.resolve()
 
 
 def contents(snapshot):
@@ -131,8 +134,27 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     if history:
         with tempfile.TemporaryDirectory(prefix="specspec-gantt-history-") as directory:
             fixture = clone_history(root, Path(directory) / "project")
-            # Every maintained commit is current-schema or the explicit empty predecessor.
-            commits = run_git(fixture, "rev-list", "--reverse", "HEAD").decode().splitlines()
+            assert (
+                Path(run_git(fixture, "rev-parse", "--show-toplevel").decode().strip()) == fixture
+            )
+            assert (
+                Path(
+                    run_git(fixture, "rev-parse", "--path-format=absolute", "--git-common-dir")
+                    .decode()
+                    .strip()
+                )
+                == fixture / ".git"
+            )
+            assert run_git(fixture, "config", "core.autocrlf").strip() == b"false"
+            tags = run_git(fixture, "tag", "--list").decode().splitlines()
+            assert set(tags) == {"stage/00-empty", "stage/04-audit"} | {
+                f"stage/{record['key']}-{kind}" for record in revisions for kind in ("spec", "code")
+            }
+            assert run_git(fixture, "rev-parse", "HEAD") == run_git(
+                fixture, "rev-parse", "stage/04-audit"
+            )
+            # Check ALL retained refs, not just main: no obsolete branch/tag may hide.
+            commits = run_git(fixture, "rev-list", "--reverse", "--all").decode().splitlines()
             assert len(commits) == 8, commits
             for index, ref in enumerate(commits):
                 snapshot = git_snapshot(fixture, ref, allow_empty=index == 0)
@@ -142,6 +164,10 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                     assert snapshot.format_version == FORMAT_VERSION
             assert git_snapshot(fixture, staged=True).valid
             assert contents(load_snapshot(fixture)) == contents(current)
+            for path in RUNTIME_PATHS:
+                assert run_git(fixture, "show", f"HEAD:{path}") == (root / path).read_bytes(), (
+                    f"The tracked runtime/test snapshot differs from the bundle: {path}"
+                )
             previous_implementation = None
             for record in revisions:
                 predecessor, spec_ref, code_ref = (

@@ -28,8 +28,25 @@ sources:
   symbol: maintained Gantt canvas fixture
 - path: example/gantt/test/browser.cjs
   symbol: installed Chromium smoke
+- path: example/gantt/history/checkout.py
+  symbol: safe independent workspace creation
+- path: tests/test_example_checkout.py
+  symbol: non-destructive checkout/identity checks
 ---
 # Rebuild the Gantt regression history with actual current CLI operations
+
+## External-workspace correction
+
+TAvql3w= and 83D9YWw= clarify that the tracked example/gantt snapshot is not a Git
+workspace. Git there selects SpecSpec development commits, explaining the user's
+UI failures against obsolete schemas. The safe checkout helper creates independent
+manual workspaces and disposable test clones. Both host fixtures now retain the
+complete maintained stage history, rather than copying files into one new baseline
+commit. CI application/browser checks run in a clone; all retained refs and final
+runtime/test snapshot consistency are checked. The history walkthrough documents
+recurring whole-history reconstruction on every schema change and optional fiction.
+The separate oFOaAVo= implementation record describes current verification; earlier
+run counts and reconstruction evidence below remain historical, not repeated claims.
 
 The maintained Gantt project history is now an independent complete Git bundle,
 not a demand to parse the surrounding SpecSpec repository's older graph revisions.

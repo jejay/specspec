@@ -74,7 +74,13 @@ class CDP {
     const input=(id,value)=>evaluate(`(() => {const n=document.getElementById(${JSON.stringify(id)});n.value=${JSON.stringify(value)};n.dispatchEvent(new Event('input',{bubbles:true}));})()`);
     const saved=()=>evaluate(`localStorage.getItem('specspec-gantt-plan')`);
     const count=()=>evaluate(`document.querySelectorAll('#task-table tr').length`);
-    const reload=async()=>{await client.send('Page.reload',{ignoreCache:true});await wait(async()=>await evaluate(`!!document.querySelector('#task-table tr')`),'App did not reload.');};
+    const reload=async()=>{
+      // Page.reload acknowledges navigation before the old DOM necessarily disappears.
+      // Require a fresh, fully loaded document; old rows must not satisfy readiness.
+      await evaluate(`window.__ganttBeforeReload=true`);
+      await client.send('Page.reload',{ignoreCache:true});
+      await wait(async()=>await evaluate(`!window.__ganttBeforeReload&&document.readyState==='complete'&&!!document.querySelector('#task-table tr')`),'App did not reload into a new document.');
+    };
     await wait(async()=>await count()===6,'Initial workshop did not render six tasks.');
     assert.equal(await saved(),null,'Opening the demo must not write storage.');
     assert.equal(await evaluate(`document.querySelectorAll('.bar.current').length`),6);

@@ -20,7 +20,7 @@ sources:
 - path: example/gantt/history/cli.jsonl
   symbol: real guarded CLI writes/context/impact receipts
 - path: example/gantt/history/revisions.json
-  symbol: real spec/code fingerprints and commit IDs
+  symbol: actual fixture stage commit IDs and receipt ordinals
 - path: example/gantt/history/verify.py
   symbol: current receipts and independent compliant Git bundle
 - path: tests/test_gantt_example.py

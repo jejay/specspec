@@ -19,7 +19,8 @@ npm --prefix electron start
 The first runtime launch downloads the pinned Electron framework if absent; this is
 installation, not a renderer/CDN dependency. The app itself makes no remote requests.
 Click **Open project**, choose a folder and explicitly **Trust and Open**. Discovery
-finds the nearest `_specspec/`, including `example/gantt`. A configured, trusted CLI
+finds the nearest `_specspec/`. For Gantt Git comparisons, choose the independent
+clone, not the tracked `example/gantt` fixture snapshot. A configured, trusted CLI
 executable is run in the main process; project content cannot choose it.
 
 For an explicit interpreter and authorized initial folder (paths are interpreted
@@ -33,8 +34,9 @@ Bare executable names such as `python`, `specspec`, and `uvx` continue to use PA
 npm --prefix electron start -- --python ../.venv/bin/python --project ..
 # Windows (PowerShell or Git Bash):
 npm --prefix electron start -- --python ../.venv/Scripts/python.exe --project ..
-# The worked example:
-npm --prefix electron start -- --python ../.venv/Scripts/python.exe --project ../example/gantt
+# The worked example, in its own Git repository:
+python example/gantt/history/checkout.py
+npm --prefix electron start -- --python ../.venv/Scripts/python.exe --project ../../specspec-examples/gantt
 ```
 
 `SPECSPEC_PYTHON` supplies an interpreter with `-m specspec`. Alternatively use
@@ -85,8 +87,9 @@ remain external prerequisites. Packaging and dependency licenses are retained; s
 installers and publication are separate work. `npm audit` reports no known findings
 for the pinned dependency trees at the time of this implementation, not a security guarantee.
 
-The real Windows host test uses a disposable CLI-managed/Git graph and profile,
-loopback-only Chromium debugging, and the same real canvas regression harness as
+The real Windows host test clones the maintained Gantt Git bundle into an independent
+repository and uses a disposable profile. It retains the real stage tags/ancestry,
+with loopback-only Chromium debugging and the same real canvas regression harness as
 VS Code. It checks A/M/D and live theme tokens, sandbox/no Node/blocked requests and
 popups, actual saving, manual-file watcher sync, invalid-file/draft preservation, reload persistence and actual
 historical/workspace switching. `SPECSPEC_SCREENSHOT_DIR` captures diagnostics;

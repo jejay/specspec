@@ -48,7 +48,7 @@ sources:
 - path: graph-ui-common/media/graph.js
   symbol: distanceFor, drawLegend, compactCard, loadForm
 - path: graph-ui-common/media/graph.js
-  symbol: legacyWorkspace and withdrawal presentation
+  symbol: invalid-workspace diagnostics and withdrawal presentation
 - path: graph-ui-common/media/graph.js
   symbol: trackHover, syncHover, updateHoverAppearance
 - path: graph-ui-common/src/graph-vendor.js

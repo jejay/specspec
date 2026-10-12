@@ -8,7 +8,7 @@ parents:
 - fdB9ZLM=
 sources:
 - path: graph-ui-common/host/cli.cjs
-  symbol: bounded shell-free API 2 invoke
+  symbol: bounded shell-free API 3 invoke
 - path: graph-ui-common/host/project.cjs
   symbol: nearest graph discovery
 - path: graph-ui-common/host/session.cjs
@@ -17,10 +17,18 @@ sources:
   symbol: camera and native control exclusions
 - path: graph-ui-common/media/graph-model.js
   symbol: metrics/layout/renderMatches
+- path: graph-ui-common/media/graph.css
+  symbol: semantic/Git-separated themed titles and corner letters
 - path: graph-ui-common/media/graph.js
   symbol: host-neutral renderer and native drafts
 - path: graph-ui-common/scripts/build.cjs
   symbol: buildGraph and dependency notices
+- path: graph-ui-common/test-host/fixture.cjs
+  symbol: real CLI/Git A/M/D only in disposable graph
+- path: graph-ui-common/test-host/platform.cjs
+  symbol: themed paint and desktop save/stale checks
+- path: graph-ui-common/test-host/ui.cjs
+  symbol: one real canvas harness for both hosts
 - path: graph-ui-common/test/graph-model.test.cjs
   symbol: pure graph regressions
 - path: graph-ui-common/test/graph.test.cjs
@@ -31,14 +39,6 @@ sources:
   symbol: nonce-protected local template
 - path: vscode/src/host.js
   symbol: project-scoped VS Code renderer adapter
-- path: graph-ui-common/test-host/ui.cjs
-  symbol: one real canvas harness for both hosts
-- path: graph-ui-common/test-host/fixture.cjs
-  symbol: real CLI/Git A/M/D only in disposable graph
-- path: graph-ui-common/test-host/platform.cjs
-  symbol: themed paint and desktop save/stale checks
-- path: graph-ui-common/media/graph.css
-  symbol: semantic/Git-separated themed titles and corner letters
 ---
 # Extract one renderer and guarded graph session
 

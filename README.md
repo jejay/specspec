@@ -2,17 +2,35 @@
 
 Tool-managed Markdown specification graphs, with a Python CLI and a VS Code graph editor.
 
+New engineers: [architecture guide](docs/architecture.md) and
+[control/data flow SVG](docs/architecture.svg).
+
 This repository uses SpecSpec itself: [`_specspec/`](_specspec/) contains its working specification, with core intentions, revisable technical choices, withdrawn design history, and implementation links to actual code/tests. Start with the [graph tour](docs/own-spec.md). [`INTENTION_SPEC.md`](INTENTION_SPEC.md) and [`CONCLUSION_SPEC.md`](CONCLUSION_SPEC.md) remain the original intention/design context.
 
 ## Worked example: a planning app that changes direction
 
-[`example/gantt/`](example/gantt/) is a runnable local Gantt planner developed with
-SpecSpec **before the first code**, plus a clearly [simulated user/AI conversation](example/gantt/STORY.md).
-Two major redirects withdraw **13/17** and **9/16** live graph nodes, with original
-reasoning and runnable prototypes retained in real Git stage commits. The final app
-has weekday dependency forecasts, an explicit what-if baseline, native forms, and
-safe local JSON import/export. See the [run/history guide](example/gantt/README.md).
-It has its own `_specspec/` graph—not a nested Git repository or an approval workflow.
+[`example/gantt/`](example/gantt/) contains a runnable local planner and a portable
+**independent Git history**, with SpecSpec developed before code and two major
+redirects withdrawing **13/17** and **9/16** live nodes. The tracked folder is only
+a fixture snapshot: Git there finds SpecSpec's development history, so comparisons
+of its old-schema commits can fail. Create the real example workspace instead:
+
+```sh
+python example/gantt/history/checkout.py
+# Default: ~/Projects/specspec-examples/gantt; existing folders are never overwritten.
+```
+
+Open that clone in VS Code/Electron and compare `stage/01-code` → `stage/02-spec`
+or `stage/02-code` → `stage/03-spec`. Tests/CI use disposable clones of the same
+bundle, not your manual workspace or old SpecSpec development commits. See the
+[run/history guide](example/gantt/README.md).
+
+Every node-schema change requires rewriting **all maintained example history** as
+if it had always used the current SpecSpec version, including every retained ref,
+withdrawn node and ledger—not just HEAD. Unrelated development history is untouched;
+production tooling remains current-only. The [maintenance procedure](example/gantt/history/WALKTHROUGH.md)
+explains the recurring obligation. Plausible graph emergence/revision is enough;
+[fictional AI dialogue](example/gantt/STORY.md) is optional illustration, not evidence.
 
 ## Install from this checkout
 
@@ -103,7 +121,9 @@ specspec diff --base <older-commit> --target <newer-commit> --json
 The pre-commit hook validates the **staged** node blobs, including schema and graph relationships. It does not confuse unstaged edits with the contents being committed. Installation refuses existing hooks and respects `core.hooksPath`; chain `specspec --root <project> hook check` manually when another hook already exists. The installed hook uses the Python environment from installation, which must remain available; reinstall it after moving environments.
 
 Comparisons require current-schema graph snapshots. For a compliant historical
-corpus, clone `example/gantt/history/gantt.bundle` as described in its walkthrough.
+corpus, run `python example/gantt/history/checkout.py` and use the independent
+clone as described in its walkthrough. Do not run historical comparisons in the
+tracked snapshot or reuse obsolete development-repository commit IDs.
 
 Hooks guard against inconsistent graphs, not manual edits, adversarial modification, or proof of review. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
 
@@ -115,7 +135,11 @@ npm --prefix vscode ci
 npm --prefix vscode run compile
 ```
 
-To try this repository's own graph, open the repository root in VS Code and launch **Run SpecSpec on this repository** (F5). Install the Python package into `.venv` and run `npm --prefix graph-ui-common ci` and `npm --prefix vscode ci` first. The launch compiles the extension, opens `specspec-dev.code-workspace` in a separate development profile, and selects the local Python interpreter explicitly. Trust this repository if VS Code asks, then open a node Markdown file under `_specspec/` or run **SpecSpec: Open Graph** in that development window. The canvas lives in the main editor area, not the sidebar. Node files default to the graph custom editor; **Reopen Editor With → Text Editor** still exposes raw Markdown. Independent tabs and split editors can show different nodes, cameras, and comparisons. There is no Activity Bar container. **Open project** / **SpecSpec: Select Project** can select a nested graph such as `example/gantt` without reopening the workspace. Right-clicking a project folder in Explorer → **SpecSpec: Open Graph** also selects its nearest graph.
+To try this repository's own graph, open the repository root in VS Code and launch **Run SpecSpec on this repository** (F5). Install the Python package into `.venv` and run `npm --prefix graph-ui-common ci` and `npm --prefix vscode ci` first. The launch compiles the extension, opens `specspec-dev.code-workspace` in a separate development profile, and selects the local Python interpreter explicitly. Trust this repository if VS Code asks, then open a node Markdown file under `_specspec/` or run **SpecSpec: Open Graph** in that development window. The canvas lives in the main editor area, not the sidebar. Node files default to the graph custom editor; **Reopen Editor With → Text Editor** still exposes raw Markdown. Independent tabs and split editors can show different nodes, cameras, and comparisons. There is no Activity Bar container. **Open project** / **SpecSpec: Select Project** can select another graph without reopening the workspace. For Gantt Git comparisons, select the external clone under `~/Projects/specspec-examples/gantt`, not the tracked fixture snapshot. Right-clicking a project folder in Explorer → **SpecSpec: Open Graph** also selects its nearest graph.
+
+The root `.vscode/settings.json` Python Environments discovery list is generated
+local state and ignored; it is not the shared interpreter configuration. Tracked
+launch/tasks and `specspec-dev.code-workspace` remain the development entry points.
 
 Alternatively, open `vscode/` and launch **Run SpecSpec Extension**. Both launches open the repository's development workspace. If you run **Open Graph** in an empty window, it prompts for a project folder instead of silently returning. Subfolders resolve to the nearest containing `_specspec` project. The **Compare Revisions** command opens an independent panel and accepts a base and optional target commit.
 

@@ -14,3 +14,5 @@ graph-ui-common/media/vendor/
 electron/build/
 electron/release/
 *.vsix
+# Generated local Python Environments discovery; launch/tasks/workspace stay shared.
+/.vscode/settings.json

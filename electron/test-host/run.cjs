@@ -38,10 +38,13 @@ async function run() {
       assert.ok(await evaluate(`window.SpecSpecHost.getState().dirty`));
       await evaluate(`document.getElementById('discard').click();document.getElementById('compare').click()`);await delay(200);
       assert.ok(await evaluate(`document.querySelector('dialog').open`));
-      await evaluate(`const inputs=document.querySelectorAll('dialog input');inputs[0].value='HEAD';inputs[1].value='HEAD';document.querySelector('dialog button[value="apply"]').click()`);
+      // Exercise a real redirect in the independent history, not HEAD against itself.
+      await evaluate(`const inputs=document.querySelectorAll('dialog input');inputs[0].value='stage/02-code';inputs[1].value='stage/03-spec';document.querySelector('dialog button[value="apply"]').click()`);
       for(let i=0;i<500;i++){if(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`))break;await delay(100);}
       assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`), JSON.stringify(await evaluate(`({revision:document.getElementById('revision').textContent,message:document.getElementById('message').textContent,dialog:document.querySelector('dialog').open,returnValue:document.querySelector('dialog').returnValue})`)));
       assert.ok(await evaluate(`document.getElementById('save').disabled`));
+      assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('stage/02-code')&&document.getElementById('revision').textContent.includes('stage/03-spec')`));
+      assert.ok(await evaluate(`document.querySelectorAll('#cards .card').length>0`));
       await evaluate(`document.getElementById('workspace').click()`);
       for(let i=0;i<500;i++){if(await evaluate(`!document.getElementById('revision').textContent.includes('read-only')`))break;await delay(100);}
       assert.ok(!await evaluate(`document.getElementById('revision').textContent.includes('read-only')`));

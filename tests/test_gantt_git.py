@@ -1,27 +1,19 @@
 """Git regressions use the maintained Gantt history, never old root schemas."""
 
-import importlib.util
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 from test_git import git
 
+from specspec.cli import main
 from specspec.git import git_snapshot, semantic_diff, source_change_impact
 from specspec.workspace import add_node, load_snapshot, update_node
 
-GANTT = Path(__file__).resolve().parents[1] / "example/gantt"
-
-
-@pytest.fixture
-def gantt_history(tmp_path):
-    spec = importlib.util.spec_from_file_location("gantt_fixture", GANTT / "history/verify.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    root = module.clone_history(GANTT, tmp_path / "gantt")
-    git(root, "config", "core.autocrlf", "false")
-    git(root, "config", "user.name", "SpecSpec tests")
-    git(root, "config", "user.email", "tests@example.invalid")
-    return root
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_gantt_index_reads_staged_corruption_not_repaired_worktree(gantt_history):
@@ -84,3 +76,67 @@ def test_gantt_worktree_linked_source_changes_reach_requirement_ancestors(gantt_
     for node_id in implementations:
         assert current.graph.closure(node_id, ancestors=True) <= set(impact["source_affected"])
     assert semantic_diff(before, current)["changes"] == []
+
+
+@pytest.mark.parametrize(
+    ("base", "target", "withdrawn"),
+    [
+        ("stage/01-code", "stage/02-spec", 13),
+        ("stage/02-code", "stage/03-spec", 9),
+    ],
+)
+def test_historical_redirects_load_through_the_ui_diff_protocol(
+    gantt_history, base, target, withdrawn
+):
+    root = gantt_history
+    original_index = git(root, "ls-files", "--stage")
+    original_worktree = load_snapshot(root).files
+    result = CliRunner().invoke(
+        main, ["--root", str(root), "diff", "--base", base, "--target", target, "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["ok"] and not envelope["diagnostics"]
+    diff = envelope["result"]
+    assert diff["base"]["valid"] and diff["target"]["valid"] and diff["impact_complete"]
+    assert sum("retired" in change["fields"] for change in diff["changes"]) == withdrawn
+    assert diff["added_edges"] and diff["affected"]
+    assert git(root, "ls-files", "--stage") == original_index
+    assert load_snapshot(root).files == original_worktree
+
+
+def test_host_fixture_preserves_real_history_and_adds_only_disposable_git_cues():
+    script = r"""
+const { execFileSync } = require('node:child_process');
+const { fixture } = require('./graph-ui-common/test-host/fixture.cjs');
+const project = fixture(process.argv[1], process.argv[2]);
+try {
+  const git = (...args) => execFileSync('git', ['-C', project.root, ...args],
+    {encoding:'utf8'}).trim();
+  console.log(JSON.stringify({
+    root: project.root, top: git('rev-parse','--show-toplevel'),
+    commits: git('rev-list','--count','--all'),
+    modified: project.modified, added: project.added, removed: project.removed,
+    diff: project.cli(['diff','--base','HEAD','--json']),
+    history: project.cli(['diff','--base','stage/02-code','--target','stage/03-spec','--json']),
+  }));
+} finally { project.cleanup(); }
+"""
+    completed = subprocess.run(
+        ["node", "-e", script, str(ROOT / "example/gantt"), sys.executable],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    result = json.loads(completed.stdout)
+    assert Path(result["top"]).resolve() == Path(result["root"]).resolve()
+    assert ROOT not in Path(result["root"]).resolve().parents
+    assert result["commits"] == "8"
+    assert result["history"]["impact_complete"]
+    assert {c["id"]: c["kind"] for c in result["diff"]["changes"]} == {
+        result["modified"]: "changed",
+        result["added"]: "added",
+        result["removed"]: "removed",
+    }
+    assert not Path(result["root"]).exists()

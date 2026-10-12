@@ -1,6 +1,5 @@
 """The worked example uses its own graph and real, inspectable Git development history."""
 
-import importlib.util
 import json
 from pathlib import Path
 
@@ -19,15 +18,18 @@ def invoke(root, *args):
     return result.exit_code, json.loads(result.output)
 
 
-def test_example_graph_is_independent_and_usable_as_complete_agent_context():
+def test_example_graph_is_independent_and_usable_as_complete_agent_context(gantt_history):
     parent = load_snapshot(ROOT)
-    example = load_snapshot(GANTT)
+    example = load_snapshot(gantt_history)
     graph = example.require_valid()
     assert not example.diagnostics
     assert {n.id for n in parent.nodes}.isdisjoint({n.id for n in example.nodes})
-    assert discover_root(GANTT / "history") == GANTT
+    assert discover_root(gantt_history / "history") == gantt_history
+    assert (
+        Path(git(gantt_history, "rev-parse", "--show-toplevel").decode().strip()) == gantt_history
+    )
     implementation = next(n for n in example.nodes if n.type == "implementation" and not n.retired)
-    code, envelope = invoke(GANTT, "context", implementation.id)
+    code, envelope = invoke(gantt_history, "context", implementation.id)
     assert code == 0 and envelope["ok"]
     required = graph.closure(implementation.id, ancestors=True) | {implementation.id}
     assert set(envelope["result"]["required_ids"]) == required
@@ -35,13 +37,8 @@ def test_example_graph_is_independent_and_usable_as_complete_agent_context():
     assert "fingerprint" not in envelope["result"]
 
 
-def test_example_receipts_and_all_three_real_git_stage_pairs_are_verified():
-    spec = importlib.util.spec_from_file_location(
-        "gantt_history_verify", GANTT / "history/verify.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    result = module.verify(GANTT, history=True)
+def test_example_receipts_and_all_three_real_git_stage_pairs_are_verified(gantt_verifier):
+    result = gantt_verifier.verify(GANTT, history=True)
     assert result["ok"]
     assert result["verified_git_stages"] == ["01", "02", "03"]
     assert result["withdrawn_count"] > 0
@@ -74,12 +71,12 @@ def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index
     assert load_snapshot(GANTT).files == original.files
 
 
-def test_withdrawn_example_reasoning_requires_explicit_history_context():
-    before = load_snapshot(GANTT)
+def test_withdrawn_example_reasoning_requires_explicit_history_context(gantt_history):
+    before = load_snapshot(gantt_history)
     withdrawn = next(n for n in before.nodes if n.retired and n.type == "requirement")
-    assert invoke(GANTT, "context", withdrawn.id)[0] == 1
-    code, envelope = invoke(GANTT, "context", withdrawn.id, "--include-retired")
+    assert invoke(gantt_history, "context", withdrawn.id)[0] == 1
+    code, envelope = invoke(gantt_history, "context", withdrawn.id, "--include-retired")
     assert code == 0
     required = before.require_valid().closure(withdrawn.id, ancestors=True) | {withdrawn.id}
     assert set(envelope["result"]["required_ids"]) == required
-    assert load_snapshot(GANTT).files == before.files
+    assert load_snapshot(gantt_history).files == before.files

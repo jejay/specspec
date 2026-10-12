@@ -42,6 +42,9 @@ material uncertainty and conflicts rather than manufacturing agreement.
 - Keep implementation explanations and `sources` references current when code
   or verification changes. Source symbols are descriptive, not machine-resolved.
 - Present specification changes, code changes, and affected nodes together.
+- Account for earlier assistant-authored work as unfinished work, not somebody
+  else's edits. Before reporting completion, explicitly account for remaining
+  changes and finish authorized coherent spec/code slices with exact-index checks.
 - Never silently stage files, create commits, or install/replace local Git hooks.
 
 ## Checks
@@ -69,9 +72,21 @@ This repository's own graph is self-referencing design documentation. Validate
 its working graph and current source references, but do not require Git tooling
 to work against its obsolete historical schemas. Rejected older revisions are
 expected. Use the independent, rewritten current-schema Gantt history in
-`example/gantt/history/gantt.bundle` for rigorous Git regression tests. Clone it
-into a disposable repository; do not install nested Git metadata in the checkout
-or rewrite unrelated SpecSpec development history.
+`example/gantt/history/gantt.bundle` for serious Git/temporal, host and application
+integration tests. `example/gantt` is a tracked fixture snapshot, NOT a Git workspace;
+Git there finds this repository. Run `python example/gantt/history/checkout.py` to
+create `~/Projects/specspec-examples/gantt` for manual UI comparisons, or give a new
+external destination for disposable tests. Do not install nested Git metadata.
+
+EVERY node-schema change requires rewriting the ENTIRE maintained history of Gantt
+and additional examples as if all revisions had always used today's SpecSpec.
+Refresh all retained refs, withdrawn nodes, actual receipts, commit ledgers, bundle
+and tracked snapshot together; validate every revision with current tools. Updating
+only HEAD or retaining old readers is not a solution. See
+`example/gantt/history/WALKTHROUGH.md`. Preserve local experiments before explicitly
+recreating stale clones; never reset them silently or rewrite unrelated SpecSpec
+history. Plausible graph emergence/revision is sufficient; fabricated AI dialogue
+is not required. Focused unit tests may use smaller independent current-schema graphs.
 
 If an edit is interrupted, retain `.specspec-local/` and run `recover`. Remove a
 stale lock with `recover --force-lock` only after confirming no writer is running.

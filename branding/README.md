@@ -1,7 +1,10 @@
 # SpecSpec dachshund
 
 `dachshund.svg` is an exact, byte-preserving import of the project owner's provided
-`Monochrome_Dachshund_Puppy_Emblem.svg`; the original loose SVG/PNG remain untouched.
+[`Monochrome_Dachshund_Puppy_Emblem.svg`](../Monochrome_Dachshund_Puppy_Emblem.svg).
+That original SVG and the supplied [PNG](../Monochrome_Dachshund_Puppy_Emblem.png)
+are versioned unchanged at their original paths. Git attributes disable line-ending
+conversion for both the original SVG and its byte-identical branding import.
 The full white puppy emblem on black is the brand artwork. `app-icon.png` is its
 256-pixel `resvg` rendering for Electron/extension package icons.
 

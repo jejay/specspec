@@ -11,7 +11,9 @@ Gantt/planning example, at least two major redirects, and proper Git recording.
 This narrative is an educational simulation, not a transcript of an external
 customer or additional authorization. CLI operations, code, checks, and Git
 commits described as completed are real. Stage numbers are narrative references,
-not review stages stored on nodes.
+not review stages stored on nodes. This older illustrative dialogue is optional:
+maintained examples need plausible graph emergence and revision, not invented AI
+conversations. The current checkout/maintenance guide is `history/WALKTHROUGH.md`.
 
 ## 01 — The initial business-portfolio hypothesis
 
@@ -143,9 +145,11 @@ commit's hash inside itself would be fiction, so the ledger is completed afterwa
 
 ## Final audit — the history is real
 
-The final implementation is `660af26`. Its following audit records that actual hash
-and verifies all three spec/code pairs, the initially absent graph/code, fresh CLI
-current CLI receipt contents, large explicit withdrawals, and retained branch semantics.
+The maintained final implementation is tagged `stage/03-code`; its actual current
+commit ID is recorded in `history/revisions.json`, not the obsolete development
+repository hash. Its following audit verifies all three spec/code pairs, the
+initially absent graph/code, fresh current CLI receipt contents, large explicit
+withdrawals, and retained branch semantics.
 The first audit exposed the legitimate empty predecessor snapshot before `init`;
 the verifier now treats that boundary explicitly rather than requiring a nonexistent
 graph. Parent/nested graph tests also check exact staged blobs independently using a
