@@ -13,3 +13,7 @@ type/revision mappings and manifesto exceptions.
 
 Origin: the user's follow-up after inspecting the thirteen-color implementation.
 The exact chroma increase, hue spacing and remapped indices remain conclusions.
+
+Later selection: gfAxHps= supplies an exact seven-color table after personal
+playground exploration. It supersedes this earlier nine-color/count tuning;
+retain the request as history, not the current palette cardinality.

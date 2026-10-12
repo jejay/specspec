@@ -13,6 +13,12 @@ sources:
 - path: docs/own-spec.md
   symbol: nine-color rainbow tuning
 ---
+## Later user-selected palette
+
+gfAxHps= replaces the nine swatches/indices described below with an exact
+seven-color playground result. Earlier runs remain actual historical evidence;
+6QB9hRY= and the separate current implementation record describe the new table.
+
 # Tune the shared rainbow to nine slightly stronger colors
 
 Implement l3vgxN4= through the revised 6QB9hRY= palette choice. Keep OKLCH

@@ -9,7 +9,8 @@ parents:
 
 Use tools/rainbow-playground/index.html plus local plain JS/CSS, no server, CDN,
 packages, CLI, project access or production asset dependency. Open directly from
-disk. Default to the current nine-color parameters: L=.73, C=.12, hue 300 to 30.
+disk. Default to the current adopted seven-color parameters: count 7, L=.69, C=.12,
+hue 320 to 20. The generator exactly reproduces gfAxHps= and its role mappings.
 Expose count, lightness, chroma and hue endpoints, a dark/light preview, reset,
 color swatches and tinted/hovered node-style samples. Interpolate linearly from
 start to end hue, not an implicit shortest-path rotation.
