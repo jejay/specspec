@@ -226,6 +226,24 @@ validators. Both complete Windows host suites ultimately passed sequentially;
 the current tuning screenshots are from Electron. Constants and bounded host evidence remain revisable, not
 accessibility/display or every-platform certification.
 
+## Separate palette playground
+
+The [user request](../_specspec/XLyy460=standalone-rainbow-parameter-playground.md)
+and [offline/export choice](../_specspec/IAy2dGI=offline-oklch-playground-and-copyable-palette.md)
+add [`tools/rainbow-playground/index.html`](../tools/rainbow-playground/index.html).
+Open it directly in a browser; no server, network or installation is needed.
+Count, lightness, chroma and hue endpoints drive an interactive dark/light preview,
+with the current nine-color palette as defaults. Out-of-gamut samples explicitly
+reduce chroma at fixed hue/lightness, rather than silently clipping RGB. Copy
+parameters JSON (sufficient), full palette JSON or CSS variables back to the
+assistant. Clipboard rejection falls back to selected text for manual copy.
+There is no automatic palette import, graph mutation or filesystem/browser-storage
+persistence. Suggested hue-based type/Git mappings remain suggestions.
+The [implementation/evidence record](../_specspec/mtuhTCk=offline-rainbow-playground-implementation.md)
+links the small tool, focused regressions and actual standalone file:// browser
+verification. This is a parameter experiment, not universal display/accessibility
+certification.
+
 ## Minimum/maximum distance, spacing, and headline correction
 
 Revision-local shortest/longest directed path bounds explain semantic fills via
