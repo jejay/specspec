@@ -4,22 +4,23 @@ type: requirement
 parents:
 - Rg30CXs=
 - bLBNk80=
+- gfAxHps=
 - l3vgxN4=
 - qnGsij4=
-- gfAxHps=
+- B87C_kI=
 ---
 # Share the user's exact seven-step table and comparison-derived fills
 
 Use the seven exact swatches from gfAxHps=: #bc82c9, #7e97e6, #1facce,
-#37b390, #92a64b, #ca8d3e and #dc7b7c. The user's pasted CSS is authoritative.
-Map one-based CSS references to zero-based model indices: requirement 3,
-implementation 0, added 4, changed/renamed 1, removed 6 and source-changed 5.
+#37b390, #92a64b, #ca8d3e and #dc7b7c. The user's hex values remain authoritative; B87C_kI= revises only two roles.
+Map one-based CSS references to zero-based model indices: requirement 4,
+implementation 0, added 3, changed/renamed 1, removed 6 and source-changed 5.
 The existing pure shared model remains the single node-palette source; translating
 the CSS into that table/mapping avoids unused variables or a second color authority.
 
 For min/max distance, one hop uses violet and (distance-1) modulo seven cycles
 the table; gray manifesto zero stays outside the spectrum. Unknown/invalid paths
-use neutral gray. Type mode uses table teal for requirements and violet for
+use neutral gray. Type mode uses table yellow-green for requirements and violet for
 implementations, with light-gray manifesto. Derived metrics stay revision-local.
 
 Add persisted mode git-revision, labeled "Git/Revision Status". Fill from the
@@ -60,8 +61,14 @@ changes only shared palette samples/indices, not fill modes or interaction rules
 
 gfAxHps= replaces the previous count, samples and indices with the explicit
 seven-color result. Current playground reset defaults use count 7, L=.69, C=.12,
-hue 320 to 20: actually running the generator reproduces all seven exact hex
-values and mappings. This reproducibility is evidence, not authority to change
+hue 320 to 20: the initial generator reproduced all seven exact hex values
+and original mappings; B87C_kI= now swaps Requirement/Added only. This reproducibility is evidence, not authority to change
 any supplied byte. Preserve the earlier nine-color choice/evidence as history.
 No production CSS configuration/import system, label persistence, schema change
 or example-history rewrite is introduced for this palette application.
+
+## Later Added/Requirement swap
+
+B87C_kI= assigns Added color 4 (#37b390), closer to its existing green text cue,
+and Requirement color 5 (#92a64b). All swatches and other roles stay unchanged.
+The older pasted CSS/JSON and X8Rqyk8= evidence describe the earlier assignments.

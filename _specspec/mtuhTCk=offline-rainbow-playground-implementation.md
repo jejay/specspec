@@ -17,6 +17,15 @@ sources:
 - path: graph-ui-common/test-host/playground.cjs
   symbol: real file browser checks
 ---
+## Later Added/Requirement mapping correction
+
+B87C_kI= swaps the two role indices without changing the seven hex values or
+parameters. The original mapping/export regression and actual check counts below
+remain historical evidence. Current production and playground put Requirement at
+color 5 and Added at color 4, with Added prioritized near the default green text
+cue and Requirement using an available leftover. The later implementation record
+will document current tests; this does not retroactively change earlier results.
+
 ## Later user-selected defaults
 
 gfAxHps= supplies the exact seven-color CSS and JSON selection. X8Rqyk8= updates

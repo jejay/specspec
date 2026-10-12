@@ -24,3 +24,10 @@ The user also supplies the full playground JSON: count 7, lightness .69, chroma
 .12, startHue 320, endHue 20; zero-based mappings requirement 3, implementation 0,
 added 4, changed 1, removed 6, renamed 1, source-changed 5, and no gamut reductions.
 Use these explicit parameters for playground defaults and exact export regression.
+
+## Later explicit mapping correction
+
+B87C_kI= supersedes only the original Requirement/Added mapping: Requirement
+now uses color 5 (#92a64b), Added color 4 (#37b390), closer to its green text.
+Keep the earlier pasted CSS/JSON above as the original user result, not current
+role assignments. The swatches, parameters and other mappings remain unchanged.
