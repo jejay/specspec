@@ -40,7 +40,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <label id="sources-label">Source references (JSON)<textarea id="sources" rows="4" spellcheck="false"></textarea></label>
     <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="retire">Retire</button><button type="button" id="restore" hidden>Restore</button><button type="button" id="discard">Discard form edits</button></div></form>
     <section id="before-section" hidden><h3>Base revision text</h3><pre id="before"></pre></section></section></div>
-    <footer>Click a node to explore and edit its neighborhood. Fills: selected color mode. Git title/corner: A added, M modified, D deleted, R renamed. Linked-source and withdrawal cues remain separate. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
+    <footer>Click a node to explore and edit its neighborhood. Right-click card chrome to cycle label previews: red → blue → green → purple → turquoise → yellow → none. Preview only, not saved; persistence may come later. Fills: selected color mode. Git title/corner: A added, M modified, D deleted, R renamed. Linked-source and withdrawal cues remain separate. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
     <script nonce="${nonce}" src="${resource('host.js')}"></script>
     <script nonce="${nonce}" src="${resource('vendor/graph-vendor.js')}"></script>
     <script nonce="${nonce}" src="${resource('graph-model.js')}"></script>

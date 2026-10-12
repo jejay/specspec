@@ -62,6 +62,9 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.implementation { border-radius: 20px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
+/* Temporary label ring: equal on all sides, inside the existing box. No layout change. */
+#cards .card[data-preview-label] { outline: 6px solid var(--preview-label-ink); outline-offset: -6px; }
+#cards .card[data-preview-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 26px; }
 .card.added strong, .card.added h2, .git-corner.added { color: var(--git-added); }
 .card.changed strong, .card.changed h2, .card.renamed strong, .card.renamed h2, .git-corner.changed, .git-corner.renamed { color: var(--git-modified); }

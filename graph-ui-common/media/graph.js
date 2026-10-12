@@ -10,6 +10,10 @@
   let editSequence = 0, documentVersion;
   let layoutFrame, layout, layoutKey, cameraScene;
   let drawnEdges = [], hoveredNode, hoverPoint;
+  // Visual experiment only: never put these labels in drafts, host state or messages.
+  const previewLabels = new Map();
+  const labelCycle = [undefined, ['red', '#e65e66'], ['blue', '#5c9eff'], ['green', '#58ba7a'],
+    ['purple', '#aa79df'], ['turquoise', '#35bdbe'], ['yellow', '#dfc24d']];
   const cameraAPI = window.SpecSpecCamera;
   const cameras = Object.fromEntries(Object.entries(restored.cameras || {})
     .map(([key, value]) => [key, cameraAPI.validTransform(value)]).filter(([, value]) => value));
@@ -95,6 +99,31 @@
     const card = target?.closest?.('.card');
     return card?.parentElement === $('cards') ? card.dataset.nodeId : undefined;
   }
+
+  const labelIdFor = card => card.dataset.nodeId === '__draft__' && orphaned() ? selected : card.dataset.nodeId;
+  function applyPreviewLabel(card) {
+    const label = labelCycle[previewLabels.get(labelIdFor(card)) || 0];
+    if (label) {
+      card.dataset.previewLabel = label[0];
+      card.style.setProperty('--preview-label-ink', label[1]);
+      card.setAttribute('aria-description', `${label[0]} label preview only; not saved. Right-click card to cycle.`);
+    } else {
+      delete card.dataset.previewLabel;
+      card.style.removeProperty('--preview-label-ink');
+      card.removeAttribute('aria-description');
+    }
+  }
+  $('viewport').addEventListener('contextmenu', event => {
+    // Keep native editing/copy/link/button menus; card chrome is the experiment.
+    if (event.defaultPrevented || event.target.closest?.('input, textarea, select, a, [contenteditable]:not([contenteditable="false"]), button:not(.card)')) return;
+    const id = cardIdAt(event.target);
+    if (id === undefined) return;
+    const card = event.target.closest('.card'), key = labelIdFor(card);
+    event.preventDefault(); event.stopPropagation();
+    const next = ((previewLabels.get(key) || 0) + 1) % labelCycle.length;
+    if (next) previewLabels.set(key, next); else previewLabels.delete(key);
+    applyPreviewLabel(card);
+  });
 
   function updateHoverAppearance() {
     const plain = [], highlighted = [], neighbors = new Set([hoveredNode]);
@@ -253,6 +282,7 @@
       card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
     }
+    for (const card of $('cards').children) applyPreviewLabel(card);
     drawLegend(); updateButtons(); applyLayout();
     if ($('cards').contains(activeInput) && !activeInput.disabled) {
       activeInput.focus({ preventScroll: true });
@@ -450,7 +480,7 @@
     if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 3) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
-    rememberCamera(); delete cameras.draft;
+    rememberCamera(); delete cameras.draft; previewLabels.delete('__draft__');
     creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
     $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'Unsaved new node';

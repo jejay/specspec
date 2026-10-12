@@ -244,6 +244,32 @@ links the small tool, focused regressions and actual standalone file:// browser
 verification. This is a parameter experiment, not universal display/accessibility
 certification.
 
+## Temporary right-click label visualization
+
+The [user request](../_specspec/DG-JpDc=temporary-node-label-border-preview.md)
+adds a deliberately non-persistent visual trial. Card chrome/headline context clicks
+cycle none → red → blue → green → purple → turquoise → yellow → none, in both shared
+hosts, including expanded, manifesto, removed and draft cards. Native field/link/
+inner-button and background menus remain untouched. The [rendering choice](../_specspec/E7O_6GU=view-local-label-cycle-with-inset-border.md)
+uses a six-world-pixel solid inset outline, uniform around the existing border box,
+with a separate keyboard-focus cue. It covers the ordinary border while active,
+retains its label hue on hover and follows existing unrelated-node darkening.
+It changes no node size, port, path, camera, selection or draft/caret contents.
+
+A renderer-memory map retains labels through redraw/focus/color-mode/Refresh in
+the same view. A newly loaded view starts empty; independent views do not share
+labels, and new draft previews reset for each new draft. No label data enters
+host.setState, mutation messages, node metadata, CLI or filesystem. UI text and
+accessible descriptions explicitly say preview only/not saved. Persistence will
+likely be explored later, but is not implemented, an approval marker or a current
+schema promise. The [implementation/evidence record](../_specspec/JTezmL0=transient-node-label-preview-implementation.md)
+links the shared code, five label regressions and successful complete Windows host
+checks. Several initial Electron launches failed the existing camera-reset check;
+final direct host runners passed with unchanged camera assertions/timeouts. The
+record retains those failures and explains host-zoom outline rounding and the
+VS Code native-menu probe correction. Inspected Electron label screenshots are
+bounded evidence, not a persistence or universal accessibility claim.
+
 ## Minimum/maximum distance, spacing, and headline correction
 
 Revision-local shortest/longest directed path bounds explain semantic fills via

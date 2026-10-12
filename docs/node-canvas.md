@@ -89,6 +89,11 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;
   source-only, rename and withdrawal labels preserve their distinct meanings.
   Existing title/letter theme colors and connection inks stay independent.
+- **Temporary label preview** cycles card-chrome right-clicks through red, blue,
+  green, purple, turquoise, yellow and none. A six-pixel equal inset outline keeps
+  card/port geometry unchanged and preserves native field/control context menus.
+  Labels live only in renderer memory, not host state or canonical data, and reset
+  on view reload. Persistence will likely be explored later; it is not implemented.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
   layout positions, magnification, colors, or derived scores enter `_specspec`.
 
@@ -134,7 +139,9 @@ checks tangent/head joins and screen
 strength at 12% zoom, four color modes and revision-local bounds, label-free
 shorter-card fit, same-pose native headline rendering at 250%, confirms circle-free endpoints, visits a real multiple-depth
 parent neighborhood, restores the overview camera, and switches semantic colors. Optional
-`SPECSPEC_SCREENSHOT_DIR` captures screenshots of overview and focused views. The
+`SPECSPEC_SCREENSHOT_DIR` captures screenshots of overview and focused views;
+`SPECSPEC_SCREENSHOT_FILTER` optionally restricts capture to names containing that
+substring (for example `label-preview`) without skipping any assertions. The
 agent inspected these on Windows; this does not replace full human editing/review
 or revision-picker verification. Only this isolated automated test disables trust.
 

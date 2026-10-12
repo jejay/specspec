@@ -72,6 +72,71 @@ function hoverEvent(dom, target, type = 'pointerover', relatedTarget = null, poi
   return event;
 }
 
+function rightClick(dom, target) {
+  const event = new dom.window.MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+  target.dispatchEvent(event); return event;
+}
+
+test('label preview cycles the exact order per ID without mutation, state writes, selection or geometry changes', t => {
+  const { dom, $, card, snapshot, saved, messages } = hoverFixture(t);
+  const before=JSON.stringify(snapshot),preferences=saved(),count=messages.length;
+  const world=[...$('cards').children].map(c=>[c.style.left,c.style.top,c.style.width,c.style.height]);
+  const paths=[...$('edges').children].map(p=>p.getAttribute('d')),camera=$('graph').style.transform;
+  for(const name of ['red','blue','green','purple','turquoise','yellow',undefined]) {
+    assert.equal(rightClick(dom,card('child').querySelector('strong')).defaultPrevented,true);
+    assert.equal(card('child').dataset.previewLabel,name);
+    assert.equal(card('root').dataset.previewLabel,undefined);
+    if(name) assert.match(card('child').getAttribute('aria-description'),/preview only; not saved/);
+    else {assert.equal(card('child').getAttribute('aria-description'),null);assert.equal(card('child').style.getPropertyValue('--preview-label-ink'),'');}
+  }
+  assert.equal(JSON.stringify(snapshot),before);assert.equal(saved(),preferences);assert.equal(messages.length,count);
+  assert.deepEqual([...$('cards').children].map(c=>[c.style.left,c.style.top,c.style.width,c.style.height]),world);
+  assert.deepEqual([...$('edges').children].map(p=>p.getAttribute('d')),paths);assert.equal($('graph').style.transform,camera);
+});
+
+test('labels retain through redraw/mode/focus/refresh, but not a new renderer restored from host state', t => {
+  const { dom, $, card, snapshot, send, saved }=hoverFixture(t);
+  rightClick(dom,card('root'));rightClick(dom,card('child'));rightClick(dom,card('child'));
+  for(const mode of model.COLOR_MODES) {
+    $('color-mode').value=mode;$('color-mode').dispatchEvent(new dom.window.Event('change'));
+    assert.equal(card('root').dataset.previewLabel,'red');assert.equal(card('child').dataset.previewLabel,'blue');
+  }
+  card('child').click();assert.equal(card('child').dataset.previewLabel,'blue');$('back').click();
+  send({type:'snapshot',snapshot,diagnostics:[],readonly:false});assert.equal(card('child').dataset.previewLabel,'blue');
+  const next=fixture(t,{restored:saved()});
+  assert.equal(next.$('cards').querySelector('[data-preview-label]'),null);
+  assert.doesNotMatch(JSON.stringify(saved()),/previewLabel|preview-label|labelCycle/);
+});
+
+test('expanded label clicks preserve editing/caret and native field/button/background context menus', t => {
+  const { dom, $, card, saved, messages }=hoverFixture(t);
+  card('child').click();const body=$('body');body.value='# Native draft';body.dispatchEvent(new dom.window.Event('input'));
+  body.focus();body.setSelectionRange(2,6,'backward');const preferences=saved(),count=messages.length;
+  for(const target of [body,$('sources'),$('parent-candidate'),$('save'),$('viewport')]) assert.equal(rightClick(dom,target).defaultPrevented,false);
+  assert.equal(card('child').dataset.previewLabel,undefined);
+  assert.equal(rightClick(dom,$('title')).defaultPrevented,true);assert.equal(card('child').dataset.previewLabel,'red');
+  assert.equal(dom.window.document.activeElement,body);assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[2,6,'backward']);
+  assert.equal(saved(),preferences);assert.equal(messages.length,count);assert.equal($('body'),body);
+});
+
+test('read-only removed and manifesto cards support presentation labels; each new draft starts unlabeled', t => {
+  const { dom, $, card, snapshot, send }=hoverFixture(t);
+  const target={...snapshot,nodes:snapshot.nodes.filter(n=>n.id!=='grand'),edges:snapshot.edges.filter(e=>!e.includes('grand'))};
+  send({type:'snapshot',snapshot:target,diagnostics:[],readonly:true,diff:{base:snapshot,changes:[{id:'grand',kind:'removed'}],added_edges:[],removed_edges:[['child','grand']]}});
+  rightClick(dom,card('grand'));rightClick(dom,card('root'));
+  assert.equal(card('grand').dataset.previewLabel,'red');assert.equal(card('root').dataset.previewLabel,'red');
+  send({type:'snapshot',snapshot,diagnostics:[],readonly:false});$('new').click();
+  rightClick(dom,card('__draft__'));assert.equal(card('__draft__').dataset.previewLabel,'red');
+  $('discard').click();$('new').click();assert.equal(card('__draft__').dataset.previewLabel,undefined);
+  assert.match(dom.window.document.querySelector('footer').textContent,/Preview only, not saved; persistence may come later/);
+});
+
+test('label ring has uniform thick inset paint and a separate keyboard-focus cue without border-box changes', () => {
+  const css=readFileSync(join(__dirname,'../media/graph.css'),'utf8');
+  assert.match(css, /#cards \.card\[data-preview-label\] \{ outline: 6px solid var\(--preview-label-ink\); outline-offset: -6px; \}/);
+  assert.match(css, /#cards \.card\[data-preview-label\]:focus-visible \{ box-shadow: 0 0 0 2px var\(--vscode-focusBorder\)/);
+});
+
 function highlightedEdges($) {
   return [...$('edges').querySelectorAll('.link.incident-highlight')].map(p => `${p.dataset.parent}>${p.dataset.child}`).sort();
 }

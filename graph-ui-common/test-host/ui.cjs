@@ -52,7 +52,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
   const clients = new Map(); let active, context;
   async function screenshot(name) {
     const directory = process.env.SPECSPEC_SCREENSHOT_DIR;
-    if (!directory || !active) return;
+    if (!directory || !active || (process.env.SPECSPEC_SCREENSHOT_FILTER && !name.includes(process.env.SPECSPEC_SCREENSHOT_FILTER))) return;
     const image = await active.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     mkdirSync(directory, { recursive: true }); writeFileSync(join(directory, `${name}.png`), Buffer.from(image.data, 'base64'));
     console.log(`Screenshot: ${join(directory, `${name}.png`)}`);
@@ -186,6 +186,49 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.deepEqual(await paint(),before,'Exiting hover restores computed paint and SVG order.');
       assert.deepEqual(await cardPaint(),beforeCards,'Exiting hover restores all card paint, including semantic borders.');
       await evaluate(`delete window.__hoverPaths`);
+    }
+    async function checkLabelPreview(id, selector, image) {
+      const world=await positions(),pose=await camera();
+      const saved=await evaluate(`JSON.stringify(window.SpecSpecHost.getState())`);
+      const geometry=()=>evaluate(`JSON.stringify([...document.querySelectorAll('#edges path')].map(p=>[p.getAttribute('d'),getComputedStyle(p).strokeWidth,getComputedStyle(p).strokeDasharray]))`);
+      const paths=await geometry();
+      const colors=[['red','rgb(230, 94, 102)'],['blue','rgb(92, 158, 255)'],['green','rgb(88, 186, 122)'],['purple','rgb(170, 121, 223)'],['turquoise','rgb(53, 189, 190)'],['yellow','rgb(223, 194, 77)'],[undefined,undefined]];
+      for(const [name,color] of colors) {
+        const result=await evaluate(`(() => {
+          const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});
+          const target=${JSON.stringify(selector)}?c.querySelector(${JSON.stringify(selector)}):c;
+          const event=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,button:2});target.dispatchEvent(event);
+          const style=getComputedStyle(c),probe=document.createElement('span');
+          probe.style.outline='6px solid red';probe.style.outlineOffset='-6px';document.body.append(probe);
+          const expected=getComputedStyle(probe),expectedWidth=expected.outlineWidth,expectedOffset=expected.outlineOffset;probe.remove();
+          return {prevented:event.defaultPrevented,name:c.dataset.previewLabel,
+            color:style.outlineColor,width:style.outlineWidth,offset:style.outlineOffset,expectedWidth,expectedOffset,description:c.getAttribute('aria-description')};
+        })()`);
+        assert.equal(result.prevented,true);assert.equal(result.name,name);
+        if(name) {
+          assert.equal(result.color,color);assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/not saved/);
+          // Ordinary semantic hover must not repaint the label ring.
+          await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});c.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));})()`);
+          assert.equal(await evaluate(`getComputedStyle([...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)})).outlineColor`),color);
+          if(name==='red'&&image) await screenshot(image);
+          await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
+        } else assert.equal(result.description,null);
+        assert.equal(await positions(),world);assert.deepEqual(await camera(),pose);assert.equal(await geometry(),paths);
+        assert.equal(await evaluate(`JSON.stringify(window.SpecSpecHost.getState())`),saved,'Label clicks never write persisted host state.');
+      }
+      assert.ok(await evaluate(`(() => {
+        const viewport=document.getElementById('viewport'),targets=[viewport,...document.querySelectorAll('#cards textarea,#cards input,#cards select,#cards button:not(.card)')];
+        // Probe the renderer listener, not VS Code's own document-level menu
+        // handler. Avoid opening synthetic host menus during the remaining suite.
+        const stop=event=>event.stopPropagation();viewport.addEventListener('contextmenu',stop);
+        try {return targets.every(target=>{
+          const before=[...document.querySelectorAll('#cards .card')].map(c=>c.dataset.previewLabel).join(',');
+          const event=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,button:2});let preventedByRenderer=false;
+          const prevent=event.preventDefault.bind(event);event.preventDefault=()=>{if(event.currentTarget===viewport)preventedByRenderer=true;prevent();};
+          target.dispatchEvent(event);
+          return !preventedByRenderer&&before===[...document.querySelectorAll('#cards .card')].map(c=>c.dataset.previewLabel).join(',');
+        });}finally{viewport.removeEventListener('contextmenu',stop);}
+      })()`),'Renderer leaves native field/button/background context menus untouched.');
     }
     async function checkHoverPalette() {
       // Real browser CSS probes cover every colored link kind (including draft),
@@ -337,6 +380,9 @@ exports.checkUI = async function checkUI(port, options = {}) {
       return [...document.querySelectorAll('#cards .card.requirement')].find(c=>{const r=c.getBoundingClientRect();return r.right>v.left&&r.left<v.right&&r.bottom>v.top&&r.top<v.bottom&&paths.some(p=>p.dataset.parent===c.dataset.nodeId)&&paths.some(p=>p.dataset.child===c.dataset.nodeId);})?.dataset.nodeId;
     })()`);
     assert.ok(hoverNode);
+    await checkLabelPreview(hoverNode,undefined,'label-preview-compact');
+    const labelRoot=await evaluate(`document.querySelector('#cards .card.manifesto').dataset.nodeId`);
+    await checkLabelPreview(labelRoot,undefined,'label-preview-manifesto');
     await checkHover(hoverNode, undefined, 'hover-overview');
     for(const kind of ['added','changed','removed']) {
       const id=await evaluate(`document.querySelector('#cards .card.${kind}').dataset.nodeId`);
@@ -524,7 +570,9 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
     assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),await evaluate(`window.SpecSpecGraph.REVISION_COLORS.changed`));
     await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
-    await checkHover(await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`),'#body','hover-revision-expanded-root');
+    const expandedRoot=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
+    await checkLabelPreview(expandedRoot,'#title','label-preview-expanded');
+    await checkHover(expandedRoot,'#body','hover-revision-expanded-root');
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
     assert.equal(await evaluate(`document.getElementById('parent-add-controls').hidden`), true);
@@ -534,7 +582,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, nine-step slightly more saturated violet-to-red spectrum and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, shorter cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, nine-step slightly more saturated violet-to-red spectrum, transient right-click label cycle/equal inset ring with zero persisted-state or geometry changes, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;
