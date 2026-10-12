@@ -8,10 +8,10 @@ parents:
 # Keep an independent Gantt graph and maintained current-schema Git stages
 
 Keep example/gantt/_specspec independent of the root graph. Record separate
-intentions/conclusions and terminal implementation evidence, with fictional
-dialogue clearly labeled. Each meaningful direction has a spec commit before its
-runnable code; large obsolete dependent branches are explicitly withdrawn without
-changing their bodies/parents/sources beyond withdrawal.
+intentions/conclusions and terminal implementation evidence. Fictional dialogue
+is optional and labeled when present, not a test prerequisite. Each direction has
+a spec commit before its runnable code. Large obsolete dependent branches are
+explicitly withdrawn without changing their bodies/parents/sources beyond withdrawal.
 
 The user explicitly requests rewritten, current-compliant example history instead
 of preserving old SpecSpec schemes in the tool. The separate independent-history
@@ -19,6 +19,10 @@ choice implements that with a complete Git bundle, freshly executed current CLI
 receipts, actual fixture commit IDs and receipt ordinals. No hashes/expectation
 options, legacy schema compatibility or nested .git installation is required.
 Tests clone it temporarily; unrelated surrounding SpecSpec commits are untouched.
+The tracked snapshot still belongs to the surrounding Git worktree, not an example
+Git workspace. 83D9YWw= records safe external manual/automated clones. TAvql3w=
+requires reconstructing ALL maintained history whenever the schema changes, not
+only the latest tree; no old reader or migration commit substitutes for that.
 
 The final app remains a dependency-free local browser example, not a production
 scheduler/service. Application JSON v1 import conversion is its own feature,

@@ -7,9 +7,11 @@ parents:
 ---
 # Use the maintained Gantt graph for stable host integration evidence
 
-Use the current Gantt graph for disposable real VS Code/Electron canvas, Git-cue,
-watcher/draft and history integration fixtures. Select a live manifesto-child
-requirement structurally, not by a hardcoded old UUID. Keep a separate compact
+Clone the complete maintained Gantt history for disposable real VS Code/Electron
+canvas, Git-cue, watcher/draft and history integration fixtures. Retain real stage
+tags/ancestry and independent indexes; do not replace history with copied files
+and a synthetic one-commit baseline. 83D9YWw= records this checkout mechanism.
+Select a live manifesto-child requirement structurally, not by a hardcoded old UUID. Keep a separate compact
 current-schema graph for native document lifecycle/split/save tests. The actual
 self-referencing root graph remains usable for design inspection and working
 validation without becoming a fixed historical/schema/layout test fixture.

@@ -12,9 +12,18 @@ The existing Gantt stages were committed inside the surrounding SpecSpec reposit
 Rebuild their ordered independent project trees into a standalone Git fixture,
 using current compact IDs, hash-free metadata and actual current CLI receipts.
 Store its complete history as a checked-in Git bundle plus a revision ledger.
-Tests clone the bundle into disposable repositories, not a silently installed
-nested .git directory or an attempt to parse SpecSpec's obsolete parent revisions.
-Unrelated surrounding development commits are not rewritten or force-pushed.
+Tests clone the bundle into independent disposable repositories; manual UI/Git
+experiments use an external clone too, not the tracked snapshot's enclosing Git
+worktree. The separate 83D9YWw= choice supplies a safe checkout helper. No nested
+.git is silently installed and no attempt is made to parse obsolete parent
+revisions. Unrelated development commits are not rewritten or force-pushed.
+
+TAvql3w= makes reconstruction recurring: EVERY schema change rebuilds every
+maintained example revision/ref, including withdrawn nodes, as though the project
+had always used today's tools. Recreate stage tags, actual receipts, ledgers,
+snapshot and complete bundle together. A current HEAD atop obsolete ancestors
+is insufficient. Validate all retained refs, not just main. Preserve believable
+graph development and revision; fictional conversation is not required.
 
 Use one random old/new mapping throughout every Gantt snapshot. Rebuild all three
 spec/code pairs and a final audit, retain meaningful app code/story/withdrawal
