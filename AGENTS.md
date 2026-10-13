@@ -96,3 +96,43 @@ is not required. Focused unit tests may use smaller independent current-schema g
 
 If an edit is interrupted, retain `.specspec-local/` and run `recover`. Remove a
 stale lock with `recover --force-lock` only after confirming no writer is running.
+
+Part of this project is to work out a "specspec AGENTS.md" for specspec-driven development. The goal is to replace this whole AGENTS.md with the following text (or to work out a version of this text that will take this place). To keep the flexibility we need to accept that we cannot just do that, for example reliance on git history will break if we develop on breaking changes. Hence we need to approach/converge to the principles described in the following text: 
+
+# PRELIMINARY SPECSPEC AGENTS.MD
+
+# Intention-Conclusion Specification-Spectrum-Driven Development
+
+A specification spectrum (specspec) graph documents and specifies the spectrum of the owner's intent to the the agent's conclusions for the development of a product. The intention-conclusion spectrum is represented as a directed acyclic graph of requirements, in which a parent-child connection stands for an intention-conclusion relationship. The root parent node, the manifesto, contains the core goal of the product. At the opposite end, leaf nodes can state conclusions about implementation details.
+
+A specspec graph records what "is" and what "ought to be" at a certain point in time using positive language. Negative language to contrast what "is not", "ought not to be" or "was" is avoided. Historic contrasting ("this button was blue but now it is purple") is avoided, the history is managed via git and specspec's git aware tools. A perfectly implementation-mature specspec graph aims at enabling metaphorical compiler-level determinism once it is implemented by an agent.
+
+
+## Phases of Specification-Spectrum Driven Development
+
+### Owner Planning
+
+The owner can optionally directly manually modify the specspec. The agent needs to check whether the owner modified the specspec before any action.
+ 
+
+### Tandem Planning
+
+The owner tells the agent what they want or the agent infers it from the existing manual specspec changes. The agent tries to separate the owner's intention from the owner's own conclusions. The agent tries to understand and learn about the owner's intention and conclusions. The agent challenges and either validates the conclusions or proposes alternative conclusions. The agent proposes and discusses its own additional conclusions.
+
+In tandem planning the owner's focus is on breadth and the agent's focus is on depth. The agent can also focus on breadth either when asked explicitly or implicitly when the missing breadth is obvious.
+
+The agent never steers the conversation, instead it gives the owner an overview of its understanding of the owner's intention, of its critique, conclusions, etc, ready to be corrected. It can offer guidance questions together with its own answers. The agent focuses on the most important issues and leaves out less controversial conclusions that would bloat the conversation.
+
+The agent never discusses the planned addition of nodes to the specspec graph mid tandem planning. Contrary, the agent needs to discuss potential removals, split-ups and modifications of nodes immediately.
+
+Tandem planning can have arbitrary number of rounds and also be skipped. In tandem planning the agent guides the owner and gathers information, understanding and approval; but in tandem planning the agent does not manipulate the specspec.
+
+
+### Agent Planning
+
+Agent planning phase is entered once the user requests the agent to manipulate the specspec (e.g. "draw the graph", "change the spec"). The goal of the phase is for the agent to create a perfectly implementation-mature specspec. If available the agent uses the pre-existing specspec, the historical context and the understanding and approvals from the tandem planning phase. If there was no tandem phase, the agent tries to infer the owner's intention and conclusions from the specspec git history and uncommitted workbench state. The agent commits the uncommitted manual specspec changes by the owner as "Owner specspec changes: [intention/conclusion agent understanding description]" before changing it itself. The agent uses the specspec commandline tools to manipulate the specspec and creates the best implementation-mature version with the given knowledge. The agent commits its changes as "Agent specspec changes: [description]". The agent finally gives a summary of the changes. 
+
+
+### Implementation
+
+Whenever the specspec is not perfectly implementation-mature, the implementing agent has to close the gap by deepening the specspec by adding conclusion and implementation nodes. The agent never unilaterly adds breadth to or removes from the specspec in an implementation phase. If the implementing agent realizes that there is a contradiction in the spec (or even how to likely improve the product by any means), the agent implements a simple and large-spanning contradiction free subset of the specspec graph and communicates the found contradiction, its subset implementation decisions and the consequences. The agent can also propose a resolution or improvement as a specspec graph on a new proposal branch. 
