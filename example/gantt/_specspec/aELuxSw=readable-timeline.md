@@ -6,6 +6,5 @@ parents:
 ---
 # Make timing readable
 
-Show task names and date ranges alongside aligned timeline bars. Supply a textual equivalent, keyboard-accessible controls, and horizontal scrolling rather than silently hiding long plans.
-
-Origin: STORY.md, simulated opening request.
+Show task names and date ranges alongside aligned timeline bars. Provide textual
+dates, keyboard-accessible controls and horizontal scrolling for long plans.

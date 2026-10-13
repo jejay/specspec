@@ -4,11 +4,10 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Keep candidate conclusions separately revisable
+# Keep intentions and solution conclusions independently revisable
 
-An engineer must be able to explore different solutions to an intention without
-silently adopting every detail of an agent's suggestion. Keep the intention and
-its candidate conclusions separately addressable so a solution can be reviewed,
-replaced, or reconsidered without rewriting the problem it was meant to solve.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), concept introduction.
+Give each coherent intention and each meaningful solution choice a separately
+addressable place in the graph. Explain how a conclusion realizes its parents.
+Owners can reconsider a solution while preserving the outcome it serves. The
+agent distinguishes owner outcomes, owner-suggested solutions and its own choices
+through their relationships and reasoning.

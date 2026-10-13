@@ -9,64 +9,27 @@ parents:
 - xu6W0c4=
 - fuyy0Lk=
 ---
-# Delete node subgraphs and derive deleted ghosts from HEAD
+# Derive physical-deletion ghosts from freshly resolved HEAD
 
-Choose current-only format/API 5: no retired field in canonical files, records,
-semantic comparisons or frontmatter, no retire/restore commands, live/retired
-filters, include-retired option, badges or corresponding native-document metadata
-planner. Reject old schemas/fields rather than keep a compatibility reader. Keep
-IDs, source-blob schema and ordinary graph/transaction safeguards unchanged.
+Represent the saved graph with physically present format/API 5 node files. Managed
+deletion follows AuhoBoU='s descendant plan and writer guards. The user records
+reasons in ordinary Git commits; predecessor trees retain removed node reasoning.
 
-The user's later correction fuyy0Lk= and separate conclusion AuhoBoU= replace
-the earlier explicitly-named-files-only choice: delete each requested node AND all
-its directed descendants, including children shared with surviving parents. Warn
-before deletion about uncommitted affected nodes, including staged additions/edits.
-Use the shared backend plan/whole-action confirmation and current transaction
-safeguards; never reparent survivors or delete the manifesto. The previous
-no-cascade choice remains in Git history, not the current contract. Deleted source
-hints are absent from current checks; earlier records remain in valid Git snapshots.
-The tool does not stage, commit, write a reason receipt or install hooks. Users
-record deletion rationale in their normal commit message. Manual deletion is
-permitted and subject to ordinary consistency checks.
+Default/new/reset workspace views compare current saved files and native overlays
+with freshly resolved HEAD. Display the base/target union, marking missing target
+IDs D with base text/links. Ghost and historical body/source text are selectable,
+read-only and unsavable; creation/capture/delete controls are enabled only for
+applicable working records. After commit removes base membership, clean vanished
+focus returns to overview; dirty orphan forms remain copyable/unsavable. Each
+revision supplies its own metrics. Explicit comparisons retain independent state.
 
-Default/new/reset workspace views compare current files (plus existing native
-open-document overlays) with freshly resolved HEAD, never the index or a cached
-commit. Both shared hosts use the union for display and mark missing target IDs D
-with base text/relationships and read-only copyable details/source previews; no
-Save/Delete/Capture action can recreate a ghost. Per-revision metrics stay separate;
-the display union is not a canonical graph. After HEAD advances, reread the base:
-committed ghosts disappear, unless a dirty out-of-band form must remain copyable
-and unsavable. An untracked new node deleted before a commit has no HEAD ghost.
-Explicit revision comparisons stay read-only and independent of the default.
+Observe canonical files, private HEAD/index and shared packed refs/current symbolic
+ref-directory ancestry in both hosts, including unborn repos, new refs, detached
+HEAD and linked worktrees. Optional polling/Refresh are explicit fallbacks. Genuinely
+unborn HEAD has an empty baseline; unavailable/invalid baselines have clear notes.
 
-Observe Git HEAD/current branch refs/packed refs as well as canonical files, in
-both hosts, including detached HEAD and linked worktrees, without default polling.
-Watch notifications are hints, not an all-filesystem guarantee; optional polling
-and Refresh stay available. A truly unborn repository has an explicit empty HEAD
-baseline. No Git repository or an invalid/obsolete baseline is shown with a clear
-comparison-unavailable note, never a fabricated successful HEAD comparison.
-
-Native VS Code Delete uses the managed project CLI, not a dirty-buffer retired
-edit: drain pending edits, bind the action to this document, require clean project
-SpecSpec documents and confirm destructive deletion. Native text Save/undo remains
-native; deleted open buffers must not re-overlay/recreate files during graph reads.
-Forms/drafts/caret/camera/colors/shapes/temporary labels are not rewritten.
-Deletion failure/cancellation retains input. There is no restore status control;
-Git or ordinary creation/editing handles reconsideration outside this workflow.
-
-Convert the root once under saved-byte/journal protection, physically deleting
-already retired files while preserving their original bytes/history in Git.
-Amend surviving conclusions/relationships explicitly; don't silently rewrite core
-intentions to make this mechanism inevitable. Reconstruct the entire maintained
-independent Gantt corpus as format five, replacing retire batches with actual
-file deletions and reasons in commit messages. Earlier branch explanations live
-in their earlier commits, not flagged HEAD files. Refresh all refs, receipts,
-ledgers, bundle and snapshot together and preserve existing manual experiments.
-
-Verify exact-index deletion versus working files; explicit batches, dangling
-references/root protection, interruption/recovery/external races; absent removed
-fields/actions; unborn/non-Git/bad baselines; default ghost on deletion and after
-staging, removal only on commit without manual Refresh, historical previews and
-independent per-view comparisons; native clean-buffer deletion and retained dirty
-forms. Run independent current-schema Git/host/app suites. Evidence remains bounded
-and revisable; source relocation and passing tests are not semantic correctness.
+Native Delete drains pending edits, binds the action, requires clean SpecSpec
+documents, confirms the backend plan and uses the managed project writer. Overlay
+reads validate absent-buffer inputs then omit missing files; edits to absent files
+fail. Native Save/undo remains the document lifecycle. Retain drafts/caret/cameras,
+per-view comparisons, shape, palette and source previews during these transitions.

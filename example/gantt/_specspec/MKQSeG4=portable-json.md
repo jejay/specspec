@@ -4,6 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Keep a portable local plan
+# Keep a portable validated JSON plan
 
-Import/export a documented JSON format with validation before replacement. Warn about any future conversion; never call lossy conversion exact preservation. Origin: STORY.md, simulated redirect one.
+Import/export a documented versioned JSON format. Validate imports before applying
+them. Explain format conversion and information losses in a preview, with explicit
+replacement of current work. Export saved valid plan data for owner-controlled files.

@@ -4,11 +4,9 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Use SpecSpec to maintain this repository specification
+# Maintain SpecSpec with its own specification graph
 
-This repository is itself a usable example of a SpecSpec-managed project. Maintain
-its working specification in `_specspec`, connect implementation explanations to
-actual code and verification, and document how to inspect and change the graph.
-Keep candidate technical decisions distinguishable from the user's core intentions.
-
-Origin: the project owner's request to make this repository a SpecSpec-using example.
+Keep this repository's active specification in `_specspec` and connect its
+implementation leaves to actual code and verification. Provide discoverable
+inspection/editing instructions. Distinguish owner intentions, revisable choices
+and implemented behavior through their graph relationships.

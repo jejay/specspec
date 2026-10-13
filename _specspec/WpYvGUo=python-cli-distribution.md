@@ -4,9 +4,9 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Distribute the command-line tool as an isolated Python application
+# Distribute an isolated Python command-line application
 
-Implement the command-line tool in Python and make it usable through pipx and uvx,
-without requiring users to install its dependencies into their project's runtime.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), explicit Python tool requirement.
+Implement the command-line tool in Python and support `pipx` and `uvx` use with
+its dependencies isolated from the owner's product runtime. Provide installation
+from a local checkout or Git URL and an importable library for integration.
+Publication is a separately authorized release action.

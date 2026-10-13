@@ -4,6 +4,9 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Edit the complete task set
+# Edit a validated complete workshop task set
 
-Add, edit, select, and remove tasks using accessible forms. Reject deletion of a referenced prerequisite instead of silently detaching links. Failed edits keep the draft and valid plan. Origin: STORY.md, simulated redirect two.
+Use accessible native forms to add, select, edit and remove tasks. Save a candidate
+only after validating durations, bounds and prerequisites. A referenced prerequisite
+can be removed after the user explicitly edits its dependents' links. Invalid edits
+and cancelled navigation retain the draft and saved valid plan.

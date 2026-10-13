@@ -1,5 +1,13 @@
 # Simulated conversation, maintained development history
 
+This optional narrative preserves the illustrative product briefs. The maintained
+graph/history applies the current owner/tandem/agent/implementation process in
+`AGENTS.md`: positive stage bindings and `Agent specspec changes:` checkpoints.
+The turns below are a fictional teaching story, not a phase-by-phase execution
+transcript. In particular, discussion of node recording/removal below supplies
+illustration; actual operations and commit chronology are in the receipt ledger
+and bundle. SpecSpec's real owner process input is preserved in its own Git history.
+
 The independent history in `history/gantt.bundle` was explicitly reconstructed
 with the current SpecSpec scheme. The dialogue/app evolution below is retained;
 node IDs, CLI receipts and Git stage references now come from new current-tool

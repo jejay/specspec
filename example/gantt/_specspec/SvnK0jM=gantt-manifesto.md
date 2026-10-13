@@ -6,11 +6,8 @@ format_version: 5
 ---
 # Help people understand and revise a plan
 
-Make a planning application's timing, trade-offs, and revisions understandable.
-A readable Gantt view is a means to that purpose, not a commitment to a particular
-market, storage service, scheduler, or date model. Keep desired outcomes distinct
-from revisable implementation conclusions and let feedback change the direction.
-
-This is a fictional worked example commissioned by the SpecSpec project owner.
-STORY.md labels every simulated user/AI turn; none is an actual external client's
-instruction or technical sign-off. Git records real specification and code stages.
+Make a planning application's timing, trade-offs and revisions understandable.
+Provide a readable timeline and a textual equivalent. Develop separately reasoned
+solution choices under the owner's outcomes and use feedback to guide the next
+planning decision. Each current graph describes its desired product and actual
+realization; Git records its evolution.

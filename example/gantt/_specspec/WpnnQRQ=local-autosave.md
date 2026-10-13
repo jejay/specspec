@@ -4,6 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Keep work in this browser
+# Save valid work in this browser
 
-Save valid edits locally when storage is available; explain session-only operation and storage failures. Do not contact a cloud service. Origin: STORY.md, simulated redirect one.
+Autosave valid edits in browser-local storage when available. Explain session-only
+operation and storage failures. Keep a portable JSON export so the owner can save
+work independently of browser storage conditions.

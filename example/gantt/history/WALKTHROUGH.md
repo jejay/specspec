@@ -58,6 +58,28 @@ after commit without a retired/restore workflow. Workshop weekday reasoning is a
 new justification, not approval or resurrection of the portfolio branch. `cli.jsonl` contains new actual executions from reconstruction, not
 altered older receipts or a claim that original commits used today's encoding.
 
+## Specification-planning phases in the maintained fixture
+
+Each retained graph states that stage's current desired product and realized code
+positively. Owner outcomes, reasoned conclusions and implementation leaves remain
+separate. Git commit messages and predecessor trees record redirects, removal
+reasons and execution evidence; active bindings contain implementation mappings
+rather than correction/run diaries.
+
+The three specification commits use `Agent specspec changes: <description>` and
+precede their code. The optional story supplies fictional product briefs, not a
+claim of actual owner-edited graphs or fabricated tandem approval. This replay has
+no manual owner graph edits to invent an `Owner specspec changes:` commit for.
+The actual SpecSpec owner's process input is recorded separately in SpecSpec's own
+history. The eight-commit topology and meaningful redirects remain inspectable.
+
+The maintained process reconstruction reuses the example's existing canonical
+five-byte identities at creation, supplies the positive bodies to real current CLI
+commands, and captures new actual responses and staged source anchors. It is a
+labeled synthetic fixture construction, not an untouched original history or an
+edited receipt translation. All previous manual clones and saved bundles remain
+available; use a fresh destination for the maintained history.
+
 ## Run historical prototypes separately
 
 From your clone, worktrees are explicit opt-in operations:
@@ -86,7 +108,8 @@ python -m pytest tests/test_example_checkout.py tests/test_gantt_example.py test
 ```
 
 The verifier clones temporarily and checks **all retained refs/commits**, current
-schema/DAG, independent Git/index, tags, actual receipt/context/impact contents,
+schema/DAG, positive current bindings, agent specification commit names, independent
+Git/index, tags, actual receipt/context/impact contents,
 stage ordering, both deletion sets/reasons, semantic/edge/source diffs and all runnable
 model stages. It compares the final runtime/tests and graph with the tracked
 snapshot to catch drift. Git integration and real-host fixtures use the same clone

@@ -5,14 +5,12 @@ parents:
 - gfAxHps=
 - XLyy460=
 ---
-# Give Added the green closer to its text cue; Requirement gets the leftover
+# Assign Added its green cue and Requirement the remaining green
 
-Swap only the current Requirement and Added assignments: Requirement uses one-based
-color 5 (#92a64b), Added uses color 4 (#37b390). Keep all seven swatches, their order,
-parameters and other role mappings unchanged. Added's old color 5 is too far from
-the added-node text color; color 4 is closer. Requirement receives what is left over.
-Reflect that priority in the standalone selection tool, not just its default labels.
+Use one-based color 4 (`#37b390`) for Added and color 5 (`#92a64b`) for Requirement.
+Implementation uses color 1, changed/renamed color 2, removed color 7 and source
+impact color 6. Keep the seven ordered swatches and selected parameters exact.
 
-Origin: the user's explicit mapping swap and selection-tool logic request. This
-supersedes only the Requirement/Added indices in gfAxHps='s earlier pasted outputs.
-Keep manifesto exceptions, themed text/edges, hover and temporary labels unchanged.
+The standalone selection tool prioritizes Added near its default green text cue
+and gives Requirement the nearest suitable unused entry afterward, with reuse
+when the chosen palette has exhausted its entries. Explain that priority.

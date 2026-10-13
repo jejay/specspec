@@ -4,8 +4,10 @@ type: requirement
 parents:
 - 4PzVJho=
 ---
-# Simplify the puppy to monochrome face contours
+# Derive a minimal themed dachshund face icon
 
-Preserve an exact copy of the supplied full SVG in branding/dachshund.svg. Derive a distinct 24x24 Activity Bar icon with simple floppy ears, head/muzzle and nose/eye shapes, roughly 1.5-unit strokes, generous negative space, and one foreground color. Avoid embedding the complex original or a black background in the mask icon. Share the derivative across hosts; resvg miniature/enlarged light/dark previews are implementation evidence, not universal legibility proof.
-
-Origin: the user's cross-platform/sidebar/branding request in this conversation. Technical choices remain revisable.
+Keep `branding/dachshund.svg` byte-identical to the supplied SVG. Use a distinct
+24×24 monochrome mask with floppy ears, head/muzzle, nose/eyes, roughly 1.5-unit
+strokes and generous negative space. Share this derivative across hosts. Package
+icons may use a raster of the full artwork. Offline light/dark miniature renders
+provide bounded legibility evidence.

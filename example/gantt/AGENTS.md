@@ -1,49 +1,68 @@
-# Working on the Gantt example
+# Working on the Gantt specification and app
 
-In the SpecSpec checkout, this folder is a tracked graph/runtime fixture snapshot,
-not an independent Git workspace: Git here finds the parent's development history.
-For manual Git/UI experiments, run `python example/gantt/history/checkout.py` from
-the SpecSpec root and open the resulting `~/Projects/specspec-examples/gantt` clone.
-Tests clone `history/gantt.bundle` into independent disposable repositories. Do not
-add nested `.git` here or reinitialize the graph. The parent's instructions apply
-when editing its tracked fixture; in a standalone clone, use that clone's own index.
+The graph records current owner outcomes, separately reasoned conclusions and
+actual implementation mappings in positive language. Git predecessor trees and
+commit messages carry changed reasoning, removal explanations and execution history.
+The manifesto defines the planning purpose; requirement relationships express the
+intention-conclusion spectrum; implementation leaves link actual code/tests.
 
-Read `_specspec` via `list`, `context`, and `impact` before changing code. Use
-`add`, `update`, and `delete` for this checkout; format/API 5 has no `--expect`,
-fingerprints or retired field/workflow. Manual changes are permitted by the product,
-not recommended. Intentions and conclusions are distinguished by reasoning and
-relationships, not approval states. Delete explicitly named obsolete branches;
-explain why in Git commits. Earlier nodes and explanations remain in Git history.
-Default workspace compares with HEAD; deleted files remain as D until committed.
+## Planning phases
 
-No fabricated AI conversation is required: plausible graph construction/revision
-is enough. The retained `STORY.md` is optional fictional illustration, not actual
-user authorization or a prerequisite for additional example projects.
-`history/cli.jsonl` records real CLI operations; `history/revisions.json` records
-actual rebuilt fixture Git revisions and receipt ordinals. The fixture was
-explicitly reconstructed through current CLI executions, not represented as the
-untouched original history. Never invent receipts, backdate commits or claim
-unrun checks. Implementation nodes link actual code/tests and explain omissions.
+Inspect owner working/index specification changes before action. Preserve manual
+owner input before agent edits with a separate `Owner specspec changes: <understanding>`
+commit. Validate its exact intended staged graph.
 
-Use canonical five-byte padded Base64url IDs (40 bits, full trailing `=`) and
-`<id><slug>.md` filenames. Keep only the current SpecSpec schema in tooling.
-Obsolete surrounding SpecSpec graph revisions need not work. This Gantt history
-is the rigorous Git regression corpus; every maintained commit must be compliant.
-Whenever the node schema changes, reconstruct the ENTIRE maintained history as if
-all stages had always used today's SpecSpec. Refresh all refs, earlier/deleted nodes,
-receipts, ledgers, bundle and tracked snapshot together, then verify every revision.
-Updating only HEAD is insufficient. See `history/WALKTHROUGH.md`. Save experiments
-before explicitly recreating stale clones; never reset them automatically or
-rewrite unrelated SpecSpec development history.
+In tandem planning, understand the product brief and distinguish intention from
+suggested solution. Discuss significant removals/splits/modifications promptly,
+offer concise corrected overviews and deepen consequential reasoning. Graph edits
+belong to requested agent planning; rounds may be skipped with sufficient context.
 
-Before an authorized commit, stage the complete intended change and run BOTH:
+On a request to change the specification, use saved graph/context/impact and owner
+understanding to plan a precise implementation-mature graph through `add`, `update`
+and `delete`. Keep positive current bindings and independently revisable choices.
+Inspect cascade scope and explicitly reconnect retained children during consolidation.
+Validate the exact intended index and commit `Agent specspec changes: <description>`.
+
+Implementation closes depth gaps under existing intentions with conclusions and
+code mappings. Owner planning decides breadth/removal changes. Report contradictions,
+consistent-subset decisions and consequences; a proposal branch can hold a suggested
+resolution. Working tests give bounded evidence for review.
+
+## Independent workspace and portable fixture
+
+In the SpecSpec checkout, `example/gantt` is a tracked fixture snapshot. Git here
+uses SpecSpec's development repository. Its parent instructions apply. For temporal
+experiments, run `python example/gantt/history/checkout.py <new-external-destination>`
+and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
+manual experiments remain preserved; the helper reserves new destinations and
+retains partial clones. Independent clones own their Git metadata/index.
+
+Use `list`, `context` and `impact` before code changes. Current format/API 5 uses
+canonical padded Base64url IDs over five bytes, including `=`, and `<id><slug>.md`
+files. Valid manual Markdown is usable; graph-aware CLI/UI edits are recommended.
+Delete removes the full descendant closure, including shared children, with warnings
+for affected uncommitted files. Explain reasons in Git. Default workspace compares
+to HEAD, keeping committed D ghosts through staging until commit.
+
+`history/cli.jsonl` contains actual current CLI inputs/results. `revisions.json`
+records actual stage commits/receipt ordinals. Agent specification checkpoints
+precede each runnable stage's code. `STORY.md` is optional fictional product-brief
+illustration; artifact checks supply execution evidence. Preserve stage reasoning
+in Git and scope future candidates distinctly from delivered prototype behavior.
+
+Every node-schema change reconstructs the entire maintained example history under
+today's grammar: all refs, predecessor/deleted nodes, source anchors, actual receipts,
+ledger, bundle and tracked snapshot. Validate every revision with current tools.
+See `history/WALKTHROUGH.md`. SpecSpec development history retains its original
+commits, and existing clones retain their experiments.
+
+Before an authorized SpecSpec-checkout commit, run from its root:
 
 ```sh
-python -m specspec hook check
-python -m specspec --root example/gantt hook check
+python -m specspec hook check --sources
+python -m specspec --root example/gantt hook check --sources
 ```
 
-(Both commands above are from the SpecSpec root for its tracked fixture change.)
-In a standalone example clone, validate only its own staged graph. No hooks are installed.
-Browser runtime uses local files only; do not add remote scripts or executable
-project HTML. Tests run without installing app dependencies.
+In a standalone clone, check its own exact index. Hook installation is explicit and
+preserves existing hooks. Browser runtime uses local scripts and literal project
+text; model tests run with Node and browser tests use an installed browser.

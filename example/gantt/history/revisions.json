@@ -5,12 +5,12 @@
     "node_count_before": 0,
     "spec_node_count": 15,
     "deletion_reason": "",
-    "predecessor_commit": "c189f353ec5643c155f350b74d358122a1b8163f",
     "deleted_ids": [],
+    "predecessor_commit": "8f8624369f09b18db47599bae03ba6b3612d6acc",
     "spec_receipt": 28,
-    "spec_commit": "1eb6c2bcba04d094577f42b1a97febdce92be436",
+    "spec_commit": "07bbfe3f2a21bca2e9aa1421d8b020002686bb06",
     "implementation_receipt": 34,
-    "implementation_commit": "eeedca004628ba6b4a1f186f2135a3f27724aa14"
+    "implementation_commit": "a9393332fc27f7c5a596b77395269a5043b86e5e"
   },
   {
     "key": "02",
@@ -18,7 +18,6 @@
     "node_count_before": 17,
     "spec_node_count": 14,
     "deletion_reason": "Delete the portfolio/team/service/weekday/leveling branch because the experiment is now a personal local manual-date plan. Earlier reasoning is in the preceding commit.",
-    "predecessor_commit": "eeedca004628ba6b4a1f186f2135a3f27724aa14",
     "deleted_ids": [
       "zgY-VDk=",
       "HoQ2Fis=",
@@ -34,10 +33,11 @@
       "zc8JxKI=",
       "K49IgJM="
     ],
+    "predecessor_commit": "a9393332fc27f7c5a596b77395269a5043b86e5e",
     "spec_receipt": 69,
-    "spec_commit": "731423b9b6e9ff8983268613b870acdca86493f3",
+    "spec_commit": "39f102c5b1469f3aba457042b63d108de61b0b2b",
     "implementation_receipt": 75,
-    "implementation_commit": "f3fa1365128f68dcb06fbc1a550f6c3ba4f31a31"
+    "implementation_commit": "78d1110a6842783e04b0fef2952cd3892d4f686a"
   },
   {
     "key": "03",
@@ -45,7 +45,6 @@
     "node_count_before": 16,
     "spec_node_count": 19,
     "deletion_reason": "Delete personal scope/manual dates/weekends/priorities/independent-task and v1 branch because workshop what-if planning needs duration/prerequisite workday forecasts. Earlier reasoning is in the preceding commit.",
-    "predecessor_commit": "f3fa1365128f68dcb06fbc1a550f6c3ba4f31a31",
     "deleted_ids": [
       "zjh9_Yk=",
       "KcSNaqI=",
@@ -57,9 +56,10 @@
       "brGH6zM=",
       "ZQyhSnM="
     ],
+    "predecessor_commit": "78d1110a6842783e04b0fef2952cd3892d4f686a",
     "spec_receipt": 110,
-    "spec_commit": "fcb157f5528c1d3fc979cb5c4fbec88f5633009b",
+    "spec_commit": "44bef4002e49b912dc1bb01e35151bc56eab87f2",
     "implementation_receipt": 118,
-    "implementation_commit": "e431b23996e046edc4863b6742ed69fdbe5918bc"
+    "implementation_commit": "7e9590ae506b8947fb469c3b06bdfc968260a2ab"
   }
 ]

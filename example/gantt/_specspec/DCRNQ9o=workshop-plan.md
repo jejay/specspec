@@ -6,4 +6,5 @@ parents:
 ---
 # Plan one makerspace workshop
 
-Replace the personal renovation experiment with one workshop plan. Do not restore portfolio grouping, named-owner optimization, priorities, accounts, or cloud storage. Origin: STORY.md, simulated redirect two.
+Help a makerspace organize one workshop using work durations, prerequisites,
+earliest bounds and an explicit what-if baseline. Keep the plan local and portable.

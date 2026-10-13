@@ -4,13 +4,9 @@ type: requirement
 parents:
 - W8_8BXA=
 ---
-# Leave project constraints and categories to the user
+# Let the owner define project constraints and categories
 
-Do not impose functional/non-functional categories or preferred architectures,
-frameworks, or implementation languages on projects using SpecSpec. A user may
-make a technology choice an intention for reasons outside the tool's control.
-
-This does not prevent this repository from having its own explicitly specified
-Python CLI constraint.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), requirements neutrality.
+Owners choose the functional, non-functional, architectural, framework and language
+constraints of their own products. A technology may be a core intention for reasons
+outside the tool's control. SpecSpec supplies a neutral grammar for expressing and
+relating those constraints; this repository explicitly chooses a Python CLI.

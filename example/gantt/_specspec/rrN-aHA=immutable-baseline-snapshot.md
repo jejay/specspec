@@ -6,6 +6,11 @@ parents:
 - aELuxSw=
 - XZk4rMA=
 ---
-# Use an explicit full-plan baseline snapshot
+# Store an explicit deep baseline and compare on a common axis
 
-Capture a deep snapshot of validated plan data on explicit request; edits never mutate it. Render current and baseline forecasts on a common calendar axis, with text dates and finish deltas explicitly counted in calendar days. Removed baseline-only tasks remain visible. Added tasks have no baseline. This is a what-if comparison, not an approval state. Origin: STORY.md, AI redirect-two conclusion.
+Capture a copied normalized full saved plan on request. Current edits retain it.
+Forecast current and baseline independently, then render both on the same bounded
+calendar axis. Use current task order followed by baseline-only tasks. Show textual
+start/end and finish delta in calendar days. Baseline-only rows remain visible as
+removed; new current-only tasks show Added; absent baseline dates show an empty
+comparison. Replace/clear actions are explicit and validation preserves snapshots.

@@ -1,6 +1,7 @@
-"""Dogfood the real graph without fixing its choices or withdrawal history."""
+"""Validate current binding graphs and usable context while choices evolve."""
 
 import json
+import re
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -30,7 +31,7 @@ def test_repository_spec_is_valid_and_has_no_missing_sources():
 def test_repository_graph_is_usable_as_agent_context():
     snapshot = load_snapshot(ROOT)
     graph = snapshot.require_valid()
-    # Exercise a real implementation record; do not freeze its ID or withdrawal flag.
+    # Exercise a real implementation record while allowing identities to evolve.
     implementation = next(node for node in snapshot.nodes if node.type == "implementation")
     result = CliRunner().invoke(main, ["--root", str(ROOT), "context", implementation.id, "--json"])
     assert result.exit_code == 0, result.output
@@ -50,3 +51,25 @@ def test_repository_accepts_manual_edits_without_touching_files():
     assert candidate.valid
     assert candidate.graph.nodes[node.id].body.endswith("An unmanaged change.\n")
     assert load_snapshot(ROOT).files == before.files
+
+
+def test_current_bindings_keep_revision_and_run_diaries_in_git(gantt_verifier):
+    for root in [ROOT, ROOT / "example/gantt"]:
+        nodes = load_snapshot(root).nodes
+        gantt_verifier.assert_current_bindings(nodes)
+        for node in nodes:
+            assert not re.search(r"\b(?:supersed\w*|formerly|previously)\b", node.body), node.id
+            assert not re.search(r"\b\d+ (?:Python|shared UI|VS Code) tests passed", node.body)
+            assert not re.search(r"\b(?:format/API|API-)\s*[1-4]\b", node.body), node.id
+
+
+def test_implementation_links_use_current_descriptions_and_preserve_blob_anchors():
+    snapshot = load_snapshot(ROOT)
+    anchored = []
+    for node in snapshot.nodes:
+        for source in node.sources:
+            description = source.get("symbol", "")
+            assert not re.search(r"API [1-4]|migrate_command|nine RAINBOW", description)
+            if "blob" in source:
+                anchored.append(source)
+    assert {source["mode"] for source in anchored} == {"strict", "expanding"}

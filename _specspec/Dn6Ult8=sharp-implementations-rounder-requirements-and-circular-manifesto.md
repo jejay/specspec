@@ -5,13 +5,9 @@ parents:
 - eLTZ3sg=
 - iktVTRU=
 ---
-# Distinguish node types by roundness without recoloring
+# Distinguish node types with square, rounder and circular outlines
 
-Swap the Requirement and Implementation roundness designs. Implementations should
-have the sharpest edges. Make requirements a little rounder still than the previous
-implementation design. Make the manifesto a full circle, not a rounded rectangle
-or elongated capsule. Preserve all currently selected colors and role mappings.
-
-Origin: the user's explicit node-shape request after the Added/Requirement color
-swap. Shapes are presentation of existing node types, not new canonical metadata,
-approval categories or review scores. Preserve native editing and readable content.
+Implementation cards have the sharpest outline, Requirement cards are rounder,
+and the manifesto is a true circle in compact and expanded views. Preserve the
+selected palette and role mappings, native editing and readable content. Shape
+presents the existing node grammar in the shared renderer.

@@ -4,8 +4,10 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Learn without erasing the earlier rationale
+# Keep intentions, conclusions and implementation separately revisable
 
-Use separate intention and conclusion nodes. When the simulated user redirects, physically delete the obsolete dependent branch, keep its explanations in prior Git commits, and record the next experiment honestly. No approval statuses or depth-based confidence scores.
-
-Origin: STORY.md, simulated AI review-boundary clarification.
+Record coherent owner outcomes separately from reasoned realization choices and
+implementation mappings. Agent planning reads saved context/impact and produces
+positive current-state specification before code. Owner-authorized redirects are
+planned explicitly; commit reasons and predecessor Git trees retain removed branches.
+Implementation deepens existing intentions and reports scope gaps for owner planning.

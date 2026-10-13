@@ -4,6 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Respect an earliest allowed start
+# Respect project and task earliest-start bounds
 
-A project start and optional task earliest date bound the forecast. Weekend bounds advance to Monday. Do not confuse an earliest date with a guaranteed appointment. Origin: STORY.md, simulated redirect two.
+Use the project start and optional per-task earliest date as lower bounds for the
+forecast. Weekend lower bounds advance to Monday. Explain calculated dates as
+forecasts satisfying these bounds and prerequisite timing.

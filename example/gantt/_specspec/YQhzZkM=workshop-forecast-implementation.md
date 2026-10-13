@@ -13,17 +13,21 @@ sources:
   ranges:
   - - 1
     - 125
-  symbol: forecast, validate, chart, captureBaseline, previewImport
 - path: test/model.test.cjs
   blob: 790ca5f43cc48a1c02fc7b11c46013facb3dc988
   mode: strict
   ranges:
   - - 1
     - 116
-  symbol: 20 model regressions and seeded DAG reference
 - path: history/personal-v1.json
-  symbol: actual archived stage-two export
 ---
-# Implement validated forecasts and immutable what-if baselines
+# Calculate workshop forecasts, baseline snapshots and JSON previews
 
-model.js implements iterative UTC weekday DAG forecasting, duration/earliest bounds, reference/cycle validation, bounded dates/task counts/horizon, copied baseline snapshots, added/removed comparisons, explicit calendar-day deltas, safe deletion, and versioned JSON preview/conversion. Twenty Node tests passed, including forty seeded DAGs against an independent reference, deep bounded graphs, DST/leap/weekend bounds, baseline/input immutability, and the real archived personal v1 export. No owner/resource leveling, holiday calendar, cloud, or optimization is implemented. V1 conversion deliberately changes end/weekend semantics and drops priorities; warnings are data returned before Apply.
+`model.js` implements iterative UTC weekday DAG scheduling, bounded normalization,
+immutable copied baselines, current/baseline rows and calendar-day deltas. Task save
+validates the whole candidate; removal validates reference safety. Import returns a
+validated version-two preview or explicit version-one conversion warnings.
+
+Model tests cover seeded DAGs against an independent reference, deep bounded graphs,
+weekend/DST/leap dates, invalid/cyclic inputs, input/baseline immutability and the
+archived personal JSON fixture. The pure model has deterministic local-data semantics.

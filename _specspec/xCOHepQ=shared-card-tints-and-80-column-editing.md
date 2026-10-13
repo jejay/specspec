@@ -7,49 +7,19 @@ parents:
 - LtROyww=
 - fdB9ZLM=
 ---
-# Reuse shared card tints, widen only expanded cards and strengthen Git corners
+# Use shared tints, an 80-column form and bold Git corners
 
-Keep the manifesto accent #d3d3d3, but remove its solid background, dark text and
-special badge/contrast-theme rules. Share the 15% accent resting fill and 24%
-hover fill for compact and expanded cards alike, with ordinary theme text. Use
-one transient node-hovered class from existing delegated hover state. Only the
-manifesto gets a white hover border; other hovered borders emphasize their own
-semantic hue. Keep contrast-theme resting background/borders shared too. The
-original all-card white-border choice in 0d8d44b overgeneralized the root request
-and is superseded by bLBNk80=. Leave existing relationship emphasis,
-non-neighbor darkening, palette metrics and truthful gray legends intact.
+Share normal theme text and card tint rules across types: 15% accent at rest and
+24% on hover. Share high-contrast resting rules. The distance/type manifesto accent
+is `#d3d3d3`; its hovered border is white. Other colored borders and revision-colored
+manifestos use the hue-emphasis conclusion.
 
-Increase fixed expanded world width from 620 to 860 units, leaving compact cards
-264 by 112. Give textarea and revision pre text the same host editor monospace
-font (fallback monospace) and editor font size (fallback 13px). Verify 80-column
-ASCII at representative 13/14/16px fonts in the installed browser, both editor and
-revision display, without wrapping or horizontal overflow. This is a typical-font
-budget, not a guarantee for arbitrarily large/proportional font customizations or
-80 wide Unicode glyphs. Retain soft wrapping for longer lines. Width remains
-independent of viewport/camera, and the existing intrinsic layout/routing handles
-this larger expanded card without a compact-card size increase.
+Ordinary expanded cards are 860 world units wide. Their 822px-wide native content
+budget is retained inside the expanded manifesto circle. Textareas and revision
+previews share host editor monospace font/size with monospace/13px fallback. Keep
+soft wrapping for longer text and verify typical 80 ASCII columns at 13/14/16px.
 
-Increase all Git corners, including rename R consistently, from 14px/700 to
-20px/800. Keep them absolutely anchored in the existing bottom-right corner and
-reserve 26px badge-row space rather than enlarging compact cards. Verify no
-heading/metadata/badge collision or clipping, and maintain matching Git title/
-letter colors and full state labels. These pixel/weight choices remain revisable.
-
-Extend model/DOM/CSS and real-host tests for uniform hover/fill restoration,
-expanded width, native editor/caret/geometry, actual 80-column fitting and enlarged
-Git corners. Record the earlier solid-gray evidence as superseded history, not
-proof the user requested that appearance. No host renderer fork, canonical UI
-metadata, text reformatting, or permanent compositor hint is introduced.
-
-Width tuning: use 860 rather than the initial 820-unit candidate to retain margin
-for textarea padding and a vertical scrollbar at representative 16px monospace
-fonts. Actual 80-column fit passes in both installed host browsers.
-
-## Later type-shape revision
-
-Dn6Ult8= changes roundness only, with AZbsoEA= choosing type radii
-and a genuinely circular manifesto in compact/expanded views. The earlier all-card
-compact dimensions and expanded outer width above remain the original sizing
-choice; they now apply to ordinary Requirement/Implementation cards. The manifesto
-uses a square outline fitted around its unchanged native editor content budget.
-Colors, text, hover, Git cues and existing actual checks are not retroactively changed.
+Git corners use 20px / 800 weight with absolute bottom-right anchoring and 26px
+badge-row clearance, including R. Verify headings, badges and letters fit ordinary
+264×112 cards and that circular markers fit their arc. Layout stays intrinsic and
+native controls/caret remain the same during hover and resizing.

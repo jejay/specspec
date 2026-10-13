@@ -8,6 +8,15 @@ parents:
 - k2YLQSM=
 - rrN-aHA=
 ---
-# Use a native local DOM chart and forms
+# Use local classic scripts, native forms and a DOM calendar
 
-Use dependency-free classic browser scripts, textContent, native controls, and a horizontally scrolling calendar grid. The application can load from local files or a local static server without a runtime API/CDN. File-origin localStorage support varies; show failures and recommend a stable local origin for persistence. Keep a text task table and distinct baseline/current bars. App task links are not SpecSpec justification links. Origin: STORY.md, AI redirect-two conclusion.
+Use dependency-free local classic scripts, textContent and native controls. Launch
+from local files or a stable local static origin. The latter supplies predictable
+browser-local storage conditions; file-origin failures show session-only guidance.
+
+Render a horizontally scrolling calendar with weekend shading, distinct current/
+baseline bars and a text date table. Keep scrolling inside chart/table areas and
+retain form/caret during resize. Preview file/pasted JSON separately from saved data,
+cancel stale asynchronous file reads, and confirm discard of dirty task/settings
+input before replacement/navigation. Browser task prerequisites express scheduling;
+SpecSpec graph links express specification justification.

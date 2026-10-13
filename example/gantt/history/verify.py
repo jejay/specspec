@@ -45,11 +45,32 @@ def contents(snapshot):
     return {node.id: node.to_dict() for node in snapshot.nodes}
 
 
+def assert_current_bindings(nodes) -> None:
+    """Guard against embedding correction/run diaries in the active bindings."""
+    markers = (
+        "Origin:",
+        "## Current deletion",
+        "## Later ",
+        "## Superseded ",
+        "## Resolved follow-up",
+        "At that checkpoint",
+        "Earlier run counts",
+        "Original test counts",
+        "withdrawal flags",
+    )
+    for node in nodes:
+        assert node.body.startswith("# "), node.id
+        assert not any(marker in node.body for marker in markers), node.id
+        if node.type == "implementation":
+            assert node.sources, node.id
+
+
 def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     current = load_snapshot(root)
     current.require_valid()
     assert not current.diagnostics, current.diagnostics
     assert all(ID_RE.fullmatch(node.id) for node in current.nodes)
+    assert_current_bindings(current.nodes)
     for node in current.nodes:
         if node.type == "implementation":
             assert node.sources and all((root / s["path"]).is_file() for s in node.sources)
@@ -96,7 +117,13 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             if "--sources" in argv:
                 node.sources = json.loads(argv[argv.index("--sources") + 1])
         elif action == "delete":
-            assert set(changed) == set(argv[3:-1])
+            requested = [arg for arg in argv[3:-1] if arg != "--yes"]
+            prior_graph, errors = build_graph(list(records.values()))
+            assert not errors
+            expected = set(requested)
+            for node_id in requested:
+                expected.update(prior_graph.closure(node_id))
+            assert set(changed) == expected
             for node_id in changed:
                 del records[node_id]
         graph, diagnostics = build_graph(list(records.values()))
@@ -161,6 +188,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 if index:
                     snapshot.require_valid()
                     assert snapshot.format_version == FORMAT_VERSION
+                    assert_current_bindings(snapshot.nodes)
                     assert not check_results(
                         resolve_nodes(
                             fixture,
@@ -185,6 +213,8 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 run_git(fixture, "merge-base", "--is-ancestor", predecessor, spec_ref)
                 run_git(fixture, "merge-base", "--is-ancestor", spec_ref, code_ref)
                 run_git(fixture, "merge-base", "--is-ancestor", code_ref, "HEAD")
+                message = run_git(fixture, "log", "-1", "--format=%B", spec_ref).decode()
+                assert message.startswith("Agent specspec changes: "), message
                 before = git_snapshot(fixture, predecessor, allow_empty=True)
                 spec, implementation = (
                     git_snapshot(fixture, spec_ref),

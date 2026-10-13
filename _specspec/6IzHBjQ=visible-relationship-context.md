@@ -5,20 +5,12 @@ parents:
 - eLTZ3sg=
 - W8_8BXA=
 ---
-# Show relationship context and potential downstream impact
+# Show relationship context and all-depth potential impact
 
-In a focused subgraph, retain understandable upstream/downstream context, with
-minimum/maximum manifesto-distance coloring explained by the selected legend.
-Remove repetitive hop-distance text labels from the nodes, including parents and
-the expanded selected card. For each child, continue showing the total size of
-its downstream subgraph, including grandchildren, great-grandchildren, and all
-deeper generations, to convey potential scope affected by a change. Do not limit
-this cue to the next generation.
+Keep understandable upstream/downstream context around a focused node. Explain
+minimum and maximum manifesto distance through color and the selected legend.
+Keep compact and expanded cards concise. Each child shows the total number of
+unique descendants at every depth, excluding that child itself.
 
-Derive these cues from graph links; they are context and potential-impact hints,
-not stored spectrum scores, new node categories, or a claim that every reachable
-node is necessarily invalidated by every edit.
-
-Origin: the user's label-removal correction to the earlier tree UI revision and
-all-depth impact clarification. Distance and DAG counting conventions remain
-separately stated conclusions.
+Treat these derived cues as potential scope for investigation. Per-child totals
+may overlap; their meaning follows actual graph links at the selected revision.

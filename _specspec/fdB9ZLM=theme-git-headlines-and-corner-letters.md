@@ -6,8 +6,11 @@ parents:
 - qnGsij4=
 - YOPhqYc=
 ---
-# Use themed headlines and text alternatives without conflating Git states
+# Use themed Git titles and readable corner letters
 
-Map semantic added/changed/removed comparison kinds to A/M/D at the card bottom-right and the same title color in compact/expanded cards. Use gitDecoration.addedResourceForeground and deletedResourceForeground; use editorGutter.modifiedBackground for the requested blue M (VS Code's modified RESOURCE foreground is often amber). Use current CSS theme variables automatically and VS Code dark defaults as fallback/Electron values. Keep rename R distinct in blue and source-only text/context separate without inventing M. Preserve withdrawal, existing Git classes/edge dashes, semantic fills and accessible full state labels. Color changes do not alter graph metadata, layout, drafts, camera or draft baselines.
-
-Origin: the user's cross-platform/sidebar/branding request in this conversation. Technical choices remain revisable.
+Map comparison kinds to matching headline and bottom-right A/M/D/R cues in compact
+and expanded cards. Added/deleted use gitDecoration resource foreground tokens;
+modified/renamed use editorGutter.modifiedBackground for blue. Read host CSS theme
+variables with VS Code dark defaults in standalone windows. Keep full accessible
+state labels and source-only context as its own informational list. Semantic fills,
+edge patterns, intrinsic layout, drafts and camera retain their independent roles.

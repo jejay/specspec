@@ -7,49 +7,14 @@ parents:
 - bOXyw00=
 - SRsw2W0=
 ---
-# Separate semantic fills from Git accents and route links at actual boundaries
+# Separate semantic fills, Git accents and boundary routing
 
-Offer minimum-distance, maximum-distance, and existing-node-type color modes with
-legends and theme-compatible tinted fills. Default to minimum; keep the previous
-distance preference and obsolete-status fallback mapped to minimum without
-changing drafts or cameras. Do not repeat hop-distance labels on compact/expanded
-cards. Keep downstream and Git/withdrawal badges separately understandable.
-Withdrawal is labeled separately, not a confidence stage. Git additions/removals/
-changes retain separate labels, strokes, and patterns rather than replacing semantic
-colors. Persist presentation choices only in webview state.
+Use theme-compatible tinted cards with explanatory color legends and independent
+Git headline/corner labels, relationship patterns and source-impact text. Persist
+presentation choices per view. Full records retain canonical identity and binding
+text; graph geometry and color metrics are derived state.
 
-Use border-box compact cards and measure rendered node bounds before routing.
-Distribute incoming/outgoing side ports and use relation-aware curved routing
-waypoints to avoid intervening cards. The earlier orthogonal row/gutter routing
-is superseded by the separate LR layered-layout conclusion. Arrowheads
-end outside target borders with sufficient clearance. Recompute geometry when
-expanded inputs resize; do not re-create form fields on every keystroke.
-
-Keep layout/metric helpers pure and locally bundled, test geometric endpoints,
-and verify the real VS Code webview in an isolated profile.
-
-## Manifesto fill exception
-
-The later light-gray-manifesto intention pWgqwcQ= and rendering conclusion
-6MUwTIw= replace the generic tinted fill for the manifesto only: use its fixed
-light-gray accent and solid background in all color modes, with dark root text
-and truthful legends. Keep themed Git titles/corners, native inputs and focus
-cues distinct. Other node palettes, derived metrics and routing remain unchanged.
-
-## Shared-tint correction
-
-iktVTRU= clarifies that the preceding solid-root exception misunderstood the
-request. xCOHepQ= restores the generic tinted fill and theme text for the manifesto
-while retaining its neutral gray accent/legend. Cards share hover tint shifting,
-not white borders: the white override belongs only to the manifesto. The earlier
-all-card claim overgeneralized the root request; bLBNk80= restores stronger
-semantic-hue borders elsewhere. Outside-neighborhood darkening is unchanged.
-
-## Shared rainbow and revision-mode extension
-
-Rg30CXs= requests a denser violet-to-red rainbow table and a separate comparison
-fill mode. 6QB9hRY= replaces the arbitrary repeating depth palette, shares table
-entries with node types and adds Git/Revision Status fills including the root.
-The earlier fixed-gray-in-all-modes and separate-Git-fill statements apply to
-distance/type modes; themed title/corner cues and withdrawal stay separate in all
-modes. No approval-status scheme or canonical status fields return.
+Measure intrinsic border boxes before routing. Attach distributed side ports to
+actual shape boundaries and retain curved obstacle-aware reserved corridors.
+Expanded input resizing recomputes geometry around the same form DOM. Keep pure
+layout/metric helpers locally bundled and verify painted clearance in real hosts.

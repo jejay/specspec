@@ -2,58 +2,32 @@
 id: qowy5AI=
 type: requirement
 parents:
-- Oou-SvU=
-- 6SyZ-BU=
-- tvic3PQ=
+- F5JaC_4=
+- DiIJxaQ=
+- _wJJQko=
+- ME4UXTA=
 ---
-## Current deletion correction
+# Define canonical five-byte IDs and the current typed node schema
 
-xu6W0c4=/5d5oDCM= supersede stored withdrawal, retired flags/controls and
-format/API four with current-only format/API five. Withdraw by deleting the
-Markdown file, keep reasons/earlier explanations in Git, and show HEAD-relative
-deleted ghosts in the default workspace until commit. All earlier version/flag
-workflow descriptions below are historical, not the current contract. Source
-blob anchoring, no approval gates, native persistence distinctions and current-only
-example-history policy remain; all retained Gantt revisions use actual deletions.
+Encode `secrets.token_bytes(5)` with padded RFC 4648 Base64url: seven payload
+symbols plus `=`, 40 random bits and canonical zero pad bits. Paths are
+`_specspec/<id><ascii-slug>.md`. References are full and case-sensitive. Generate
+inside the writer lock and retry exact or ASCII-casefold collisions against every
+current node, independently of its summary. Validate casefold aliases for portable
+filename safety. Random IDs are project references; branch-merge collision checking
+remains part of graph validation.
 
-# Generate canonical five-byte IDs and remove superseded readers
+Current format/API 5 fields are: required `id`, `type`, unique `parents`; manifesto
+integer `format_version: 5`; optional implementation `sources`; optional namespaced
+JSON-compatible `extensions`. Types are manifesto, requirement and implementation.
+Requirement parents are manifesto/requirement; implementation parents are requirements.
+Read the unique manifesto/version before full parsing. Unsupported versions,
+unknown fields, duplicate YAML keys, tags/aliases, coerced types, unsafe filenames,
+invalid UTF-8 and files exceeding 1 MiB produce explicit diagnostics. Direct regular
+node files are the canonical entries. Source-region syntax is specified separately.
 
-Use secrets.token_bytes(5) and padded RFC 4648 Base64url. The complete eight-byte
-ASCII string ends in one equals sign; seven payload symbols have 40 bits, not 42.
-The final symbol must have zero pad bits. Node paths are _specspec/<id><slug>.md:
-the equals sign is both part of the ID and the sole separator before the summary.
-Full IDs remain case-sensitive in references, messages, API and UI.
-
-Generate under the managed writer lock, reserving every current node's ID,
-including withdrawn ones. Retry exact and ASCII-casefold collisions, regardless
-of summary, for Windows/portable filename safety. Reject case-only node aliases
-in input graphs too. Cryptographic randomness is for unbiased identifier generation,
-not a secret/authentication claim; local checking does not prevent branch merge
-collisions. Init has no graph to collide with.
-
-Keep the current format/API 4 shape, without node fingerprints or managed hashes; validate only that current schema
-and these IDs. Remove v1/v2 normalization, obsolete hash/status recognition, the
-migrate command and host migration controls. Old UUID/old-version snapshots fail
-with diagnostics, without silent conversion or pretending to be a valid baseline.
-Keep manual-edit/schema/DAG/byte-transaction/recovery protections. Mermaid export
-uses an injective ASCII-safe ID representation. VS Code associates only the new
-equals-delimited filenames; the Python backend still verifies the actual node.
-
-Convert the two working graphs once through a temporary tool-managed migration
-with a saved mapping, original bytes, validation and recovery journal. That
-conversion utility is not a permanent production compatibility feature. Update
-current documentation/links/references. Keep prior reasoning as withdrawn/history
-text where useful; do not mistake such prose for supported old runtime schemas.
-Persisted host drafts/cameras are not silently rekeyed or claimed compatible.
-
-Origin: a separate implementation choice following the user's resolved encoding
-and compatibility intentions. It supersedes the previous analysis's suggestion
-to retain legacy readers and the earlier schema migration contract.
-
-## Source-region refinement
-
-jsIUeP0=/VnSF9BE= choose structured blob-addressed strict/expanding ranges and
-current-only format/API 4. Five-byte node IDs and manual-edit/writer protections
-remain. Source blob IDs identify immutable Git content, not node-integrity gates.
-All maintained Gantt history is reconstructed under current tools; API 3 is now
-obsolete. The earlier compact-ID conversion and its actual checks remain history.
+Preserve unaffected frontmatter comments and body bytes on targeted writes.
+Normalize tool-controlled fields and summaries when writing them. Mermaid uses
+injective ASCII-safe identifiers. CLI arguments and hosts retain full IDs, including
+hyphen-leading identities; VS Code associates `**/_specspec/???????=*.md` and verifies
+the actual resource through the backend.

@@ -7,25 +7,15 @@ parents:
 - bOXyw00=
 - DiIJxaQ=
 ---
-# Use an in-webview neighborhood view and explicit relationship metrics
+# Focus the existing form and derive distinct downstream counts
 
-Switch between overview and focused views in the existing local webview. Use
-compact upstream and downstream groups around an expanded selected-node card, moving the
-existing form into that card rather than introducing another write path. Back
-returns to the overview without discarding a draft; switching to a different
-node requires explicit discard confirmation if the form is dirty.
+Move the same native form into the expanded selected card, with direct compact
+parents and children around it. Back retains the draft; changing focus confirms
+any requested dirty-form discard. Keep actual parent links separate from the Add
+parent candidate picker; choosing a candidate alone retains the link set.
 
-Minimum and maximum distance mean shortest/longest directed edge counts from the
-manifesto, computed separately per snapshot under the distance-bounds conclusion,
-not in the potentially cyclic revision union. Explain them through color/legend,
-not repeated on-node distance text. For a
-child card, count all distinct nodes reachable below that child at any depth,
-excluding the child itself. Traverse iteratively and deduplicate by ID so a DAG
-with multiple paths does not inflate the total. A leaf shows zero. Label this
-as downstream nodes / potential impact, not a direct-child count. Shared nodes
-count once within each child's subgraph; totals for different children can overlap
-and must not be presented as an additive global total.
-
-Keep revision overlays and removed neighbors visible. Use base-snapshot context
-for removed nodes, target context for surviving nodes, and mark old relationships.
-No depth, count, position, or color is written into canonical node metadata.
+Count each child's unique all-depth descendants iteratively, excluding that child.
+A leaf shows zero. Distinct child totals may overlap. Use revision-local path and
+relationship contexts: base for removed nodes, target for surviving nodes. Retain
+historical overlay links and mark their comparison meaning. Metrics and layout are
+transient presentation derived from canonical links.

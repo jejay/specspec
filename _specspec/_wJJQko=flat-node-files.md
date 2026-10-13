@@ -4,11 +4,10 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Keep canonical nodes directly in the project-root directory
+# Keep canonical nodes in a flat project-root directory
 
-The project-root `_specspec` directory directly contains node Markdown files and
-nothing else. Each file represents one node, with YAML frontmatter and binding
-Markdown text. The manifesto may hold global metadata such as a spec format
-version; no separate configuration file belongs inside the canonical directory.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), managed directory section.
+The project-root `_specspec` directory directly contains one Markdown file per node.
+Each file has YAML frontmatter and binding Markdown text. The unique manifesto
+contains global `format_version` metadata. Runtime state belongs in the separate
+ignored project-root `.specspec-local` directory. Discovery selects the nearest
+containing `_specspec`, including a nearer directory with invalid contents.

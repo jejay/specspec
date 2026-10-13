@@ -7,33 +7,14 @@ parents:
 - DiIJxaQ=
 - SRsw2W0=
 ---
-# Derive minimum and maximum directed path lengths per revision
+# Derive path bounds independently for each revision
 
-Compute minimum distance with iterative breadth-first traversal from the manifesto.
-Compute maximum distance with iterative topological dynamic programming over all
-snapshot relationships, not the placement backbone or only visible neighbors.
-Both count directed edges, with manifesto distance zero. Multiple-parent shortcuts
-can make minimum smaller than maximum. Neither is confidence, review effort, or a
-canonical stored score. Maximum agrees with full-root DAG rank, but is a snapshot
-metric rather than a visible-subgraph placement instruction.
+Compute minimum distance by iterative BFS and maximum by topological dynamic
+programming over all snapshot links. Count directed edges with zero at the
+manifesto. Deduplicate edges; unknown/unreachable or cycle-blocked paths remain
+unknown with neutral fills. Defensive inputs terminate even when cyclic.
 
-Deduplicate repeated edges. Missing/unreachable nodes have unknown distances and
-a neutral fill. Defensive cyclic input must terminate; do not publish a finite
-maximum for a cycle or a descendant whose parents cannot all be processed. Do not
-combine base/target edges to compute paths: surviving nodes use target metrics,
-removed nodes use base metrics, even when the display union has reverse cycles.
-
-Keep the existing distance preference as minimum for compatibility; add a separate
-maximum preference, retaining node-type coloring and obsolete-status fallback.
-Use one palette indexed by the selected distance and explain shortest/longest paths
-in the legend. Remove all on-node hop-distance badges/text, including focused
-parent and expanded cards. Retain downstream, Git, and withdrawn labels. No color
-switch changes node records, drafts/caret/original node contents, camera, routing, or positions.
-
-Test unequal paths, multiple parents, deep iterative traversal, repeated edges,
-unreachable/defensive cycles, revision isolation, both legends/preferences,
-label absence, and native draft/selection preservation.
-
-Origin: a separate metric/presentation conclusion implementing the user's two
-distance modes and simpler cards; algorithms, preference keys, and palette reuse
-are revisable choices.
+Surviving nodes use target metrics and removed nodes use base metrics. Display
+unions and placement backbones are presentation, while complete snapshots determine
+semantic paths. Persist minimum/maximum as separate view preferences. A color switch
+retains canonical records, form/draft/caret, camera, routing and world positions.

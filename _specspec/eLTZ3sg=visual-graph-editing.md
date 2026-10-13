@@ -6,7 +6,6 @@ parents:
 ---
 # Offer visually guided graph editing in VS Code
 
-Provide a VS Code extension that displays the specification graph and supports
-visually guided specification editing as the recommended user workflow.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), visual editor requirement.
+Provide a VS Code extension that displays the specification graph and offers
+visually guided editing. Make graph-aware editing a convenient recommended owner
+workflow alongside direct access to canonical Markdown.

@@ -6,22 +6,12 @@ parents:
 - eLTZ3sg=
 - 6EmKDz8=
 ---
-# Concentrate graph development near the manifesto
+# Develop a compact graph outward from the manifesto
 
-Make the manifesto the visual origin of a densely developed specification graph.
-Early intentions and short branches should remain near that origin, not be pushed
-toward a distant right-hand concentration merely because they share later
-conclusions or implementations. Favor compact outward development over a sparse
-beginning and crowded terminal end.
+Use the manifesto as the visual origin. Keep early intentions and short branches
+near it even when they feed distant shared conclusions. Favor compact outward
+development with readable separated cards and viewport-independent arrangement.
 
-Retain left-to-right relationship development, readable non-overlapping cards,
-and arrangement independent of the viewport. Density must come from logical
-relationships and presentation, not stored node positions or spectrum scores.
-
-Give adjacent nodes just a little more breathing room after removing repetitive
-hop badges, without losing compact development near the origin. The simpler cards
-may still yield a denser graph overall. This requests a modest spacing adjustment,
-not a larger sparse graph, viewport-driven compression, or fixed pixel constants.
-
-Origin: the user's modest-spacing request and earlier layout-heuristic correction in this conversation. This states
-the requested result; ranking, spacing, and library adaptations are conclusions.
+Give adjacent nodes modest breathing room while keeping the origin dense. Derive
+placement from relationships and presentation choices; express graph meaning
+through canonical links.

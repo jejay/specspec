@@ -5,18 +5,13 @@ parents:
 - ME4UXTA=
 - PL1IogE=
 ---
-# Permit manual Markdown changes and keep the UI synchronized
+# Synchronize permitted manual edits while preserving user input
 
-Remove graph fingerprints, managed_hash markers, and hash-based editing gates.
-The CLI and visual editor remain the recommended ways to change the graph, but
-manual Markdown changes are permitted: users are consenting adults, not subject
-to provenance enforcement. Continue checking actual schema and graph consistency.
+Keep both UIs synchronized with external canonical Markdown changes through file
+watchers. Offer explicit configurable polling as an optional supplement, initially
+disabled. Retain unsaved text, caret and camera state during synchronization.
 
-Synchronize both UIs with external Markdown changes through file watchers. Offer
-configurable polling as an optional supplement, disabled by default; the default
-should run through watchers alone. Preserve unsaved text, native caret and camera
-state rather than silently overwriting drafts during synchronization. Report
-invalid files without silently repairing them or presenting stale data as current.
-
-Origin: the user's explicit manual-edit/fingerprint-removal and watcher/default-off
-polling correction in this conversation. Mechanisms and schema versions are choices.
+Report invalid saved files with actionable diagnostics and a clearly out-of-date
+last valid view. Saving an externally changed edited node requires overwrite
+confirmation; unrelated graph changes leave a draft usable. Canonical consistency
+is determined by contents, with transaction guards based on original file bytes.

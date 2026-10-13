@@ -5,20 +5,13 @@ parents:
 - eLTZ3sg=
 - t8RQMdE=
 ---
-# Navigate a node canvas with smooth panning and zooming
+# Navigate a smooth spatial node canvas
 
-Make exploring the graph feel like a spatial node editor such as Blender: smoothly
-pan across the graph and zoom in/out to move between context and readable detail.
-Users must be able to recover their bearings and reach content beyond the visible
-area without layout reflow. Navigation must coexist with selecting nodes, editing
-text and settings, retained drafts, historical read-only views, and review cues.
+Support smooth pan and zoom between relationship context and readable detail.
+Users can recover their bearings and reach clipped content through framing and
+actual-size controls. Navigation coexists with node selection, native editing,
+retained drafts, revision comparisons and review context.
 
-Node headlines should remain clearly rendered when zooming deeply into detail,
-not look like an enlarged low-resolution bitmap. Preserve native text/form behavior
-and world layout while improving headline rendering at high magnification.
-
-This requests the navigation experience, not Blender's computational node engine,
-file format, visual branding, or arbitrary graph mutation by dragging connections.
-
-Origin: the user's high-zoom headline feedback and Blender-like node-editor request in this conversation.
-Library, algorithm, and gesture-binding choices are separate technical conclusions.
+Render native headlines clearly at high magnification with unchanged logical
+font sizes and intrinsic world layout. Preserve text selection, scrolling and
+caret behavior while camera actions move the graph world.

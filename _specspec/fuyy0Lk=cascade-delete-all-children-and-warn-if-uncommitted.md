@@ -5,20 +5,13 @@ parents:
 - xu6W0c4=
 - DiIJxaQ=
 ---
-# Delete every descendant, including shared children, and warn about uncommitted nodes
+# Delete all descendants and warn about uncommitted affected nodes
 
-Deleting a node through SpecSpec also deletes all its children, at every depth.
-This includes full children and partial children: a child with other parents is
-still a child of the selected node and is deleted with it, along with its own
-descendants. Multiple paths or requested roots do not duplicate deletion.
+Managed deletion removes the selected node and every directed descendant,
+including children shared with outside parents and their descendants. Deduplicate
+multiple paths and overlapping requested roots. Preserve outside parents.
 
-Before removing files, warn if the requested node or any affected descendant is
-not committed. Staging is not committing; an added or edited staged node still
-needs the warning. Keep the deletion-only model and HEAD-relative default graph:
-committed nodes remain as D after deletion and staging, disappearing after commit.
-Explain deletion reasons and retain earlier reasoning in normal Git history.
-
-Origin: the user's follow-up in this conversation. This corrects the earlier
-explicit-dependent-batch implementation choice, not the physical-deletion/HEAD
-intention. Warning delivery and destructive-action confirmation are separately
-specified mechanisms, not review states or per-node approval gates.
+Before deleting, warn about every affected node with uncommitted saved changes.
+Staged additions/edits remain uncommitted. Committed deleted nodes retain D ghosts
+through staging until commit; never-committed nodes have an empty HEAD membership.
+Git retains removed reasoning and ordinary commit messages record the reasons.

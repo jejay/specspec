@@ -5,28 +5,14 @@ parents:
 - eLTZ3sg=
 - DiIJxaQ=
 ---
-# Draw clearly connected and directional relationship arrows
+# Draw readable directional relationship curves
 
-Relationship arrows must visibly connect the correct node boundaries and make
-the direction of each link understandable, without running through node content.
-Maintain readability when parents occupy different distances from the root.
-Prefer smooth curved connections, as in a spatial node editor, over angular
-orthogonal links; the chosen routing mechanism must still make endpoints clear.
+Connect the correct card boundaries with smooth arrows whose direction is clear
+across different parent distances. Route around node content. Keep strokes and
+heads visibly strong at low magnification, with direct boundary attachments and
+smooth tangent joins from curve to filled arrowhead.
 
-Connections retain a minimum visible stroke strength even as nodes become smaller
-when zooming out. Do not decorate endpoints with round connector circles. Arrowheads
-must continue the approaching line naturally, including strongly curved links,
-without an abrupt directional kink or a stroke protruding through the arrow tip.
-
-Hovering a node also highlights all its displayed incoming and outgoing connection
-curves and arrowheads, so users can trace its immediate relationships without
-selecting or editing it. Apply this in overview and focused neighborhoods, including
-expanded cards. Leaving the node removes the temporary emphasis. Preserve clear
-direction and distinguish Git relationship changes while highlighting. Colored
-incident curves and heads become brighter and more saturated in their own hue,
-not less colored through white/foreground mixing, including added/removed links
-when hovering new, changed or deleted nodes.
-
-Origin: the user's node-hover request and initial arrow correction, Blender-like editor request, and
-subsequent minimum-strength/no-circles/arrow-transition feedback in this conversation.
-Screenshots illustrate defects, not a required algorithm, pixel size, or library.
+Hover emphasizes immediate displayed incoming/outgoing curve/head pairs in both
+views, including expanded cards and historical/draft relationships. Restore their
+paint on exit. Colored incident connections gain brightness and saturation in
+their own hue; Git patterns and relationship direction remain readable.

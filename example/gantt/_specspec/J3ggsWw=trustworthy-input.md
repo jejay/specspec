@@ -4,8 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Keep project text and invalid input safe
+# Validate input and render project text literally
 
-Treat names and imported data as text, not executable markup. Reject invalid input before replacing a valid plan and explain problems without discarding current work.
-
-Origin: STORY.md, simulated opening clarification.
+Treat names/imported data as text. Validate a candidate before replacing the saved
+plan and show actionable input errors while retaining valid work and editable drafts.
+The browser uses textContent and ordinary native controls for project strings.

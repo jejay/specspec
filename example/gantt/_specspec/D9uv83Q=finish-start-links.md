@@ -4,6 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Explain prerequisite timing
+# Respect finish-to-start prerequisites
 
-Allow finish-to-start prerequisites. A task may start only after every prerequisite finishes, with no dependency cycles or missing references. Origin: STORY.md, simulated redirect two.
+Allow tasks to reference distinct existing prerequisites in an acyclic graph.
+A successor's start follows every prerequisite's finish. Surface invalid links or
+cycles before applying a candidate and retain the saved valid plan.

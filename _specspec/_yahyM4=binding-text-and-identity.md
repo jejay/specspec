@@ -4,11 +4,9 @@ type: requirement
 parents:
 - _wJJQko=
 ---
-# Separate stable references from discovery summaries
+# Separate stable identity from discovery summaries
 
-Reference nodes by identifier, not by their non-binding English filename summary.
-Frontmatter records the node type and dependency identifiers; the Markdown body
-contains the binding specification text. Filename summaries aid discovery without
-becoming requirements themselves.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), managed directory section.
+References use the full node identifier. Frontmatter defines identity, type and
+parent identifiers; the Markdown body carries binding specification text.
+The English filename summary assists discovery. Identity remains stable through
+body edits, parent edits and summary-only file renames.

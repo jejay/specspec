@@ -4,11 +4,8 @@ type: requirement
 parents:
 - Dn6Ult8=
 ---
-# Make Implementation corners completely square
+# Give Implementation cards zero-radius corners
 
-Implementation nodes must have zero-radius corners, not merely the sharpest
-remaining rounded style. Apply 0px to compact and expanded cards. Leave Requirement
-24px corners, the circular manifesto, colors/mappings, editing and other behavior
-unchanged.
-
-Origin: the user's explicit 0-radius correction after the initial 7px shape swap.
+Use completely square 0px corners for Implementation cards in compact and expanded
+views. Requirement corners are 24px and the manifesto is circular. Preserve the
+palette, role assignments, native editor and other graph behavior.

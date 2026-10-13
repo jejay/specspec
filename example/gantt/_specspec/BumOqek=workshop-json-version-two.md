@@ -8,6 +8,17 @@ parents:
 - rrN-aHA=
 - J3ggsWw=
 ---
-# Version the workshop file and preview legacy conversion
+# Define version-two workshop JSON and previewed conversion
 
-Use version:2 with title/start/tasks (id/title/duration/earliest/dependsOn) and an optional full baseline. Validate both forecasts and their common horizon. Import preview is session-only until Apply. Convert v1 manual ranges to at least one weekday of duration, preserve start as an earliest bound, drop priority, and add no dependencies. Explain that end dates/weekends/priorities no longer have the same meaning; do not silently convert stored v1 data or overwrite corrupt storage. Origin: STORY.md, AI redirect-two conclusion.
+A `version: 2` envelope has title/start/tasks and optional full baseline. Tasks have
+id/title/duration/earliest/dependsOn. Normalize copied fields, validate both forecasts
+and their common axis, and serialize saved data. Import preview accepts up to one
+million characters; file input is bounded to one million bytes. Apply explicitly
+replaces saved work/storage after confirmation; cancel retains both.
+
+Convert valid version-one ranges to the count of contained weekdays, minimum one
+workday; keep each old start as earliest, create empty prerequisite arrays and an
+empty baseline, and use the earliest task start as project start (2026-04-06 for
+an empty plan). Consume the v1 priority as conversion input and report its omission.
+Warn that manual end becomes a duration-derived forecast and weekend-only ranges
+advance to a workday. Keep stored v1 bytes protected pending preview/Apply/reset.

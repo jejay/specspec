@@ -1,7 +1,9 @@
 # A planning app that changes its mind
 
-A runnable Gantt example with an independent `_specspec` graph and plausible
-spec-before-code development through two substantial redirects. The existing
+A runnable Gantt example with an independent `_specspec` graph and agent-planned
+spec-before-code development through two substantial redirects. Every retained
+graph describes that stage's current product positively, with separately reasoned
+conclusions and actual implementation mappings. Git records changed decisions. The existing
 [fictional story](STORY.md) is optional illustration, not required evidence or
 actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
 physically deleted during redirects and remain in the earlier Git commits.
@@ -43,7 +45,11 @@ See the [history/maintenance walkthrough](history/WALKTHROUGH.md).
 | 02 | `stage/02-spec` / `stage/02-code` | Personal manual dates/weekends/priorities; **13/17 nodes deleted** |
 | 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/16 nodes deleted** |
 
-Every spec checkpoint precedes its code. Deleted branches retain their identity,
+Every spec checkpoint is an `Agent specspec changes:` commit and precedes its code.
+The [agent guide](AGENTS.md) describes owner/tandem/agent/implementation phases.
+This is an explicitly reconstructed fixture with existing canonical identities
+reused at creation and new actual CLI outputs. Existing manual clones retain their
+local experiments. Deleted branches retain their identity,
 body, parents and sources in earlier commits, not flagged files in HEAD. Redirect
 commit messages explain why; default workspace shows deleted HEAD nodes as D until
 the deletion is committed, including after staging. `history/cli.jsonl` records actual reconstructed CLI executions;

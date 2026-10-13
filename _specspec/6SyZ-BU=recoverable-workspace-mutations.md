@@ -5,16 +5,20 @@ parents:
 - ME4UXTA=
 - tvic3PQ=
 ---
-# Validate and journal tool-driven graph mutations
+# Validate and journal managed workspace mutations
 
-Validate current and candidate snapshots under a workspace lock. Compare original
-file bytes before replacement, without fingerprints or stored content markers.
-Stage replacements and journal original/replacement states outside _specspec in
-the ignored .specspec-local directory. Manual edits are allowed, not recommended.
+Under a project workspace lock, load and validate the saved graph, construct the
+candidate and validate it before canonical replacement. Stage replacement bytes
+on the same filesystem and journal original/replacement states in `.specspec-local`.
+Compare each target's original bytes immediately before replacement and validate
+again afterward. A null replacement records physical deletion.
 
-Interrupted batches block further tool writes until recovery. Recovery must not
-overwrite intervening external edits. Process-interruption recovery is not a claim
-of full power-loss durability or adversarial filesystem race protection.
+Interrupted batches block managed writes until recovery. Recovery restores known
+original states only while current files match a known original/replacement/absence
+state; intervening external text requires explicit user resolution. Preserve the
+journal and staged data until completed recovery. Remove a stale lock after confirming
+its writer absent. Initialize an entire staged directory from supplied manifesto
+text and expose it at `_specspec` once valid. Existing projects use ordinary edits.
 
-Origin: CONCLUSION_SPEC.md transaction strategy, revised by the user's hash-removal
-request. Byte checks protect a transaction, not the provenance of a prior edit.
+These safeguards address cooperating writers and process interruption. Filesystem
+races and full power-loss durability require their own assessment.

@@ -6,33 +6,21 @@ parents:
 - tvic3PQ=
 - LvYBN_4=
 ---
-## Current deletion correction
+# Validate exact index blobs and compare revision graphs by ID
 
-xu6W0c4=/5d5oDCM= supersede stored withdrawal, retired flags/controls and
-format/API four with current-only format/API five. Withdraw by deleting the
-Markdown file, keep reasons/earlier explanations in Git, and show HEAD-relative
-deleted ghosts in the default workspace until commit. All earlier version/flag
-workflow descriptions below are historical, not the current contract. Source
-blob anchoring, no approval gates, native persistence distinctions and current-only
-example-history policy remain; all retained Gantt revisions use actual deletions.
+Check exactly the staged node blobs, including partially staged files, using
+NUL-delimited Git paths and object reads. Conflicted stages, unsafe entries,
+unsupported schema and invalid graphs produce diagnostics. An opt-in hook respects
+Git's hook directory and preserves an existing hook. Manual chaining is explicit.
 
-# Validate index blobs and compare graph snapshots by ID
+Read worktree, index and historical snapshots with their current schema. Compare
+full IDs to return added/removed nodes, semantic body/parent/metadata changes,
+filename-only renames, base/target records and changed edges. Compute potential
+impact from both ancestor/descendant contexts so removed links remain represented.
+Source-file changes reach linked implementation nodes and their requirement ancestors
+using references in both snapshots, with conservative file-level impact.
 
-Validate exactly the staged Git blobs, not their working-file counterparts, before
-committing. Preserve existing hooks and respect Git's configured hook directory.
-Read index and historical snapshots without checking out another revision.
-
-Compare nodes by ID and report semantic changes separately from filename-only
-renames. Return added/removed edges and base/target records. Review impact uses
-both graphs so removed relationships cannot hide affected descendants; linked
-source changes identify implementation records and their requirement ancestors.
-
-Origin: [CONCLUSION_SPEC.md](../CONCLUSION_SPEC.md), Git hook and revision diffs.
-
-## Current source-address refinement
-
-jsIUeP0=/VnSF9BE= supersede format/API 3 with current-only format/API 4.
-Structured Git blob IDs are source snapshot addresses, not restored managed_hash,
-fingerprints, edit-provenance or approval gates. Optional hook check --sources
-checks exact-index source regions and object retention without writes/staging.
-Default graph hook, watcher/native persistence and byte transactions stay in scope.
+Absent base specifications and genuinely unborn HEAD have explicit empty baselines.
+Invalid revisions report incomplete comparison/impact with actionable diagnostics.
+Git reads leave checkout, staging, branches and refs under the user's control.
+Optional `hook check --sources` assesses staged source mapping and retention.

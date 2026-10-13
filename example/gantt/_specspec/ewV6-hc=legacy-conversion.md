@@ -4,6 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Explain conversion of personal plans
+# Preview personal-file conversion before replacing work
 
-Keep JSON portability/local persistence, but preview conversion of version-one manual-date plans before replacing the current workshop. Make date/priority losses and changed weekday semantics explicit. Origin: STORY.md, simulated redirect two.
+Support portable version-one manual-plan import through a preview of its version-two
+workshop conversion. Explain date/priority losses and weekday forecasting semantics
+before explicit Apply. Keep current saved work/storage intact during preview/cancel.

@@ -5,9 +5,12 @@ Tool-managed Markdown specification graphs, with a Python CLI and a VS Code grap
 New engineers: [architecture guide](docs/architecture.md) and
 [control/data flow SVG](docs/architecture.svg).
 
-This repository uses SpecSpec itself: [`_specspec/`](_specspec/) contains its working specification, with core intentions, revisable technical choices, withdrawn design history, and implementation links to actual code/tests. Start with the [graph tour](docs/own-spec.md). [`INTENTION_SPEC.md`](INTENTION_SPEC.md) and [`CONCLUSION_SPEC.md`](CONCLUSION_SPEC.md) remain the original intention/design context.
+This repository uses SpecSpec itself: [`_specspec/`](_specspec/) contains its positive current specification, with owner intentions, revisable conclusions and implementation links to actual code/tests. Git retains changed reasoning and execution history. Start with the [graph/process tour](docs/own-spec.md). [`INTENTION_SPEC.md`](INTENTION_SPEC.md) preserves the original owner input; [`CONCLUSION_SPEC.md`](CONCLUSION_SPEC.md) summarizes current technical choices.
 
-## Worked example: a planning app that changes direction
+## Maintained example: a planning app that changes direction
+
+Gantt is the sole maintained product example. Small generated graphs are focused
+test fixtures; `tools/rainbow-playground` is a separate development tool.
 
 [`example/gantt/`](example/gantt/) contains a runnable local planner and a portable
 **independent Git history**, with SpecSpec developed before code and two major

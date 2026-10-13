@@ -6,21 +6,13 @@ parents:
 - ME4UXTA=
 - SRsw2W0=
 ---
-# Link implementation explanations to Git-tracked source regions
+# Link implementations to precise and growing Git-tracked regions
 
-Enrich implementation source hints with multiple line-level regions in multiple
-files. Use Git to keep references useful after code shifts, instead of making
-users manually renumber every insertion. Prefer file-content objects to avoid
-having to embed a not-yet-created commit's identity in that same commit.
+Support multiple source regions across multiple files. Keep links useful after
+mechanical line shifts through Git file-content addressing. Specific references
+report internal changes; broad references can absorb internal additions/changes.
+Preserve separate selected regions and expose unavailable or ambiguous mappings.
 
-Support both specific and broad references: specific references must not silently
-accept additions or changes inside their selected regions; broad references may
-include code added or changed inside them. Preserve the user's selected separate
-regions rather than silently treating unrelated intervening code as implementation.
-Expose problems and allow deliberate correction through SpecSpec commands; an
-optional Git check may assist. Source tracing is not proof that changed code still
-realizes its intention, an approval state or authorization to silently stage code.
-
-Origin: the user's line-level/blame-like source-link discussion, endorsement of
-blob-based anchoring and explicit request for both specific and broad references,
-with intention, conclusion, detailed conclusion, implementation and sensible commits.
+Supply deliberate capture/reanchor operations, readable source previews and an
+optional Git check. Source links give implementation context; review determines
+whether the code still fulfills its intention.

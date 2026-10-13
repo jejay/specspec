@@ -6,58 +6,20 @@ parents:
 - DiIJxaQ=
 - YOPhqYc=
 ---
-## Current deletion correction
+# Reconcile file and Git notifications while retaining drafts
 
-xu6W0c4=/5d5oDCM= supersede stored withdrawal, retired flags/controls and
-format/API four with current-only format/API five. Withdraw by deleting the
-Markdown file, keep reasons/earlier explanations in Git, and show HEAD-relative
-deleted ghosts in the default workspace until commit. All earlier version/flag
-workflow descriptions below are historical, not the current contract. Source
-blob anchoring, no approval gates, native persistence distinctions and current-only
-example-history policy remain; all retained Gantt revisions use actual deletions.
+Treat watcher events as reload hints. Coalesce events, serialize reads/writes, retry
+transient reads a bounded number of times and compare loaded records directly to
+skip unchanged redraws. VS Code uses filesystem watchers; Electron observes the
+project parent and canonical directory and reattaches after directory recreation.
+Report watcher errors. Explicit Refresh and optional configurable polling remain
+available; polling defaults to 0/off and is disposed on switch/close.
 
-# Use hash-free version-three files and watcher-driven reconciliation
-
-Choose hash-free format/API 3: no managed_hash, snapshot fingerprint, --expect
-option or hash verification. The later compact-ID/current-only correction selects
-canonical padded Base64url IDs and equals-delimited filenames. Validate only the
-current schema; reject superseded formats/UUIDs and unknown metadata rather than
-normalizing them or offering migration. The two working graphs were converted once
-through a temporary journaled tool; that is not shipped compatibility code.
-Root Git history need not remain readable. The Gantt regression history is
-explicitly rebuilt under the current scheme; unrelated history stays untouched.
-
-Continue validating schemas and the full rooted DAG, locking tool writers,
-comparing original file bytes during replacement and refusing recovery over
-external edits. These are consistency and transaction protections, not manual-edit
-provenance gates or approval. Git compares semantic records and raw bytes directly.
-
-Coalesce watcher events as reload hints, serialize reads/writes, retry transient
-read failures a bounded number of times, and compare loaded data directly to avoid
-unnecessary redraws. Use VS Code's filesystem watcher; Electron watches both the
-project directory and canonical directory so replacing/deleting/recreating the
-latter reattaches its watcher. Surface watcher errors; don't secretly enable polling.
-A configurable millisecond interval defaults to zero in both hosts; configuration,
-project switches and disposal cancel old timers/watchers. Explicit refresh remains.
-No watcher-only guarantee is claimed for every filesystem or arbitrary missed event.
-
-Refresh clean forms. Retain dirty drafts with their original node record, not a
-hash; unrelated changes refresh context without preventing saves. Ask confirmation
-before saving over a changed edited node, and preserve deleted-node drafts for
-copy/discard. Re-read and validate current files before UI mutations. Invalid reloads
-retain the last valid graph marked out-of-date with diagnostics, disable mutations
-until fixed, and never rewrite the external files. Historical views stay read-only.
-Render acknowledgements use session sequence tokens and full visible membership,
-not content hashes. External editors need not honor locks, so final byte comparison
-and atomic replacement reduce but do not eliminate every filesystem race.
-
-Origin: a revisable technical conclusion implementing the user's new intention;
-versioning, conflict confirmation and watcher adapters do not rewrite its outcome.
-
-## Current source-address refinement
-
-jsIUeP0=/VnSF9BE= supersede format/API 3 with current-only format/API 4.
-Structured Git blob IDs are source snapshot addresses, not restored managed_hash,
-fingerprints, edit-provenance or approval gates. Optional hook check --sources
-checks exact-index source regions and object retention without writes/staging.
-Default graph hook, watcher/native persistence and byte transactions stay in scope.
+Refresh clean forms. Dirty forms retain original records, text, caret and camera;
+unrelated changes refresh context while preserving save eligibility. Same-node
+changes require overwrite confirmation. Deleted drafts stay copyable and unsavable.
+Invalid reloads retain a clearly out-of-date last valid graph and diagnostics and
+restrict managed mutations until repair. Historical views retain their selected
+revision. Rendering acknowledgements use sequence tokens and full visible membership.
+Watchers are filesystem-dependent notification hints; byte-checked transactions
+supply a separate persistence boundary.

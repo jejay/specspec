@@ -4,6 +4,8 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Forecast from work duration
+# Forecast dates from whole workday durations
 
-Choose duration in positive Monday-Friday workdays rather than editing an end date. Recalculate a forecast, without claiming resource optimization. Origin: STORY.md, simulated redirect two.
+Enter positive Monday–Friday workday durations. Calculate each task's forecast
+start/end and recalculate related timing after valid edits. Explain forecasts as
+planning estimates under the declared calendar and prerequisite rules.

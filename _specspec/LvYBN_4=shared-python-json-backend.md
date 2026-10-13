@@ -6,28 +6,15 @@ parents:
 - apEb_pM=
 - WpYvGUo=
 ---
-## Current deletion correction
+# Share one Python domain library and versioned JSON CLI
 
-xu6W0c4=/5d5oDCM= supersede stored withdrawal, retired flags/controls and
-format/API four with current-only format/API five. Withdraw by deleting the
-Markdown file, keep reasons/earlier explanations in Git, and show HEAD-relative
-deleted ghosts in the default workspace until commit. All earlier version/flag
-workflow descriptions below are historical, not the current contract. Source
-blob anchoring, no approval gates, native persistence distinctions and current-only
-example-history policy remain; all retained Gantt revisions use actual deletions.
+Use a reusable Python backend for schema validation, DAG rules, Markdown planning,
+workspace transactions, Git snapshots and source-region operations. Host adapters
+invoke it using shell-free argument arrays and bounded UTF-8 stdin/output.
 
-# Share one Python validation and mutation backend
-
-Expose graph operations through a reusable Python library and versioned JSON CLI.
-Host adapters invoke the CLI without a shell; they do not implement separate schema
-validation, withdrawal rules or Markdown mutation planning. API 4 exposes api_version,
-ok, result and structured diagnostics, with stable exit codes and actionable errors,
-without fingerprints or managed hashes. Editors refresh through watchers and optional
-polling, re-read before mutations, and preserve drafts across external changes.
-
-Origin: CONCLUSION_SPEC.md package/machine interface and the user's manual-edit
-correction. Version and synchronization mechanisms remain separate choices.
-
-## Native-document persistence correction
-
-The later user-authorized native-document conclusion revises Python-only persistence for ordinary VS Code file saves. Python now also exposes non-writing overlay reads and Markdown edit plans; adapters still do not fork schema/DAG/withdrawal rules or serialization. VS Code applies those plans to its TextDocuments and owns native persistence/recovery; these saves are not the managed writer transaction. Explicit CLI/Electron operations retain that writer. This is a scoped revision of the earlier canonical-mutation sentence, not a claim that native saves acquire locks/journals.
+API 5 responses contain `api_version`, `ok`, `result` and structured diagnostics.
+Exit codes are 0 for success, 1 for validation/rejected actions and 2 for invocation
+or I/O failure. JSON stdout contains one machine-readable envelope. Body input
+supports UTF-8 files and `-` stdin; updates replace an explicitly supplied parent
+list. Native editor operations return non-writing overlays/plans; host documents
+own their persistence. Managed project/Electron saves use the transaction writer.

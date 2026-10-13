@@ -5,10 +5,8 @@ parents:
 - ME4UXTA=
 - _wJJQko=
 ---
-# Protect the Git-versioned graph against corruption
+# Protect Git-versioned graph consistency
 
-Keep the specification under Git and offer a Git hook that checks graph
-consistency and catches corrupting manual edits before they enter a commit.
-Consistency checking must remain usable alongside ordinary Git development.
-
-Origin: [INTENTION_SPEC.md](../INTENTION_SPEC.md), Git and tool management.
+Keep canonical specifications under Git and offer an opt-in hook that checks the
+exact graph about to enter a commit. Integrate consistency checking with ordinary
+Git development and CI. Users retain control of staging, commits and hook setup.

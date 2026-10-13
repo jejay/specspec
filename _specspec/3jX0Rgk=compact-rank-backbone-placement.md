@@ -6,33 +6,16 @@ parents:
 - aiuyGEs=
 - tgHQyx4=
 ---
-# Compact placement without discarding multi-parent relationships
+# Place a compact rank-preserving backbone and draw every link
 
-Earliest ranks alone leave Dagre's vertical alignment stretched by distant common
-sinks. Compute earliest ranks from every primary parent, then choose one
-rank-preceding parent per node, deterministically by ID among equally deep parents,
-as a placement backbone. Feed this rank-preserving forest to Dagre for compact
-ordering/placement. All canonical and historical relationships remain rendered;
-the backbone neither changes parent metadata nor declares a preferred/approved
-requirement or a dependency of lesser importance.
+Compute earliest ranks from all primary parents. For each node choose a deepest
+rank-preceding parent deterministically by ID as a placement backbone. Dagre places
+that rank-preserving forest compactly; every canonical/historical relationship is
+still drawn. Canonical parent metadata carries the full justification graph.
 
-Allocate non-backbone forward routes through the nearest clear vertical gaps in
-skipped card columns, flattening the lane across each full column before curving
-in the empty horizontal gaps. Outer gutters remain fallback corridors and serve
-reverse historical links. Choose stable order and clearance margins; this is a
-presentation heuristic, not an optimal/crossing-free routing guarantee.
-
-Retain the full-parent rank constraints, intrinsic expanded dimensions, camera
-independence, full-height attachments, screen-strength floors, and tangent-aligned
-arrow approaches. Test root-neighbor vertical concentration as well as early
-columns, with full relationship membership and painted-stroke clearance. No tree,
-position, ranking, or choice preference is stored in canonical metadata.
-
-
-After removing distance badges, use slightly shorter compact cards while opening
-intrinsic rank and sibling gaps modestly. The initial tuning is 112-world-unit
-card height (was 128), rank gap 140 (was 128), and sibling gap 44 (was 36), with
-unchanged compact width and routing clearances. These are revisable implementation
-constants, not user-prescribed canonical sizes. Verify two-line headlines and the
-remaining badges fit, packing stays compact, and changed gaps preserve painted
-curve/head clearance and viewport-independent arrangement.
+Route non-backbone forward edges through nearby clear gaps across skipped columns;
+use outer gutters for fallback and reverse history routes. These are stable readable
+presentation heuristics with conservative card clearance. Ordinary compact cards
+are 264×112 world units; rank gap is 140 and sibling gap 44. Verify headings and
+badges fit and routes clear painted card outlines. Shape-specific dimensions and
+expanded intrinsic heights are supplied by the card-shape conclusion.
