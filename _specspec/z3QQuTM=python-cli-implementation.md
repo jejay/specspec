@@ -12,16 +12,27 @@ sources:
 - path: src/specspec/cli.py
   symbol: context
 - path: src/specspec/cli.py
+  symbol: delete
+- path: src/specspec/cli.py
   symbol: main
 - path: src/specspec/cli.py
   symbol: migrate_command
-- path: src/specspec/cli.py
-  symbol: delete
 - path: tests/test_api.py
 - path: tests/test_core.py
 - path: tests/test_ids.py
   symbol: current-only commands, physical deletion and removed legacy filters
 ---
+## Current cascade implementation
+
+fuyy0Lk=/AuhoBoU= supersede named-files-only deletion. The shared backend now
+removes every directed descendant, including shared children, with per-node
+uncommitted warnings/confirmation before unlinking and reviewed-scope rechecking.
+See huB7hcg= for current code, 182 Python/141 shared/37 VS Code/nine Electron
+checks and full real-host evidence, including earlier failures. PfJv45U= separately
+justifies aligning the outer smoke budget; individual deadlines/assertions remain.
+The earlier deletion/retirement/schema/count checkpoints below are history, not
+current cascade or warning contracts. No node schema conversion is introduced.
+
 ## Current deletion-only correction
 
 xu6W0c4=/5d5oDCM= supersede the earlier retired/withdrawal workflow below.

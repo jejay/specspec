@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const { resolve } = require('node:path');
 const { existsSync, readFileSync, writeFileSync } = require('node:fs');
 const vscode = require('vscode');
+const { PHASE_GUARD_MS } = require('./budgets.cjs');
 
 exports.run = async function run() {
   const expected = resolve(process.env.SPECSPEC_TEST_PROJECT_ROOT);
@@ -21,9 +22,9 @@ exports.run = async function run() {
   assert.ok(snapshot.nodes.some(node => node.type === 'manifesto'));
   // Wait for external Chromium checks before this test host exits.
   if (process.env.SPECSPEC_UI_RESULT) {
-    // Aggregate guard covers the expanded source-preview/schema-4 fixture suite;
+    // Aggregate shared guard includes source previews and real cascade Git checks;
     // individual CDP, mapping and watcher deadlines/assertions remain unchanged.
-    const until = Date.now() + 160_000;
+    const until = Date.now() + PHASE_GUARD_MS;
     while (!existsSync(process.env.SPECSPEC_UI_RESULT) && Date.now() < until) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -41,7 +42,7 @@ exports.run = async function run() {
     const requestPath = process.env.SPECSPEC_NATIVE_REQUEST, responsePath = process.env.SPECSPEC_NATIVE_RESPONSE;
     let last = 0;
     // Aggregate native lifecycle guard; each request still has its own deadline.
-    const until = Date.now() + 160_000;
+    const until = Date.now() + PHASE_GUARD_MS;
     while (!existsSync(process.env.SPECSPEC_NATIVE_RESULT) && Date.now() < until) {
       if (existsSync(requestPath)) {
         let request; try { request = JSON.parse(readFileSync(requestPath, 'utf8')); } catch {}

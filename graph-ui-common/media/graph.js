@@ -71,7 +71,7 @@
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
-    $('delete').title = 'Physically deletes the Markdown file. D remains in the default HEAD comparison until committed.';
+    $('delete').title = 'Deletes this node and every descendant, including shared children. Uncommitted nodes are warned about before deletion; HEAD ghosts remain D until committed.';
     $('save').disabled = !editable() || pending;
     $('delete').disabled = !editable() || creating || dirty || Boolean(state?.document?.dirty) || pending || currentNode()?.type === 'manifesto';
     for (const id of elements) $(id).disabled = !editable() || pending;

@@ -15,6 +15,12 @@ function fixture(t, options = {}) {
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
+      if (args[0] === 'delete') {
+        if (args.includes('--dry-run')) return { api_version: 5, ok: true, diagnostics: options.deleteWarnings || [], result: options.deletePlan || { requested_ids: [args[1]], deleted_ids: [args[1]], nodes: [{ id: args[1], path: node.path }], uncommitted: [], git_available: true, git_note: '' } };
+        if (options.deleteError) throw new Error(options.deleteError);
+        const plan = JSON.parse(input);
+        current = { ...current, nodes: current.nodes.filter(n => !plan.deleted_ids.includes(n.id)), changed_ids: plan.deleted_ids };
+      }
       return { api_version: 5, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
         base: current, target: current, changes: [], added_edges: [], removed_edges: [],
         base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
@@ -135,6 +141,26 @@ test('polls do not pile up behind slow reads or refresh immutable historical tar
   assert.ok(f.calls.filter(c => c.args[0] === 'export').length < 7);
   await f.s.chooseRevisions(); const count = f.calls.length; f.s.configurePolling(2); f.s.scheduleRefresh(); await pause(25);
   assert.equal(f.calls.length, count);
+});
+test('Delete previews a backend descendant plan and warns about partial uncommitted children before one confirmation', async t => {
+  const plan = { requested_ids: ['node'], deleted_ids: ['child', 'node'], nodes: [{id:'child',path:'_specspec/child.md'},{id:'node',path:node.path}], uncommitted:[{id:'child',path:'_specspec/child.md',status:'A '}], git_available:true,git_note:'' };
+  const warnings = [{ severity:'warning',node_id:'child',message:'Node child has uncommitted Git changes (A ); staging is not committing.' }];
+  const f = fixture(t,{deletePlan:plan,deleteWarnings:warnings});await f.s.open();
+  await f.s.handle({type:'delete',id:'node'});
+  const calls=f.calls.filter(c=>c.args[0]==='delete');
+  assert.deepEqual(calls.map(c=>c.args),[['delete','node','--dry-run','--json'],['delete','node','--yes','--reviewed-plan','-','--json']]);
+  assert.deepEqual(JSON.parse(calls[1].input),plan);
+  assert.equal(f.confirmations.length,1);assert.match(f.confirmations[0],/ALL.*descendants.*2 Markdown/);
+  assert.match(f.confirmations[0],/shared with surviving parents/);assert.match(f.confirmations[0],/uncommitted.*child.*staging is not committing/s);
+});
+test('Delete cancellation and a changed plan retain input and never silently retry an enlarged cascade', async t => {
+  const no=fixture(t,{confirm:false});await no.s.open();await no.s.handle({type:'delete',id:'node'});
+  assert.equal(no.messages.at(-1).type,'cancelled');
+  assert.ok(no.calls.filter(c=>c.args[0]==='delete').every(c=>c.args.includes('--dry-run')));
+  const changed=fixture(t,{deleteError:'Deletion scope or uncommitted warnings changed; preview and confirm again.'});await changed.s.open();
+  await assert.rejects(changed.s.handle({type:'delete',id:'node'}),/preview and confirm again/);
+  assert.equal(changed.calls.filter(c=>c.args[0]==='delete'&&!c.args.includes('--dry-run')).length,1);
+  assert.equal(changed.s.snapshot.nodes[0].body,node.body);
 });
 test('native document sessions coalesce rapid typing, flush received edits, and acknowledge per-view sequences', async t => {
   const f = fixture(t), edits = []; let version = 1;

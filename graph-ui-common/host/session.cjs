@@ -241,8 +241,14 @@ class GraphSession {
       input = message.body;
     } else if (message.type === 'delete') {
       if (nodes.get(id).type === 'manifesto') throw new Error('The manifesto cannot be deleted.');
-      if (!await this.host.confirm('Delete this node’s Markdown file? Repair or explicitly delete its dependent nodes first. The HEAD-relative workspace shows it as D until you commit; explain why in that commit.')) { await this.post({ type: 'cancelled' }); return; }
-      args = ['delete', id];
+      const preview = await this.cli(['delete', id, '--dry-run', '--json']);
+      const plan = preview.result;
+      if (!Array.isArray(plan?.deleted_ids) || !plan.deleted_ids.includes(id)) throw new Error('Backend did not return a valid descendant deletion plan.');
+      const warnings = (preview.diagnostics || []).filter(d => d.severity === 'warning').map(d => d.message);
+      const text = `Delete this node and ALL its descendants (${plan.deleted_ids.length} Markdown files)? Children shared with surviving parents are also deleted. Outside parents/unrelated branches remain. The HEAD-relative workspace shows committed nodes as D until you commit; explain why in that commit.${warnings.length ? '\n\nWARNING — uncommitted nodes / unavailable Git assessment:\n' + warnings.join('\n') : ''}`;
+      if (!await this.host.confirm(text)) { await this.post({ type: 'cancelled' }); return; }
+      args = ['delete', id, '--yes', '--reviewed-plan', '-'];
+      input = JSON.stringify(plan);
     } else throw new Error('Unknown graph action.');
     const response = await this.cli([...args, ...common], input);
     await this.refresh(true, response.result.changed_ids?.[0]);

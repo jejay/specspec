@@ -46,7 +46,7 @@ def test_diamond_and_implementation(workspace):
     assert snapshot.graph.order.index(left) < snapshot.graph.order.index(leaf)
 
 
-def test_deletion_batches_are_explicit_physical_and_keep_the_remaining_dag_valid(workspace):
+def test_deletion_cascades_are_physical_and_keep_the_remaining_dag_valid(workspace):
     root, manifesto = workspace
     _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
     snapshot, child = add_node(root, "requirement", [parent], "Child\n", "child")
@@ -55,7 +55,6 @@ def test_deletion_batches_are_explicit_physical_and_keep_the_remaining_dag_valid
         for node in snapshot.nodes
     )
     for ids, match in [
-        ([parent], "Missing parent"),
         ([manifesto], "manifesto cannot be deleted"),
         ([], "nonempty"),
         ([child, child], "distinct"),
@@ -64,7 +63,7 @@ def test_deletion_batches_are_explicit_physical_and_keep_the_remaining_dag_valid
         with pytest.raises(SpecError, match=match):
             delete_nodes(root, ids)
         assert load_snapshot(root).files == snapshot.files
-    remaining = delete_nodes(root, [parent, child])
+    remaining = delete_nodes(root, [parent], allow_uncommitted=True)
     assert remaining.valid and set(remaining.graph.nodes) == {manifesto}
     for node_id in [parent, child]:
         assert not (root / snapshot.graph.nodes[node_id].path).exists()

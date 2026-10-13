@@ -110,6 +110,7 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args, input) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args, input });
     if (options.cliError) throw new Error(options.cliErrorMessage || 'Cannot run Python backend');
+    if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:5,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
     if (args[0] === 'editor') {
       const request = JSON.parse(input);
       if (options.editError && request.edit) throw new Error('Planner temporarily unavailable');
@@ -181,8 +182,10 @@ test('physical deletion is confirmed and retired/restore/accept messages are rej
   await calls.commands.get('specspec.openGraph')();
   const count = calls.panels[0].messages.filter(message => message.type === 'snapshot').length;
   calls.panels[0].send({ type: 'delete', id: 'node' });
+  await waitFor(() => calls.cli.some(call => call.args[0] === 'delete' && !call.args.includes('--dry-run')));
   await waitFor(() => calls.panels[0].messages.filter(message => message.type === 'snapshot').length > count);
-  assert.deepEqual(calls.cli.find(call => call.args[0] === 'delete').args, ['delete', 'node', '--json']);
+  assert.deepEqual(calls.cli.filter(call => call.args[0] === 'delete').map(c=>c.args), [['delete','node','--dry-run','--json'],['delete','node','--yes','--reviewed-plan','-','--json']]);
+  assert.match(calls.warnings.at(-1), /ALL its descendants/);
   for (const action of ['retire', 'restore', 'accept']) {
     const errors = calls.panels[0].messages.filter(m => m.type === 'error').length;
     calls.panels[0].send({ type: action, id: 'node' });
@@ -347,10 +350,27 @@ test('native Delete is bound, confirmed and managed, never a retired buffer edit
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'delete'));
   doc.isDirty = false;
   panel.send({ type: 'delete', id: 'node' });
-  await waitFor(() => f.calls.cli.some(c => c.args[0] === 'delete'));
-  assert.deepEqual(f.calls.cli.find(c => c.args[0] === 'delete').args, ['delete', 'node', '--json']);
+  await waitFor(() => f.calls.cli.some(c => c.args[0] === 'delete' && !c.args.includes('--dry-run')));
+  assert.deepEqual(f.calls.cli.find(c => c.args[0] === 'delete' && !c.args.includes('--dry-run')).args, ['delete', 'node', '--yes', '--reviewed-plan', '-', '--json']);
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'editor' && JSON.parse(c.input).edit?.retired !== undefined));
   assert.equal(doc.isDirty, false);
+});
+test('native cascade confirmation warns about a saved staged descendant, and dirty descendant tabs block deletion', async t => {
+  const child={...fileNode,id:'child',parents:['node'],path:'_specspec/child--summary.md'};
+  const plan={requested_ids:['node'],deleted_ids:['child','node'],nodes:[{id:'child',path:child.path},{id:'node',path:fileNode.path}],uncommitted:[{id:'child',path:child.path,status:'A '}],git_available:true,git_note:''};
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[fileNode,child]},deletePlan:plan,deleteWarnings:[{severity:'warning',message:'Node child has uncommitted staged changes; staging is not committing.'}]});
+  const root=await f.openDocument(fileNode),leaf=await f.openDocument(child);
+  root.panel.send({type:'delete',id:'node'});
+  await waitFor(()=>root.panel.messages.at(-1).type==='cancelled');
+  assert.match(f.calls.warnings.at(-1),/ALL.*descendants.*2 Markdown/);
+  assert.match(f.calls.warnings.at(-1),/uncommitted staged.*staging is not committing/);
+  assert.ok(f.calls.cli.filter(c=>c.args[0]==='delete').every(c=>c.args.includes('--dry-run')));
+  const count=f.calls.cli.filter(c=>c.args[0]==='delete').length;
+  leaf.doc.isDirty=true;root.panel.send({type:'delete',id:'node'});
+  await waitFor(()=>root.panel.messages.at(-1).type==='error');
+  assert.match(root.panel.messages.at(-1).message,/dirty SpecSpec/);
+  assert.equal(f.calls.cli.filter(c=>c.args[0]==='delete').length,count);
+  assert.equal(root.doc.isDirty,false);assert.equal(leaf.doc.isDirty,true);
 });
 test('split node views share native contents but preserve independent panels and open other node files', async t => {
   const other = { ...fileNode, id: 'other', path: '_specspec/other--summary.md', body: '# Other' };

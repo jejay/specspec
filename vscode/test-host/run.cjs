@@ -8,6 +8,7 @@ const { checkUI } = require('./ui.cjs');
 const { fixture } = require('../../graph-ui-common/test-host/fixture.cjs');
 const { platformChecks } = require('../../graph-ui-common/test-host/platform.cjs');
 const { documentChecks } = require('./documents.cjs');
+const { HOST_GUARD_MS } = require('./budgets.cjs');
 
 async function run() {
   const root = resolve(__dirname, '../..');
@@ -69,7 +70,9 @@ async function run() {
     const result = JSON.stringify({ ok: false, error: error.message });
     writeFileSync(uiResult, result); writeFileSync(native.result, result);
   });
-  const timer = setTimeout(() => { console.error('VS Code host smoke test timed out.'); child.kill(); }, 240_000);
+  // Cover both existing 160s phase guards plus startup/shutdown, not just 240s
+  // total. Individual assertion/operation deadlines are unchanged.
+  const timer = setTimeout(() => { console.error('VS Code host smoke test timed out.'); child.kill(); }, HOST_GUARD_MS);
   child.on('error', error => { console.error(error); process.exitCode = 1; });
   child.on('close', async code => {
     clearTimeout(timer); await ui;

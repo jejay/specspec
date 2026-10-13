@@ -11,6 +11,7 @@ from typing import Any
 import click
 
 from . import __version__
+from .deletion import deletion_plan, deletion_warnings
 from .editor import MAX_REQUEST_BYTES, editor_request
 from .git import git_snapshot, install_hook, semantic_diff, source_change_impact
 from .model import API_VERSION, Diagnostic, SpecError
@@ -231,14 +232,111 @@ def update(
     mutation_output(snapshot, [node_id], as_json)
 
 
+def interactive_stdin() -> bool:
+    return sys.stdin.isatty()
+
+
+def read_deletion_plan(path: str) -> dict[str, Any]:
+    if path == "-":
+        raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
+    else:
+        with Path(path).open("rb") as stream:
+            raw = stream.read(MAX_REQUEST_BYTES + 1)
+    try:
+        if len(raw) > MAX_REQUEST_BYTES:
+            raise ValueError("Plan exceeds the 16 MiB limit.")
+        plan = json.loads(raw)
+        if not isinstance(plan, dict) or type(plan.get("git_available")) is not bool:
+            raise ValueError("Expected the deletion plan object, not a response envelope.")
+        return plan
+    except (ValueError, TypeError) as error:
+        raise SpecError(
+            [Diagnostic("DELETE_PLAN", f"Invalid reviewed plan: {error}")], 2
+        ) from error
+
+
 @main.command(name="delete", context_settings={"ignore_unknown_options": True})
 @click.argument("ids", nargs=-1, required=True)
+@click.option(
+    "--dry-run", is_flag=True, help="Preview all descendants and Git warnings; no writes."
+)
+@click.option(
+    "--yes", is_flag=True, help="Consent to deletion of uncommitted nodes; warnings remain."
+)
+@click.option(
+    "--reviewed-plan", help="Compare a previously reviewed plan (JSON file or - for stdin)."
+)
 @json_option
 @click.pass_obj
 @guarded
-def delete(root: Path | None, ids: tuple[str, ...], as_json: bool) -> None:
-    """Delete only named node files; explain why in your normal Git commit."""
-    mutation_output(delete_nodes(root_path(root), list(ids)), list(ids), as_json)
+def delete(
+    root: Path | None,
+    ids: tuple[str, ...],
+    dry_run: bool,
+    yes: bool,
+    reviewed_plan: str | None,
+    as_json: bool,
+) -> None:
+    """Delete nodes AND all descendants, including shared children; explain why in Git."""
+    project = root_path(root)
+    if dry_run:
+        if reviewed_plan is not None:
+            raise SpecError(
+                [Diagnostic("ARGUMENT", "Do not combine --dry-run and --reviewed-plan.")], 2
+            )
+        snapshot = load_snapshot(project)
+        plan = deletion_plan(snapshot, list(ids))
+        emit(plan, [*snapshot.diagnostics, *deletion_warnings(plan)], as_json=as_json)
+        return
+    reviewed = read_deletion_plan(reviewed_plan) if reviewed_plan is not None else None
+    actual: dict[str, Any] = {}
+    warned: list[Diagnostic] = []
+
+    def confirm(plan: dict[str, Any]) -> bool:
+        nonlocal actual, warned
+        actual = plan
+        warnings = deletion_warnings(plan)
+        if warnings and not yes and (as_json or not interactive_stdin()):
+            emit(
+                plan,
+                [
+                    *warnings,
+                    Diagnostic(
+                        "DELETE_CONFIRMATION",
+                        "No files removed. Review --dry-run, then use --yes "
+                        "or an interactive terminal.",
+                    ),
+                ],
+                as_json=as_json,
+                ok=False,
+            )
+            raise click.exceptions.Exit(1)
+        if warnings:
+            # Even --yes/JSON callers get stderr warnings BEFORE the first unlink;
+            # stdout stays one JSON envelope and also retains these diagnostics.
+            emit(None, warnings)
+            warned = warnings
+            if not yes:
+                return click.confirm(
+                    f"Delete all {len(plan['deleted_ids'])} nodes, including shared descendants?",
+                    default=False,
+                )
+        return True
+
+    snapshot = delete_nodes(project, list(ids), confirm=confirm, reviewed_plan=reviewed)
+    diagnostics = (
+        snapshot.diagnostics if as_json else [d for d in snapshot.diagnostics if d not in warned]
+    )
+    emit(
+        {
+            **snapshot.to_dict(),
+            **actual,
+            "changed_ids": actual["deleted_ids"],
+            "affected": actual["deleted_ids"],
+        },
+        diagnostics,
+        as_json=as_json,
+    )
 
 
 @main.command(name="list")

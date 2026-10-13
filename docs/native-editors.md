@@ -100,7 +100,11 @@ clean SpecSpec documents, not a native metadata change pending Save. The result 
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
 explicit diagnostics, not successful graph validation. Unsafe paths, edits to
 missing files, identity changes, unsupported schemas, locks/recovery and oversized
-requests fail. Reads skip overlays for already deleted files, so retained open
+requests fail. Delete now removes every descendant, including shared children,
+through the same backend plan as the CLI. Its confirmation shows the total file
+count and uncommitted affected-node warnings (staged is not committed), then
+rechecks the reviewed scope under the writer lock. Dirty descendant documents
+remain protected by the project-wide save/revert guard. Reads skip overlays for already deleted files, so retained open
 buffers do not resurrect nodes. The planner never writes files or recreates a
 deleted node. The current planner uses API version 5;
 upgrade the development CLI and extension together to gain this new command.

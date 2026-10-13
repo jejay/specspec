@@ -499,6 +499,8 @@ renames, removed/added parent edges and linked-source ancestry.
 | Earlier deletion/HEAD implementation evidence | [JqNzSPg=](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md) |
 | User's cascade/uncommitted-warning correction | [fuyy0Lk=](../_specspec/fuyy0Lk=cascade-delete-all-children-and-warn-if-uncommitted.md) |
 | Descendant planning/confirmation conclusion | [AuhoBoU=](../_specspec/AuhoBoU=downstream-deletion-plans-and-uncommitted-warnings.md) |
+| Cascade/warning implementation and evidence | [huB7hcg=](../_specspec/huB7hcg=cascade-deletion-and-uncommitted-warning-implementation.md) |
+| Separately justified host-test budget | [PfJv45U=](../_specspec/PfJv45U=align-vscode-smoke-budget-with-existing-phase-guards.md) |
 | Compact IDs and current-only backend | [qowy5AI=](../_specspec/qowy5AI=canonical-base64url-and-current-only-backend.md) |
 | User's history/test scope correction | [Oou-SvU=](../_specspec/Oou-SvU=current-scheme-only-and-gantt-git-regressions.md) |
 | Independent compliant Git fixture | [YaXJpGE=](../_specspec/YaXJpGE=independent-current-schema-gantt-history.md) |
@@ -589,9 +591,9 @@ Exact staged root/fixture validation precedes the authorized implementation comm
 See [the completion evidence](../_specspec/Zhzgq8s=finish-backlog-with-linked-implementation-and-verification.md)
 for scope and retained failures; this is not future-feature or every-platform proof.
 
-### Deletion-only/HEAD-view verification
+### Earlier deletion-only/HEAD-view verification
 
-The [current implementation record](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md)
+At that checkpoint the [implementation record](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md)
 links schema/API 5, physical delete/recovery, shared GitWatcher, native clean-document
 protection, absent retired controls and current source/history seams. Checks pass:
 **157 Python, 139 common UI, 35 VS Code and nine Electron tests**, Ruff, both graphs,
@@ -609,3 +611,34 @@ Existing clones/experiments are unchanged. A fresh manual comparison workspace i
 `~/Projects/specspec-examples/gantt-deletion`; use it or another new destination,
 not an automatically reset old clone. Remote CI, non-Windows host behavior, universal
 watch delivery and semantic correctness are not inferred from these checks.
+
+### Current descendant-cascade and warning checks
+
+The [current implementation/evidence](../_specspec/huB7hcg=cascade-deletion-and-uncommitted-warning-implementation.md)
+realizes [fuyy0Lk=](../_specspec/fuyy0Lk=cascade-delete-all-children-and-warn-if-uncommitted.md)
+through [AuhoBoU=](../_specspec/AuhoBoU=downstream-deletion-plans-and-uncommitted-warnings.md):
+all descendants, including shared/partial children, with pre-write uncommitted
+warnings and unchanged outside parents. `delete --dry-run` previews the scope;
+warned noninteractive deletion needs `--yes`. Both hosts confirm the backend plan
+and recheck its scope/warnings under the writer lock. No new node schema or corpus
+rekey; source regions, palette, camera, shapes and HEAD ghosts remain unchanged.
+
+Checks passed: **182 Python (25 new cascade cases), 141 shared UI, 37 VS Code and
+nine Electron**, Ruff, both working graphs and the complete unchanged eight-commit
+Gantt history with 123 actual API-5 receipts/model/source/index checks. Both fresh
+Windows hosts passed real sole/shared/deeper deletion, staged/new-child warnings,
+outside-parent byte preservation and all D ghosts surviving staging then vanishing
+after commit without Refresh/default polling. VS Code's full native suite passed too.
+
+Retain failures: a newly added unmerged-fixture setup used a bytes Git ID as text;
+ASCII decoding fixed the test, not production. Two combined VS Code runs passed
+shared/cascade checks but were killed by the old 240s outer budget during native
+checks; unchanged native-only passed. The [separate budget choice](../_specspec/PfJv45U=align-vscode-smoke-budget-with-existing-phase-guards.md)
+keeps both 160s phase guards and individual deadlines/assertions, aligning the outer
+guard to their sum plus startup/shutdown (360s). Fresh combined passed; this is not
+a production timing guarantee or an exclusive-cause claim for all older failures.
+An annotation script hit its 30s outer tool limit, leaving a stale lock; the writer
+PID was confirmed absent, recovery cleared it, and the missing annotation completed.
+Earlier profile/backups/experiments and manual clones are preserved. Exact staged
+validation precedes the implementation commit. No remote CI/every-platform,
+adversarial Git/FS, universal watcher or semantic correctness claim is made.

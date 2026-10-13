@@ -94,7 +94,7 @@ specspec update <requirement-id> --body revised-requirement.md
 specspec context <requirement-id> --json
 ```
 
-`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `delete` takes multiple explicitly named IDs and physically removes their Markdown files; the remaining DAG must be valid. No implicit descendant deletion or reparenting. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
+`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `delete` takes one or more root IDs and physically removes them AND all descendants, including children shared with surviving parents. It warns before removing any affected uncommitted node, even if staged; preview with `--dry-run`, and use `--yes` for noninteractive warned deletion. The remaining DAG must be valid; no reparenting or manifesto deletion. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
 
 The CLI and graph editor are recommended, but manual `_specspec` Markdown edits are allowed. Validation checks actual schema and graph consistency, not how the files were edited. There are no stored `managed_hash` markers or graph fingerprints. Valid manual changes need no repair or provenance acknowledgement.
 
@@ -112,8 +112,10 @@ The flat `_specspec` directory contains nodes only. Global `format_version` meta
 Format/API **5** has no `managed_hash`, `status` or `retired` field. Withdraw a node
 by deleting its Markdown file (`specspec delete <id>...` or a valid manual deletion).
 Explain why in your normal Git commit. Earlier content stays in Git history, not
-flagged files. The manifesto cannot be deleted; repair surviving parent references
-or explicitly delete a complete dependent batch first. See [the deletion guide](docs/deletion.md).
+flagged files. Managed deletion cascades through every full/partial child at every
+depth, deduplicating shared descendants while preserving outside parents/unrelated
+branches. It warns about uncommitted affected nodes before unlinking, including
+staged edits/additions. The manifesto cannot be deleted; survivors are not reparented. See [the deletion guide](docs/deletion.md).
 
 The default workspace always compares against **HEAD**, not the index. A deleted
 HEAD node remains visible as **D**, with read-only, copyable earlier content and

@@ -168,9 +168,9 @@ def test_full_id_round_trips_cli_editor_context_and_mermaid(workspace):
         manifesto
     ]
     assert load_snapshot(root).files == snapshot.files
-    deleted = runner.invoke(main, ["--root", str(root), "delete", child, "--json"])
+    deleted = runner.invoke(main, ["--root", str(root), "delete", child, "--yes", "--json"])
     assert deleted.exit_code == 0, deleted.output
-    assert json.loads(deleted.output)["result"]["changed_ids"] == [child]
+    assert json.loads(deleted.stdout)["result"]["changed_ids"] == [child]
     assert child not in load_snapshot(root).require_valid().nodes
     for args in [
         ["retire", child],
@@ -205,7 +205,7 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     )
     assert result.exit_code == 0, result.output
     assert load_snapshot(root).graph.nodes[node_id].body == "# Updated\n"
-    result = runner.invoke(main, [*prefix, "delete", node_id, "--json"])
+    result = runner.invoke(main, [*prefix, "delete", node_id, "--yes", "--json"])
     assert result.exit_code == 0, result.output
     assert node_id not in load_snapshot(root).graph.nodes
 

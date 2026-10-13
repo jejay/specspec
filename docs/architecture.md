@@ -103,13 +103,23 @@ native editors share text, not cameras.
 
 UI sessions check authorization, current node IDs and draft conflicts, then build
 specific CLI commands; renderers cannot supply arbitrary commands or file paths.
-Direct CLI calls do not run the UI confirmation workflow.
+Direct CLI calls do not run the UI workflow; warned CLI deletion asks one terminal
+confirmation or requires explicit `--yes` for JSON/noninteractive calls.
+
+[`deletion.py`](../src/specspec/deletion.py) plans the full directed descendant
+closure, including shared children, and derives per-node Git warnings without
+optional index writes. Both hosts use `delete --dry-run --json`, show the total
+scope/warnings, then pass a reviewed plan to the managed command. It recomputes
+scope/paths/warnings under the lock and refuses changed scope rather than silently
+deleting more nodes. This is destructive-action consent, not node review approval.
+See [deletion](deletion.md) for warning, native-document and Git-status limitations.
 
 `workspace.mutate()` acquires the managed-writer lock, reads/validates the current
 snapshot, constructs and validates a candidate, stages replacements and journals
 old/new bytes in **`.specspec-local/`**, outside the canonical directory. It compares
-original bytes before replacement, calls `os.replace()` per changed file, validates
-the result and cleans transaction state on success. The UI then reloads the graph.
+original bytes before replacement, calls `os.replace()` for replacement bytes or
+unlinks files with `new: null` for the complete deletion closure, validates the
+result and cleans transaction state on success. The UI then reloads the graph.
 `init` instead stages an entire new node directory and refuses an existing graph.
 
 An interrupted batch leaves explicit recovery state. `recover` only restores files

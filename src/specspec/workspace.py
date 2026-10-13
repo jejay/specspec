@@ -441,18 +441,54 @@ def update_node(
     return mutate(root, operation)
 
 
-def delete_nodes(root: Path, ids: list[str]) -> Snapshot:
-    """Physically remove only named files, after validating the remaining graph."""
-    if not ids or len(ids) != len(set(ids)):
-        raise SpecError([Diagnostic("DELETE", "Name a nonempty batch of distinct node IDs.")], 2)
+def delete_nodes(
+    root: Path,
+    ids: list[str],
+    *,
+    allow_uncommitted: bool = False,
+    confirm: Callable[[dict[str, Any]], bool] | None = None,
+    reviewed_plan: dict[str, Any] | None = None,
+) -> Snapshot:
+    """Delete the full descendant closure in one recoverable, warned transaction."""
+    # Local import avoids the Git/snapshot module cycle; plans never perform writes.
+    from .deletion import deletion_plan, deletion_warnings
+
+    warnings: list[Diagnostic] = []
 
     def operation(before: Snapshot) -> dict[str, bytes | None]:
-        nodes = [require_node(before, node_id) for node_id in ids]
-        if any(node.type == "manifesto" for node in nodes):
-            raise SpecError([Diagnostic("DELETE", "The manifesto cannot be deleted.")])
-        return {node.path: None for node in nodes}
+        nonlocal warnings
+        plan = deletion_plan(before, ids)
+        warnings = deletion_warnings(plan)
+        if reviewed_plan is not None and reviewed_plan != plan:
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "DELETE_PLAN_CHANGED",
+                        "Deletion scope or uncommitted warnings changed; "
+                        "preview and confirm again.",
+                    )
+                ]
+            )
+        if confirm is not None:
+            if not confirm(plan):
+                raise SpecError(
+                    [Diagnostic("DELETE_CANCELLED", "Deletion cancelled; no files removed.")]
+                )
+        elif warnings and not allow_uncommitted:
+            raise SpecError(
+                [
+                    *warnings,
+                    Diagnostic(
+                        "DELETE_CONFIRMATION",
+                        "Confirm the full deletion plan or explicitly allow uncommitted deletion.",
+                    ),
+                ]
+            )
+        return {node["path"]: None for node in plan["nodes"]}
 
-    return mutate(root, operation)
+    result = mutate(root, operation)
+    result.diagnostics.extend(warnings)
+    return result
 
 
 def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:

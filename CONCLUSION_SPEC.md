@@ -130,9 +130,14 @@ Review is a spectrum of confidence and attention, often concentrated on early in
 Remove approval statuses, scores, parent-approval rules, and the accept command. Git additions communicate newness relative to the chosen revision; semantic changes and linked-source impact provide review context. Context export lists current siblings without deciding whether they are competing alternatives.
 
 The user's deletion correction removes the retired flag and all retire/restore
-commands/filters/badges. Explicit `delete` batches physically remove named files
-under the existing writer/journal, using null replacement states; validate the
-remaining DAG first, without cascade or reparenting, and protect the manifesto.
+commands/filters/badges. The later cascade correction deletes named roots AND all
+unique directed descendants, including shared/partial children with surviving
+parents, under the existing writer/journal with null replacement states. Warn
+before unlinking about every affected uncommitted node, including staged changes;
+preview with `--dry-run`, and require whole-action consent/`--yes` for warned deletion.
+Both hosts show backend plans/warnings and pass reviewed scope for locked rechecking.
+Validate the remainder, preserve outside parents/unrelated branches, never reparent
+or delete the manifesto. This extends behavior without a node-schema change.
 Record reasons in normal Git commits; earlier explanations belong in prior commits.
 Default workspace compares with freshly resolved HEAD: deleted base ghosts remain D
 through staging and disappear after commit. Both hosts watch HEAD/current refs and
@@ -157,7 +162,7 @@ specspec [--root <project>] init --manifesto <file>
 specspec [--root <project>] validate [--json] [--warnings-as-errors]
 specspec [--root <project>] add --type requirement --parent <id> --slug <text> --body <file>
 specspec [--root <project>] update <id> --body <file> [--parent <id> ...]
-specspec [--root <project>] delete <id>...
+specspec [--root <project>] delete <id>... [--dry-run] [--yes] [--reviewed-plan <json-file>|-] [--json]
 specspec [--root <project>] list [--json]
 specspec [--root <project>] show <id> [--ancestors] [--descendants] [--json]
 specspec [--root <project>] context <id> [--max-bytes <n>] [--json]

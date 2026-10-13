@@ -1,24 +1,68 @@
 # Removing nodes and the default workspace graph
 
-**Withdraw by deleting the node file.** There is no retired flag, retire/restore
+**Withdraw by deleting node files.** There is no retired flag, retire/restore
 command, live/retired filter or withdrawal badge in current format/API **5**.
 Earlier text and relationships remain in Git history. Explain your reason in the
 normal Git commit, rather than maintaining a separate lifecycle state.
 
+## Delete the entire descendant closure
+
 ```sh
-specspec impact <id> --json
-specspec delete <id> [<another-id> ...] --json
-# Review, stage and commit yourself. A commit message can explain the removal.
+specspec delete <id> [<another-id> ...] --dry-run --json
+specspec delete <id> [<another-id> ...]
+# Noninteractive/JSON consent when the preview warns about uncommitted nodes:
+specspec delete <id> [<another-id> ...] --yes --json
+# Review, stage and commit yourself. Explain the removal in the commit message.
 ```
 
-Delete removes only explicitly named Markdown files. The remaining specification
-must be a valid rooted DAG: no dangling parents, implicit cascade or reparenting.
-Repair surviving references first or explicitly delete the dependent batch. The
-manifesto cannot be deleted by this command. Manual deletion is permitted too;
-invalid external deletions produce diagnostics, not an automatically repaired graph.
+Delete removes each requested node **and every child at every depth**, including
+**partial/shared children** with other surviving parents. Those children's own
+children are deleted too. Multiple paths and overlapping requested roots remove
+each file once. Outside parents, ancestors and unrelated branches survive; the
+command never silently reparents. The saved graph determines the closure, not a
+layout backbone, exclusive ownership, Git base graph or source impact.
+
+The manifesto cannot be deleted. Invalid graphs, unknown IDs, empty/duplicate root
+arguments fail before any unlink. The remaining specification must be a valid
+rooted DAG. Manual filesystem deletion remains permitted, but is NOT an automatic
+cascade; invalid external deletions produce diagnostics, not graph repair.
+
+## Warn before discarding uncommitted nodes
+
+Every affected node is checked, not just the named node. Added/untracked/ignored
+nodes, staged additions, staged or unstaged edits, comment-only changes, renames,
+mode changes and unresolved index entries warn. **Staging is not committing.**
+Changed linked code alone is not an uncommitted-node warning. Ordinary Git status
+uses its own clean-filter/line-ending interpretation; Git flags/configuration can
+hide changes, so this is not adversarial detection or a new node-fingerprint scheme.
+Unborn HEAD nodes are uncommitted. Without Git or a usable assessment, the whole
+closure is warned about explicitly instead of being declared committed.
+
+`--dry-run` writes no files and returns a plan: `requested_ids`, `deleted_ids`, all
+`nodes` (ID/path pairs), per-node `uncommitted` Git statuses, `git_available` and
+`git_note`, plus structured warning diagnostics. Success reports ALL removed IDs
+in `changed_ids`/`deleted_ids`, including implicit descendants.
+
+An interactive terminal asks one whole-action confirmation when warnings exist;
+cancelling leaves every file intact. JSON/noninteractive calls with warnings fail
+without deletion unless `--yes` explicitly consents. Clean committed CLI branches
+need no extra confirmation. `--yes` does not hide warnings: stderr receives them
+before unlinking, and JSON stdout remains one envelope with the same diagnostics.
+These are destructive-action warnings/consent, not confidence or approval states.
+
+Both UIs preview through the same backend and confirm the total closure size,
+shared-child rule and warnings before deletion. They pass the reviewed plan as
+bounded JSON stdin (`--yes --reviewed-plan -`). The writer recomputes scope and
+warning/path records under its lock; a changed plan fails before writes and needs
+another preview/confirmation. It compares actual records, not hashes, `--expect`
+or a persistent approval receipt. This does not freeze all text or HEAD; normal
+transaction byte checks and filesystem race limitations still apply.
+
 Managed batches retain original-byte checks, lock/journal/recovery and `new: null`
-entries. If interrupted, keep `.specspec-local` and run `recover`; it refuses to
-replace new external text. These are not filesystem-atomic or adversarial guarantees.
+entries for implicit descendants too. If interrupted, keep `.specspec-local` and
+run `recover`; it refuses to replace new external text. These are not filesystem-
+atomic or adversarial guarantees. SpecSpec never stages/commits, deletes linked
+source files or installs hooks for this operation.
 
 ## HEAD is the default baseline, not the index
 
@@ -31,12 +75,13 @@ replace new external text. These are not filesystem-atomic or adversarial guaran
 | New untracked node created then deleted | No ghost: it never belonged to HEAD |
 | Explicit old/new commit comparison | Earlier deleted nodes can still appear |
 
-Deleted ghosts are display records from the base revision, not canonical nodes or
-stored statuses. They cannot be saved, deleted again or captured into source metadata.
-Their text remains read-only and selectable; implementation sources can be previewed
-against the base code version. Relationships/metrics use their own revisions, not an
-invalid union DAG. Dirty out-of-band forms for a now-deleted node remain copyable and
-unsavable even after commit; keeping a draft is not keeping the canonical node.
+These rules apply to the entire cascade. Deleted ghosts are display records from
+the base revision, not canonical nodes or stored statuses. They cannot be saved,
+deleted again or captured into source metadata. Their text remains read-only and
+selectable; implementation sources can be previewed against the base code version.
+Relationships/metrics use their own revisions, not an invalid union DAG. Dirty
+out-of-band forms for a deleted node stay copyable/unsavable even after commit;
+keeping a draft is not keeping the canonical node.
 
 Both hosts reread HEAD and watch its private/current-branch/shared packed refs as
 well as canonical files, including detached HEAD and linked worktrees. No default
@@ -52,16 +97,19 @@ is supported; use the independent current-schema Gantt history for temporal test
 
 ## Native node-file editors
 
-VS Code Delete is a managed, confirmed project-file deletion, not a retired-field
-edit waiting for native Save. Save/revert dirty SpecSpec documents first; queued
-form edits are drained and the action is bound to this tab's node. Ordinary native
-Save/undo remains native. An open buffer can outlive a deleted file, but cannot
-re-overlay or recreate it in the graph. An attempted edit/save through the graph
-reports the missing file rather than silently resurrecting it.
+VS Code Delete is a managed, confirmed cascade, not a retired-field edit waiting
+for native Save. Save/revert dirty SpecSpec documents first, including descendant
+tabs; queued form edits are drained and the action is bound to this tab's node.
+Ordinary native Save/undo remains native. An open buffer can outlive a deleted
+file, but cannot re-overlay or recreate it in the graph. Attempted graph edits/
+saves report the missing file rather than silently resurrecting it.
 
-The user intention and separate technical conclusion are
+The physical-deletion/HEAD intention and amended conclusion are
 [`xu6W0c4=`](../_specspec/xu6W0c4=withdraw-by-file-deletion-and-show-workspace-against-head.md)
 and [`5d5oDCM=`](../_specspec/5d5oDCM=physical-deletion-and-head-relative-ghost-views.md).
-Previous retirement explanations now live in earlier Git commits. All maintained
-Gantt revisions/refs, actual receipts, ledgers and bundle are reconstructed as if
-this deletion-only schema had always been used; manual clones are never reset.
+The follow-up cascade/warning intention and separate detailed conclusion are
+[`fuyy0Lk=`](../_specspec/fuyy0Lk=cascade-delete-all-children-and-warn-if-uncommitted.md)
+and [`AuhoBoU=`](../_specspec/AuhoBoU=downstream-deletion-plans-and-uncommitted-warnings.md).
+Previous explanations remain in Git. This extension does not change node schema;
+the complete independent Gantt current-schema history/receipts remain the regression
+corpus. Existing manual clones and local experiments are never reset automatically.

@@ -64,7 +64,7 @@ def test_uncommitted_created_then_deleted_node_has_no_head_ghost(workspace):
     git(root, "add", "_specspec")
     git(root, "commit", "-m", "Root")
     _, child = add_node(root, "requirement", [manifesto], "# Trial\n", "trial")
-    delete_nodes(root, [child])
+    delete_nodes(root, [child], allow_uncommitted=True)
     assert semantic_diff(git_snapshot(root, "HEAD"), load_snapshot(root))["changes"] == []
 
 
@@ -73,7 +73,7 @@ def test_deleted_open_buffer_does_not_resurrect_a_file_or_poison_other_documents
     snapshot, child = add_node(root, "requirement", [manifesto], "# Original\n", "child")
     node = snapshot.graph.nodes[child]
     text = (root / node.path).read_text(encoding="utf-8")
-    delete_nodes(root, [child])
+    delete_nodes(root, [child], allow_uncommitted=True)
     read = editor_request(root, {"documents": {node.path: text + "\nUnsaved retained text"}})
     assert read["snapshot"]["valid"] and not read["diagnostics"]
     assert child not in {n["id"] for n in read["snapshot"]["nodes"]}
@@ -104,7 +104,7 @@ def test_partial_delete_recovery_refuses_a_new_external_file(workspace, monkeypa
 
     monkeypatch.setattr(Path, "unlink", interrupted)
     with pytest.raises(OSError, match="Interrupted"):
-        delete_nodes(root, [one, two])
+        delete_nodes(root, [one, two], allow_uncommitted=True)
     monkeypatch.setattr(Path, "unlink", original)
     removed[0].write_bytes(b"External content must not be replaced")
     with pytest.raises(SpecError, match="External edit"):
