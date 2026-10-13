@@ -2,13 +2,14 @@
 id: 5d5oDCM=
 type: requirement
 parents:
-- xu6W0c4=
-- DiIJxaQ=
-- Yfy0414=
 - Bnr6yZY=
+- DiIJxaQ=
 - TAvql3w=
+- Yfy0414=
+- xu6W0c4=
+- fuyy0Lk=
 ---
-# Delete explicitly named nodes and derive deleted ghosts from HEAD
+# Delete node subgraphs and derive deleted ghosts from HEAD
 
 Choose current-only format/API 5: no retired field in canonical files, records,
 semantic comparisons or frontmatter, no retire/restore commands, live/retired
@@ -16,12 +17,14 @@ filters, include-retired option, badges or corresponding native-document metadat
 planner. Reject old schemas/fields rather than keep a compatibility reader. Keep
 IDs, source-blob schema and ordinary graph/transaction safeguards unchanged.
 
-A delete command takes an explicitly named batch. Physically unlink those files
-within the existing lock, original-byte checks and recoverable journal, with
-new=null entries. Validate the remaining rooted DAG before writing; never cascade,
-automatically reparent surviving nodes or delete the manifesto. Delete children
-explicitly or repair references first. Deleted source hints are not in current
-source checks; their earlier records remain available in valid Git snapshots.
+The user's later correction fuyy0Lk= and separate conclusion AuhoBoU= replace
+the earlier explicitly-named-files-only choice: delete each requested node AND all
+its directed descendants, including children shared with surviving parents. Warn
+before deletion about uncommitted affected nodes, including staged additions/edits.
+Use the shared backend plan/whole-action confirmation and current transaction
+safeguards; never reparent survivors or delete the manifesto. The previous
+no-cascade choice remains in Git history, not the current contract. Deleted source
+hints are absent from current checks; earlier records remain in valid Git snapshots.
 The tool does not stage, commit, write a reason receipt or install hooks. Users
 record deletion rationale in their normal commit message. Manual deletion is
 permitted and subject to ordinary consistency checks.

@@ -65,6 +65,14 @@ sources:
 - path: docs/architecture.md
 - path: docs/architecture.svg
 ---
+## Later cascade correction
+
+fuyy0Lk=/AuhoBoU= supersede this checkpoint's named-files-only/no-cascade
+choice. Current managed delete removes the entire descendant closure, including
+shared children, with uncommitted warnings before deletion. Counts/behavior below
+are actual earlier evidence, not current cascade/confirmation contracts. The
+separate follow-up implementation record links new code and verification.
+
 # Implement deletion-only nodes and a freshly HEAD-relative workspace graph
 
 Implement xu6W0c4= through 5d5oDCM=. The user's new intention, separate detailed

@@ -39,9 +39,11 @@ material uncertainty and conflicts rather than manufacturing agreement.
 - Do not introduce approval statuses, acceptance scores, or parent-review gates.
   Git differences communicate newness and change relative to the selected base.
 - Withdraw by physically deleting node files; explain why in the Git commit.
-  No retired flag or retire/restore workflow. Keep the remaining DAG valid without
-  implicit cascade/reparenting. Default workspace compares to HEAD; D remains
-  visible through staging and vanishes after commit. See `docs/deletion.md`.
+  No retired flag or retire/restore workflow. Managed `delete` removes the whole
+  descendant closure, including children shared with surviving parents, and warns
+  about uncommitted affected nodes before unlinking. Never reparent or delete the
+  manifesto. Default workspace compares to HEAD; D remains visible through staging
+  and vanishes after commit. See `docs/deletion.md`.
 - Keep implementation explanations and `sources` references current when code
   or verification changes. Source symbols remain descriptive. Blob/range locations are resolved through
   the shared backend; see `docs/source-regions.md`.

@@ -158,8 +158,13 @@ No status/proposed/accepted fields, accept command, review receipt gate or score
 The [user's correction](../_specspec/xu6W0c4=withdraw-by-file-deletion-and-show-workspace-against-head.md)
 and [separate design conclusion](../_specspec/5d5oDCM=physical-deletion-and-head-relative-ghost-views.md)
 remove retired flags, retire/restore commands/filters/badges and native metadata edits.
-Physically delete named node files, explain why in the normal Git commit, and keep
-earlier reasoning in Git rather than flagged current files. The six previously
+Physically delete node files, explain why in the normal Git commit, and keep
+earlier reasoning in Git rather than flagged current files. The [later cascade
+intention](../_specspec/fuyy0Lk=cascade-delete-all-children-and-warn-if-uncommitted.md)
+and [separate plan/warning conclusion](../_specspec/AuhoBoU=downstream-deletion-plans-and-uncommitted-warnings.md)
+replace named-files-only deletion with the entire descendant closure, including
+shared children. Warn about any affected uncommitted node before deletion; staged
+changes remain uncommitted. The earlier no-cascade choice is history, not current. The six previously
 retired root records were removed; their contents and old choices remain in earlier
 commits. The former withdrawal conclusion apEb_pM= is amended, not a new approval gate.
 
@@ -491,7 +496,9 @@ renames, removed/added parent edges and linked-source ancestry.
 | Manifesto | [XV5_rPQ=](../_specspec/XV5_rPQ=specspec-manifesto.md) |
 | User's deletion/default-HEAD correction | [xu6W0c4=](../_specspec/xu6W0c4=withdraw-by-file-deletion-and-show-workspace-against-head.md) |
 | Physical deletion/HEAD ghost conclusion | [5d5oDCM=](../_specspec/5d5oDCM=physical-deletion-and-head-relative-ghost-views.md) |
-| Deletion implementation/evidence | [JqNzSPg=](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md) |
+| Earlier deletion/HEAD implementation evidence | [JqNzSPg=](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md) |
+| User's cascade/uncommitted-warning correction | [fuyy0Lk=](../_specspec/fuyy0Lk=cascade-delete-all-children-and-warn-if-uncommitted.md) |
+| Descendant planning/confirmation conclusion | [AuhoBoU=](../_specspec/AuhoBoU=downstream-deletion-plans-and-uncommitted-warnings.md) |
 | Compact IDs and current-only backend | [qowy5AI=](../_specspec/qowy5AI=canonical-base64url-and-current-only-backend.md) |
 | User's history/test scope correction | [Oou-SvU=](../_specspec/Oou-SvU=current-scheme-only-and-gantt-git-regressions.md) |
 | Independent compliant Git fixture | [YaXJpGE=](../_specspec/YaXJpGE=independent-current-schema-gantt-history.md) |
@@ -520,7 +527,9 @@ python -m specspec update <full-id> --body <body-file>
 Use `add --parent <id> ...` for a separate conclusion, not a rewritten intention
 that makes one solution inevitable. `update --parent` replaces the full parent
 list. Keep source links current. No accept/retire/restore step; `delete` takes
-explicit batches and leaves a valid DAG. Explain removals in Git commits.
+explicit roots and removes all their descendants, including shared children, while
+leaving a valid DAG. Warn about uncommitted affected nodes before deletion. Explain
+removals in Git commits.
 
 ## Git, checks, and recovery
 
