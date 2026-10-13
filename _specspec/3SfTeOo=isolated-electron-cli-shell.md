@@ -5,6 +5,16 @@ parents:
 - YOPhqYc=
 - ME4UXTA=
 ---
+## Current deletion correction
+
+xu6W0c4=/5d5oDCM= supersede stored withdrawal, retired flags/controls and
+format/API four with current-only format/API five. Withdraw by deleting the
+Markdown file, keep reasons/earlier explanations in Git, and show HEAD-relative
+deleted ghosts in the default workspace until commit. All earlier version/flag
+workflow descriptions below are historical, not the current contract. Source
+blob anchoring, no approval gates, native persistence distinctions and current-only
+example-history policy remain; all retained Gantt revisions use actual deletions.
+
 # Start with a sandboxed Electron shell and explicit project authorization
 
 Use Electron for a first Linux/Windows standalone shell. A sandboxed, context-isolated renderer with nodeIntegration disabled gets a fixed preload messaging/state API, never filesystem/spawn/credential access. The main process chooses/authorizes a local project explicitly, fixes the CLI executable from trusted launch configuration, validates IPC sender/allowed messages, denies remote requests/navigation/popups and delegates all graph writes to the guarded Python API. Native confirmations cover withdrawal and conflicting overwrites; revision input is bounded text. Persist presentation/drafts outside canonical data, scoped by project. Recheck authorization and current files; retain drafts and confirm same-node overwrite conflicts and report process/render errors. No installer, signing, update service, bundled Python, credential integration or production security certification is claimed in this first slice.

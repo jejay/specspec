@@ -6,6 +6,16 @@ parents:
 - 6SyZ-BU=
 - tvic3PQ=
 ---
+## Current deletion correction
+
+xu6W0c4=/5d5oDCM= supersede stored withdrawal, retired flags/controls and
+format/API four with current-only format/API five. Withdraw by deleting the
+Markdown file, keep reasons/earlier explanations in Git, and show HEAD-relative
+deleted ghosts in the default workspace until commit. All earlier version/flag
+workflow descriptions below are historical, not the current contract. Source
+blob anchoring, no approval gates, native persistence distinctions and current-only
+example-history policy remain; all retained Gantt revisions use actual deletions.
+
 # Generate canonical five-byte IDs and remove superseded readers
 
 Use secrets.token_bytes(5) and padded RFC 4648 Base64url. The complete eight-byte
