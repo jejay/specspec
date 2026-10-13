@@ -6,6 +6,7 @@ import { findProjectRoot, resolveInvocation } from './project';
 import { graphHtml } from './view';
 const { GraphSession } = require('./common/host/session.cjs');
 const { ProjectDocuments } = require('./common/host/documents.cjs');
+const { GitWatcher } = require('./common/host/git-watch.cjs');
 const presentation = require('../media/graph-model.js');
 
 const VIEW_TYPE = 'specspec.graphEditor';
@@ -150,6 +151,8 @@ class GraphProject implements vscode.Disposable {
     this.disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration('specspec', root)) this.documents.changed();
     }));
+    const gitWatcher = new GitWatcher(root.fsPath, () => this.documents.changed(), (error: Error) => this.output.appendLine(error.message));
+    this.disposables.push({ dispose: () => gitWatcher.close() });
     void this.connectGit();
   }
   documentPath(document: vscode.TextDocument): string | undefined {
@@ -216,7 +219,7 @@ class GraphView implements vscode.Disposable {
       },
     } : undefined;
     this.session = new GraphSession({
-      cli: (args: string[], input?: string) => ['add', 'update', 'retire', 'restore'].includes(args[0])
+      cli: (args: string[], input?: string) => ['add', 'update', 'delete'].includes(args[0])
         ? project.documents.mutate(args, input) : project.cli(args, input),
       readGraph: (base: string) => project.documents.readGraph(base),
       authorized: () => vscode.workspace.isTrusted,
@@ -237,7 +240,6 @@ class GraphView implements vscode.Disposable {
         state: () => ({ nodeId: adapter.id, path: adapter.get().path, version: document.version, dirty: document.isDirty,
           ...(recovery ? { recoveredForm: recovery.form } : {}) }),
         edit: (message: unknown) => project.documents.edit(adapter, message),
-        withdrawal: (retired: boolean) => project.documents.withdrawal(adapter, retired),
         save: async () => { await project.documents.idle(); if (!await document.save()) throw new Error('VS Code could not save the node file.'); },
       } } : {}),
     });

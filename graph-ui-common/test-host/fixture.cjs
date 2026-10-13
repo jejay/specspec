@@ -14,14 +14,14 @@ function fixture(source, python) {
     const cli = (args, input) => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', root, ...args], { input, encoding: 'utf8' })).result;
     let s = cli(['list', '--json']);
     const manifesto = s.nodes.find(n => n.type === 'manifesto');
-    const modified = s.nodes.find(n => n.type === 'requirement' && !n.retired && n.parents.includes(manifesto.id));
-    if (!modified) throw new Error('The UI fixture needs a live manifesto-child requirement.');
+    const modified = s.nodes.find(n => n.type === 'requirement' && n.parents.includes(manifesto.id));
+    if (!modified) throw new Error('The UI fixture needs a current manifesto-child requirement.');
     cli(['update', modified.id, '--body', '-', '--json'], '# Modified UI fixture intention\n\nDisposable test content, not the real project.\n');
     const added = cli(['add', '--parent', manifesto.id, '--slug', 'added-ui-fixture', '--body', '-', '--json'], '# Added UI fixture intention\n\nDisposable test content.\n').changed_ids[0];
     s = cli(['list', '--json']);
-    const removed = s.nodes.find(n => n.type === 'implementation' && !n.retired);
-    // A literal deletion exercises D; only this disposable terminal node is removed.
-    rmSync(join(root, removed.path));
+    const removed = s.nodes.find(n => n.type === 'implementation');
+    // A managed physical deletion exercises D; this disposable terminal node only.
+    cli(['delete', removed.id, '--json']);
     cli(['validate', '--warnings-as-errors', '--json']);
     return { root, added, modified: modified.id, removed: removed.id, cli, cleanup };
   } catch (error) { cleanup(); throw error; }

@@ -5,7 +5,7 @@ const model = require('../media/graph-model.js');
 function snapshot(edges, extra = []) {
   const ids = new Set(['root', ...edges.flat(), ...extra]);
   return { valid: true, nodes: [...ids].map(id => ({
-    id, type: id === 'root' ? 'manifesto' : 'requirement', retired: false,
+    id, type: id === 'root' ? 'manifesto' : 'requirement',
     parents: edges.filter(([, child]) => child === id).map(([parent]) => parent),
     body: `# ${id}\n`, sources: [],
   })), edges };
@@ -15,7 +15,7 @@ test('manifesto stays light gray in distance/type modes regardless of distance o
   assert.equal(model.TYPE_COLORS.manifesto, '#d3d3d3');
   for (const mode of ['distance', 'max-distance', 'type']) {
     for (const distance of [undefined, 0, 1, 7, 30]) {
-      assert.equal(model.color(mode, { type: 'manifesto', retired: false }, distance), '#d3d3d3');
+      assert.equal(model.color(mode, { type: 'manifesto' }, distance), '#d3d3d3');
     }
     assert.notEqual(model.color(mode, { type: 'requirement' }, 1), '#d3d3d3');
     assert.notEqual(model.color(mode, { type: 'implementation' }, 2), '#d3d3d3');
@@ -101,17 +101,17 @@ test('render acknowledgements verify complete focused or total membership', () =
   assert.equal(model.renderMatches(state, { ...report, visibleIds: ['a'], nodeCount: 1 }), false);
   assert.equal(model.renderMatches(state, { ...report, view: 'overview' }), false);
   assert.ok(model.renderMatches(state, { view: 'overview', visibleIds: ['root', 'a', 'b', 'c'], nodeCount: 4 }));
-  assert.equal(model.renderMatches(state, { nodeCount: 4 }), false, 'API 4 requires full membership, not legacy counts.');
+  assert.equal(model.renderMatches(state, { nodeCount: 4 }), false, 'API 5 requires full membership, not legacy counts.');
   assert.ok(model.renderMatches(state, { view: 'focus', creating: true, draftParents: ['root'], visibleIds: ['root'], nodeCount: 2 }));
 });
 
 test('draft baseline comparison uses normalized contents, not paths or hashes', () => {
-  const node = { id: 'a', type: 'requirement', retired: false, body: '# Body\r\n', parents: ['b', 'c'],
+  const node = { id: 'a', type: 'requirement', body: '# Body\r\n', parents: ['b', 'c'],
     sources: [{ path: 'b.py', symbol: 'two' }, { path: 'a.py' }], extensions: { 'example:note': { b: 2, a: 1 } } };
   const reordered = { ...node, body: '# Body\n', path: 'renamed.md', parents: ['c', 'b'],
     sources: [...node.sources].reverse(), extensions: { 'example:note': { a: 1, b: 2 } } };
   assert.equal(model.sameNode(node, reordered), true);
-  for (const changes of [{ body: '# Changed' }, { parents: ['b'] }, { retired: true }, { sources: [] }]) {
+  for (const changes of [{ body: '# Changed' }, { parents: ['b'] }, { extensions: {} }, { sources: [] }]) {
     assert.equal(model.sameNode(node, { ...reordered, ...changes }), false);
   }
   for (const bad of [undefined, {}, { ...node, parents: 5 }, { ...node, body: 5 }, { ...node, sources: ['not a source'] }]) {

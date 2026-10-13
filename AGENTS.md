@@ -28,9 +28,9 @@ material uncertainty and conflicts rather than manufacturing agreement.
 
 ## Changes
 
-- Use `add`, `update`, `retire`, and `restore` for ordinary canonical graph changes
+- Use `add`, `update`, and `delete` for ordinary canonical graph changes
   in this checkout. The product permits manual Markdown edits, but CLI/UI editing
-  remains recommended. Format/API 4 has no node hashes, fingerprints, or `--expect`; source blob IDs
+  remains recommended. Format/API 5 has no node hashes, fingerprints, or `--expect`; source blob IDs
   are Git content addresses, not node edit gates.
   The authorized compact-ID conversion is a one-time tool-managed migration,
   not a permanent compatibility command.
@@ -38,8 +38,10 @@ material uncertainty and conflicts rather than manufacturing agreement.
   Do not rewrite its parent intention to make a chosen implementation inevitable.
 - Do not introduce approval statuses, acceptance scores, or parent-review gates.
   Git differences communicate newness and change relative to the selected base.
-- Retirement means withdrawal with retained history, not insufficient review.
-  Keep live nodes independent of retired parents; restoration is not approval.
+- Withdraw by physically deleting node files; explain why in the Git commit.
+  No retired flag or retire/restore workflow. Keep the remaining DAG valid without
+  implicit cascade/reparenting. Default workspace compares to HEAD; D remains
+  visible through staging and vanishes after commit. See `docs/deletion.md`.
 - Keep implementation explanations and `sources` references current when code
   or verification changes. Source symbols remain descriptive. Blob/range locations are resolved through
   the shared backend; see `docs/source-regions.md`.
@@ -82,7 +84,7 @@ external destination for disposable tests. Do not install nested Git metadata.
 
 EVERY node-schema change requires rewriting the ENTIRE maintained history of Gantt
 and additional examples as if all revisions had always used today's SpecSpec.
-Refresh all retained refs, withdrawn nodes, actual receipts, commit ledgers, bundle
+Refresh all retained refs, earlier/deleted nodes, actual receipts, commit ledgers, bundle
 and tracked snapshot together; validate every revision with current tools. Updating
 only HEAD or retaining old readers is not a solution. See
 `example/gantt/history/WALKTHROUGH.md`. Preserve local experiments before explicitly

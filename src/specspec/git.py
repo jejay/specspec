@@ -42,6 +42,19 @@ def resolve_commit(root: Path, ref: str) -> str:
     )
 
 
+def unborn_head(root: Path) -> bool:
+    """Only an unresolved symbolic HEAD is an empty baseline, not a bad user ref."""
+    try:
+        branch = run_git(root, "symbolic-ref", "--quiet", "HEAD").decode().strip()
+    except SpecError:
+        return False
+    completed = subprocess.run(
+        ["git", "-C", str(root), "show-ref", "--verify", "--quiet", branch],
+        capture_output=True,
+    )
+    return completed.returncode == 1
+
+
 def git_snapshot(
     root: Path, ref: str | None = None, *, staged: bool = False, allow_empty: bool = False
 ) -> Snapshot:
@@ -52,6 +65,8 @@ def git_snapshot(
         records = run_git(repository, "ls-files", "--stage", "-z", "--", prefix).split(b"\0")
     else:
         # Resolve refs first; never pass user input as an option to ls-tree.
+        if allow_empty and ref == "HEAD" and unborn_head(repository):
+            return snapshot_from_files(root, {}, allow_empty=True)
         commit = resolve_commit(repository, str(ref))
         records = run_git(repository, "ls-tree", "-r", "-z", commit, "--", prefix).split(b"\0")
     for record in records:
@@ -153,20 +168,25 @@ def source_change_impact(
     repository, prefix = repository_paths(root)
     project_prefix = prefix.removesuffix(SPEC_DIR)
     full_paths = [project_prefix + path for path in sorted(references)]
-    commits = [resolve_commit(repository, base_ref)]
+    empty_head = base_ref == "HEAD" and unborn_head(repository)
+    commits = [] if empty_head else [resolve_commit(repository, base_ref)]
     if target_ref is not None:
         commits.append(resolve_commit(repository, target_ref))
-    changed = run_git(
-        repository,
-        "--literal-pathspecs",
-        "diff",
-        "--name-only",
-        "-z",
-        "--no-renames",
-        *commits,
-        "--",
-        *full_paths,
-    ).split(b"\0")
+    changed = (
+        [path.encode("utf-8") for path in full_paths]
+        if empty_head
+        else run_git(
+            repository,
+            "--literal-pathspecs",
+            "diff",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            *commits,
+            "--",
+            *full_paths,
+        ).split(b"\0")
+    )
     if target_ref is None:
         # git diff excludes untracked files, including new referenced realizations.
         changed.extend(

@@ -33,11 +33,11 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 4 && !state.readonly &&
+  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 5 && !state.readonly &&
     (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
   const draftCard = () => creating || orphaned();
-  const description = node => `${node.type}${node.retired ? ' · retired' : ''}`;
+  const description = node => `${node.type}${currentNodeById(node.id) ? '' : ' · deleted'}`;
   const formNodeType = () => creating ? $('node-type').value : originalNode?.type || graph.nodes.get(selected)?.type;
   const parentsEditable = () => editable() && !pending && formNodeType() !== 'manifesto';
   const contextFor = id => currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
@@ -67,28 +67,24 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 4 || state.readonly || pending || Boolean(state.document);
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 5 || state.readonly || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
-    $('retire').title = $('restore').title = state?.document ? 'Changes the document; save the file to persist it.' : '';
+    $('delete').title = 'Physically deletes the Markdown file. D remains in the default HEAD comparison until committed.';
     $('save').disabled = !editable() || pending;
-    const withdrawn = Boolean(graph.nodes.get(selected)?.retired);
-    $('retire').hidden = withdrawn;
-    $('restore').hidden = !withdrawn || creating;
-    $('retire').disabled = !editable() || creating || dirty || pending || currentNode()?.type === 'manifesto' || withdrawn;
-    $('restore').disabled = !editable() || creating || dirty || pending || !withdrawn;
+    $('delete').disabled = !editable() || creating || dirty || Boolean(state?.document?.dirty) || pending || currentNode()?.type === 'manifesto';
     for (const id of elements) $(id).disabled = !editable() || pending;
     for (const id of ['body', 'sources']) {
       // Keep retained text selectable/copyable when files are invalid or deleted.
-      $(id).readOnly = (sourceInvalid && !state?.document) || orphaned();
-      if (sourceInvalid || orphaned()) $(id).disabled = pending;
+      $(id).readOnly = !editable() || orphaned();
+      $(id).disabled = pending;
     }
     $('parent-candidate').disabled = !parentsEditable();
     $('add-parent').disabled = !parentsEditable() || !$('parent-candidate').value;
     for (const button of $('parent-links').querySelectorAll('button')) button.disabled = !parentsEditable();
     $('source-tools').hidden = formNodeType() !== 'implementation';
-    $('capture-source').disabled = !editable() || pending || creating || !currentNode() || withdrawn;
+    $('capture-source').disabled = !editable() || pending || creating || !currentNode();
     for (const id of ['source-path', 'source-ranges', 'source-mode', 'source-staged']) $(id).disabled = $('capture-source').disabled;
   }
 
@@ -235,7 +231,7 @@
     const explanation = document.createElement('span');
     explanation.className = 'legend-help';
     explanation.textContent = colorMode === 'git-revision'
-      ? state.diff ? 'Relative to selected comparison · withdrawal is not deletion; source impact is not M'
+      ? state.diff ? 'Relative to selected comparison · D means a deleted file; source impact is not M'
         : 'No revision comparison available · neutral fills'
       : colorMode === 'type' ? 'Existing node types · not review stages'
       : `${colorMode === 'max-distance' ? 'Longest' : 'Shortest'} directed path from manifesto · violet → red, repeats every ${model.RAINBOW_COLORS.length} hops · not a confidence score`;
@@ -254,7 +250,7 @@
     const node = graph.nodes.get(id), context = contextFor(id);
     const card = document.createElement('button');
     card.type = 'button'; card.className = `card ${node.type} ${kind || ''}`;
-    card.dataset.nodeId = id; card.dataset.retired = String(Boolean(node.retired));
+    card.dataset.nodeId = id;
     card.dataset.relation = related || '';
     card.dataset.minDistance = context?.minDistances.get(id) ?? 'unknown';
     card.dataset.maxDistance = context?.maxDistances.get(id) ?? 'unknown';
@@ -274,7 +270,6 @@
       card.dataset.downstream = count;
       badge(`${count} downstream`, 'downstream-badge', 'All reachable descendants at every depth, excluding this child. Shared nodes counted once per child; totals may overlap. Potential impact, not guaranteed invalidation.');
     }
-    if (node.retired) badge('retired', 'retired-badge', 'Withdrawn, retained as history. Not an approval level.');
     if (kind) badge(kind.replace(/-/g, ' '), `git-badge ${kind}`);
     card.append(heading, metadata, badges); gitCorner(card, kind);
     card.addEventListener('click', () => select(id));
@@ -302,7 +297,7 @@
     if (view === 'focus') {
       const card = document.createElement('article'), node = originalNode && orphaned() ? originalNode : graph.nodes.get(selected);
       card.className = `card expanded ${creating ? $('node-type').value : node?.type || 'requirement'} ${kinds.get(selected) || ''}`;
-      card.dataset.nodeId = focalId; card.dataset.retired = String(Boolean(!creating && node?.retired));
+      card.dataset.nodeId = focalId;
       card.classList.toggle('revision-colored', colorMode === 'git-revision');
       card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
@@ -472,7 +467,7 @@
   }
 
   function select(id, force = false) {
-    if (!force && state?.document && id !== state.document.nodeId && !state.readonly) {
+    if (!force && state?.document && id !== state.document.nodeId && currentNodeById(id) && !state.readonly) {
       send({ type: 'open-node', id }); return;
     }
     if (!force && pending) return;
@@ -513,7 +508,7 @@
   });
 
   $('new').addEventListener('click', () => {
-    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 4) return;
+    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 5) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
     rememberCamera(); delete cameras.draft; previewLabels.delete('__draft__');
@@ -547,9 +542,9 @@
       body: $('body').value, parents: [...formParents], sources: $('sources').value, slug: $('slug').value, nodeType: $('node-type').value,
       ...(state.document ? { documentVersion, editSequence } : {}) });
   });
-  for (const action of ['restore', 'retire']) $(action).addEventListener('click', () => {
-    if (!editable() || creating || dirty || pending) return;
-    pending = true; updateButtons(); send({ type: action, id: selected });
+  $('delete').addEventListener('click', () => {
+    if ($('delete').disabled) return;
+    pending = true; updateButtons(); send({ type: 'delete', id: selected });
   });
   $('discard').addEventListener('click', () => {
     if (state?.document) send({ type: 'discard-form' });
@@ -626,6 +621,7 @@
       populateParents(restored.draft.parents, formNodeType());
       $('sources-label').hidden = formNodeType() !== 'implementation';
     } else if (!dirty && !creating) {
+      if (selected && !graph.nodes.has(selected)) { rememberCamera(); selected = undefined; view = 'overview'; }
       originalNode = currentNode(); loadForm();
     }
     if (dirty || creating) {

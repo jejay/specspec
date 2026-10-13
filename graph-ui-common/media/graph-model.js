@@ -24,7 +24,7 @@
       || node.sources.some(source => !source || typeof source.path !== 'string'))) return false;
     const sorted = value => Array.isArray(value) ? value.map(sorted)
       : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])])) : value;
-    const contents = node => ({ id: node.id, type: node.type, retired: Boolean(node.retired),
+    const contents = node => ({ id: node.id, type: node.type,
       body: node.body?.replace(/\r\n/g, '\n'), parents: [...(node.parents || [])].sort(),
       sources: [...(node.sources || [])].sort((a, b) => compare(JSON.stringify(sorted(a)), JSON.stringify(sorted(b)))),
       extensions: node.extensions || {}, format_version: node.format_version });

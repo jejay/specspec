@@ -12,8 +12,8 @@ from typing import Any
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
-FORMAT_VERSION = 4
-API_VERSION = 4
+FORMAT_VERSION = 5
+API_VERSION = 5
 MAX_FILE_BYTES = 1024 * 1024
 
 
@@ -41,7 +41,6 @@ class SpecError(Exception):
 class SpecNode:
     id: str
     type: str
-    retired: bool
     parents: list[str]
     body: str
     path: str
@@ -53,7 +52,6 @@ class SpecNode:
         data: dict[str, Any] = {
             "id": self.id,
             "type": self.type,
-            "retired": self.retired,
             "parents": sorted(self.parents),
             "body": self.body.replace("\r\n", "\n"),
             "sources": sorted(self.sources, key=lambda s: json.dumps(s, sort_keys=True)),
@@ -72,10 +70,6 @@ class SpecNode:
             "type": self.type,
             "parents": self.parents,
         }
-        # Preserve invalid caller values until schema validation; do not coerce
-        # truthy values or silently omit falsey non-booleans during serialization.
-        if self.retired is not False:
-            result["retired"] = self.retired
         if self.format_version is not None:
             result["format_version"] = self.format_version
         if self.sources:

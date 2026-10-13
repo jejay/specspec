@@ -4,31 +4,32 @@ import pytest
 
 from specspec import workspace as module
 from specspec.model import SpecError
-from specspec.workspace import add_node, load_snapshot, recover, serialize, set_retired
+from specspec.workspace import add_node, delete_nodes, load_snapshot, recover, serialize
 
 
 def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
     root, manifesto = workspace
     _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
     before, child = add_node(root, "requirement", [parent], "Child\n", "child")
-    original = module.os.replace
-    replacements = 0
+    original = Path.unlink
+    deletions = 0
 
-    def interrupted(source, target):
-        nonlocal replacements
-        if Path(target).parent == root / "_specspec":
-            replacements += 1
-            if replacements == 2:
+    def interrupted(target, *args, **kwargs):
+        nonlocal deletions
+        if target.parent == root / "_specspec":
+            deletions += 1
+            if deletions == 2:
                 raise OSError("Simulated process interruption")
-        return original(source, target)
+        return original(target, *args, **kwargs)
 
-    monkeypatch.setattr(module.os, "replace", interrupted)
+    monkeypatch.setattr(Path, "unlink", interrupted)
     with pytest.raises(OSError, match="Simulated"):
-        set_retired(root, [parent, child], True)
+        delete_nodes(root, [parent, child])
     assert not load_snapshot(root).valid
     assert (root / ".specspec-local" / "journal.json").exists()
     assert all(entry.suffix == ".md" for entry in (root / "_specspec").iterdir())
-    monkeypatch.setattr(module.os, "replace", original)
+    assert len(list((root / "_specspec").iterdir())) == 2
+    monkeypatch.setattr(Path, "unlink", original)
     recover(root)
     assert load_snapshot(root).files == before.files
 

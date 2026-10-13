@@ -59,11 +59,7 @@ def register(main, root_path, emit, guarded, json_option):
             project = root_path(root)
             snapshot = graph(project, ref, staged, graph_ref)
             snapshot.require_valid()
-            nodes = (
-                [require_node(snapshot, node_id)]
-                if node_id
-                else [n for n in snapshot.nodes if not n.retired]
-            )
+            nodes = [require_node(snapshot, node_id)] if node_id else snapshot.nodes
             result = checked(
                 lambda: resolve_nodes(
                     project, nodes, ref=ref, staged=staged, retention=action == "check"
@@ -113,7 +109,7 @@ def register(main, root_path, emit, guarded, json_option):
     ):
         project = root_path(root)
         node = require_node(load_snapshot(project), node_id)
-        if node.type != "implementation" or node.retired:
+        if node.type != "implementation":
             raise SpecError([Diagnostic("SOURCES", "Capture requires a live implementation node.")])
         source = checked(
             lambda: SourceReader(
@@ -150,7 +146,7 @@ def register(main, root_path, emit, guarded, json_option):
         project = root_path(root)
         node = require_node(load_snapshot(project), node_id)
         values = node.semantic()["sources"]
-        if node.type != "implementation" or node.retired or number > len(values):
+        if node.type != "implementation" or number > len(values):
             raise SpecError(
                 [Diagnostic("SOURCES", "Select a source on a live implementation node.")]
             )

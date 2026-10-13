@@ -185,7 +185,7 @@ def snapshot_from_files(
                             node.id,
                         )
                     )
-                elif not node.retired and "blob" not in source and not target.is_file():
+                elif "blob" not in source and not target.is_file():
                     errors.append(
                         Diagnostic(
                             "SOURCE_MISSING",
@@ -231,7 +231,6 @@ def new_node(
     return SpecNode(
         node_id,
         node_type,
-        False,
         parents,
         body,
         f"{SPEC_DIR}/{node_id}{slugify(slug)}.md",
@@ -329,14 +328,16 @@ def initialize(root: Path, body: str, slug: str = "project-manifesto") -> Snapsh
     return result
 
 
-def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes]]) -> Snapshot:
+def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes | None]]) -> Snapshot:
     with workspace_lock(root) as state:
         before = load_snapshot(root, ignore_state=True)
         before.require_valid()
         changes = operation(before)
         if not changes:
             return before
-        proposed_files = {**before.files, **changes}
+        proposed_files = {
+            path: raw for path, raw in {**before.files, **changes}.items() if raw is not None
+        }
         candidate = snapshot_from_files(root, proposed_files, check_sources=True)
         candidate.require_valid()
         if state.stat().st_dev != (root / SPEC_DIR).stat().st_dev:
@@ -345,9 +346,10 @@ def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes]]) -> Sna
             )
         staged: dict[str, Path] = {}
         for index, (path, raw) in enumerate(sorted(changes.items())):
-            temporary = state / f"stage-{index}"
-            temporary.write_bytes(raw)
-            staged[path] = temporary
+            if raw is not None:
+                temporary = state / f"stage-{index}"
+                temporary.write_bytes(raw)
+                staged[path] = temporary
         current_files, current_errors = read_files(root)
         if current_errors or current_files != before.files:
             cleanup(state)
@@ -364,7 +366,7 @@ def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes]]) -> Sna
                 },
             },
         )
-        for path, temporary in staged.items():
+        for path, raw in sorted(changes.items()):
             if (root / SPEC_DIR).is_symlink():
                 raise SpecError([Diagnostic("CONCURRENT", "Canonical directory became a symlink.")])
             target = root / path
@@ -380,7 +382,10 @@ def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes]]) -> Sna
                         )
                     ]
                 )
-            os.replace(temporary, target)
+            if raw is None:
+                target.unlink()
+            else:
+                os.replace(staged[path], target)
         result = load_snapshot(root, ignore_state=True)
         result.require_valid()
         cleanup(state)
@@ -436,13 +441,16 @@ def update_node(
     return mutate(root, operation)
 
 
-def set_retired(root: Path, ids: list[str], retired: bool) -> Snapshot:
-    def operation(before: Snapshot) -> dict[str, bytes]:
-        changes: dict[str, bytes] = {}
-        for node_id in ids:
-            node = replace(require_node(before, node_id), retired=retired)
-            changes[node.path] = serialize(node, before.files[node.path])
-        return changes
+def delete_nodes(root: Path, ids: list[str]) -> Snapshot:
+    """Physically remove only named files, after validating the remaining graph."""
+    if not ids or len(ids) != len(set(ids)):
+        raise SpecError([Diagnostic("DELETE", "Name a nonempty batch of distinct node IDs.")], 2)
+
+    def operation(before: Snapshot) -> dict[str, bytes | None]:
+        nodes = [require_node(before, node_id) for node_id in ids]
+        if any(node.type == "manifesto" for node in nodes):
+            raise SpecError([Diagnostic("DELETE", "The manifesto cannot be deleted.")])
+        return {node.path: None for node in nodes}
 
     return mutate(root, operation)
 

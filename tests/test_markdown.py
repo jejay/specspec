@@ -9,7 +9,7 @@ from specspec.git import semantic_diff
 from specspec.workspace import add_node, load_snapshot, update_node
 
 
-def test_manual_parent_body_and_withdrawal_changes_are_readable(workspace):
+def test_manual_parent_body_and_deletion_changes_are_readable(workspace):
     root, manifesto = workspace
     _, left = add_node(root, "requirement", [manifesto], "Left\n", "left")
     _, right = add_node(root, "requirement", [manifesto], "Right\n", "right")
@@ -24,10 +24,14 @@ def test_manual_parent_body_and_withdrawal_changes_are_readable(workspace):
     assert path.read_bytes() == raw
     diff = semantic_diff(before, after)
     assert [left, leaf] in diff["removed_edges"] and [right, leaf] in diff["added_edges"]
-    path.write_bytes(raw.replace(b"type: requirement", b"type: requirement\nretired: true"))
-    assert load_snapshot(root).graph.nodes[leaf].retired
     update_node(root, leaf, body="Tool edit after manual edits\n")
-    assert load_snapshot(root).graph.nodes[leaf].retired
+    path.unlink()
+    deleted = load_snapshot(root)
+    assert deleted.valid and leaf not in deleted.graph.nodes
+    assert (
+        next(c for c in semantic_diff(after, deleted)["changes"] if c["id"] == leaf)["kind"]
+        == "removed"
+    )
 
 
 def test_cli_outputs_have_no_content_hashes(workspace):
@@ -49,6 +53,6 @@ def test_cli_outputs_have_no_content_hashes(workspace):
         )
         assert result.exit_code == 0, result.output
         envelope = json.loads(result.output)
-        assert envelope["api_version"] == 4
+        assert envelope["api_version"] == 5
         assert "fingerprint" not in envelope["result"]
         assert "managed_hash" not in result.output

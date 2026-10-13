@@ -12,7 +12,7 @@ from specspec.cli import main
 from specspec.editor import editor_request
 from specspec.format import parse_node, read_document, serialize
 from specspec.model import ID_RE, SpecError
-from specspec.workspace import add_node, initialize, load_snapshot, new_node, set_retired
+from specspec.workspace import add_node, initialize, load_snapshot, new_node
 
 
 @pytest.mark.parametrize(
@@ -70,21 +70,20 @@ def test_double_hyphen_is_not_a_second_filename_separator():
         serialize(replace(node, path=f"_specspec/{node.id}--root.md"))
 
 
-def test_add_retries_live_retired_and_casefold_collisions_under_lock(workspace, monkeypatch):
+def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monkeypatch):
     root, manifesto = workspace
     # Keep this deterministic independently of the randomly generated root.
     values = iter([b"fooba", b"other"])
     monkeypatch.setattr(module.secrets, "token_bytes", lambda _: next(values))
     _, live = add_node(root, "requirement", [manifesto], "Live\n", "live")
-    _, retired = add_node(root, "requirement", [manifesto], "Withdrawn\n", "retired")
-    set_retired(root, [retired], True)
+    _, second = add_node(root, "requirement", [manifesto], "Second\n", "second")
     before = load_snapshot(root)
     alias = live[0].swapcase() + live[1:]
     assert ID_RE.fullmatch(alias), alias
     candidates = iter(
         [
             base64.urlsafe_b64decode(live),
-            base64.urlsafe_b64decode(retired),
+            base64.urlsafe_b64decode(second),
             base64.urlsafe_b64decode(alias),
             b"fresh",
         ]
@@ -126,20 +125,21 @@ def test_case_only_duplicate_graph_ids_are_invalid(workspace):
     assert any(d.code == "DUPLICATE" and "case-only" in d.message for d in snapshot.diagnostics)
 
 
-@pytest.mark.parametrize("retired", ["true", 1, None, [], {}])
-def test_withdrawal_flag_is_strictly_boolean(workspace, retired):
+@pytest.mark.parametrize("retired", [True, False, "true", 1, None, [], {}])
+def test_removed_withdrawal_field_is_rejected_even_when_false(workspace, retired):
     root, _ = workspace
-    with pytest.raises(SpecError, match="boolean"):
-        serialize(replace(load_snapshot(root).nodes[0], retired=retired))
+    node = load_snapshot(root).nodes[0]
+    with pytest.raises(SpecError, match="Unknown fields"):
+        parse_node({**node.frontmatter(), "retired": retired}, node.body, node.path)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 5, True])
+@pytest.mark.parametrize("version", [1, 2, 3, 4, True])
 def test_only_current_schema_is_readable_and_never_converted(workspace, version):
     root, _ = workspace
     before = load_snapshot(root)
     node = before.nodes[0]
     raw = before.files[node.path].replace(
-        b"format_version: 4", f"format_version: {str(version).lower()}".encode()
+        b"format_version: 5", f"format_version: {str(version).lower()}".encode()
     )
     (root / node.path).write_bytes(raw)
     assert not load_snapshot(root).valid
@@ -168,12 +168,18 @@ def test_full_id_round_trips_cli_editor_context_and_mermaid(workspace):
         manifesto
     ]
     assert load_snapshot(root).files == snapshot.files
-    retired = set_retired(root, [child], True)
-    assert retired.graph.nodes[child].id.endswith("=")
-    payload = json.loads(
-        runner.invoke(main, ["--root", str(root), "list", "--retired", "--json"]).output
-    )
-    assert payload["result"]["nodes"][0]["id"] == child
+    deleted = runner.invoke(main, ["--root", str(root), "delete", child, "--json"])
+    assert deleted.exit_code == 0, deleted.output
+    assert json.loads(deleted.output)["result"]["changed_ids"] == [child]
+    assert child not in load_snapshot(root).require_valid().nodes
+    for args in [
+        ["retire", child],
+        ["restore", child],
+        ["list", "--retired"],
+        ["list", "--live"],
+        ["context", manifesto, "--include-retired"],
+    ]:
+        assert runner.invoke(main, ["--root", str(root), *args, "--json"]).exit_code == 2
 
 
 @pytest.mark.parametrize("node_id", ["-_____8=", "--____8="])
@@ -191,7 +197,7 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     )
     assert added.exit_code == 0, added.output
     assert json.loads(added.output)["result"]["changed_ids"] == [node_id]
-    for command in ["show", "context", "impact", "retire", "restore"]:
+    for command in ["show", "context", "impact"]:
         result = runner.invoke(main, [*prefix, command, node_id, "--json"])
         assert result.exit_code == 0, result.output
     result = runner.invoke(
@@ -199,12 +205,15 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     )
     assert result.exit_code == 0, result.output
     assert load_snapshot(root).graph.nodes[node_id].body == "# Updated\n"
+    result = runner.invoke(main, [*prefix, "delete", node_id, "--json"])
+    assert result.exit_code == 0, result.output
+    assert node_id not in load_snapshot(root).graph.nodes
 
 
 def test_obsolete_fields_are_not_normalized(workspace):
     root, _ = workspace
     node = load_snapshot(root).nodes[0]
-    for field in ["managed_hash: ignored", "status: accepted"]:
+    for field in ["managed_hash: ignored", "status: accepted", "retired: false"]:
         raw = serialize(node).replace(b"type: manifesto", f"type: manifesto\n{field}".encode())
         data, body = read_document(raw, node.path)
         with pytest.raises(SpecError, match="Unknown fields"):

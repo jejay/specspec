@@ -9,10 +9,12 @@ add nested `.git` here or reinitialize the graph. The parent's instructions appl
 when editing its tracked fixture; in a standalone clone, use that clone's own index.
 
 Read `_specspec` via `list`, `context`, and `impact` before changing code. Use
-`add`, `update`, and `retire` for this checkout; format/API 4 has no `--expect` or
-fingerprints. Manual changes are permitted by the product, not recommended. Intentions and conclusions
-are distinguished by reasoning/relationships, not approval statuses. Withdraw the
-complete obsolete dependent branch, retaining its explanations and original IDs.
+`add`, `update`, and `delete` for this checkout; format/API 5 has no `--expect`,
+fingerprints or retired field/workflow. Manual changes are permitted by the product,
+not recommended. Intentions and conclusions are distinguished by reasoning and
+relationships, not approval states. Delete explicitly named obsolete branches;
+explain why in Git commits. Earlier nodes and explanations remain in Git history.
+Default workspace compares with HEAD; deleted files remain as D until committed.
 
 No fabricated AI conversation is required: plausible graph construction/revision
 is enough. The retained `STORY.md` is optional fictional illustration, not actual
@@ -28,7 +30,7 @@ Use canonical five-byte padded Base64url IDs (40 bits, full trailing `=`) and
 Obsolete surrounding SpecSpec graph revisions need not work. This Gantt history
 is the rigorous Git regression corpus; every maintained commit must be compliant.
 Whenever the node schema changes, reconstruct the ENTIRE maintained history as if
-all stages had always used today's SpecSpec. Refresh all refs, retired nodes,
+all stages had always used today's SpecSpec. Refresh all refs, earlier/deleted nodes,
 receipts, ledgers, bundle and tracked snapshot together, then verify every revision.
 Updating only HEAD is insufficient. See `history/WALKTHROUGH.md`. Save experiments
 before explicitly recreating stale clones; never reset them automatically or

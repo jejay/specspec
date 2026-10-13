@@ -39,9 +39,9 @@ The preceding Activity Bar host choice is withdrawn, not retained as a runtime
 compatibility mode. Native saves use non-writing Python plans and VS Code documents;
 managed project/Electron operations retain the Python writer. The dachshund artwork and tiny monochrome derivative remain separate.
 Git title/corner A/M/D/R colors use theme tokens, with modified-gutter blue for M;
-semantic fills, source-only context and withdrawal remain independent.
+semantic fills, source-only context and deletion remain independent.
 
-The adapters invoke the CLI with argument arrays and JSON output. It contains no independent schema, withdrawal, or graph validation implementation. The Python library does not depend on VS Code or Git for ordinary workspace operations.
+The adapters invoke the CLI with argument arrays and JSON output. It contains no independent schema, deletion, or graph validation implementation. The Python library does not depend on VS Code or Git for ordinary workspace operations.
 
 Distribution targets are `pipx install specspec` and `uvx --from specspec specspec`. Until published, support installation from a local checkout or Git URL. Do not assume the PyPI name is available; confirm it before publishing.
 
@@ -58,25 +58,25 @@ Use canonical padded RFC 4648 Base64url IDs over `secrets.token_bytes(5)`:
 40 random bits encoded as seven symbols plus one `=`, for eight characters total.
 Keep the trailing equals sign in the full identity and use it as the sole filename
 separator: `<id><ascii-slug>.md`. Generate under the writer lock and retry exact
-or case-only collisions against all current nodes, including withdrawn nodes,
+or case-only collisions against all current node files,
 regardless of summary. Validate zero pad bits and reject case-only graph aliases
 for portable filename safety. Frontmatter is authoritative, with a matching filename. Resolve references only by full ID. Discover direct files only; reject directories, symlinks, and non-node files.
 
 Search upward for the nearest `_specspec` directory, stopping even when it is invalid. Support an explicit project-root override. Keep all operation state outside `_specspec`; do not introduce a configuration file or node subdirectory.
 
-Current format/API 4 frontmatter (the sole supported scheme):
+Current format/API 5 frontmatter (the sole supported scheme):
 
 | Field | Rule |
 | --- | --- |
 | `id` | Required canonical padded Base64url of five octets, including `=`. |
 | `type` | `manifesto`, `requirement`, or `implementation`. |
-| `retired` | Optional strict boolean; true means withdrawn, not unreviewed. No approval `status` field. |
 | `parents` | Required array of unique IDs; order is non-semantic. |
-| `format_version` | Required integer `4` on the manifesto only. |
+| `format_version` | Required integer `5` on the manifesto only. |
 | `sources` | Optional implementation-only `{path, symbol?}` whole-file entries or `{path, symbol?, blob, mode, ranges}` Git-addressed text regions. |
 | `extensions` | Optional namespaced JSON-compatible metadata mapping. |
 
-Current format/API 4 adds strict (specific) and expanding (broad) source regions.
+Current format/API 5 retains strict (specific) and expanding (broad) source regions
+introduced in API 4, but removes the retired field/workflow.
 Full Git blob IDs anchor known source bytes independently of an unknown future
 commit ID; inclusive regions resolve into worktree/index/revisions without spec
 renumbering. Strict reports internal edits, expanding absorbs internal edits, and
@@ -98,7 +98,7 @@ Allow lists and headings without interpreting them as separate graph elements. S
 
 Maintain node, parent, and child dictionaries. Validate file schemas and duplicate IDs before resolving edges; never silently discard malformed nodes to manufacture a usable graph.
 
-Use deterministic Kahn ordering and iterative traversal. Return a concrete cycle witness rather than only reporting that sorting failed. Apply structural checks to every node and withdrawal checks to the live graph; there are no parent-approval gates. Invalid snapshots still expose diagnostics and file-level records, but cannot drive editing or complete context queries.
+Use deterministic Kahn ordering and iterative traversal. Return a concrete cycle witness rather than only reporting that sorting failed. Apply structural checks to every physically present node; there are no parent-approval gates. Invalid snapshots still expose diagnostics and file-level records, but cannot drive editing or complete context queries.
 
 Calculate closures on demand and rebuild from files on every invocation initially. The core graph checks are linear; deterministic heap ordering adds `O(V log V)`. A daemon or persisted index is unnecessary until measured latency justifies one.
 
@@ -123,13 +123,22 @@ Batch replacement is not filesystem-atomic. Interrupted operations remain explic
 
 `init` stages an entire new directory before exposing it at `_specspec`, refuses an existing workspace, and obtains manifesto text from the caller rather than inventing it.
 
-## 5. Risk-proportionate review and withdrawal
+## 5. Risk-proportionate review and physical deletion
 
 Review is a spectrum of confidence and attention, often concentrated on early intentions near the manifesto rather than every later conclusion. This is not a deterministic depth rule: risky details may warrant substantial review anywhere. Once the user judges an implementation attempt worth its uncertainty and token cost, no per-node proposed/accepted ceremony blocks it. Keep conclusions independently revisable as implementation and feedback improve understanding; neither implementation nor a commit proves correctness.
 
-Remove approval statuses, scores, parent-approval rules, and the accept command. Git additions communicate newness relative to the chosen revision; semantic changes and linked-source impact provide review context. Context export lists live siblings without deciding whether they are competing alternatives.
+Remove approval statuses, scores, parent-approval rules, and the accept command. Git additions communicate newness relative to the chosen revision; semantic changes and linked-source impact provide review context. Context export lists current siblings without deciding whether they are competing alternatives.
 
-Keep a strict optional retired boolean for withdrawal and retained history. Explicit retire/restore batches name their nodes; live nodes cannot depend on withdrawn parents, and the manifesto cannot be withdrawn. Restoration does not claim review or approval. Keep withdrawal controls separate from content saves.
+The user's deletion correction removes the retired flag and all retire/restore
+commands/filters/badges. Explicit `delete` batches physically remove named files
+under the existing writer/journal, using null replacement states; validate the
+remaining DAG first, without cascade or reparenting, and protect the manifesto.
+Record reasons in normal Git commits; earlier explanations belong in prior commits.
+Default workspace compares with freshly resolved HEAD: deleted base ghosts remain D
+through staging and disappear after commit. Both hosts watch HEAD/current refs and
+packed refs (including detached/linked worktrees); no default polling. Deleted details
+are read-only/copyable, not restorable statuses. Native Delete requires clean project
+SpecSpec documents. See [deletion](docs/deletion.md) and its separate graph intention/conclusion.
 
 Keep only the current node scheme in production tooling. The authorized conversion
 of both working graphs was performed once through a temporary journaled tool, not
@@ -148,9 +157,8 @@ specspec [--root <project>] init --manifesto <file>
 specspec [--root <project>] validate [--json] [--warnings-as-errors]
 specspec [--root <project>] add --type requirement --parent <id> --slug <text> --body <file>
 specspec [--root <project>] update <id> --body <file> [--parent <id> ...]
-specspec [--root <project>] retire <id>...
-specspec [--root <project>] restore <id>...
-specspec [--root <project>] list [--live | --retired] [--json]
+specspec [--root <project>] delete <id>...
+specspec [--root <project>] list [--json]
 specspec [--root <project>] show <id> [--ancestors] [--descendants] [--json]
 specspec [--root <project>] context <id> [--max-bytes <n>] [--json]
 specspec [--root <project>] impact <id> [--json]
@@ -163,7 +171,7 @@ specspec [--root <project>] recover
 
 Mutation commands accept `--json`, without fingerprints or `--expect`. Body input may use `-` for stdin so the extension needs no temporary node files. Parent changes are explicit full replacements, not additions inferred from text.
 
-Version-three JSON envelopes contain `api_version: 3`, `ok`, `result`, and `diagnostics`. Diagnostics have stable codes, severity, paths, optional node IDs, and corrective messages. Exit codes: `0` success, `1` invalid specification or rejected mutation, `2` invocation/I/O failure. Keep prose and terminal decoration out of JSON stdout.
+Current JSON envelopes contain `api_version: 5`, `ok`, `result`, and `diagnostics`. Diagnostics have stable codes, severity, paths, optional node IDs, and corrective messages. Exit codes: `0` success, `1` invalid specification or rejected mutation, `2` invocation/I/O failure. Keep prose and terminal decoration out of JSON stdout.
 
 ## 7. Git hook and revision diffs
 
@@ -179,7 +187,7 @@ The initial installer targets the selected workspace. Repositories containing mu
 
 ### Semantic diff
 
-Load each revision without checkout and detect its own manifesto version. An absent specification in the base revision is an empty baseline. Compare by ID; separate added/removed nodes, body changes, parent changes, withdrawal changes, metadata changes, and filename-only changes.
+Load each revision without checkout and detect its own manifesto version. An absent specification in the base revision is an empty baseline. Compare by ID; separate added/removed nodes, body changes, parent changes, metadata changes, and filename-only changes.
 
 Return base and target graph records plus edge additions/removals so the extension can display removed nodes and disconnected relationships. Compute impact from the union of old and new descendant closures. Map changed linked source files to implementation records and their requirement ancestors using references from both snapshots, including untracked live source files. Invalid snapshots yield diagnostics and an explicitly incomplete impact result.
 
@@ -195,17 +203,17 @@ Development launches use a dedicated workspace file and isolated profile so open
 
 ### Editing
 
-Selecting a node replaces the overview with a neighborhood view: direct parents and children stay compact, and the selected node expands to host its binding text, actual parent links, source references, and withdrawal/restoration controls. There is no editing sidebar. A **Total graph** back action returns to the overview without losing a draft; selecting a different node requires confirmation before discarding unsaved work. New nodes use the same expanded-card presentation.
+Selecting a node replaces the overview with a neighborhood view: direct parents and children stay compact, and the selected node expands to host its binding text, actual parent links, source references, and confirmed physical Delete controls. There is no editing sidebar. A **Total graph** back action returns to the overview without losing a draft; selecting a different node requires confirmation before discarding unsaved work. New nodes use the same expanded-card presentation.
 
 Explain minimum/maximum manifesto distance through the selected color legend rather than repeating hop labels on compact parents or the expanded card. Show each child’s **downstream node count**: all distinct reachable descendants at every depth, excluding the child itself. This incorporates grandchildren and every deeper generation as potential impact context, not a promise that every edit invalidates those nodes. Deduplicate IDs within each child’s subgraph; different children’s totals may overlap and are not additive. Use target metrics for surviving nodes and base metrics for removed nodes, never the potentially cyclic revision union.
 
-Show only linked parents in the editable parent list, with explicit removal and a separate “Add parent” candidate picker; choosing a candidate alone must not change the links. The manifesto displays no parents and offers no parent-editing controls. Text and parent changes call `update`; withdrawal and restoration use their dedicated commands; there is no acceptance action. New-node creation uses `add`. Keep original node contents with drafts and ask confirmation before overwriting externally changed node contents. Unrelated graph changes do not prevent saving. Re-read and validate current files before mutations; deleted-node drafts stay copyable rather than being recreated.
+Show only linked parents in the editable parent list, with explicit removal and a separate “Add parent” candidate picker; choosing a candidate alone must not change the links. The manifesto displays no parents and offers no parent-editing controls. Text and parent changes call `update`; physical deletion uses its dedicated managed command; there is no acceptance action. New-node creation uses `add`. Keep original node contents with drafts and ask confirmation before overwriting externally changed node contents. Unrelated graph changes do not prevent saving. Re-read and validate current files before mutations; deleted-node drafts stay copyable rather than being recreated.
 
 Use full IDs in messages, not webview-generated filesystem paths. The host validates messages against the current graph before invoking the CLI. Disable mutation commands for historical comparison views and untrusted workspaces. Watch canonical files and refresh after changes; coalesce events, retry incomplete saves a bounded number of times, serialize reads/writes, and retain unsaved form content/caret/camera. Compare loaded records directly to skip unchanged redraws. Invalid files retain the last valid graph visibly marked out of date and disable mutations until a valid reload; never rewrite external changes. VS Code uses its filesystem watcher; Electron watches the project parent and canonical directory, reattaching on directory replacement. Optional polling uses a configurable millisecond interval defaulting to 0/off (`specspec.pollIntervalMs`, `--poll-interval-ms` / `SPECSPEC_POLL_INTERVAL_MS`). Dispose timers/watchers on closure/project switches and report watcher errors without secretly enabling polling. Explicit refresh remains; watcher-only delivery on every mounted/network filesystem and race-free writes against noncooperating editors are not guaranteed.
 
 ### Colors and arrows
 
-Provide **Min. Distance to Manifesto** (default), **Max. Distance to Manifesto**, **Node type**, and **Git/Revision Status** fill modes with legends. Use the user's exact seven-entry table: #bc82c9, #7e97e6, #1facce, #37b390, #92a64b, #ca8d3e, #dc7b7c. Their full playground output confirms count 7, OKLCH L=.69/C=.12 and hues 320 → 20; the generator reproduces every hex value. The later user correction swaps Requirement/Added only: Added gets the green closer to its text cue and Requirement the leftover. Distance one starts at the first swatch, seven reaches the last, then repeats; unknown paths are neutral. Zero-based indices are requirement 4, implementation 0, added 3, changed/renamed 1, removed 6 and source-changed 5. Revision fills choose table green for A, blue for M/R, red for D and amber for source-only impact, with neutral unchanged/no-comparison/draft fills. Apply the selected comparison kind to the manifesto too; direct changes take precedence over source impact, and withdrawal does not mean deletion. Keep existing title/corner theme tokens and edge colors independent. Compute minimum via iterative BFS and maximum via topological dynamic programming over all snapshot links, with zero at the manifesto. Deduplicate repeated edges and leave unreachable/cycle-blocked maximums unknown rather than inventing a finite value. Use target metrics for surviving nodes and base metrics for removed nodes, never the overlay union or visible placement backbone. Retain the existing distance preference as minimum and persist maximum separately. Remove on-node hop labels while retaining downstream/Git/withdrawal badges. Keep Git changes distinct through labels and patterned strokes, not by overriding type/distance fills. Neither mode expresses acceptance or confidence; label withdrawal separately. The clarified manifesto-color request fixes its accent at #d3d3d3 in distance/type modes, with matching legends, but uses the same theme text and 15% resting/24% hover tint as other cards, not a solid light-gray fill. Only the neutral manifesto in distance/type modes gets a white hover border; in revision mode the manifesto, like other nodes, gets brighter and more strongly colored hover in its selected fill hue. The earlier all-card white-border choice overgeneralized the root request and is superseded by the color-preserving hover correction. High-contrast resting styles stay shared too. Keep colors, counts, focus, and draft state out of canonical metadata. Collapse linked-source review information into an informational list rather than a large orange warning paragraph.
+Provide **Min. Distance to Manifesto** (default), **Max. Distance to Manifesto**, **Node type**, and **Git/Revision Status** fill modes with legends. Use the user's exact seven-entry table: #bc82c9, #7e97e6, #1facce, #37b390, #92a64b, #ca8d3e, #dc7b7c. Their full playground output confirms count 7, OKLCH L=.69/C=.12 and hues 320 → 20; the generator reproduces every hex value. The later user correction swaps Requirement/Added only: Added gets the green closer to its text cue and Requirement the leftover. Distance one starts at the first swatch, seven reaches the last, then repeats; unknown paths are neutral. Zero-based indices are requirement 4, implementation 0, added 3, changed/renamed 1, removed 6 and source-changed 5. Revision fills choose table green for A, blue for M/R, red for D and amber for source-only impact, with neutral unchanged/no-comparison/draft fills. Apply the selected comparison kind to the manifesto too; direct changes take precedence over source impact; D is physical deletion relative to the base. Keep existing title/corner theme tokens and edge colors independent. Compute minimum via iterative BFS and maximum via topological dynamic programming over all snapshot links, with zero at the manifesto. Deduplicate repeated edges and leave unreachable/cycle-blocked maximums unknown rather than inventing a finite value. Use target metrics for surviving nodes and base metrics for removed nodes, never the overlay union or visible placement backbone. Retain the existing distance preference as minimum and persist maximum separately. Remove on-node hop labels while retaining downstream/Git badges. Keep Git changes distinct through labels and patterned strokes, not by overriding type/distance fills. Neither mode expresses acceptance or confidence; no withdrawal state is stored. The clarified manifesto-color request fixes its accent at #d3d3d3 in distance/type modes, with matching legends, but uses the same theme text and 15% resting/24% hover tint as other cards, not a solid light-gray fill. Only the neutral manifesto in distance/type modes gets a white hover border; in revision mode the manifesto, like other nodes, gets brighter and more strongly colored hover in its selected fill hue. The earlier all-card white-border choice overgeneralized the root request and is superseded by the color-preserving hover correction. High-contrast resting styles stay shared too. Keep colors, counts, focus, and draft state out of canonical metadata. Collapse linked-source review information into an informational list rather than a large orange warning paragraph.
 
 Use Dagre for a left-to-right presentation, with origin-anchored earliest ranks rather than sink-biased network-simplex ranking. For a DAG, each node's rank is one plus its maximum parent rank; short branches remain near the manifesto even when they feed a distant shared sink. Reverse the engine input and use its RL longest-path ranker to obtain those source ranks, then reverse waypoints back to visible relationship direction. Keep shortest manifesto distance separate from visual rank. Compute all-parent ranks first, then give Dagre a deterministic deepest-parent placement backbone: this preserves those ranks but avoids sink-driven vertical stretching. Draw all non-backbone relationships through the nearest clear gaps across skipped columns, with outer gutters as fallback. This forest is a layout aid, not a dependency choice or canonical tree. Rank target relationships in the overview/current focus and base relationships for a removed selected node; extra revision links remain overlays, not live-rank constraints. Feed it stable ID/edge ordering and intrinsic border-box dimensions—not viewport dimensions or zoomed screen rectangles. Ordinary compact Requirement/Implementation cards stay 264×112, and their expanded editor retains a fixed 860-world-unit width (previously 620) to fit typical 80-column text; textarea and revision display share the host editor monospace font/size. Use completely square 0px Implementation corners and 24px Requirement corners in both states. The manifesto instead has a true circle: 264×264 compact, and an expanded diameter equal to the unchanged 822px-wide native content rectangle's diagonal plus 48px, rounded up. Center the same form inside that square/50%-radius outline, grow on intrinsic form resize and keep Git markers inside its arc. This deliberately enlarges the root's outer footprint, not its text width, colors or schema. This is not a guarantee for arbitrarily large fonts or wide glyphs. Measure intrinsic height when forms resize. The current modest spacing adjustment shortens compact height from 128 to 112 world units, increases rank gap from 128 to 140 and sibling gap from 36 to 44. These are revisable implementation constants: despite larger gaps, vertical pitch falls from 164 to 156. Verify two-line headings/badges fit and curves still clear cards. Cache unchanged layouts and preserve the focused card's screen anchor when its size changes. Resizing the window must never wrap or reorganize nodes.
 
@@ -241,7 +249,7 @@ Current scope is a functional graph editor, graph-diff overlay, relational LR la
 
 ## 9. Source references and agent context
 
-Use canonical project-relative POSIX paths with an optional descriptive symbol. Reject absolute paths, traversal, control characters, redundant separators/dot components, and resolved symlink escapes. Warn about missing live source files, but do not make source existence a structural prerequisite. Retired nodes may refer to removed files.
+Use canonical project-relative POSIX paths with an optional descriptive symbol. Reject absolute paths, traversal, control characters, redundant separators/dot components, and resolved symlink escapes. Warn about missing live source files, but do not make source existence a structural prerequisite. Earlier deleted-node records may refer to removed files in historical comparisons.
 
 Export a selected node with its ancestor closure, then clearly separated direct children and live siblings, using `sibling_ids` rather than `proposal_ids`. Deduplicate and order deterministically. Return complete node records without a snapshot fingerprint.
 
@@ -249,9 +257,9 @@ Never silently truncate binding text. Measure the actual serialized response, in
 
 ## 10. Build sequence and verification
 
-1. **Python package and read/write core:** strict hash-free format, graph validation, CLI, transactional init/add/update/withdrawal operations, and recovery.
+1. **Python package and read/write core:** strict hash-free format, graph validation, CLI, transactional init/add/update/delete operations, and recovery.
 2. **Git integration:** staged validation, hook installation, revision snapshots, semantic diffs, and old/new impact analysis.
 3. **VS Code slice:** graph rendering, node creation/editing, HEAD/workspace overlays, and commit-to-commit comparisons through the CLI.
 4. **Dogfooding and distribution:** installable wheel, package checks, CI, editor packaging, and risk-proportionate self-specification review.
 
-Test malformed frontmatter, duplicate IDs, cycles, multi-parent graphs, withdrawal failures, current-only schema rejection and interrupted-write recovery, valid manual changes, watcher/polling/draft conflicts, symlink/path escapes, comments/body preservation, interrupted mutations, invalid/partial external saves, partial staging, hook non-overwrite, slug renames, removed edges, and missing/unsupported revision formats. Run CLI integration tests in disposable repositories. Test Python on Windows and Linux; compile the extension and manually verify its VS Code UI before calling editor behavior production-ready.
+Test malformed frontmatter, duplicate IDs, cycles, multi-parent graphs, deletion failures and HEAD ghost/commit transitions, current-only schema rejection and interrupted-write recovery, valid manual changes, watcher/polling/draft conflicts, symlink/path escapes, comments/body preservation, interrupted mutations, invalid/partial external saves, partial staging, hook non-overwrite, slug renames, removed edges, and missing/unsupported revision formats. Run CLI integration tests in disposable repositories. Test Python on Windows and Linux; compile the extension and manually verify its VS Code UI before calling editor behavior production-ready.

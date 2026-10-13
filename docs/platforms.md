@@ -26,7 +26,7 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   narrow sidebar, not the large workspace the user intended. Earlier supported-API
   ordering evidence remains history, not a current instruction to drag an icon.
 - Electron: isolated/sandboxed renderer, fixed narrow preload API, sender-checked
-  main-process IPC, explicit local project authorization, shell-free Python API 4,
+  main-process IPC, explicit local project authorization, shell-free Python API 5,
   bounded process/render checks, no remote navigation/popups/renderer filesystem.
   No bundled Python, installer/signing/updater, secret integration or production
   security certification in the initial slice.
@@ -36,7 +36,8 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   Added/deleted use `gitDecoration` theme foregrounds; M uses the theme's blue
   `editorGutter.modifiedBackground`, because VS Code modified-file foreground is
   often amber. Standalone uses VS Code dark defaults. Source-only changes do not
-  invent a node M; retirement is not deletion. Semantic fills remain independent.
+  invent a node M; deleted HEAD nodes remain D until committed. No retired workflow.
+  Semantic fills remain independent.
 
 ## Preceding shared-host/sidebar slice (historical evidence)
 
@@ -64,7 +65,7 @@ sidebar, while checking geometry/metrics for every displayed node/edge.
 
 The user's later correction permits manual changes, removes fingerprint/managed_hash
 gates, and asks for file-watcher synchronization with configurable default-off
-polling. Both hosts use API 4. VS Code watches canonical-directory/file changes;
+polling. Both hosts use API 5 and watch HEAD/current refs/packed refs for commits. VS Code watches canonical-directory/file changes;
 Electron watches the parent and canonical directory and reattaches on replacement.
 `specspec.pollIntervalMs` / `--poll-interval-ms` (or `SPECSPEC_POLL_INTERVAL_MS`) use
 milliseconds with zero as default. The shared session coalesces events, retries

@@ -53,10 +53,11 @@ prerequisites or rescheduling. Give me priorities, local autosave, and a JSON fi
 I can keep. I don't want accounts or a scheduling service.
 
 **AI (simulated):** That reverses the product scope and date model. I checked impact
-before changing the graph: the obsolete branch is **13 of the 17 live nodes**,
-including its two implementation explanations. I'll retire that complete branch,
-not delete the evidence or rewrite the original intention to claim you always
-wanted a personal app. The broad manifesto, readable timeline, safe input, and
+before changing the graph: the obsolete branch is **13 of the 17 nodes**,
+including its two implementation explanations. I'll delete those files in an
+explicit batch and explain the scope/date-model reversal in the Git commit.
+Earlier explanations remain in Git, not a retired status or a rewrite of the
+original intention claiming you always wanted a personal app. The broad manifesto, readable timeline, safe input, and
 revisable-choice intentions survive. New intentions describe manual dates, weekends,
 priorities, and local ownership. Separate conclusions choose inclusive date ranges,
 browser storage, and a version-one JSON schema.
@@ -64,8 +65,8 @@ browser storage, and a version-one JSON schema.
 **User (simulated):** Yes, the manual version is the useful next experiment. Storage
 can be browser-local, but don't pretend it is a backup or synchronized workspace.
 
-**AI (simulated):** The managed retirement was one guarded batch after reading
-impact, with no live dependents left on withdrawn parents. The replacement graph
+**AI (simulated):** The managed deletion was one guarded batch after reading
+impact, with no dangling parent references in the remaining graph. The replacement graph
 is committed before rewriting the prototype. At this spec-only commit, the code
 still implements stage 01; the next commit will realize stage 02. That temporary
 boundary is explicit rather than a fabricated implementation claim.
@@ -87,13 +88,13 @@ We work Monday–Friday. I need to freeze a baseline, change a duration, and see
 finish dates move. Keep local files and autosave. Still no portfolio, owner leveling,
 accounts, or cloud. Don't silently reinterpret my old personal-plan JSON.
 
-**AI (simulated):** This replaces **9 of the 16 live nodes**: personal scope, manual
+**AI (simulated):** This replaces **9 of the 16 nodes**: personal scope, manual
 ranges/weekends, priorities, independent tasks, the v1 schema choice, and both
 implementation explanations. Portability, local autosave, and the browser-storage
-choice survive with the common intentions. I'll withdraw the obsolete branch in
-one guarded batch. Weekday dependencies resemble the initial experiment, but this
-new workshop forecast is a separately justified conclusion, not restoration or
-approval of the old portfolio branch.
+choice survive with the common intentions. I'll delete the obsolete branch in
+one guarded batch and explain why in the Git commit. Weekday dependencies resemble
+the initial experiment, but this workshop forecast is a separately justified
+conclusion, not resurrection or approval of the old portfolio branch.
 
 **User (simulated):** Use the simple dependency forecast, not an optimizer. Excluding
 holidays and resources is fine if the app says so. Baseline capture must be explicit;
@@ -134,13 +135,13 @@ Chromium's inline data-URL date icons, which do not contact an external service.
 
 This is prototype evidence, not exhaustive manual/accessibility/platform/security/
 performance certification. No holidays, resource optimizer, accounts, or cloud were
-smuggled back into the app. The graph contains 44 nodes, evenly divided between live
-and retained withdrawn explanations. Review remains proportionate to this small,
+smuggled back into the app. The graph contains 22 nodes; 22 removed explanations
+remain in earlier Git revisions, not retired files in the working graph. Review remains proportionate to this small,
 revisable experiment; there is no invented per-node approval ceremony.
 
 **AI (simulated, Git boundary):** This implementation is committed after its spec.
 The following audit records its real hash once it exists and verifies all three
-spec/code pairs and both large withdrawals against Git blobs. Recording a future
+spec/code pairs and both large deletions against Git blobs and commit reasons. Recording a future
 commit's hash inside itself would be fiction, so the ledger is completed afterward.
 
 ## Final audit — the history is real
@@ -149,7 +150,7 @@ The maintained final implementation is tagged `stage/03-code`; its actual curren
 commit ID is recorded in `history/revisions.json`, not the obsolete development
 repository hash. Its following audit verifies all three spec/code pairs, the
 initially absent graph/code, fresh current CLI receipt contents, large explicit
-withdrawals, and retained branch semantics.
+deletions, commit reasons, and earlier branch semantics in Git.
 The first audit exposed the legitimate empty predecessor snapshot before `init`;
 the verifier now treats that boundary explicitly rather than requiring a nonexistent
 graph. Parent/nested graph tests also check exact staged blobs independently using a

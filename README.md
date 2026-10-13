@@ -34,7 +34,7 @@ explains the recurring obligation. Plausible graph emergence/revision is enough;
 
 ## Implementation source regions
 
-[Source-region guide](docs/source-regions.md): current format/API 4 supports
+[Source-region guide](docs/source-regions.md): current format/API 5 supports
 whole-file hints and full Git blob anchors with multiple inclusive ranges.
 **Strict** (specific) reports internal changes; **expanding** (broad) includes them.
 Positions resolve without renumbering the spec; ambiguity/deletion/unavailable
@@ -94,7 +94,7 @@ specspec update <requirement-id> --body revised-requirement.md
 specspec context <requirement-id> --json
 ```
 
-`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `retire` and `restore` take multiple explicitly named IDs; withdrawal dependency rules apply to the resulting batch. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
+`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `delete` takes multiple explicitly named IDs and physically removes their Markdown files; the remaining DAG must be valid. No implicit descendant deletion or reparenting. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
 
 The CLI and graph editor are recommended, but manual `_specspec` Markdown edits are allowed. Validation checks actual schema and graph consistency, not how the files were edited. There are no stored `managed_hash` markers or graph fingerprints. Valid manual changes need no repair or provenance acknowledgement.
 
@@ -102,16 +102,28 @@ Node IDs are canonical padded Base64url of **five random bytes (40 bits)**:
 seven symbols plus `=`, eight characters in total. The full trailing equals sign
 belongs to the identity and also separates it from the filename summary, for
 example `XV5_rPQ=specspec-manifesto.md`. Tool creation retries project-local
-collisions, including withdrawn nodes and case-only aliases, under the writer
+collisions against current node files, including case-only aliases, under the writer
 lock. IDs remain case-sensitive; these are references, not security tokens.
 
 The flat `_specspec` directory contains nodes only. Global `format_version` metadata belongs on the manifesto. Runtime locks, staging files, and recovery journals live in the ignored `.specspec-local` directory. Do not delete an unfinished journal: run `specspec recover`. Use `recover --force-lock` only after confirming that no writer is running.
 
-## Schema and withdrawal
+## Schema, deletion and the default HEAD comparison
 
-Format 3 has no `managed_hash` or `status` field. Ordinary nodes have no stored review stage; optional `retired: true` marks a withdrawn explanation retained as history. The manifesto cannot be retired, and live nodes cannot depend on retired parents. `specspec restore ID` reverses withdrawal; it does not declare approval.
+Format/API **5** has no `managed_hash`, `status` or `retired` field. Withdraw a node
+by deleting its Markdown file (`specspec delete <id>...` or a valid manual deletion).
+Explain why in your normal Git commit. Earlier content stays in Git history, not
+flagged files. The manifesto cannot be deleted; repair surviving parent references
+or explicitly delete a complete dependent batch first. See [the deletion guide](docs/deletion.md).
 
-Only the current compact-ID format/API **3** schema is supported. Obsolete
+The default workspace always compares against **HEAD**, not the index. A deleted
+HEAD node remains visible as **D**, with read-only, copyable earlier content and
+links, including after staging. It vanishes once the deletion is committed; both
+hosts watch HEAD/ref changes. Explicit historical comparisons still show earlier
+nodes. Unborn Git has an empty baseline; non-Git/invalid baselines show a clear
+comparison-unavailable note. No default polling, staging, commits or status-restore
+workflow is introduced. Native-document Delete requires saved project documents.
+
+Only the current compact-ID format/API **5** schema is supported. Obsolete
 node formats, UUID IDs and unknown fields are rejected, not silently normalized.
 There is no permanent migration command or editor conversion control. Both working
 graphs were converted once through a temporary journaled tool. Old root-history
@@ -179,7 +191,7 @@ Curved connections run directly from right to left card boundaries, including ci
 
 **Navigate:** middle-button drag or drag the background to pan; wheel / pinch to zoom around the pointer. Use **− / +**, **100%**, **Frame graph** and **Frame node** to recover your view. With the canvas focused, arrow keys pan, `+` / `-` zoom, `1` restores actual size, and `Home` / `F` frames the graph. Native form scrolling, text selection, and editing retain their normal behavior. Cameras survive refresh and back navigation; no positions or camera preferences are written into `_specspec`.
 
-Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** offers **Min. Distance to Manifesto** (shortest directed path, default), **Max. Distance to Manifesto** (longest directed path), **Node type**, and **Git/Revision Status**, with legends. Distance modes cycle through the seven colors selected in the playground, from purple (one hop) to red, repeating after seven hops. Node types reuse the selected yellow-green and purple; Added fills take the teal-green closer to the existing added text cue. Paths count relationships from the manifesto in each revision—not the focused subset or comparison overlay. None is an acceptance score. In distance/type modes the manifesto keeps a gray accent and white hover border, with the same tinted background as other cards—not a solid pale fill. In **Git/Revision Status**, including on the manifesto, fills use rainbow green for A, blue for M/R, red for D, amber for linked-source impact and neutral gray for unchanged nodes. Labels distinguish rename/source-only/withdrawal; no comparison and unsaved drafts are neutral, not fictitious Git changes. Existing themed titles/letters and connection colors remain separate. Status-colored manifesto borders retain their hue on hover like other nodes. All unrelated nodes, including the manifesto, can still darken temporarily.
+Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** offers **Min. Distance to Manifesto** (shortest directed path, default), **Max. Distance to Manifesto** (longest directed path), **Node type**, and **Git/Revision Status**, with legends. Distance modes cycle through the seven colors selected in the playground, from purple (one hop) to red, repeating after seven hops. Node types reuse the selected yellow-green and purple; Added fills take the teal-green closer to the existing added text cue. Paths count relationships from the manifesto in each revision—not the focused subset or comparison overlay. None is an acceptance score. In distance/type modes the manifesto keeps a gray accent and white hover border, with the same tinted background as other cards—not a solid pale fill. In **Git/Revision Status**, including on the manifesto, fills use rainbow green for A, blue for M/R, red for D, amber for linked-source impact and neutral gray for unchanged nodes. Labels distinguish rename, deletion and source-only impact; no comparison and unsaved drafts are neutral, not fictitious Git changes. Existing themed titles/letters and connection colors remain separate. Status-colored manifesto borders retain their hue on hover like other nodes. All unrelated nodes, including the manifesto, can still darken temporarily.
 
 To experiment with the palette yourself, open [`tools/rainbow-playground/index.html`](tools/rainbow-playground/index.html) directly in a browser. Adjust color count, lightness, chroma and hue endpoints; preview dark/light tinted nodes and copy parameters JSON, full palette JSON or CSS variables to paste back to the assistant. This separate offline tool does not apply or save anything in SpecSpec. See its [guide](tools/rainbow-playground/README.md).
 
@@ -187,7 +199,7 @@ To experiment with the palette yourself, open [`tools/rainbow-playground/index.h
 
 Nodes no longer repeat hop-distance labels; the selected color legend explains that context. Child cards still show **N downstream**: the entire reachable descendant subgraph, including every deeper generation, excluding that child and deduplicating shared nodes. Different child totals may overlap; this is potential-impact context rather than guaranteed invalidation.
 
-The webview supports node creation, binding-text/parent/source editing, explicit withdrawal/restoration, and graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. Expanded cards are wider so typical 80-column monospace lines fit both the Markdown editor and base-revision text display; compact cards keep their existing size. Node-file tabs update their bound VS Code `TextDocument` through Python-planned edits, with native dirty state, Save/autosave, undo/redo and recovery. Selecting another node opens its file editor. Project panels and Electron retain Python-managed writes; create nodes through **Open Graph**. Commit-target comparison views are read-only. See [document/persistence semantics](docs/native-editors.md). Unsupported schemas report diagnostics without conversion controls; invalid files never silently lose drafts or get rewritten. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
+The webview supports node creation, binding-text/parent/source editing, confirmed physical node deletion, and HEAD-relative graph-diff overlays. **Parents** lists actual linked nodes; a separate **Add parent** picker offers candidates without linking them until you click **Add parent**. The manifesto has no parents or parent-editing controls. Expanded cards are wider so typical 80-column monospace lines fit both the Markdown editor and base-revision text display; compact cards keep their existing size. Node-file tabs update their bound VS Code `TextDocument` through Python-planned edits, with native dirty state, Save/autosave, undo/redo and recovery. Selecting another node opens its file editor. Project panels and Electron retain Python-managed writes; create nodes through **Open Graph**. Commit-target comparison views are read-only. See [document/persistence semantics](docs/native-editors.md). Unsupported schemas report diagnostics without conversion controls; invalid files never silently lose drafts or get rewritten. Untrusted workspaces cannot execute the tool. No project Markdown is executed or loaded as HTML.
 
 **Markdown synchronization:** both hosts reload on file-watcher notifications, coalescing bursts and briefly retrying incomplete saves. Polling is **off by default**. Enable it in VS Code with `"specspec.pollIntervalMs": 5000`, or in Electron with `--poll-interval-ms 5000` / `SPECSPEC_POLL_INTERVAL_MS=5000`; `0` disables it. Watchers remain enabled. Explicit Refresh is always available; watcher-only delivery depends on the OS/filesystem and is not guaranteed on every network/mounted drive.
 
@@ -225,7 +237,7 @@ The adapter seam supports later integration work, not an existing agent integrat
 colors, relative to the selected base. A/D use VS Code Git resource foregrounds; M uses
 the theme's modified-gutter blue, since modified-resource foreground is often amber.
 Electron uses Dark Modern/default Git colors. Larger, heavier corner letters fit within unchanged compact cards. Semantic fills, source-only impact and
-withdrawal stay separate: source changes don't invent M, and retirement is not deletion.
+deletion stay separate: source changes don't invent M, and D is physical deletion relative to the comparison base.
 The [full dachshund SVG and minimal icon](branding/README.md) are preserved/derived
 separately; resvg miniature light/dark renders and real-host screenshots were inspected.
 

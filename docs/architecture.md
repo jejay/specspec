@@ -18,9 +18,9 @@ corrections rather than treating those descriptions as current contracts.
 - **Canonical data is a Markdown DAG, not a database.** Each direct
   `_specspec/<id><slug>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only format/API 4
+  potentially multiple parents, and terminal implementations. Only format/API 5
   and padded five-byte Base64url IDs, including the final `=`, are supported.
-- **Python owns domain meaning.** Schema, graph rules, withdrawal, Markdown plans,
+- **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
   No host reimplements those rules. Each CLI invocation rebuilds snapshots;
   there is no daemon or persistent graph index.
@@ -29,8 +29,9 @@ corrections rather than treating those descriptions as current contracts.
   Python plans to native text documents. These saves are deliberately *not*
   Python transactions.
 - **Presentation is not specification.** Cameras, focus, colors, layout and drafts
-  do not enter canonical metadata. Graph depth is not confidence; retirement is
-  withdrawal, not deletion or approval. Agent context is implemented as CLI
+  do not enter canonical metadata. Graph depth is not confidence; withdraw by
+  deleting node files, with reasons/earlier explanations in Git. Deleted HEAD nodes
+  remain D through staging and disappear after commit; no retired status exists. Agent context is implemented as CLI
   exports; Claude Code/Codex connectors are not implemented.
 
 ## A. Follow the runtime boundaries
@@ -45,7 +46,7 @@ corrections rather than treating those descriptions as current contracts.
 
 The bridge spawns the trusted executable with argument arrays, `--root`, and
 `shell: false`. Bodies or editor requests go through UTF-8 stdin. JSON stdout has
-`{api_version: 4, ok, result, diagnostics}`; process time and output are bounded.
+`{api_version: 5, ok, result, diagnostics}`; process time and output are bounded.
 CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
 or I/O failures. An editor plan can succeed while reporting
 `snapshot.valid: false`: it preserves repairable intermediate text, not a valid
@@ -144,7 +145,7 @@ validates the index, not repaired/unstaged working files; hook installation is
 opt-in and preserves existing hooks. Ordinary exploration never stages, commits or
 switches branches.
 
-Semantic diffs match full IDs, distinguishing body/parent/withdrawal/metadata
+Semantic diffs match full IDs, distinguishing body/parent/metadata
 changes from pure filename renames and raw file changes. They return both snapshots
 and edge additions/removals. Structural impact includes descendants from **both**
 old and new graphs, so removing an edge cannot hide its earlier dependents.

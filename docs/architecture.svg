@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2660" viewBox="0 0 2400 2660" role="img" aria-labelledby="architecture-title architecture-description">
   <title id="architecture-title">SpecSpec architecture — control, data and persistence flows</title>
-  <desc id="architecture-description">Engineering introduction to the current format/API 4 implementation. A shared, unprivileged DOM/SVG canvas communicates through narrow VS Code or Electron adapters with a shared GraphSession and bounded, shell-free Python CLI bridge. Python owns the Markdown schema, snapshot construction, rooted DAG rules, edit planning, journaled managed writes, Git snapshots and semantic/source impact. Saved nodes live directly in _specspec; managed transaction state lives separately in .specspec-local. Blue arrows are control calls; teal arrows are records, bytes or text; orange arrows persist state or files; dashed purple arrows are refresh hints. A refresh flow shows coalesced watcher/document/Git events, overlay reads, last-valid-graph reconciliation, and token/full-membership render acknowledgements. Two save flows distinguish managed CLI/Electron/project-panel transactions from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native saves are not Python-journaled and can save invalid text. A final source map explains where to change domain rules, shared presentation, coordination and host adapters, and why serious Git/host tests clone the independently maintained Gantt bundle. No obsolete schema readers, approval gates, daemon or agent connectors are implied. Architectural arrows omit incidental calls; see architecture.md and the canonical specification graph for details.</desc>
+  <desc id="architecture-description">Engineering introduction to the current format/API 5 implementation, with physical node deletion and default HEAD-relative D ghosts until committed. A shared, unprivileged DOM/SVG canvas communicates through narrow VS Code or Electron adapters with a shared GraphSession and bounded, shell-free Python CLI bridge. Python owns the Markdown schema, snapshot construction, rooted DAG rules, edit planning, journaled managed writes, Git snapshots and semantic/source impact. Saved nodes live directly in _specspec; managed transaction state lives separately in .specspec-local. Blue arrows are control calls; teal arrows are records, bytes or text; orange arrows persist state or files; dashed purple arrows are refresh hints. A refresh flow shows coalesced watcher/document/Git events, overlay reads, last-valid-graph reconciliation, and token/full-membership render acknowledgements. Two save flows distinguish managed CLI/Electron/project-panel transactions from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native saves are not Python-journaled and can save invalid text. A final source map explains where to change domain rules, shared presentation, coordination and host adapters, and why serious Git/host tests clone the independently maintained Gantt bundle. No obsolete schema readers, approval gates, daemon or agent connectors are implied. Architectural arrows omit incidental calls; see architecture.md and the canonical specification graph for details.</desc>
   <metadata>Documentation of the current checkout, not a proposed architecture. Source references are repository-relative. Hand-authored, self-contained SVG: no scripts, external fonts, images or remote assets. Companion: docs/architecture.md. Canonical reasoning: docs/own-spec.md and _specspec/.</metadata>
   <defs>
     <style>
@@ -45,7 +45,7 @@
   <path d="M64 269H2336" stroke="#d8e2eb" stroke-width="1.5"/>
 
   <g id="introduction">
-    <text x="64" y="70" class="kicker">ENGINEERING FIELD GUIDE / CURRENT FORMAT &amp; API 4</text>
+    <text x="64" y="70" class="kicker">ENGINEERING FIELD GUIDE / CURRENT FORMAT &amp; API 5</text>
     <text x="64" y="126" class="title">SpecSpec: control &amp; data flow</text>
     <text x="64" y="173" class="subtitle">One canonical Markdown DAG. One Python authority. One shared canvas. Two save lifecycles.</text>
     <rect x="1998" y="63" width="338" height="48" rx="24" fill="#edf5f2"/>
@@ -117,7 +117,7 @@
       <rect x="654" y="982" width="512" height="112" rx="10" class="card"/>
       <text x="678" y="1019" class="heading">Bounded CLI bridge</text>
       <text x="678" y="1055" class="code">graph-ui-common/host/cli.cjs</text>
-      <text x="654" y="1112" class="foot">argv + UTF-8 stdin · shell:false · API 4 stdout</text>
+      <text x="654" y="1112" class="foot">argv + UTF-8 stdin · shell:false · API 5 stdout</text>
     </g>
 
     <g id="python-core">
@@ -127,7 +127,7 @@
       <text x="1328" y="487" class="code">workspace.py → format.py + model.py</text>
       <text x="1328" y="520" class="code">→ graph.py (all in src/specspec/)</text>
       <text x="1328" y="558" class="body">Bytes → strict nodes → parent/child maps</text>
-      <text x="1328" y="591" class="body">One root; types; links; cycles; withdrawal</text>
+      <text x="1328" y="591" class="body">One root; types; links; cycles; deletion</text>
       <text x="1328" y="628" class="body">Snapshot + diagnostics + deterministic order</text>
     </g>
     <g id="python-operation-ports">
@@ -316,7 +316,7 @@
       <rect x="64" y="2160" width="730" height="285" rx="12" class="row"/>
       <text x="88" y="2200" class="heading">Change domain meaning here</text>
       <text x="88" y="2239" class="code">src/specspec/{format,model,graph}.py</text>
-      <text x="88" y="2275" class="body">Schema, root/type grammar, DAG and withdrawal</text>
+      <text x="88" y="2275" class="body">Schema, root/type grammar, DAG and deletion</text>
       <text x="88" y="2311" class="code">src/specspec/{workspace,editor,git}.py</text>
       <text x="88" y="2347" class="body">Writer/recovery, native plans, diffs / exact index</text>
       <text x="88" y="2387" class="small">Tests: tests/ · staged hook check validates blobs, not worktree.</text>
@@ -347,7 +347,7 @@
   <g id="canonical-contract">
     <rect x="64" y="2480" width="2272" height="120" rx="12" fill="#172e46"/>
     <text x="88" y="2517" class="heading" style="fill:#fff">Canonical contract</text>
-    <text x="88" y="2550" class="small" style="fill:#d9e6ef">Format/API 4 only · five random bytes → padded Base64url IDs (keep “=”) · one manifesto → multi-parent requirements → terminal implementations.</text>
+    <text x="88" y="2550" class="small" style="fill:#d9e6ef">Format/API 5 only · five random bytes → padded Base64url IDs (keep “=”) · one manifesto → multi-parent requirements → terminal implementations.</text>
     <text x="88" y="2582" class="small" style="fill:#d9e6ef">Live nodes cannot depend on withdrawn parents. Retirement ≠ deletion / approval. Hosts render project Markdown as data, not executable HTML.</text>
   </g>
   <text x="64" y="2633" class="foot">Companion: docs/architecture.md · Canonical reasoning: docs/own-spec.md + _specspec/ · Architectural flows, not an exhaustive call graph.</text>

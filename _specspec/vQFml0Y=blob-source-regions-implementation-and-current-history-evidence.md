@@ -22,26 +22,41 @@ sources:
   ranges:
   - - 1
     - 220
-- path: src/specspec/format.py
-- path: src/specspec/model.py
-- path: src/specspec/cli.py
-- path: src/specspec/editor.py
-- path: graph-ui-common/host/session.cjs
-- path: graph-ui-common/media/graph.js
-- path: graph-ui-common/media/graph-model.js
-- path: graph-ui-common/view.cjs
-- path: graph-ui-common/test/graph.test.cjs
-- path: graph-ui-common/test/session.test.cjs
-- path: graph-ui-common/test-host/ui.cjs
-- path: vscode/test-host/smoke.cjs
+- path: docs/source-regions.md
 - path: electron/test-host/run.cjs
-- path: tests/test_sources.py
-- path: example/gantt/history/gantt.bundle
 - path: example/gantt/history/cli.jsonl
+- path: example/gantt/history/gantt.bundle
 - path: example/gantt/history/revisions.json
 - path: example/gantt/history/verify.py
-- path: docs/source-regions.md
+- path: graph-ui-common/host/session.cjs
+- path: graph-ui-common/media/graph-model.js
+- path: graph-ui-common/media/graph.js
+- path: graph-ui-common/test-host/ui.cjs
+- path: graph-ui-common/test/graph.test.cjs
+- path: graph-ui-common/test/session.test.cjs
+- path: graph-ui-common/view.cjs
+- path: src/specspec/cli.py
+- path: src/specspec/editor.py
+- path: src/specspec/format.py
+- path: src/specspec/model.py
+- path: tests/test_sources.py
+- path: vscode/test-host/smoke.cjs
 ---
+## Current deletion-only correction
+
+xu6W0c4=/5d5oDCM= supersede the earlier retired/withdrawal workflow below.
+Current schema/API 5 removes the flag and all retire/restore/filter/metadata/badge
+paths. Managed delete physically unlinks an explicit batch after DAG checks,
+with journal new=null and original-byte/recovery safeguards. Default HEAD-relative
+UI ghosts are derived base records, read-only/copyable through staging and gone
+after commit; Git HEAD/ref watching refreshes both hosts. Native Delete requires
+clean project documents; deleted buffers never resurrect files in overlay reads.
+All earlier workflow/schema/test counts below are historical evidence. Gantt's
+entire current corpus is rebuilt with 22 physical deletions/reasons in prior Git
+commits and a 22-node HEAD, no flagged retained nodes. Earlier root explanations
+are in Git, not retained retired files. Source regions/colors/shapes/camera/native
+Save remain in scope; the separate current implementation record links actual tests.
+
 # Implement blob-addressed strict and expanding source hints in current-only format four
 
 Implement v6xn2GU= through jsIUeP0=/VnSF9BE=. Keep original intentions, blob/lifecycle

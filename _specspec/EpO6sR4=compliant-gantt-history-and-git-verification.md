@@ -5,34 +5,49 @@ parents:
 - YaXJpGE=
 - 3fWBW_g=
 sources:
+- path: electron/test-host/run.cjs
+  symbol: maintained Gantt canvas fixture
+- path: example/gantt/AGENTS.md
+- path: example/gantt/README.md
+- path: example/gantt/history/WALKTHROUGH.md
+- path: example/gantt/history/checkout.py
+  symbol: safe independent workspace creation
+- path: example/gantt/history/cli.jsonl
+  symbol: 123 actual current CLI executions
 - path: example/gantt/history/gantt.bundle
   symbol: complete current-schema standalone Git history
 - path: example/gantt/history/revisions.json
   symbol: actual stage commit IDs and receipt ordinals
-- path: example/gantt/history/cli.jsonl
-  symbol: 123 actual current CLI executions
 - path: example/gantt/history/verify.py
   symbol: clone_history, verify
-- path: example/gantt/history/WALKTHROUGH.md
-- path: example/gantt/README.md
-- path: example/gantt/AGENTS.md
+- path: example/gantt/test/browser.cjs
+  symbol: installed Chromium smoke
+- path: graph-ui-common/test-host/fixture.cjs
+  symbol: structural fixture node selection
+- path: tests/test_example_checkout.py
+  symbol: non-destructive checkout/identity checks
 - path: tests/test_gantt_example.py
 - path: tests/test_gantt_git.py
 - path: tests/test_repository_spec.py
   symbol: present-working-graph checks only
-- path: graph-ui-common/test-host/fixture.cjs
-  symbol: structural fixture node selection
 - path: vscode/test-host/run.cjs
   symbol: maintained Gantt canvas and compact native-document fixtures
-- path: electron/test-host/run.cjs
-  symbol: maintained Gantt canvas fixture
-- path: example/gantt/test/browser.cjs
-  symbol: installed Chromium smoke
-- path: example/gantt/history/checkout.py
-  symbol: safe independent workspace creation
-- path: tests/test_example_checkout.py
-  symbol: non-destructive checkout/identity checks
 ---
+## Current deletion-only correction
+
+xu6W0c4=/5d5oDCM= supersede the earlier retired/withdrawal workflow below.
+Current schema/API 5 removes the flag and all retire/restore/filter/metadata/badge
+paths. Managed delete physically unlinks an explicit batch after DAG checks,
+with journal new=null and original-byte/recovery safeguards. Default HEAD-relative
+UI ghosts are derived base records, read-only/copyable through staging and gone
+after commit; Git HEAD/ref watching refreshes both hosts. Native Delete requires
+clean project documents; deleted buffers never resurrect files in overlay reads.
+All earlier workflow/schema/test counts below are historical evidence. Gantt's
+entire current corpus is rebuilt with 22 physical deletions/reasons in prior Git
+commits and a 22-node HEAD, no flagged retained nodes. Earlier root explanations
+are in Git, not retained retired files. Source regions/colors/shapes/camera/native
+Save remain in scope; the separate current implementation record links actual tests.
+
 # Rebuild the Gantt regression history with actual current CLI operations
 
 ## External-workspace correction

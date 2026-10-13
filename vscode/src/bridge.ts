@@ -10,7 +10,6 @@ export interface Diagnostic {
 export interface SpecNode {
   id: string;
   type: 'manifesto' | 'requirement' | 'implementation';
-  retired: boolean;
   parents: string[];
   body: string;
   sources: { path: string; symbol?: string; blob?: string; mode?: 'strict' | 'expanding'; ranges?: [number, number][] }[];

@@ -104,7 +104,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.equal(await evaluate(`getComputedStyle(document.getElementById('graph')).willChange`), 'auto');
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>!('status' in c.dataset))`));
     assert.ok(await evaluate(`!document.getElementById('migrate')`), 'Superseded schema conversion is not offered.');
-    assert.ok(await evaluate(`document.querySelector('[data-retired="true"] .retired-badge') !== null`), 'Withdrawal is labeled independently of Git newness.');
+    assert.ok(await evaluate(`document.querySelector('[data-retired],.retired-badge,#retire,#restore')===null`), 'No retirement workflow or persisted-state cues remain.');
+    assert.ok(await evaluate(`document.getElementById('revision').textContent.startsWith('HEAD → ')`), 'Default workspace compares against HEAD.');
     const positions = () => evaluate(`JSON.stringify([...document.querySelectorAll('#cards .card')].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.width, c.offsetHeight]))`);
     const camera = () => evaluate(`(() => { const d=document.getElementById('viewport').dataset; return { x:Number(d.cameraX),y:Number(d.cameraY),k:Number(d.scale) }; })()`);
     const toOKLCH = `color => {
@@ -645,13 +646,13 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
     assert.equal(await evaluate(`document.getElementById('parent-add-controls').hidden`), true);
-    assert.equal(await evaluate(`document.getElementById('retire').disabled`), true);
+    assert.equal(await evaluate(`document.getElementById('delete').disabled`), true);
     assert.equal(await evaluate(`document.getElementById('save').textContent`), 'Save node');
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval-free controls, withdrawal labels, exact user-selected seven-color spectrum, transient right-click label cycle/equal inset ring with zero persisted-state or geometry changes, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, transient right-click label cycle/equal inset ring with zero persisted-state or geometry changes, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

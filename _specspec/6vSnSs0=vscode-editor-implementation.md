@@ -34,36 +34,36 @@ sources:
 - path: graph-ui-common/media/graph-model.js
   symbol: layoutGraph
 - path: graph-ui-common/media/graph-model.js
-  symbol: metrics
-- path: graph-ui-common/media/graph-model.js
   symbol: metrics minDistances/maxDistances; CARD_HEIGHT, RANK_GAP, NODE_GAP
-- path: graph-ui-common/media/graph.css
+- path: graph-ui-common/media/graph-model.js
+  symbol: metrics
 - path: graph-ui-common/media/graph.css
   symbol: git title/corner tokens and narrow host chrome
 - path: graph-ui-common/media/graph.css
   symbol: incident-highlight/hover-darkened paint, neutral manifesto and Git ink
 - path: graph-ui-common/media/graph.css
   symbol: shorter cards, empty badge rows, unhinted world text
-- path: graph-ui-common/media/graph.js
+- path: graph-ui-common/media/graph.css
 - path: graph-ui-common/media/graph.js
   symbol: distanceFor, drawLegend, compactCard, loadForm
 - path: graph-ui-common/media/graph.js
-  symbol: invalid-workspace diagnostics and withdrawal presentation
+  symbol: invalid-workspace diagnostics and HEAD deletion presentation
 - path: graph-ui-common/media/graph.js
   symbol: trackHover, syncHover, updateHoverAppearance
+- path: graph-ui-common/media/graph.js
 - path: graph-ui-common/src/graph-vendor.js
 - path: graph-ui-common/test-host/platform.cjs
   symbol: actual Git title/corner/theme checks
 - path: graph-ui-common/test-host/ui.cjs
   symbol: shared real-host geometry/hover/metrics
 - path: graph-ui-common/test/graph-model.test.cjs
-- path: graph-ui-common/test/graph-model.test.cjs
   symbol: path bounds, defensive cycles/deep graphs, spacing
-- path: graph-ui-common/test/graph.test.cjs
+- path: graph-ui-common/test/graph-model.test.cjs
 - path: graph-ui-common/test/graph.test.cjs
   symbol: distance modes/revisions/preferences, labels, native drafts/text
 - path: graph-ui-common/test/graph.test.cjs
   symbol: hover membership, native forms, lifecycle and revision regressions
+- path: graph-ui-common/test/graph.test.cjs
 - path: graph-ui-common/view.cjs
   symbol: single HTML shell
 - path: tests/test_ids.py
@@ -90,16 +90,31 @@ sources:
 - path: vscode/test-host/run.cjs
 - path: vscode/test-host/smoke.cjs
 - path: vscode/test-host/ui.cjs
-- path: vscode/test-host/ui.cjs
   symbol: checkHeadlineRendering and independent min/max path checks
 - path: vscode/test-host/ui.cjs
   symbol: checkHover computed paint and unchanged geometry
+- path: vscode/test-host/ui.cjs
 - path: vscode/test/bridge.test.cjs
 - path: vscode/test/extension.test.cjs
 - path: vscode/test/host.test.cjs
   symbol: port state/draft isolation
 - path: vscode/test/project.test.cjs
 ---
+## Current deletion-only correction
+
+xu6W0c4=/5d5oDCM= supersede the earlier retired/withdrawal workflow below.
+Current schema/API 5 removes the flag and all retire/restore/filter/metadata/badge
+paths. Managed delete physically unlinks an explicit batch after DAG checks,
+with journal new=null and original-byte/recovery safeguards. Default HEAD-relative
+UI ghosts are derived base records, read-only/copyable through staging and gone
+after commit; Git HEAD/ref watching refreshes both hosts. Native Delete requires
+clean project documents; deleted buffers never resurrect files in overlay reads.
+All earlier workflow/schema/test counts below are historical evidence. Gantt's
+entire current corpus is rebuilt with 22 physical deletions/reasons in prior Git
+commits and a 22-node HEAD, no flagged retained nodes. Earlier root explanations
+are in Git, not retained retired files. Source regions/colors/shapes/camera/native
+Save remain in scope; the separate current implementation record links actual tests.
+
 ## Current compact-ID and history correction
 
 The implementation/verification below records earlier revisions. Its legacy-reader,

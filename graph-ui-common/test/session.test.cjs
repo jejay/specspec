@@ -2,8 +2,8 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { GraphSession, pollInterval } = require('../host/session.cjs');
 const { renderMatches, sameNode } = require('../media/graph-model.js');
-const node = { id: 'node', type: 'requirement', retired: false, body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
-const snapshot = { valid: true, format_version: 4, nodes: [node], edges: [] };
+const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
+const snapshot = { valid: true, format_version: 5, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(check) { for (let i = 0; i < 100; i++) { if (check()) return; await pause(5); } assert.ok(check()); }
 function fixture(t, options = {}) {
@@ -15,7 +15,7 @@ function fixture(t, options = {}) {
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
-      return { api_version: 4, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+      return { api_version: 5, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
         base: current, target: current, changes: [], added_edges: [], removed_edges: [],
         base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
       } : current };

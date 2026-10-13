@@ -93,13 +93,16 @@ format metadata, hashes, approval stages, Git staging, or commits are introduced
 
 Omit `edit` for a read. `sources` is JSON text for implementation nodes; shared forms may send neutral
 `[]` for other types without adding a sources field. The backend uses the current
-text's type, including raw-editor changes, not an initial tab type. `retired` is an
-optional boolean edit. The result has `snapshot`, `diagnostics`,
+text's type, including raw-editor changes, not an initial tab type. No `retired`
+field/edit exists. Delete is a confirmed managed project-file operation requiring
+clean SpecSpec documents, not a native metadata change pending Save. The result has `snapshot`, `diagnostics`,
 `changes` (`path`, exact `before`/`after` text), optional `diff`, and `note`.
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
-explicit diagnostics, not successful graph validation. Unsafe/missing files,
-identity changes, unsupported schemas, locks/recovery, and oversized requests fail.
-The planner never writes files or recreates a deleted node. The current planner uses API version 4;
+explicit diagnostics, not successful graph validation. Unsafe paths, edits to
+missing files, identity changes, unsupported schemas, locks/recovery and oversized
+requests fail. Reads skip overlays for already deleted files, so retained open
+buffers do not resurrect nodes. The planner never writes files or recreates a
+deleted node. The current planner uses API version 5;
 upgrade the development CLI and extension together to gain this new command.
 
 ## Verification
@@ -113,6 +116,6 @@ recovery. The installed-host runner uses the maintained current-schema Gantt gra
 canvas/Git/watcher regressions and a compact nested graph for native lifecycle,
 split/camera/undo/raw-edit/repair checks. It does not depend on old self-spec IDs
 or historical schemes. Those are separate scale boundaries, not a large-graph typing
-performance guarantee. Electron's unchanged managed behavior uses its own real
+performance guarantee. Electron's managed save/deletion behavior uses its own real
 host suite. See implementation records for actual runs; configured CI is not
 locally observed remote execution.

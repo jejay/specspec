@@ -46,12 +46,14 @@ files or exposed to the renderer. An explicit `--project` is authorization by th
 local launcher; don't pass untrusted folder/executable paths. An invalid nearest
 canonical directory is diagnosed rather than silently falling back to its parent.
 
-Graph controls, native inline editing, cameras, min/max colors, hover, withdrawal
+Graph controls, native inline editing, cameras, min/max colors, hover, physical deletion
 and current-schema revision overlays are shared. IDs are canonical five-byte padded
 Base64url, including the trailing equals sign. Obsolete node schemes are rejected;
 no migration controls or compatibility readers are retained. **Compare revisions** uses a native HTML
 modal with bounded base/target input; an empty target means workspace. Historical
-views are read-only. Native confirmations protect retire/restore and
+views are read-only. Default workspace compares to HEAD; D survives staging and disappears after commit.
+Git HEAD/ref notifications refresh that base without default polling.
+Native confirmations protect Delete and
 saving a draft over externally changed node contents.
 
 Markdown edits outside the tool are allowed. File watchers reload the graph by

@@ -6,8 +6,8 @@ const { JSDOM } = require('jsdom');
 const { graphHtml } = require('../view.cjs');
 const model = require('../media/graph-model.js');
 
-const root = { id: 'root', type: 'manifesto', retired: false, parents: [], body: '# Purpose\n', path: '_specspec/root.md', sources: [] };
-const child = { id: 'child', type: 'requirement', retired: false, parents: ['root'], body: '# Child\n', path: '_specspec/child.md', sources: [] };
+const root = { id: 'root', type: 'manifesto', parents: [], body: '# Purpose\n', path: '_specspec/root.md', sources: [] };
+const child = { id: 'child', type: 'requirement', parents: ['root'], body: '# Child\n', path: '_specspec/child.md', sources: [] };
 
 function fixture(t, options = {}) {
   const dom = new JSDOM(graphHtml(name => name, 'local', 'test'), { runScripts: 'outside-only', pretendToBeVisual: true });
@@ -28,7 +28,7 @@ function fixture(t, options = {}) {
     dom.window.close();
     assert.deepEqual(messages.filter(message => message.type === 'client-error'), [], 'Renderer errors must not be mistaken for successful DOM tests.');
   });
-  const snapshot = { format_version: 4, valid: true, nodes: [root, child], edges: [['root', 'child']] };
+  const snapshot = { format_version: 5, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
@@ -500,25 +500,32 @@ test('nodes are editable without approval states or an acceptance action', t => 
   dom.window.document.querySelector('[data-node-id="child"]').click();
   assert.equal($('body').disabled, false);
   assert.equal($('save').disabled, false);
-  assert.equal($('retire').disabled, false);
+  assert.equal($('delete').disabled, false);
+  assert.equal($('retire'), null); assert.equal($('restore'), null);
   assert.doesNotMatch($('identity').textContent, /proposed|accepted/);
 });
 
-test('withdrawal and restoration send guarded actions, not acceptance', t => {
-  const { dom, snapshot, send, messages, $ } = fixture(t);
+test('delete sends a physical deletion action; HEAD ghosts are copyable but never editable and vanish after commit', t => {
+  const { dom, snapshot, send, messages, $, saved } = fixture(t);
   dom.window.document.querySelector('[data-node-id="child"]').click();
-  $('retire').click();
-  assert.equal(messages.at(-1).type, 'retire');
+  $('delete').click();
+  assert.equal(messages.at(-1).type, 'delete');
   assert.equal('expect' in messages.at(-1), false);
   assert.equal($('save').disabled, true);
-  const target = { ...snapshot, nodes: [root, { ...child, retired: true }] };
-  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false, force: true, selectedId: 'child' });
-  assert.match($('identity').textContent, /retired/);
-  assert.equal($('retire').hidden, true);
-  assert.equal($('restore').hidden, false);
-  $('restore').click();
-  assert.equal(messages.at(-1).type, 'restore');
-  assert.equal('expect' in messages.at(-1), false);
+  const target = { ...snapshot, nodes: [root], edges: [] };
+  const diff = { base: snapshot, target, changes: [{ id: 'child', kind: 'removed' }], added_edges: [], removed_edges: snapshot.edges, base_ref: 'HEAD', target_ref: 'workspace' };
+  send({ type: 'snapshot', snapshot: target, diff, diagnostics: [], readonly: false, force: true, selectedId: 'child' });
+  assert.match($('identity').textContent, /deleted/);
+  assert.equal($('delete').disabled, true); assert.equal($('save').disabled, true);
+  assert.equal($('body').disabled, false); assert.equal($('body').readOnly, true);
+  assert.equal($('body').value, child.body);
+  assert.equal(dom.window.document.querySelector('.expanded .git-corner').textContent, 'D');
+  // Staging alone changes no HEAD/base membership.
+  send({ type: 'snapshot', snapshot: target, diff, diagnostics: [], readonly: false });
+  assert.ok(dom.window.document.querySelector('[data-node-id="child"]'));
+  send({ type: 'snapshot', snapshot: target, diff: { ...diff, base: target, changes: [], removed_edges: [] }, diagnostics: [], readonly: false });
+  assert.equal(dom.window.document.querySelector('[data-node-id="child"]'), null);
+  assert.equal(saved().view, 'overview'); assert.equal(saved().selected, undefined);
 });
 
 test('unsupported snapshots have no conversion controls and retain a disabled draft', t => {
@@ -596,7 +603,7 @@ test('parent list displays actual links; adding and removing are explicit draft 
   $('add-parent').click();
   assert.equal($('parent-links').children.length, 2);
   assert.deepEqual([...saved().draft.parents], ['root', 'branch']);
-  assert.equal($('retire').disabled, true);
+  assert.equal($('delete').disabled, true);
   assert.ok(![...$('parent-candidate').options].some(option => option.value === 'branch'));
   $('parent-links').querySelector('button').click();
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'branch');
@@ -665,7 +672,7 @@ test('external refresh preserves unsaved text and its original contents', t => {
   dom.window.document.querySelector('.card.requirement').click();
   $('body').value = '# Unsaved\n';
   $('body').dispatchEvent(new dom.window.Event('input'));
-  assert.equal($('retire').disabled, true);
+  assert.equal($('delete').disabled, true);
   send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [root, { ...child, body: '# External\n' }] }, diagnostics: [], readonly: false });
   assert.equal($('body').value, '# Unsaved\n');
   assert.match($('message').textContent, /changed outside/);
@@ -730,7 +737,9 @@ test('historical and removed nodes are read-only, with old text visible', t => {
     added_edges: [], removed_edges: [['root', 'child']], base_ref: 'older', target_ref: 'newer',
   } });
   dom.window.document.querySelector('.card.removed').click();
-  assert.equal($('body').disabled, true);
+  assert.equal($('body').disabled, false);
+  assert.equal($('body').readOnly, true);
+  assert.equal($('save').disabled, true); assert.equal($('delete').disabled, true);
   assert.equal($('new').disabled, true);
   assert.equal($('before').textContent, '# Child\n');
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'root');
@@ -811,7 +820,7 @@ test('new-node drafts survive the total-graph view and produce valid render repo
 
 test('color modes have legends, persist without canonical changes and do not erase Git badges', t => {
   const { dom, snapshot, send, $, saved } = fixture(t);
-  const target = { ...snapshot, nodes: [root, { ...child, retired: true }] };
+  const target = { ...snapshot, nodes: [root, { ...child, body: '# Changed child' }] };
   send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false, diff: {
     base: snapshot, target, changes: [{ id: 'child', kind: 'changed' }], added_edges: [], removed_edges: [], base_ref: 'HEAD', target_ref: 'workspace',
   } });
@@ -824,9 +833,9 @@ test('color modes have legends, persist without canonical changes and do not era
   assert.match(card.querySelector('.git-badge').textContent, /changed/);
   assert.match($('legend').textContent, /Existing node types/);
   assert.equal(saved().colorMode, 'type');
-  assert.equal(target.nodes[1].retired, true);
-  assert.equal(card.dataset.retired, 'true');
-  assert.match(card.querySelector('.retired-badge').textContent, /retired/);
+  assert.equal('retired' in target.nodes[1], false);
+  assert.equal('retired' in card.dataset, false);
+  assert.equal(card.querySelector('.retired-badge'), null);
   assert.equal('status' in target.nodes[1], false);
   assert.equal('distance' in target.nodes[1], false);
 });
@@ -869,7 +878,7 @@ test('minimum/maximum distance modes have exact labels, different fills/legends,
 test('revision fills include changed manifesto, added/removed/renamed/source-only and unchanged nodes in overview and focus', t => {
   const { dom, $, snapshot, send, saved, messages } = fixture(t);
   const extra=(id,fields={})=>({...child,id,body:'# '+id,...fields});
-  const old=extra('old'),added=extra('new'),renamed=extra('rename'),source=extra('source',{retired:true}),plain=extra('plain',{retired:true});
+  const old=extra('old'),added=extra('new'),renamed=extra('rename'),source=extra('source'),plain=extra('plain');
   const base={...snapshot,nodes:[root,child,old,renamed,source,plain],edges:[...snapshot.edges,['root','old'],['root','rename'],['root','source'],['root','plain']]};
   const target={...base,nodes:[root,child,added,renamed,source,plain],edges:base.edges.filter(e=>e[1]!=='old').concat([['root','new']])};
   const diff={base,target,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'},{id:'old',kind:'removed'},{id:'new',kind:'added'},{id:'rename',kind:'renamed'}],source_affected:['source','child'],added_edges:[['root','new']],removed_edges:[['root','old']]};
@@ -889,7 +898,7 @@ test('revision fills include changed manifesto, added/removed/renamed/source-onl
   assert.equal(saved().colorMode,'git-revision');
   assert.equal(card('source').querySelector('.git-corner'),null);
   assert.equal(card('plain').querySelector('.git-corner'),null);
-  assert.ok(card('plain').querySelector('.retired-badge'));
+  assert.equal(card('plain').querySelector('.retired-badge'), null);
   for(const [id,kind] of Object.entries(kinds)) {
     card(id).click();assert.equal(card(id).style.getPropertyValue('--node-accent'),model.REVISION_COLORS[kind]);
     assert.equal(card(id).style.width,id === 'root' ? `${model.manifestoDiameter(822,720)}px` : '860px');$('back').click();
@@ -1190,25 +1199,25 @@ test('Git A/M/D/R corners match semantic kinds in compact and expanded cards', t
   const {dom,snapshot,send,$}=fixture(t);
   const added={...child,id:'added',body:'# Added'},removed={...child,id:'removed',body:'# Deleted'},renamed={...child,id:'renamed',body:'# Renamed'};
   const base={...snapshot,nodes:[root,child,removed,renamed],edges:[['root','child'],['root','removed'],['root','renamed']]};
-  const target={...snapshot,nodes:[root,{...child,retired:true},added,renamed],edges:[['root','child'],['root','added'],['root','renamed']]};
+  const target={...snapshot,nodes:[root,{...child,body:'# Modified child'},added,renamed],edges:[['root','child'],['root','added'],['root','renamed']]};
   send({type:'snapshot',snapshot:target,readonly:false,diagnostics:[],diff:{base,target,changes:[{id:'child',kind:'changed'},{id:'added',kind:'added'},{id:'removed',kind:'removed'},{id:'renamed',kind:'renamed'}],added_edges:[['root','added']],removed_edges:[['root','removed']]}});
   for(const [id,letter] of [['child','M'],['added','A'],['removed','D'],['renamed','R']]){
     const card=dom.window.document.querySelector(`[data-node-id="${id}"]`);
     assert.equal(card.querySelector('.git-corner').textContent,letter);assert.match(card.querySelector('.git-corner').getAttribute('aria-label'),/comparison base/);
   }
-  assert.equal(dom.window.document.querySelector('[data-node-id="child"]').dataset.retired,'true');
+  assert.equal('retired' in dom.window.document.querySelector('[data-node-id="child"]').dataset,false);
   dom.window.document.querySelector('[data-node-id="child"]').click();
   assert.equal(dom.window.document.querySelector('.expanded .git-corner').textContent,'M');
-  assert.equal($('title').textContent,'Child');
+  assert.equal($('title').textContent,'Modified child');
 });
 
-test('source-only impact and withdrawal never invent M or D corner letters', t => {
+test('source-only impact never invents M or D corner letters', t => {
   const {dom,snapshot,send}=fixture(t);
-  const target={...snapshot,nodes:[root,{...child,retired:true}]};
+  const target={...snapshot,nodes:[root,child]};
   send({type:'snapshot',snapshot:target,readonly:false,diagnostics:[],diff:{base:target,target,changes:[],added_edges:[],removed_edges:[],source_affected:['child']}});
   const card=dom.window.document.querySelector('[data-node-id="child"]');
   assert.ok(card.classList.contains('source-changed'));assert.equal(card.querySelector('.git-corner'),null);
-  assert.match(card.querySelector('.retired-badge').textContent,/retired/);assert.match(card.querySelector('.git-badge').textContent,/source changed/);
+  assert.equal(card.querySelector('.retired-badge'),null);assert.match(card.querySelector('.git-badge').textContent,/source changed/);
 });
 
 test('Git refresh changes presentation without rebasing a dirty draft or its native caret', t => {
@@ -1220,7 +1229,7 @@ test('Git refresh changes presentation without rebasing a dirty draft or its nat
   assert.equal($('body'),body);assert.equal(body.value,'# Dirty');assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[1,4,'backward']);
   assert.equal(saved().originalNode,old);assert.equal($('graph').style.transform,camera);
   assert.equal(dom.window.document.querySelector('.expanded .git-corner').textContent,'M');
-  assert.ok(!messages.some(m=>['save','add','retire','restore'].includes(m.type)));
+  assert.ok(!messages.some(m=>['save','add','delete'].includes(m.type)));
 });
 
 test('shared Git CSS reads theme tokens with Dark Modern defaults, separate from edge ink', () => {

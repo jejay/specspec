@@ -3,7 +3,8 @@
 A runnable Gantt example with an independent `_specspec` graph and plausible
 spec-before-code development through two substantial redirects. The existing
 [fictional story](STORY.md) is optional illustration, not required evidence or
-actual authorization. The final graph has **44 nodes: 22 live, 22 withdrawn**.
+actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
+physically deleted during redirects and remain in the earlier Git commits.
 
 ## Use the independent repository, not this tracked snapshot, for Git
 
@@ -39,11 +40,13 @@ See the [history/maintenance walkthrough](history/WALKTHROUGH.md).
 | Stage | Spec / code tags | Change |
 | --- | --- | --- |
 | 01 | `stage/01-spec` / `stage/01-code` | Portfolio, weekday forecasts, owners/rollups; cloud/leveling remain candidates |
-| 02 | `stage/02-spec` / `stage/02-code` | Personal manual dates/weekends/priorities; **13/17 live nodes withdrawn** |
-| 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/16 live nodes withdrawn** |
+| 02 | `stage/02-spec` / `stage/02-code` | Personal manual dates/weekends/priorities; **13/17 nodes deleted** |
+| 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/16 nodes deleted** |
 
-Every spec checkpoint precedes its code. Withdrawn branches retain identity, body,
-parents and sources. `history/cli.jsonl` records actual reconstructed CLI executions;
+Every spec checkpoint precedes its code. Deleted branches retain their identity,
+body, parents and sources in earlier commits, not flagged files in HEAD. Redirect
+commit messages explain why; default workspace shows deleted HEAD nodes as D until
+the deletion is committed, including after staging. `history/cli.jsonl` records actual reconstructed CLI executions;
 `history/revisions.json` records actual fixture commits and receipt ordinals.
 These are real executions in an intentionally synthetic history, not a claim that
 untouched original commits used today's encoding. No approval workflow is involved.
@@ -87,8 +90,8 @@ is unrelated to obsolete SpecSpec node schemas.
 From the clone:
 
 ```sh
-python -m specspec list --live --json
-python -m specspec list --retired --json
+python -m specspec list --json
+python -m specspec diff --base HEAD --json
 python -m specspec context <full-id> --json
 npm test
 npm run test:browser

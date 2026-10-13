@@ -183,25 +183,23 @@ class GraphSession {
         const response = await this.cli(['sources', 'view', '--reference', message.reference, ...(ref ? ['--ref', ref] : []), '--json']);
         await this.post({ type: 'source-preview', ...response.result }); return;
       }
-      if (this.target || node.retired || this.sourceInvalid) throw new Error('Capture requires a live editable implementation.');
+      if (this.target || !this.snapshot.nodes.some(n => n.id === message.id) || this.sourceInvalid) throw new Error('Capture requires a live editable implementation.');
       if (this.host.document && message.id !== this.host.document.state().nodeId) throw new Error('Capture belongs to the bound node.');
       if (typeof message.path !== 'string' || message.path.length > 4096 || !Array.isArray(message.ranges) || message.ranges.length > 64 || message.ranges.some(r => typeof r !== 'string' || !/^\d+:\d+$/.test(r)) || !['strict', 'expanding'].includes(message.mode)) throw new Error('Invalid source capture parameters.');
       const response = await this.cli(['sources', 'capture', message.id, message.path, ...message.ranges.flatMap(r => ['--range', r]), '--mode', message.mode, ...(message.staged === true ? ['--staged'] : []), '--preview', '--json']);
       await this.post({ type: 'source-captured', id: message.id, reference: response.result.reference }); return;
     }
-    if (this.host.document && ['save', 'retire', 'restore'].includes(message.type)) {
+    if (this.host.document && message.type === 'delete') {
+      if (message.id !== this.host.document.state().nodeId) throw new Error('A node-file editor can only delete its bound node.');
+      await this.flushDocument();
+    }
+    if (this.host.document && message.type === 'save') {
       if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to edit documents.');
       if (message.id !== this.host.document.state().nodeId) throw new Error('A node-file editor can only edit its bound node.');
       await this.flushDocument();
-      let applied;
-      if (message.type === 'save') {
-        applied = await this.host.document.edit(message);
-        if (!applied) { await this.post({ type: 'cancelled' }); return; }
-        await this.host.document.save();
-      } else {
-        if (!await this.host.confirm(`${message.type === 'restore' ? 'Restore this withdrawn node? Restoration is not approval.' : 'Retire this node, retaining its history?'} Check its dependency impact.`)) { await this.post({ type: 'cancelled' }); return; }
-        await this.host.document.withdrawal(message.type === 'retire');
-      }
+      const applied = await this.host.document.edit(message);
+      if (!applied) { await this.post({ type: 'cancelled' }); return; }
+      await this.host.document.save();
       const document = this.host.document.state();
       if (Number.isInteger(applied?.version)) document.version = applied.version;
       await this.post({ type: 'document-status', document, editSequence: message.editSequence });
@@ -222,7 +220,7 @@ class GraphSession {
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
     const common = ['--json'];
-    if (current.format_version !== 4) throw new Error('Unsupported specification format.');
+    if (current.format_version !== 5) throw new Error('Unsupported specification format.');
     const nodes = new Map(current.nodes.map(n => [n.id, n])), id = message.id;
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('The node no longer exists. Unsaved text has been retained.');
     let args, input;
@@ -241,9 +239,10 @@ class GraphSession {
       if (typeof message.sources !== 'string' || Buffer.byteLength(message.sources, 'utf8') > 1024 * 1024) throw new Error('Invalid source references.');
       if ((message.type === 'add' ? message.nodeType : nodes.get(id).type) === 'implementation') args.push('--sources', message.sources);
       input = message.body;
-    } else if (message.type === 'restore' || message.type === 'retire') {
-      if (!await this.host.confirm(`${message.type === 'restore' ? 'Restore this withdrawn node? Restoration is not approval.' : 'Retire this node, retaining its history?'} Check its dependency impact.`)) { await this.post({ type: 'cancelled' }); return; }
-      args = [message.type, id];
+    } else if (message.type === 'delete') {
+      if (nodes.get(id).type === 'manifesto') throw new Error('The manifesto cannot be deleted.');
+      if (!await this.host.confirm('Delete this node’s Markdown file? Repair or explicitly delete its dependent nodes first. The HEAD-relative workspace shows it as D until you commit; explain why in that commit.')) { await this.post({ type: 'cancelled' }); return; }
+      args = ['delete', id];
     } else throw new Error('Unknown graph action.');
     const response = await this.cli([...args, ...common], input);
     await this.refresh(true, response.result.changed_ids?.[0]);

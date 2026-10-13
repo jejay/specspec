@@ -7,6 +7,7 @@ from click.testing import CliRunner
 from test_git import git
 
 from specspec.cli import main
+from specspec.git import git_snapshot
 from specspec.workspace import discover_root, initialize, load_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +29,7 @@ def test_example_graph_is_independent_and_usable_as_complete_agent_context(gantt
     assert (
         Path(git(gantt_history, "rev-parse", "--show-toplevel").decode().strip()) == gantt_history
     )
-    implementation = next(n for n in example.nodes if n.type == "implementation" and not n.retired)
+    implementation = next(n for n in example.nodes if n.type == "implementation")
     code, envelope = invoke(gantt_history, "context", implementation.id)
     assert code == 0 and envelope["ok"]
     required = graph.closure(implementation.id, ancestors=True) | {implementation.id}
@@ -41,7 +42,8 @@ def test_example_receipts_and_all_three_real_git_stage_pairs_are_verified(gantt_
     result = gantt_verifier.verify(GANTT, history=True)
     assert result["ok"]
     assert result["verified_git_stages"] == ["01", "02", "03"]
-    assert result["withdrawn_count"] > 0
+    assert result["deleted_in_history"] == 22
+    assert result["node_count"] == 22
 
 
 def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index(tmp_path):
@@ -59,7 +61,7 @@ def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index
     assert invoke(tmp_path, "hook", "check")[0] == 0
     assert invoke(nested, "hook", "check")[0] == 0
 
-    node = next(n for n in original.nodes if n.type == "requirement" and not n.retired)
+    node = next(n for n in original.nodes if n.type == "requirement")
     file = nested / node.path
     file.write_bytes(original.files[node.path].replace(b"parents:", b"unknown:"))
     assert invoke(nested, "validate")[0] == 1
@@ -71,12 +73,15 @@ def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index
     assert load_snapshot(GANTT).files == original.files
 
 
-def test_withdrawn_example_reasoning_requires_explicit_history_context(gantt_history):
+def test_deleted_example_reasoning_lives_in_previous_commits_not_current_context(gantt_history):
     before = load_snapshot(gantt_history)
-    withdrawn = next(n for n in before.nodes if n.retired and n.type == "requirement")
-    assert invoke(gantt_history, "context", withdrawn.id)[0] == 1
-    code, envelope = invoke(gantt_history, "context", withdrawn.id, "--include-retired")
-    assert code == 0
-    required = before.require_valid().closure(withdrawn.id, ancestors=True) | {withdrawn.id}
-    assert set(envelope["result"]["required_ids"]) == required
+    previous = git_snapshot(gantt_history, "stage/01-code")
+    removed = next(
+        n for n in previous.nodes if n.id not in before.graph.nodes and n.type == "requirement"
+    )
+    assert invoke(gantt_history, "context", removed.id)[0] == 1
+    assert not (gantt_history / removed.path).exists()
+    assert (
+        git(gantt_history, "show", f"stage/01-code:{removed.path}") == previous.files[removed.path]
+    )
     assert load_snapshot(gantt_history).files == before.files

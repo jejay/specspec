@@ -62,7 +62,7 @@ test('node-type and colored revision swatches come from the same rainbow table',
 
 test('revision mode includes manifesto changes, but other modes keep it gray', () => {
   for(const kind of Object.keys(model.REVISION_COLORS)) {
-    const node={type:'manifesto',retired:true};
+    const node={type:'manifesto'};
     assert.equal(model.color('git-revision',node,0,kind),model.REVISION_COLORS[kind]);
     for(const mode of ['distance','max-distance','type']) {
       assert.equal(model.color(mode,node,0,kind),'#d3d3d3');

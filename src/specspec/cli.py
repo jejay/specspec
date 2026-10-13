@@ -19,12 +19,12 @@ from .source_schema import MAX_REFERENCES, validate_source
 from .workspace import (
     Snapshot,
     add_node,
+    delete_nodes,
     discover_root,
     initialize,
     load_snapshot,
     recover,
     require_node,
-    set_retired,
     update_node,
 )
 
@@ -231,45 +231,25 @@ def update(
     mutation_output(snapshot, [node_id], as_json)
 
 
-def withdrawal_command(name: str, retired: bool):
-    @main.command(name=name, context_settings={"ignore_unknown_options": True})
-    @click.argument("ids", nargs=-1, required=True)
-    @json_option
-    @click.pass_obj
-    @guarded
-    def command(root: Path | None, ids: tuple[str, ...], as_json: bool) -> None:
-        mutation_output(set_retired(root_path(root), list(ids), retired), list(ids), as_json)
-
-    command.help = (
-        "Withdraw nodes, retaining their history."
-        if retired
-        else "Restore withdrawn nodes; this is not approval."
-    )
-    return command
-
-
-withdrawal_command("retire", True)
-withdrawal_command("restore", False)
-
-
-@main.command(name="list")
-@click.option("--retired", "only_retired", is_flag=True, help="List withdrawn nodes only.")
-@click.option("--live", "only_live", is_flag=True, help="Exclude withdrawn nodes.")
+@main.command(name="delete", context_settings={"ignore_unknown_options": True})
+@click.argument("ids", nargs=-1, required=True)
 @json_option
 @click.pass_obj
 @guarded
-def list_nodes(root: Path | None, only_retired: bool, only_live: bool, as_json: bool) -> None:
-    """List nodes in the current specification graph."""
-    if only_retired and only_live:
-        raise SpecError([Diagnostic("ARGUMENT", "Do not combine --retired and --live.")], 2)
+def delete(root: Path | None, ids: tuple[str, ...], as_json: bool) -> None:
+    """Delete only named node files; explain why in your normal Git commit."""
+    mutation_output(delete_nodes(root_path(root), list(ids)), list(ids), as_json)
+
+
+@main.command(name="list")
+@json_option
+@click.pass_obj
+@guarded
+def list_nodes(root: Path | None, as_json: bool) -> None:
+    """List nodes physically present in the current specification graph."""
     snapshot = load_snapshot(root_path(root))
     snapshot.require_valid()
-    result = snapshot.to_dict()
-    if only_retired or only_live:
-        result["nodes"] = [node for node in result["nodes"] if node["retired"] == only_retired]
-        visible = {node["id"] for node in result["nodes"]}
-        result["edges"] = [edge for edge in result["edges"] if set(edge) <= visible]
-    emit(result, snapshot.diagnostics, as_json=as_json)
+    emit(snapshot.to_dict(), snapshot.diagnostics, as_json=as_json)
 
 
 @main.command(context_settings={"ignore_unknown_options": True})
@@ -321,28 +301,18 @@ def impact(root: Path | None, node_id: str, as_json: bool) -> None:
 @main.command(context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @click.option("--max-bytes", type=click.IntRange(min=1))
-@click.option("--include-retired", is_flag=True)
 @json_option
 @click.pass_obj
 @guarded
-def context(
-    root: Path | None, node_id: str, max_bytes: int | None, include_retired: bool, as_json: bool
-) -> None:
+def context(root: Path | None, node_id: str, max_bytes: int | None, as_json: bool) -> None:
     """Export complete binding context, never silently truncated."""
     snapshot = load_snapshot(root_path(root))
-    node = require_node(snapshot, node_id)
+    require_node(snapshot, node_id)
     graph = snapshot.require_valid()
-    if node.retired and not include_retired:
-        raise SpecError([Diagnostic("RETIRED", "Use --include-retired to export a retired node.")])
     required = graph.closure(node_id, ancestors=True) | {node_id}
-    children = {
-        key for key in graph.children[node_id] if include_retired or not graph.nodes[key].retired
-    }
+    children = graph.children[node_id]
     siblings = {
-        child
-        for parent in graph.parents[node_id]
-        for child in graph.children[parent]
-        if include_retired or not graph.nodes[child].retired
+        child for parent in graph.parents[node_id] for child in graph.children[parent]
     } - required
     optional = (children | siblings) - required
     result = {
@@ -416,8 +386,7 @@ def export_graph(root: Path | None, output_format: str) -> None:
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
             )
-            suffix = " (retired)" if node.retired else ""
-            lines.append(f'  {mermaid_id(node_id)}["{title}{suffix}"]')
+            lines.append(f'  {mermaid_id(node_id)}["{title}"]')
         lines.extend(
             f"  {mermaid_id(parent)} --> {mermaid_id(child)}" for parent, child in graph.edges()
         )
@@ -498,9 +467,7 @@ def hook_check(root: Path | None, as_json: bool, check_sources: bool) -> None:
     if check_sources and snapshot.valid:
         from .sources import check_results, resolve_nodes
 
-        result["sources"] = resolve_nodes(
-            project, [n for n in snapshot.nodes if not n.retired], staged=True, retention=True
-        )
+        result["sources"] = resolve_nodes(project, snapshot.nodes, staged=True, retention=True)
         diagnostics.extend(check_results(result["sources"]))
     ok = snapshot.valid and not any(d.severity == "error" for d in diagnostics)
     emit(result, diagnostics, as_json=as_json, ok=ok)

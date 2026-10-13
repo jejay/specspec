@@ -6,7 +6,7 @@ const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
 const extensionPath = require.resolve('../out/extension.js');
-const snapshot = { format_version: 4, nodes: [], edges: [], valid: true };
+const snapshot = { format_version: 5, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
 
 function fixture(t, options = {}) {
@@ -122,9 +122,9 @@ function fixture(t, options = {}) {
         changes.push({ path: n.path, before, after });
         overlaid = { ...overlaid, nodes: overlaid.nodes.map(item => item.id === n.id ? { ...item, body: request.edit.body } : item) };
       }
-      return { api_version: 4, ok: true, diagnostics: [], result: { snapshot: overlaid, diagnostics: [], changes, note: '' } };
+      return { api_version: 5, ok: true, diagnostics: [], result: { snapshot: overlaid, diagnostics: [], changes, note: '' } };
     }
-    return { api_version: 4, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+    return { api_version: 5, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
       base: current, target: current, changes: [], added_edges: [], removed_edges: [],
       base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
     } : current };
@@ -175,20 +175,21 @@ test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
   assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
 });
 
-test('withdrawal and restoration are guarded commands and acceptance messages are rejected', async t => {
-  const node = { id: 'node', type: 'requirement', retired: true, parents: [], sources: [], body: '# Node', path: '_specspec/node.md' };
+test('physical deletion is confirmed and retired/restore/accept messages are rejected', async t => {
+  const node = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Node', path: '_specspec/node.md' };
   const { calls } = fixture(t, { snapshot: { ...snapshot, nodes: [node] }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
-  for (const action of ['restore', 'retire']) {
-    const count = calls.panels[0].messages.filter(message => message.type === 'snapshot').length;
+  const count = calls.panels[0].messages.filter(message => message.type === 'snapshot').length;
+  calls.panels[0].send({ type: 'delete', id: 'node' });
+  await waitFor(() => calls.panels[0].messages.filter(message => message.type === 'snapshot').length > count);
+  assert.deepEqual(calls.cli.find(call => call.args[0] === 'delete').args, ['delete', 'node', '--json']);
+  for (const action of ['retire', 'restore', 'accept']) {
+    const errors = calls.panels[0].messages.filter(m => m.type === 'error').length;
     calls.panels[0].send({ type: action, id: 'node' });
-    await waitFor(() => calls.panels[0].messages.filter(message => message.type === 'snapshot').length > count);
-    assert.deepEqual(calls.cli.find(call => call.args[0] === action).args, [action, 'node', '--json']);
+    await waitFor(() => calls.panels[0].messages.filter(m => m.type === 'error').length > errors);
+    assert.match(calls.panels[0].messages.at(-1).message, /Unknown graph action/);
+    assert.ok(!calls.cli.some(call => call.args[0] === action));
   }
-  calls.panels[0].send({ type: 'accept', id: 'node' });
-  await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
-  assert.match(calls.panels[0].messages.at(-1).message, /Unknown graph action/);
-  assert.ok(!calls.cli.some(call => call.args[0] === 'accept'));
 });
 
 test('losing trust prevents a previously loaded graph from executing writes', async t => {
@@ -206,7 +207,7 @@ test('empty development windows use a filesystem folder picker and load the grap
   const result = await calls.commands.get('specspec.openGraph')();
   assert.equal(calls.dialogs, 1);
   assert.equal(calls.picks, 0);
-  assert.equal(result.format_version, 4);
+  assert.equal(result.format_version, 5);
   assert.equal('fingerprint' in result, false);
   assert.equal(calls.cli[0].root, root);
   assert.equal(calls.panels[0].messages.at(-1).type, 'snapshot');
@@ -318,7 +319,7 @@ test('opening a nested project creates an independent graph tab', async t => {
   await calls.commands.get('specspec.openGraph')();assert.equal(calls.cli.at(-1).root,nested);
 });
 
-const fileNode = { id: 'node', type: 'requirement', retired: false, parents: [], sources: [], body: '# Original', path: '_specspec/node--summary.md' };
+const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '_specspec/node--summary.md' };
 test('custom text editor binds a real document, marks edits dirty, and saves without CLI update', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { doc, panel } = await f.openDocument(fileNode);
@@ -331,6 +332,25 @@ test('custom text editor binds a real document, marks edits dirty, and saves wit
   panel.send({ type: 'save', id: 'node', body: '# Native draft', parents: [], sources: '[]', documentVersion: 2, editSequence: 1 });
   await waitFor(() => !doc.isDirty);
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'update'));
+});
+test('native Delete is bound, confirmed and managed, never a retired buffer edit; dirty documents block it', async t => {
+  const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] }, confirm: true });
+  const { doc, panel } = await f.openDocument(fileNode);
+  panel.send({ type: 'delete', id: 'other' });
+  await waitFor(() => panel.messages.at(-1).type === 'error');
+  assert.match(panel.messages.at(-1).message, /bound node/);
+  doc.isDirty = true;
+  const errors = panel.messages.filter(m => m.type === 'error').length;
+  panel.send({ type: 'delete', id: 'node' });
+  await waitFor(() => panel.messages.filter(m => m.type === 'error').length > errors);
+  assert.match(panel.messages.at(-1).message, /dirty SpecSpec/);
+  assert.ok(!f.calls.cli.some(c => c.args[0] === 'delete'));
+  doc.isDirty = false;
+  panel.send({ type: 'delete', id: 'node' });
+  await waitFor(() => f.calls.cli.some(c => c.args[0] === 'delete'));
+  assert.deepEqual(f.calls.cli.find(c => c.args[0] === 'delete').args, ['delete', 'node', '--json']);
+  assert.ok(!f.calls.cli.some(c => c.args[0] === 'editor' && JSON.parse(c.input).edit?.retired !== undefined));
+  assert.equal(doc.isDirty, false);
 });
 test('split node views share native contents but preserve independent panels and open other node files', async t => {
   const other = { ...fileNode, id: 'other', path: '_specspec/other--summary.md', body: '# Other' };

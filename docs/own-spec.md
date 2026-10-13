@@ -19,14 +19,14 @@ shape cannot have 42 independent random bits while remaining canonical Base64url
 
 The separate [backend conclusion](../_specspec/qowy5AI=canonical-base64url-and-current-only-backend.md)
 chooses cryptographic random bytes and collision checking under the managed writer
-lock against all current nodes, including withdrawn ones. Retry exact and case-only
+lock against all current nodes, for current node files. Retry exact and case-only
 aliases regardless of summary; validation rejects those aliases too. References
 remain case-sensitive. This protects portable filenames, not global branch-merge
 uniqueness or secret/authentication tokens. Mermaid uses injective ASCII-safe IDs.
 
 Both working graphs were converted with saved old/new mappings and original bytes
 through a temporary tool-managed migration. Current code retains **only the current
-format/API 4 schema**: no UUID reader, old hash/approval normalization or permanent
+format/API 5 schema**: no UUID reader, old hash/approval normalization or permanent
 migration command/controls. Old node files fail validation; they are not silently
 converted, accepted as a usable baseline or repaired. Rekeyed persisted host
 cameras/drafts are not claimed compatible; old drafts should be copied explicitly.
@@ -98,7 +98,7 @@ The [blob-address conclusion](../_specspec/jsIUeP0=stable-blob-anchors-with-deri
 separates stable source snapshots from derived locations and commit identity.
 The [detailed contract](../_specspec/VnSF9BE=strict-and-expanding-source-range-resolution-contract.md)
 chooses strict/expanding semantics, explicit lifecycle/checks, readable previews,
-retention budgets and current-only format/API 4. These are separate revisable
+retention budgets, introduced in API 4 and retained in current-only format/API 5. These are separate revisable
 choices, not reinterpretations of the user's core outcome. See the
 [source-region guide](source-regions.md) for commands, schema, boundaries and limits.
 Source blob IDs are not node fingerprints or approval gates. File-level impact
@@ -107,9 +107,10 @@ The entire maintained Gantt corpus—not just HEAD—is reconstructed through ac
 current CLI calls with both source modes, all refs/withdrawn nodes and new receipts.
 Existing manual clones remain preserved and may be obsolete; create a new external
 clone rather than silently resetting experiments. Earlier API-3 evidence is history.
-The [current implementation/evidence record](../_specspec/vQFml0Y=blob-source-regions-implementation-and-current-history-evidence.md)
+The [source-region implementation/evidence record](../_specspec/vQFml0Y=blob-source-regions-implementation-and-current-history-evidence.md)
 uses the feature itself: a strict schema-module anchor and expanding resolver/command
-anchors from the committed implementation. Fresh checks pass: 150 Python (30 source),
+anchors from the committed implementation. At the earlier API-4 checkpoint,
+checks passed: 150 Python (30 source),
 135 common UI, 34 VS Code and nine Electron tests, Ruff, both graphs, all eight
 maintained commits/refs and 123 actual API-4 receipts/source checks/model stages.
 Both Windows hosts pass source previews and complete existing suites; app/browser
@@ -152,10 +153,24 @@ ceremony is required. Passing tests and commits are evidence, not proof or accep
 [Separate conclusions](../_specspec/VZvwDBY=revisable-conclusions.md) remain revisable.
 
 No status/proposed/accepted fields, accept command, review receipt gate or score.
-Optional `retired: true` means withdrawal with retained explanation, not insufficient
-review. The manifesto cannot be retired; live nodes cannot depend on retired parents.
-Restore changes withdrawal, never approval. Git additions/changes/removals/renames
-and linked-source impact are derived relative to the selected current-schema base.
+## Withdraw by deleting files; default workspace compares to HEAD
+
+The [user's correction](../_specspec/xu6W0c4=withdraw-by-file-deletion-and-show-workspace-against-head.md)
+and [separate design conclusion](../_specspec/5d5oDCM=physical-deletion-and-head-relative-ghost-views.md)
+remove retired flags, retire/restore commands/filters/badges and native metadata edits.
+Physically delete named node files, explain why in the normal Git commit, and keep
+earlier reasoning in Git rather than flagged current files. The six previously
+retired root records were removed; their contents and old choices remain in earlier
+commits. The former withdrawal conclusion apEb_pM= is amended, not a new approval gate.
+
+Default workspace displays its difference to freshly resolved HEAD. Deleted HEAD
+nodes remain visible/read-only as D with earlier text/links, including after staging;
+commit removes them from both HEAD and workspace. Dirty out-of-band forms stay
+copyable/unsavable. Both hosts watch Git refs/HEAD/packed refs; no default polling.
+Unborn Git has an explicit empty baseline; no Git or invalid/old HEAD gets a clear
+comparison-unavailable note, never a fabricated successful delta. Explicit historical
+comparisons remain independent. Only schema/API 5 is supported, with existing source
+blob regions unchanged. See [the guide](deletion.md) for batch/DAG/native/recovery rules.
 
 ## Manual Markdown and watcher synchronization correction
 
@@ -331,7 +346,7 @@ neutral, and distance/type manifesto accents remain light gray outside the cycle
 
 **Git/Revision Status** uses the selected comparison: A green, M/R blue, D red,
 source-only affected amber, unchanged neutral gray. Rename/source labels remain
-distinct; withdrawal is not deletion and direct node changes take precedence over
+distinct; deleted HEAD files are D and direct node changes take precedence over
 source impact. No comparison is explicitly labeled and neutral; unsaved new or
 orphaned drafts do not invent Git changes. Existing themed titles/corners and edge
 colors/dashes are independent. The new mode colors the manifesto by its comparison
@@ -433,7 +448,7 @@ renderer/domain-rule fork, remote assets or executable project Markdown. Electro
 is isolated/sandboxed with restricted preload/IPC and explicit project authorization.
 Python/Git are external prerequisites. Brand artwork and a minimal themed icon are
 separate. A/M/D/R titles/corners use theme tokens; source-only impact is not M,
-and withdrawal is not deletion. Future agent connectors remain unimplemented.
+and D is physical deletion relative to the base. Future agent connectors remain unimplemented.
 
 The old Activity Bar sidebar conclusion is withdrawn. Its historical evidence
 remains reasoning, not an active container, review workflow or private layout override.
@@ -457,14 +472,14 @@ claim that native saves acquire Python locks or guarantee full-DAG consistency.
 ## An independent worked planning example
 
 The [Gantt app](../example/gantt/README.md) has optional fictional illustration and
-real rewritten spec-before-code fixture commits. Portfolio → personal → workshop redirects withdraw
-13/17 and 9/16 live nodes, retaining prior reasoning. The final graph has 44 nodes
-(22 live, 22 withdrawn); the app implements weekday forecasts, explicit baselines,
+real rewritten spec-before-code fixture commits. Portfolio → personal → workshop
+redirects delete 13/17 and 9/16 nodes, retaining prior reasoning in predecessor commits
+and recording reasons in commit messages. The final graph has 22 nodes; the app implements weekday forecasts, explicit baselines,
 protected browser storage and previewed JSON conversion. It is not a production
 scheduler, durable backup, authentication or resource-optimization service.
 
 Its verifier checks all maintained Git commits, actual receipt/context/impact
-results, stage ordering, both withdrawal sets, current schema, exact index and
+results, stage ordering, both deletion sets/commit reasons, current schema, exact index and
 semantic/edge/source diffs; each runnable stage's model tests execute in isolation.
 Additional Gantt Git tests cover partial staging, repaired worktrees, full-identity
 renames, removed/added parent edges and linked-source ancestry.
@@ -474,6 +489,9 @@ renames, removed/added parent edges and linked-source ancestry.
 | Purpose | Node |
 | --- | --- |
 | Manifesto | [XV5_rPQ=](../_specspec/XV5_rPQ=specspec-manifesto.md) |
+| User's deletion/default-HEAD correction | [xu6W0c4=](../_specspec/xu6W0c4=withdraw-by-file-deletion-and-show-workspace-against-head.md) |
+| Physical deletion/HEAD ghost conclusion | [5d5oDCM=](../_specspec/5d5oDCM=physical-deletion-and-head-relative-ghost-views.md) |
+| Deletion implementation/evidence | [JqNzSPg=](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md) |
 | Compact IDs and current-only backend | [qowy5AI=](../_specspec/qowy5AI=canonical-base64url-and-current-only-backend.md) |
 | User's history/test scope correction | [Oou-SvU=](../_specspec/Oou-SvU=current-scheme-only-and-gantt-git-regressions.md) |
 | Independent compliant Git fixture | [YaXJpGE=](../_specspec/YaXJpGE=independent-current-schema-gantt-history.md) |
@@ -501,7 +519,8 @@ python -m specspec update <full-id> --body <body-file>
 
 Use `add --parent <id> ...` for a separate conclusion, not a rewritten intention
 that makes one solution inevitable. `update --parent` replaces the full parent
-list. Keep source links current. No accept step; retire/restore explicit batches.
+list. Keep source links current. No accept/retire/restore step; `delete` takes
+explicit batches and leaves a valid DAG. Explain removals in Git commits.
 
 ## Git, checks, and recovery
 
@@ -560,3 +579,24 @@ are preserved, and the generated local settings file remains intact and ignored.
 Exact staged root/fixture validation precedes the authorized implementation commit.
 See [the completion evidence](../_specspec/Zhzgq8s=finish-backlog-with-linked-implementation-and-verification.md)
 for scope and retained failures; this is not future-feature or every-platform proof.
+
+### Deletion-only/HEAD-view verification
+
+The [current implementation record](../_specspec/JqNzSPg=deletion-only-head-workspace-implementation-and-evidence.md)
+links schema/API 5, physical delete/recovery, shared GitWatcher, native clean-document
+protection, absent retired controls and current source/history seams. Checks pass:
+**157 Python, 139 common UI, 35 VS Code and nine Electron tests**, Ruff, both graphs,
+all eight Gantt revisions/source checks and 123 actual API-5 receipts. Twenty final
+app model cases, real Chromium app and offline playground checks passed. Both full
+Windows host suites passed on fresh assets: a real deleted file remains as copyable,
+unsavable D through staging, then vanishes after commit via Git watching without
+Refresh/default polling. Palette, radii/camera/form/ink assertions remain intact.
+
+Initial schema/expectation/formatting failures are recorded rather than erased.
+Root's six formerly retired files are physically deleted; reasons are in the
+implementation commit and prior text is in earlier Git commits. The whole Gantt
+corpus is rewritten with physical deletion and reasons, not HEAD-only migration.
+Existing clones/experiments are unchanged. A fresh manual comparison workspace is
+`~/Projects/specspec-examples/gantt-deletion`; use it or another new destination,
+not an automatically reset old clone. Remote CI, non-Windows host behavior, universal
+watch delivery and semantic correctness are not inferred from these checks.

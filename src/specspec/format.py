@@ -28,7 +28,6 @@ from .source_schema import safe_source_path as safe_source_path
 FIELDS = {
     "id",
     "type",
-    "retired",
     "parents",
     "format_version",
     "sources",
@@ -124,8 +123,6 @@ def parse_node(
     )
     node_type = data.get("type")
     check(isinstance(node_type, str) and node_type in NODE_TYPES, "Invalid node type.")
-    retired = data.get("retired", False)
-    check(isinstance(retired, bool), "retired must be a boolean withdrawal flag.")
     parents = data.get("parents")
     valid_parents = isinstance(parents, list) and all(
         isinstance(parent, str) and ID_RE.fullmatch(parent) for parent in parents
@@ -182,7 +179,6 @@ def parse_node(
     return SpecNode(
         node_id,
         node_type,
-        retired,
         list(parents),
         body,
         path,

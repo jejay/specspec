@@ -59,20 +59,6 @@ class ProjectDocuments {
       this.changed(); return { version: applied.version };
     });
   }
-  withdrawal(adapter, retired) {
-    return this.run(async () => {
-      const current = adapter.get();
-      if (current.closed) throw new Error('The node document is closed.');
-      const result = await this.request({ path: current.path, id: adapter.id, retired });
-      if (!result.snapshot.valid) throw new Error(result.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n'));
-      const change = result.changes[0];
-      if (adapter.get().version !== current.version || adapter.get().text !== change.before) throw new Error('Document changed while planning; retry.');
-      if (change.after !== change.before) await adapter.apply(change.before, change.after, minimalTextEdit(change.before, change.after));
-      const applied = adapter.get();
-      if (applied.text !== change.after) throw new Error('Document changed while applying; review current text before retrying.');
-      adapter.lastAppliedVersion = applied.version; this.changed();
-    });
-  }
   mutate(args, input) {
     return this.run(async () => {
       if (this.documents().some(d => d.dirty)) throw new Error('Save or revert dirty SpecSpec documents before a project-wide CLI mutation.');

@@ -50,10 +50,12 @@ against this clone's worktree. Do not reuse hashes from the old development hist
 `revisions.json` records actual predecessor/spec/code commit IDs and receipt ordinals.
 The tags are readable stage names, not node approval states.
 
-The first redirect withdraws 13/17 live nodes; the second withdraws 9/16. Withdrawn
-branches retain IDs, bodies, parents and sources except for withdrawal. Workshop
-weekday reasoning is a new justification, not approval/restoration of portfolio
-reasoning. `cli.jsonl` contains new actual executions from reconstruction, not
+The first redirect deletes 13/17 nodes; the second deletes 9/16. Their files are
+physically absent after each redirect and their original IDs, bodies, parents and
+sources remain in the predecessor commits. Each redirect commit explains why.
+Default workspace always compares to HEAD: D ghosts survive staging, then vanish
+after commit without a retired/restore workflow. Workshop weekday reasoning is a
+new justification, not approval or resurrection of the portfolio branch. `cli.jsonl` contains new actual executions from reconstruction, not
 altered older receipts or a claim that original commits used today's encoding.
 
 ## Run historical prototypes separately
@@ -85,7 +87,7 @@ python -m pytest tests/test_example_checkout.py tests/test_gantt_example.py test
 
 The verifier clones temporarily and checks **all retained refs/commits**, current
 schema/DAG, independent Git/index, tags, actual receipt/context/impact contents,
-stage ordering, both withdrawal sets, semantic/edge/source diffs and all runnable
+stage ordering, both deletion sets/reasons, semantic/edge/source diffs and all runnable
 model stages. It compares the final runtime/tests and graph with the tracked
 snapshot to catch drift. Git integration and real-host fixtures use the same clone
 helper; host fixtures add disposable A/M/D worktree changes without discarding
@@ -102,10 +104,10 @@ This is a **recurring maintenance obligation**, not a one-time ID conversion:
 2. Reconstruct the example's entire chronological graph/code evolution using the
    current CLI/schema, as if it had always been developed with today's SpecSpec.
    Use one consistent identity mapping through all revisions; convert every
-   parent, filename, embedded reference and withdrawn node as needed. Revise
+   parent, filename, embedded reference and earlier/deleted node as needed. Revise
    schema/API-specific operations and verification, not the app's core intentions.
 3. Preserve plausible graph emergence, revisable conclusions, substantial
-   redirects, retained withdrawal reasoning and spec-before-code boundaries.
+   redirects, deletion reasons/earlier reasoning in Git and spec-before-code boundaries.
    **No invented AI conversation is required.** Optional fictional stories are
    illustrations, not authorization or evidence. Execute checks and CLI operations
    for real; regenerate receipts instead of editing old outputs to look current.

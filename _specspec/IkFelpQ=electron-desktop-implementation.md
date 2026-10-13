@@ -10,6 +10,8 @@ sources:
   symbol: target Linux/Windows smoke/package matrix
 - path: electron/README.md
   symbol: Linux/Windows run/package instructions and boundaries
+- path: electron/launch.cjs
+  symbol: resolveExecutable; launch-directory path capture
 - path: electron/main.cjs
   symbol: authorized main-process host and shared session
 - path: electron/package-lock.json
@@ -26,6 +28,8 @@ sources:
   symbol: bounded project-scoped drafts, protected bytes and atomic file replacement
 - path: electron/test-host/run.cjs
   symbol: real isolated save/stale/reload/history checks
+- path: electron/test/launch.test.cjs
+  symbol: three relative/absolute/PATH/cwd regressions
 - path: electron/test/security.test.cjs
   symbol: six state/security regressions
 - path: electron/theme.css
@@ -34,11 +38,22 @@ sources:
   symbol: real themed A/M/D, sandbox and UI mutations
 - path: graph-ui-common/test-host/ui.cjs
   symbol: one shared real canvas harness
-- path: electron/launch.cjs
-  symbol: resolveExecutable; launch-directory path capture
-- path: electron/test/launch.test.cjs
-  symbol: three relative/absolute/PATH/cwd regressions
 ---
+## Current deletion-only correction
+
+xu6W0c4=/5d5oDCM= supersede the earlier retired/withdrawal workflow below.
+Current schema/API 5 removes the flag and all retire/restore/filter/metadata/badge
+paths. Managed delete physically unlinks an explicit batch after DAG checks,
+with journal new=null and original-byte/recovery safeguards. Default HEAD-relative
+UI ghosts are derived base records, read-only/copyable through staging and gone
+after commit; Git HEAD/ref watching refreshes both hosts. Native Delete requires
+clean project documents; deleted buffers never resurrect files in overlay reads.
+All earlier workflow/schema/test counts below are historical evidence. Gantt's
+entire current corpus is rebuilt with 22 physical deletions/reasons in prior Git
+commits and a 22-node HEAD, no flagged retained nodes. Earlier root explanations
+are in Git, not retained retired files. Source regions/colors/shapes/camera/native
+Save remain in scope; the separate current implementation record links actual tests.
+
 # Run the shared graph in an isolated local Electron window
 
 The initial Electron 44.6.0 shell builds the same shared renderer/template/session

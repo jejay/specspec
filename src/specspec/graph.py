@@ -75,8 +75,6 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
         if node.type == "manifesto":
             if node.parents:
                 error(node, "PARENTS", "The manifesto cannot have parents.")
-            if node.retired:
-                error(node, "RETIRED", "The manifesto cannot be retired.")
         elif not node.parents:
             error(node, "PARENTS", "A non-manifesto node needs at least one parent.")
         for parent_id in node.parents:
@@ -85,7 +83,7 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
                 error(
                     node,
                     "REFERENCE",
-                    f"Missing parent {parent_id}; restore it or change the reference.",
+                    f"Missing parent {parent_id}; recover the file or change the reference.",
                 )
                 continue
             parents[node.id].add(parent_id)
@@ -96,8 +94,6 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
                 error(node, "PARENT_TYPE", "Implementation nodes cannot have children.")
             if node.type == "implementation" and parent.type != "requirement":
                 error(node, "PARENT_TYPE", "Implementations need requirement parents.")
-            if not node.retired and parent.retired:
-                error(node, "RETIRED", f"Live nodes cannot depend on retired parent {parent_id}.")
     graph = Graph(by_id, parents, children, [])
     indegrees = {node_id: len(incoming) for node_id, incoming in parents.items()}
     ready = [node_id for node_id, degree in indegrees.items() if degree == 0]

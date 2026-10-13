@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
-const { readFileSync, writeFileSync } = require('node:fs');
+const { readFileSync, writeFileSync, existsSync } = require('node:fs');
+const { execFileSync } = require('node:child_process');
 const { join } = require('node:path');
 function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
@@ -48,6 +49,23 @@ function platformChecks(fixture, host) {
         for (let i = 0; i < 300; i++) { if (await evaluate(expression)) return; await delay(100); }
         assert.ok(await evaluate(expression), JSON.stringify(await evaluate(`({message:document.getElementById('message').textContent,body:document.getElementById('body').value})`)));
       };
+      // Real HEAD deletion lifecycle in this disposable independent Git history.
+      // Stage only the already deleted fixture file, not unrelated A/M drafts.
+      await evaluate(`document.getElementById('back').click()`);
+      assert.ok(await evaluate(`document.querySelector('[data-node-id="${removed}"].removed')!==null`));
+      const base = fixture.cli(['diff','--base','HEAD','--json']).base;
+      const deletedPath = base.nodes.find(n=>n.id===removed).path;
+      assert.equal(existsSync(join(fixture.root,deletedPath)),false);
+      const git = (...args) => execFileSync('git',['-C',fixture.root,...args],{stdio:'pipe'});
+      git('add','-u','--',deletedPath); await delay(500);
+      assert.ok(await evaluate(`document.querySelector('[data-node-id="${removed}"].removed')!==null`),'Staging must not remove a HEAD ghost.');
+      await evaluate(`document.querySelector('[data-node-id="${removed}"]').click()`);
+      assert.ok(await evaluate(`document.getElementById('save').disabled&&document.getElementById('delete').disabled&&document.getElementById('body').readOnly&&!document.getElementById('body').disabled`),'Deleted details are copyable but never editable.');
+      await screenshot(`${host}-deleted-head-ghost`);
+      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Delete the disposable implementation because this test is checking HEAD-relative ghost lifetime');
+      await waitFor(`document.querySelector('[data-node-id="${removed}"]')===null&&document.getElementById('revision').textContent.startsWith('HEAD → ')`);
+      assert.equal(existsSync(join(fixture.root,deletedPath)),false);
+      console.log(`${host}: physical deletion D survives staging and vanishes after commit through Git watching without Refresh/polling.`);
       // Real manual Markdown writes, with no Refresh click, CLI mutation or polling.
       await evaluate(`document.getElementById('discard').click();document.getElementById('back').click();document.querySelector('[data-node-id="${modified}"]').click()`);
       const node = fixture.cli(['show', modified, '--json']).node, path = join(fixture.root, node.path);

@@ -51,7 +51,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     assert not current.diagnostics, current.diagnostics
     assert all(ID_RE.fullmatch(node.id) for node in current.nodes)
     for node in current.nodes:
-        if not node.retired and node.type == "implementation":
+        if node.type == "implementation":
             assert node.sources and all((root / s["path"]).is_file() for s in node.sources)
 
     receipts = [json.loads(line) for line in (root / "history/cli.jsonl").read_text().splitlines()]
@@ -81,7 +81,6 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             records[node_id] = SpecNode(
                 node_id,
                 node_type,
-                False,
                 [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"],
                 receipt["stdin"],
                 f"_specspec/{node_id}{slugify(summary)}.md",
@@ -96,10 +95,10 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 node.parents = [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"]
             if "--sources" in argv:
                 node.sources = json.loads(argv[argv.index("--sources") + 1])
-        elif action in {"retire", "restore"}:
+        elif action == "delete":
             assert set(changed) == set(argv[3:-1])
             for node_id in changed:
-                records[node_id].retired = action == "retire"
+                del records[node_id]
         graph, diagnostics = build_graph(list(records.values()))
         assert not diagnostics, diagnostics
         if action == "context":
@@ -117,8 +116,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             "init",
             "add",
             "update",
-            "retire",
-            "restore",
+            "delete",
             "context",
             "impact",
             "validate",
@@ -130,7 +128,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
 
     revisions = json.loads((root / "history/revisions.json").read_text())
     assert len(revisions) == 3
-    assert all(len(r["withdrawn_ids"]) * 2 >= r["live_before"] for r in revisions[1:])
+    assert all(len(r["deleted_ids"]) * 2 >= r["node_count_before"] for r in revisions[1:])
     checked = []
     if history:
         with tempfile.TemporaryDirectory(prefix="specspec-gantt-history-") as directory:
@@ -166,7 +164,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                     assert not check_results(
                         resolve_nodes(
                             fixture,
-                            [n for n in snapshot.nodes if not n.retired],
+                            snapshot.nodes,
                             ref=ref,
                             retention=True,
                         )
@@ -194,21 +192,25 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 )
                 assert contents(spec) == recorded_graphs[record["spec_receipt"]]
                 assert contents(implementation) == recorded_graphs[record["implementation_receipt"]]
-                assert sum(not n.retired for n in spec.nodes) == record["spec_live_count"]
-                assert not any(not n.retired and n.type == "implementation" for n in spec.nodes)
+                assert len(spec.nodes) == record["spec_node_count"]
+                assert not any(n.type == "implementation" for n in spec.nodes)
                 old, new = {n.id: n for n in before.nodes}, {n.id: n for n in spec.nodes}
-                assert old.keys() <= new.keys() <= records.keys()
-                withdrawn = {key for key in old if not old[key].retired and new[key].retired}
-                assert withdrawn == set(record["withdrawn_ids"])
-                assert sum(not n.retired for n in before.nodes) == record["live_before"]
-                for node_id in withdrawn:
-                    left, right = old[node_id].semantic(), new[node_id].semantic()
-                    left["retired"] = True
-                    assert left == right, node_id
+                deleted = old.keys() - new.keys()
+                assert deleted == set(record["deleted_ids"])
+                assert len(before.nodes) == record["node_count_before"]
+                for node_id in old.keys() & new.keys():
+                    assert old[node_id].semantic() == new[node_id].semantic(), node_id
+                # Earlier explanations are preserved in prior commits, not HEAD flags.
+                for node_id in deleted:
+                    assert run_git(fixture, "show", f"{predecessor}:{old[node_id].path}")
+                    assert old[node_id].path not in spec.files
                 diff = semantic_diff(before, spec)
-                assert diff["impact_complete"] and not diff["removed_edges"]
-                assert not any(change["kind"] == "removed" for change in diff["changes"])
-                assert withdrawn <= {c["id"] for c in diff["changes"] if c["kind"] == "changed"}
+                assert diff["impact_complete"]
+                assert deleted == {c["id"] for c in diff["changes"] if c["kind"] == "removed"}
+                if deleted:
+                    assert diff["removed_edges"]
+                    message = run_git(fixture, "log", "-1", "--format=%B", spec_ref).decode()
+                    assert "Delete" in message and "because" in message
                 impact = source_change_impact(fixture, spec_ref, code_ref, spec, implementation)
                 assert "model.js" in {s["path"] for s in impact["source_changes"]}
                 assert impact["source_affected"]
@@ -236,16 +238,13 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                     ["node", "--test", str(stage / "test/model.test.cjs")], capture_output=True
                 )
                 assert test.returncode == 0, test.stdout.decode() + test.stderr.decode()
-                assert any(
-                    not n.retired and n.type == "implementation" for n in implementation.nodes
-                )
+                assert any(n.type == "implementation" for n in implementation.nodes)
                 previous_implementation = code_ref
                 checked.append(record["key"])
     return {
         "ok": True,
         "node_count": len(current.nodes),
-        "live_count": sum(not n.retired for n in current.nodes),
-        "withdrawn_count": sum(n.retired for n in current.nodes),
+        "deleted_in_history": sum(len(r["deleted_ids"]) for r in revisions),
         "cli_operations": len(receipts),
         "verified_git_stages": checked,
     }

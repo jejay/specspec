@@ -62,10 +62,12 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
         raise SpecError(diagnostics)
     for path, text in documents.items():
         document_path(path)
-        if path not in files:
-            fail("The document no longer exists; it will not be recreated.", path)
         if not isinstance(text, str) or len(text.encode("utf-8")) > MAX_FILE_BYTES:
             fail("Document text exceeds the 1 MiB limit or is not a string.", path)
+        if path not in files:
+            # An open buffer can outlive a deleted file. Keep it in the editor,
+            # never resurrect it in the graph; editing it still fails below.
+            continue
         files[path] = text.encode("utf-8")
     changes = []
     edit = request.get("edit")
@@ -76,7 +78,6 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
             "body",
             "parents",
             "sources",
-            "retired",
         }:
             fail("Unknown editor fields.")
         path = document_path(edit.get("path"))
@@ -96,7 +97,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 versions.append(header.get("format_version"))
         if len(versions) != 1 or type(versions[0]) is not int or versions[0] != FORMAT_VERSION:
             fail(
-                "Editing requires a current format-4 manifesto. Repair its Markdown.",
+                "Editing requires a current format-5 manifesto. Repair its Markdown.",
                 path,
             )
         if "body" in edit:
@@ -128,15 +129,6 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
             elif not same_items(data.get("sources", []), sources):
                 data["sources"] = sources
                 metadata_changed = True
-        if "retired" in edit:
-            if not isinstance(edit["retired"], bool):
-                fail("retired must be a boolean.", path)
-            if data.get("retired", False) != edit["retired"]:
-                metadata_changed = True
-                if edit["retired"]:
-                    data["retired"] = True
-                else:
-                    data.pop("retired", None)
         before = files[path].decode("utf-8")
         if metadata_changed:
             stream = io.StringIO()

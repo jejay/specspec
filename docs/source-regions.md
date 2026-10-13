@@ -1,7 +1,8 @@
 # Implementation source regions
 
 Implementation `sources` supports whole-file hints and Git-addressed text regions.
-This is **current format/API 4**, not an API-3 reader or a permanent converter.
+This is **current format/API 5**, retaining the source-region contract introduced
+in API 4, without an old-schema reader or permanent converter.
 Node IDs still use five random bytes and padded Base64url, including `=`.
 
 ```yaml

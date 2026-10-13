@@ -24,7 +24,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 
 ## Separation of responsibilities
 
-- **Python** validates schemas, withdrawal, links, and writes.
+- **Python** validates schemas, links, physical deletion and writes.
 - **Dagre** produces a left-to-right presentation from stable ordered IDs,
   intrinsic sizes, and relationships; no viewport size. Reversed input and its
   RL longest-path ranker produce **earliest source ranks**, rather than drawing
@@ -100,7 +100,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   gray manifesto zero remains outside both distance/type palettes. Git/Revision
   Status instead uses rainbow green A, blue M/R, red D and amber source impact,
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;
-  source-only, rename and withdrawal labels preserve their distinct meanings.
+  source-only, rename and deletion labels preserve their distinct meanings.
   Existing title/letter theme colors and connection inks stay independent.
 - **Temporary label preview** cycles card-chrome right-clicks through red, blue,
   green, purple, turquoise, yellow and none. A six-pixel equal inset outline keeps

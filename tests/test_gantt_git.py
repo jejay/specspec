@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_gantt_index_reads_staged_corruption_not_repaired_worktree(gantt_history):
     root = gantt_history
     before = load_snapshot(root)
-    node = next(n for n in before.nodes if n.type == "requirement" and not n.retired)
+    node = next(n for n in before.nodes if n.type == "requirement")
     file = root / node.path
     file.write_bytes(before.files[node.path].replace(b"parents:", b"unknown:"))
     assert not load_snapshot(root).valid and git_snapshot(root, staged=True).valid
@@ -33,7 +33,7 @@ def test_gantt_full_identity_rename_parent_edges_and_impact(gantt_history):
     root = gantt_history
     original = load_snapshot(root)
     manifesto = next(n.id for n in original.nodes if n.type == "manifesto")
-    parent = next(n.id for n in original.nodes if n.type == "requirement" and not n.retired)
+    parent = next(n.id for n in original.nodes if n.type == "requirement")
     _, child = add_node(
         root, "requirement", [parent], "# Current-scheme regression\n", "regression"
     )
@@ -79,14 +79,14 @@ def test_gantt_worktree_linked_source_changes_reach_requirement_ancestors(gantt_
 
 
 @pytest.mark.parametrize(
-    ("base", "target", "withdrawn"),
+    ("base", "target", "deleted"),
     [
         ("stage/01-code", "stage/02-spec", 13),
         ("stage/02-code", "stage/03-spec", 9),
     ],
 )
 def test_historical_redirects_load_through_the_ui_diff_protocol(
-    gantt_history, base, target, withdrawn
+    gantt_history, base, target, deleted
 ):
     root = gantt_history
     original_index = git(root, "ls-files", "--stage")
@@ -99,7 +99,9 @@ def test_historical_redirects_load_through_the_ui_diff_protocol(
     assert envelope["ok"] and not envelope["diagnostics"]
     diff = envelope["result"]
     assert diff["base"]["valid"] and diff["target"]["valid"] and diff["impact_complete"]
-    assert sum("retired" in change["fields"] for change in diff["changes"]) == withdrawn
+    assert sum(change["kind"] == "removed" for change in diff["changes"]) == deleted
+    assert diff["removed_edges"]
+    assert all("retired" not in n for side in ["base", "target"] for n in diff[side]["nodes"])
     assert diff["added_edges"] and diff["affected"]
     assert git(root, "ls-files", "--stage") == original_index
     assert load_snapshot(root).files == original_worktree

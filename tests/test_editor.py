@@ -153,7 +153,7 @@ def test_source_planning_uses_current_text_type_not_the_initial_tab_type(workspa
         )
 
 
-def test_cycle_and_withdrawal_diagnostics_use_the_full_overlay(workspace):
+def test_cycle_diagnostics_use_the_full_overlay_and_retirement_edits_are_rejected(workspace):
     root, manifesto = workspace
     snapshot, first = add_node(root, "requirement", [manifesto], "# First", "first")
     snapshot, second = add_node(root, "requirement", [first], "# Second", "second")
@@ -161,9 +161,9 @@ def test_cycle_and_withdrawal_diagnostics_use_the_full_overlay(workspace):
     cycle = request(root, {"edit": {"path": node.path, "id": first, "parents": [second]}})
     assert not cycle["snapshot"]["valid"]
     assert any(d["code"] == "CYCLE" for d in cycle["diagnostics"])
-    withdrawn = request(root, {"edit": {"path": node.path, "id": first, "retired": True}})
-    assert not withdrawn["snapshot"]["valid"]
-    assert load_snapshot(root).require_valid().nodes[first].retired is False
+    with pytest.raises(SpecError, match="Unknown editor fields"):
+        editor_request(root, {"edit": {"path": node.path, "id": first, "retired": True}})
+    assert "retired" not in load_snapshot(root).require_valid().nodes[first].to_dict()
 
 
 def test_editor_rejects_unsafe_paths_identity_changes_and_deleted_files(workspace):
@@ -182,8 +182,11 @@ def test_editor_rejects_unsafe_paths_identity_changes_and_deleted_files(workspac
     with pytest.raises(SpecError, match="Unknown editor"):
         editor_request(root, {"edit": {"path": node.path, "id": manifesto, "type": "requirement"}})
     (root / node.path).unlink()
+    missing = editor_request(root, {"documents": {node.path: "text"}})
+    assert not missing["snapshot"]["valid"]  # Deleting the manifesto remains invalid.
+    assert not (root / node.path).exists()
     with pytest.raises(SpecError, match="not be recreated"):
-        editor_request(root, {"documents": {node.path: "text"}})
+        editor_request(root, {"edit": {"path": node.path, "id": manifesto, "body": "text"}})
 
 
 def test_invalid_raw_text_is_not_repaired_and_runtime_lock_is_not_overlaid(workspace):

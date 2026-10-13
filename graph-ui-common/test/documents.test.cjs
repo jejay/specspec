@@ -12,7 +12,7 @@ function fixture(options = {}) {
       const request = JSON.parse(input || '{}');
       if (options.slow) await new Promise(resolve => setTimeout(resolve, 5));
       if (options.concurrent) { doc.version++; doc.text = '# External'; }
-      const changes = request.edit ? [{ path: doc.path, before: request.documents[doc.path], after: request.edit.body || '# Withdrawn' }] : [];
+      const changes = request.edit ? [{ path: doc.path, before: request.documents[doc.path], after: request.edit.body ?? '# Unchanged' }] : [];
       return { result: { snapshot: { valid: !options.invalid, nodes: [] }, diagnostics: options.invalid ? [{ code: 'SCHEMA', message: 'Invalid buffer' }] : [], changes } };
     },
   });
@@ -50,7 +50,8 @@ test('invalid intermediate text stays in the native document but cannot masquera
   const f = fixture({ invalid: true });
   await f.project.edit(f.adapter, edit('')); assert.equal(f.doc.dirty, true);
   await assert.rejects(f.project.readGraph('HEAD'), /SCHEMA: Invalid buffer/);
-  await assert.rejects(f.project.withdrawal(f.adapter, true), /Invalid buffer/);
+  await assert.rejects(f.project.mutate(['delete', 'node', '--json']), /Save or revert/);
+  assert.equal(f.project.withdrawal, undefined);
 });
 test('graph reads cannot label an old buffer snapshot with a newer native document version', async () => {
   const f = fixture({ concurrent: true });
