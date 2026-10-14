@@ -1,0 +1,309 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2320" viewBox="0 0 2000 2320" role="img" aria-labelledby="interface-title interface-description">
+  <title id="interface-title">SpecSpec interface detail: renderer messages, CLI processes, Python calls and agent use</title>
+  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the SpecSpecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, optional project-level native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A single short-lived Python process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an API 5 JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through editor JSON overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar distinguishes Electron working reads, VS Code overlay reads, commit targets, managed mutations and source previews. There is no Python daemon, HTTP service or implemented agent connector.</desc>
+  <metadata>Descriptive documentation of the current format/API 5 implementation. Self-contained offline SVG with system font fallbacks and local markers only. Companion overview: docs/architecture.svg. Guide and source links: docs/architecture.md. Payload snippets are illustrative; an empty result in the response example stands in for command-specific data.</metadata>
+  <defs>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
+      .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: 1.8px; fill: #637776; }
+      .title { font-size: 56px; font-weight: 700; letter-spacing: -1.8px; }
+      .subtitle { font-size: 21px; fill: #536d70; }
+      .section { font-size: 29px; font-weight: 650; letter-spacing: -.4px; }
+      .heading { font-size: 24px; font-weight: 650; }
+      .body { font-size: 19px; fill: #466167; }
+      .small { font-size: 17px; fill: #587274; }
+      .caption { font-size: 16px; fill: #637776; }
+      .code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 17px; }
+      .label { font-size: 16px; font-weight: 600; }
+      .purple { fill: #7056a8; }
+      .teal { fill: #16796d; }
+      .gold { fill: #a55a28; }
+      .white { fill: #f7faf6; }
+      .light { fill: #c6dad5; }
+      .request { fill: none; stroke: #7056a8; stroke-width: 2.5; marker-end: url(#request-arrow); }
+      .response { fill: none; stroke: #16796d; stroke-width: 2.5; marker-end: url(#response-arrow); }
+      .write { fill: none; stroke: #b86e35; stroke-width: 3; marker-end: url(#write-arrow); }
+      .hairline { fill: none; stroke: #d7dfd8; stroke-width: 1.5; }
+      .lifeline { fill: none; stroke: #bdcac1; stroke-width: 1.5; stroke-dasharray: 4 6; }
+    </style>
+    <marker id="request-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#7056a8"/></marker>
+    <marker id="response-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#16796d"/></marker>
+    <marker id="write-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#b86e35"/></marker>
+  </defs>
+
+  <rect width="2000" height="2320" fill="#f8f9f4"/>
+  <g id="introduction" aria-label="Companion interface zoom and visual key">
+    <text x="64" y="66" class="eyebrow">SPECSPEC / INTERFACE ZOOM</text>
+    <text x="64" y="132" class="title">Inside the interface.</text>
+    <text x="64" y="176" class="subtitle">UI messages become host commands. The CLI calls a Python library—not another service.</text>
+    <rect x="1656" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
+    <text x="1796" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">COMPANION / CURRENT API 5</text>
+    <path d="M1732 140H1778" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1804 140H1850" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1876 140H1922" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
+    <path d="M64 214H102" class="request"/>
+    <text x="114" y="220" class="caption">Request / function call</text>
+    <path d="M414 214H452" class="response"/>
+    <text x="464" y="220" class="caption">Result / acknowledgement</text>
+    <path d="M810 214H848" class="write"/>
+    <text x="860" y="220" class="caption">Persist files</text>
+    <text x="1218" y="220" class="caption">Numbered seams: 1 messages · 2 process I/O · 3 Python calls</text>
+    <path d="M64 244H1936" class="hairline"/>
+  </g>
+
+  <g id="interface-chain" aria-label="Message port, subprocess contract and in-process library calls">
+    <text x="64" y="288" class="eyebrow">01 / CALL CHAIN</text>
+    <text x="344" y="288" class="section">Three contracts. One Python engine.</text>
+
+    <g id="renderer-port" aria-label="Unprivileged shared renderer and SpecSpecHost message/state methods">
+      <rect x="64" y="352" width="360" height="372" rx="16" fill="#fff" stroke="#d8d4e5" stroke-width="1.5"/>
+      <text x="88" y="393" class="heading" style="font-size:27px">Shared renderer</text>
+      <text x="88" y="425" class="small">DOM forms + graph canvas</text>
+      <text x="88" y="458" class="code" style="font-size:16px">graph-ui-common/media/graph.js</text>
+      <path d="M88 483H400" class="hairline"/>
+      <text x="88" y="519" class="code purple" style="font-size:20px">window.SpecSpecHost</text>
+      <text x="88" y="553" class="code">postMessage / onMessage</text>
+      <text x="88" y="585" class="small">Typed actions, node IDs and text</text>
+      <text x="88" y="611" class="caption" style="font-size:15px">ready / rendered: token + visible IDs</text>
+      <text x="88" y="638" class="code" style="font-size:16px">getState / setState</text>
+      <text x="88" y="664" class="caption">View state stays outside Python.</text>
+      <text x="88" y="699" class="caption">No filesystem or subprocess API</text>
+    </g>
+
+    <g id="host-coordination" aria-label="Authorized host adapters, per-view GraphSession, per-project ProjectDocuments and bounded CLI bridge">
+      <rect x="544" y="330" width="410" height="414" rx="16" fill="#eeeaf4"/>
+      <text x="568" y="370" class="heading" style="font-size:27px">Authorized JS host</text>
+      <text x="568" y="403" class="small">VS Code extension / Electron main</text>
+      <path d="M568 427H930" class="hairline"/>
+      <text x="568" y="464" class="heading">GraphSession</text>
+      <text x="568" y="495" class="small">Per view: guarded / serialized actions</text>
+      <text x="568" y="525" class="small">Checks trust, IDs and form conflicts</text>
+      <text x="568" y="557" class="code" style="font-size:16px">graph-ui-common/host/session.cjs</text>
+      <text x="568" y="594" class="body" style="font-weight:650;fill:#203a40">ProjectDocuments (VS Code)</text>
+      <text x="568" y="625" class="small">Per project: overlays, plan / apply queue</text>
+      <text x="568" y="671" class="body" style="font-weight:650;fill:#203a40">invoke() / bounded CLI bridge</text>
+      <text x="568" y="702" class="small">Trusted executable + configured prefix</text>
+      <text x="568" y="731" class="code" style="font-size:16px">graph-ui-common/host/cli.cjs</text>
+    </g>
+
+    <g id="message-contract" aria-label="Contract one: host-neutral messages through VS Code webview messaging or Electron's scoped preload IPC">
+      <circle cx="484" cy="368" r="15" fill="#e5def0"/>
+      <text x="484" y="373" text-anchor="middle" class="label purple">1</text>
+      <path d="M424 539H544" class="request"/>
+      <text x="484" y="518" text-anchor="middle" class="label purple">messages</text>
+      <path d="M544 601H424" class="response"/>
+      <text x="484" y="629" text-anchor="middle" class="label teal">UI events</text>
+      <text x="484" y="651" text-anchor="middle" class="caption" style="font-size:12px">snapshot / status</text>
+      <text x="484" y="674" text-anchor="middle" class="caption" style="font-size:14px">webview / IPC</text>
+    </g>
+
+    <g id="python-process" aria-label="One short-lived Python process per CLI invocation; facade and library are not separate services">
+      <rect x="1104" y="324" width="832" height="446" rx="18" fill="#e9eeea" stroke="#aabdb0" stroke-width="1.5" stroke-dasharray="7 6"/>
+      <text x="1128" y="354" class="eyebrow" style="font-size:12px;letter-spacing:1px">ONE SHORT-LIVED PYTHON PROCESS / EACH CLI INVOCATION</text>
+      <g id="cli-facade" aria-label="Click parses inputs, dispatches ordinary Python calls and emits results or guarded diagnostics">
+        <rect x="1128" y="377" width="204" height="367" rx="6" fill="#fff"/>
+        <text x="1152" y="414" class="heading">CLI façade</text>
+        <text x="1152" y="447" class="code">cli.py / Click</text>
+        <text x="1152" y="490" class="body">Parse</text>
+        <text x="1152" y="518" class="small">argv + stdin</text>
+        <text x="1152" y="560" class="body" style="font-weight:650;fill:#203a40">Dispatch</text>
+        <text x="1152" y="589" class="small">SpecError / I/O</text>
+        <text x="1152" y="632" class="code" style="font-size:20px">emit()</text>
+        <text x="1152" y="661" class="small">API 5 envelope</text>
+        <text x="1152" y="690" class="small">JSON stdout</text>
+        <text x="1152" y="721" class="caption">+ exit status</text>
+      </g>
+      <g id="python-library" aria-label="Reusable domain functions and types; read/validation, non-writing plans, managed mutations and Git/source resolution share graph rules">
+        <rect x="1464" y="377" width="448" height="367" rx="12" fill="#193f43"/>
+        <text x="1492" y="416" class="heading white" style="font-size:30px">Python library</text>
+        <text x="1492" y="449" class="code light">src/specspec/</text>
+        <text x="1492" y="490" class="body white" style="font-weight:650">Read / validate</text>
+        <text x="1492" y="519" class="code light" style="font-size:16px">load_snapshot() · Graph.closure()</text>
+        <text x="1492" y="560" class="body white" style="font-weight:650">Plan / write</text>
+        <text x="1492" y="589" class="code light" style="font-size:16px">editor_request() · update_node()</text>
+        <text x="1492" y="630" class="body white" style="font-weight:650">Git / sources</text>
+        <text x="1492" y="659" class="code light" style="font-size:16px">git_snapshot() · SourceReader</text>
+        <text x="1492" y="714" class="small light" style="font-size:16px">Shared: format.py + model.py + graph.py</text>
+      </g>
+      <g id="library-contract" aria-label="Contract three: ordinary function calls return Python records or raise SpecError; no RPC or second process">
+        <circle cx="1398" cy="408" r="15" fill="#d8e6dc"/>
+        <text x="1398" y="413" text-anchor="middle" class="label teal">3</text>
+        <text x="1398" y="449" text-anchor="middle" class="caption">Python calls</text>
+        <path d="M1332 555H1464" class="request"/>
+        <text x="1398" y="534" text-anchor="middle" class="label purple">call</text>
+        <path d="M1464 634H1332" class="response"/>
+        <text x="1398" y="613" text-anchor="middle" class="label teal">objects /</text>
+        <text x="1398" y="662" text-anchor="middle" class="label teal">SpecError</text>
+        <text x="1398" y="714" text-anchor="middle" class="caption" style="font-size:14px">not JSON / RPC</text>
+      </g>
+    </g>
+
+    <g id="subprocess-contract" aria-label="Contract two: explicit root, shell-free argv and UTF-8 stdin in; versioned JSON and exit status out">
+      <circle cx="1029" cy="368" r="15" fill="#e5def0"/>
+      <text x="1029" y="373" text-anchor="middle" class="label purple">2</text>
+      <path d="M954 672H1128" class="request"/>
+      <text x="1041" y="650" text-anchor="middle" class="label purple">argv + stdin</text>
+      <path d="M1128 708H954" class="response"/>
+      <text x="1041" y="736" text-anchor="middle" class="label teal">API 5 JSON</text>
+    </g>
+
+    <g id="agent-cli" aria-label="The agent calls the same CLI directly, bypassing renderer messages and JavaScript host coordination">
+      <rect x="64" y="799" width="890" height="149" rx="10" fill="#e5eee7"/>
+      <text x="88" y="837" class="heading" style="font-size:26px">Agent / external shell</text>
+      <text x="655" y="834" class="caption">No UI port or built-in connector</text>
+      <text x="88" y="880" class="code" style="font-size:21px">specspec --root &lt;project&gt; context &lt;id&gt; --json</text>
+      <text x="88" y="908" class="caption">Read: context / impact / diff · write: add / update / delete · checks: validate / hook check</text>
+      <text x="88" y="936" class="caption" style="font-size:15px">Check stdout + exit status. Context preserves the selected node + all required ancestors.</text>
+      <path d="M954 841H1197V744" class="request"/>
+      <text x="1068" y="819" text-anchor="middle" class="label purple">same CLI contract</text>
+      <path d="M1247 744V891H954" class="response"/>
+      <text x="1068" y="921" text-anchor="middle" class="label teal">stdout / exit status</text>
+    </g>
+
+    <g id="python-embedding" aria-label="Alternative Python embedding imports the same modules in the caller's own process; it is not a connection to the CLI process">
+      <text x="1464" y="835" class="body" style="font-weight:650;fill:#203a40">Python embedding (alternative)</text>
+      <text x="1464" y="870" class="code">s = load_snapshot(Path(root))</text>
+      <text x="1464" y="900" class="code">g = s.require_valid()</text>
+      <text x="1464" y="934" class="caption">Same code in your process; objects / SpecError, not JSON.</text>
+    </g>
+    <text x="64" y="973" class="caption">Direct agent calls skip UI confirmation queues and VS Code dirty-buffer guards. The agent/harness owns its process controls.</text>
+    <text x="64" y="1004" class="caption">CLI reads disk. VS Code sees unsaved text by sending explicit document overlays. No shared daemon, HTTP server or Python process cache.</text>
+  </g>
+
+  <g id="wire-examples" aria-label="Illustrative renderer Save message, translated process call and returned API envelope">
+    <text x="64" y="1050" class="eyebrow">02 / PAYLOADS</text>
+    <text x="344" y="1050" class="section">The host translates. The CLI serializes.</text>
+    <g id="ui-message-example" xml:space="preserve" aria-label="Contract one example: a managed Save message contains data, not arbitrary CLI commands">
+      <text x="64" y="1100" class="heading" style="font-size:22px">1 / UI → host</text>
+      <text x="64" y="1132" class="small">Requirement Save; illustrative JS object</text>
+      <rect x="64" y="1152" width="460" height="175" rx="8" fill="#eeeaf4"/>
+      <text x="88" y="1188" class="code">{ type: 'save', id,</text>
+      <text x="88" y="1221" class="code">  body, parents: [parentId],</text>
+      <text x="88" y="1254" class="code">  sources: '[]',</text>
+      <text x="88" y="1287" class="code">  originalNode }</text>
+      <text x="64" y="1361" class="small">Host checks IDs + draft originals;</text>
+      <text x="64" y="1390" class="small">no renderer-supplied executable / CLI args.</text>
+    </g>
+    <g id="cli-request-example" xml:space="preserve" aria-label="Contract two request: the host constructs update argv and sends raw body text on stdin">
+      <text x="560" y="1100" class="heading" style="font-size:22px">2 / Host → process</text>
+      <text x="560" y="1132" class="small">invoke(command, prefix, root, args, input)</text>
+      <rect x="560" y="1152" width="680" height="175" rx="8" fill="#e9eee8"/>
+      <text x="584" y="1188" class="code">args = ['update', id, '--parent', parentId,</text>
+      <text x="584" y="1221" class="code">        '--body', '-', '--json']</text>
+      <text x="584" y="1254" class="code">spawn(command,</text>
+      <text x="584" y="1287" class="code">  [...prefix, '--root', root, ...args], …)</text>
+      <text x="560" y="1361" class="small">cwd=root · shell:false · UTF-8 stdin = body text</text>
+      <text x="560" y="1390" class="caption">Bridge defaults: 120 s / 16 MiB combined stdout + stderr</text>
+    </g>
+    <g id="json-response-example" aria-label="Contract two response: one JSON envelope on stdout plus the process exit status">
+      <text x="1276" y="1100" class="heading" style="font-size:22px">2 / Process → caller</text>
+      <text x="1276" y="1132" class="small">Command-specific result omitted here as an empty object</text>
+      <rect x="1276" y="1152" width="660" height="175" rx="8" fill="#193f43"/>
+      <text id="json-envelope" x="1300" y="1180" class="code white" xml:space="preserve">
+        <tspan x="1300" y="1180">{</tspan>
+        <tspan x="1300" y="1206">  "api_version": 5,</tspan>
+        <tspan x="1300" y="1232">  "ok": true,</tspan>
+        <tspan x="1300" y="1258">  "result": {},</tspan>
+        <tspan x="1300" y="1284">  "diagnostics": []</tspan>
+        <tspan x="1300" y="1310">}</tspan>
+      </text>
+      <text x="1276" y="1361" class="small">Exit 0 success · 1 rejected/invalid · 2 usage/I/O</text>
+      <text x="1276" y="1390" class="caption">Host rejects wrong API, malformed output, !ok or nonzero exit.</text>
+    </g>
+    <g id="validity-contract" aria-label="A successful editor request may return an invalid snapshot; process success is not graph validity">
+      <path d="M64 1424H1936" class="hairline"/>
+      <text x="64" y="1459" class="code gold">editor: ok=true ≠ snapshot.valid=true</text>
+      <text x="568" y="1459" class="body" style="font-size:18px">A non-writing plan can preserve repairable invalid text. Native Save can persist it.</text>
+      <text x="64" y="1491" class="caption">editor stdin is JSON { documents, edit? }, not raw body text. Diagnostics carry code, message, severity and optional path / node_id / line.</text>
+    </g>
+    <g id="render-handshake" aria-label="Host results become UI snapshot or document-status events; a rendered token and visible membership acknowledge drawing">
+      <text x="64" y="1521" class="caption">Host → UI: snapshot + diff + renderToken, or document-status + editSequence. UI → host: rendered (token + visible membership).</text>
+    </g>
+  </g>
+
+  <g id="native-edit-trace" aria-label="Sequence trace of one VS Code form edit and its separate native file Save">
+    <text x="64" y="1559" class="eyebrow">03 / TRACE ONE EDIT</text>
+    <text x="344" y="1559" class="section">A plan returns before a file is saved.</text>
+    <text x="64" y="1602" class="body">VS Code node-file form · ordinary managed Save routes are listed on the right.</text>
+
+    <g id="trace-participants" aria-label="Renderer, shared host document coordination, Python editor command and VS Code native TextDocument">
+      <text x="156" y="1651" text-anchor="middle" class="heading" style="font-size:20px">Renderer</text>
+      <text x="475" y="1651" text-anchor="middle" class="heading" style="font-size:20px">GraphSession</text>
+      <text x="475" y="1678" text-anchor="middle" class="caption">+ ProjectDocuments</text>
+      <text x="870" y="1651" text-anchor="middle" class="heading" style="font-size:20px">CLI → editor.py</text>
+      <text x="1240" y="1651" text-anchor="middle" class="heading" style="font-size:20px">TextDocument</text>
+      <path d="M156 1700V2139M475 1700V2139M870 1700V2139M1240 1700V2139" class="lifeline"/>
+    </g>
+
+    <g id="trace-form-message" aria-label="Sequence-numbered edit input is coalesced and bound to the current native resource">
+      <path d="M156 1723H475" class="request"/>
+      <text x="179" y="1711" class="code" style="font-size:15px">edit: id / body / parents / sources</text>
+      <text x="179" y="1753" class="caption">documentVersion + editSequence</text>
+    </g>
+    <g id="trace-editor-request" aria-label="The host sends all open document overlays plus the requested edit on editor stdin">
+      <path d="M475 1793H870" class="request"/>
+      <text x="504" y="1778" class="code">editor --json</text>
+      <text x="504" y="1823" class="caption">stdin: { documents, edit: {path, id, …} }</text>
+      <rect x="862" y="1785" width="16" height="78" rx="3" fill="#cee0d3"/>
+      <text x="900" y="1811" class="code" style="font-size:15px">editor_request()</text>
+      <text x="900" y="1841" class="caption">Overlay → plan; no disk write</text>
+    </g>
+    <g id="trace-editor-result" aria-label="The CLI returns exact before/after text, snapshot and diagnostics to project-level coordination">
+      <path d="M870 1871H475" class="response"/>
+      <text x="504" y="1859" class="code" style="font-size:16px">changes: [{path, before, after}]</text>
+      <text x="504" y="1901" class="caption">+ snapshot + diagnostics, inside API 5 JSON</text>
+    </g>
+    <g id="trace-apply" aria-label="The host checks version and before text, then applies a minimal WorkspaceEdit to the native document">
+      <path d="M475 1952H1240" class="request"/>
+      <text x="587" y="1935" class="small">Check version + before text → minimal WorkspaceEdit</text>
+      <path d="M1240 2014H475" class="response"/>
+      <text x="613" y="1998" class="small teal">Applied document version</text>
+    </g>
+    <g id="trace-ack" aria-label="A matching document-status sequence acknowledgement returns to the renderer without clearing newer input">
+      <path d="M475 2076H156" class="response"/>
+      <text x="179" y="2061" class="code" style="font-size:15px">document-status + editSequence</text>
+      <text x="504" y="2097" class="caption">Dirty buffer · native undo / redo · split text shared</text>
+    </g>
+    <g id="trace-native-save" aria-label="Native Save or autosave persists the TextDocument to node files separately from Python; invalid text may be saved">
+      <path d="M1240 2139V2168H1282" class="write"/>
+      <path d="M1282 2147H1306L1318 2159V2193H1282ZM1306 2147V2159H1318" fill="#fff" stroke="#b86e35" stroke-width="1.7"/>
+      <text x="854" y="2165" class="small gold">Native Save / autosave → _specspec/</text>
+      <text x="854" y="2195" class="caption">No Python lock / journal; invalid text can be saved.</text>
+    </g>
+    <text x="64" y="2233" class="caption">Typing is coalesced; version and sequence guards protect newer input. Raw text edits go straight to the TextDocument.</text>
+  </g>
+
+  <g id="command-routing" aria-label="Other UI routes choose different CLI commands and library paths according to view and persistence owner">
+    <path d="M1382 1606V2239" class="hairline"/>
+    <text x="1412" y="1643" class="heading">Other UI routes</text>
+    <text x="1412" y="1685" class="body" style="font-weight:650;fill:#203a40">Electron working graph</text>
+    <text x="1412" y="1715" class="code">export --format json</text>
+    <text x="1412" y="1743" class="code">+ diff --base HEAD --json</text>
+    <text x="1412" y="1771" class="caption">Saved snapshot + Git comparison where available</text>
+    <path d="M1412 1791H1936" class="hairline"/>
+
+    <text x="1412" y="1827" class="body" style="font-weight:650;fill:#203a40">VS Code working graph</text>
+    <text x="1412" y="1857" class="code">editor --base HEAD --json</text>
+    <text x="1412" y="1885" class="caption">stdin: { documents } · no edit · no file write</text>
+    <path d="M1412 1905H1936" class="hairline"/>
+
+    <text x="1412" y="1941" class="body" style="font-weight:650;fill:#203a40">Commit-target comparison</text>
+    <text x="1412" y="1971" class="code">diff --base &lt;b&gt; --target &lt;t&gt; --json</text>
+    <text x="1412" y="1999" class="caption">Git trees · overlays ignored · read-only</text>
+    <path d="M1412 2019H1936" class="hairline"/>
+
+    <text x="1412" y="2055" class="body" style="font-weight:650;fill:#203a40">Managed project actions</text>
+    <text x="1412" y="2085" class="code">add / update / delete</text>
+    <text x="1412" y="2113" class="caption">workspace.py writer → lock / journal / saved files</text>
+    <text x="1412" y="2141" class="caption">VS Code first refuses dirty SpecSpec documents.</text>
+    <path d="M1412 2161H1936" class="hairline"/>
+
+    <text x="1412" y="2197" class="body" style="font-weight:650;fill:#203a40">Source preview / capture</text>
+    <text x="1412" y="2227" class="code">sources view / capture --preview</text>
+    <text x="1412" y="2255" class="caption">Capture returns a reference; the form's Save persists it.</text>
+  </g>
+
+  <path d="M64 2280H1936" class="hairline"/>
+  <text x="64" y="2307" class="caption" style="font-size:14px">Overview: docs/architecture.svg · Source links &amp; full contracts: docs/architecture.md</text>
+  <text x="1936" y="2307" text-anchor="end" class="caption" style="font-size:14px">Descriptive interface map · no runtime changes</text>
+</svg>

@@ -1,5 +1,6 @@
 """Versioned engineering docs/input artifacts remain usable without remote assets."""
 
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -22,8 +23,9 @@ def test_engineering_entry_point_local_links_resolve(path):
         assert (document.parent / target).exists(), (path, target)
 
 
-def test_architecture_svg_is_accessible_self_contained_documentation():
-    svg = ElementTree.parse(ROOT / "docs/architecture.svg").getroot()
+@pytest.mark.parametrize("path", ["docs/architecture.svg", "docs/architecture-interfaces.svg"])
+def test_architecture_svg_is_accessible_self_contained_documentation(path):
+    svg = ElementTree.parse(ROOT / path).getroot()
     namespace = "{http://www.w3.org/2000/svg}"
     elements = list(svg.iter())
     ids = [element.attrib["id"] for element in elements if "id" in element.attrib]
@@ -39,10 +41,65 @@ def test_architecture_svg_is_accessible_self_contained_documentation():
             if key.endswith("href"):
                 assert value.startswith("#") and value[1:] in ids
     # The only URLs are local SVG marker references; system font fallbacks need no download.
-    for reference in re.findall(
-        r"url\(([^)]+)\)", (ROOT / "docs/architecture.svg").read_text(encoding="utf-8")
-    ):
+    for reference in re.findall(r"url\(([^)]+)\)", (ROOT / path).read_text(encoding="utf-8")):
         assert reference.startswith("#") and reference[1:] in ids
+
+
+def test_architecture_svg_exposes_actor_interfaces_and_distinct_save_workflows():
+    svg = ElementTree.parse(ROOT / "docs/architecture.svg").getroot()
+    groups = {
+        element.attrib["id"]: element
+        for element in svg.iter("{http://www.w3.org/2000/svg}g")
+        if "id" in element.attrib
+    }
+    # Check the overview's reading structure, not coordinates, paint or exact prose.
+    for group_id in (
+        "owner-entry",
+        "agent-entry",
+        "conversation",
+        "visual-workspace",
+        "cli-interface",
+        "python-authority",
+        "project-data",
+        "refresh-loop",
+        "managed-save",
+        "native-save",
+        "review-loop",
+    ):
+        assert group_id in groups, group_id
+        assert groups[group_id].attrib.get("aria-label", "").strip(), group_id
+        assert "".join(groups[group_id].itertext()).strip(), group_id
+    assert groups["managed-save"] is not groups["native-save"]
+
+
+def test_interface_zoom_names_the_contracts_and_shows_a_current_json_envelope():
+    from specspec.model import API_VERSION
+
+    svg = ElementTree.parse(ROOT / "docs/architecture-interfaces.svg").getroot()
+    elements = {element.attrib["id"]: element for element in svg.iter() if "id" in element.attrib}
+    for group_id in (
+        "renderer-port",
+        "host-coordination",
+        "message-contract",
+        "subprocess-contract",
+        "cli-facade",
+        "python-library",
+        "library-contract",
+        "agent-cli",
+        "python-embedding",
+        "validity-contract",
+        "render-handshake",
+        "native-edit-trace",
+        "command-routing",
+    ):
+        assert elements[group_id].attrib.get("aria-label", "").strip(), group_id
+    envelope = json.loads("".join(elements["json-envelope"].itertext()))
+    assert envelope == {
+        "api_version": API_VERSION,
+        "ok": True,
+        "result": {},
+        "diagnostics": [],
+    }
 
 
 def test_original_brand_inputs_are_preserved_and_svg_import_is_exact():

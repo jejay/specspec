@@ -1,354 +1,311 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2660" viewBox="0 0 2400 2660" role="img" aria-labelledby="architecture-title architecture-description">
-  <title id="architecture-title">SpecSpec architecture — control, data and persistence flows</title>
-  <desc id="architecture-description">Engineering introduction to the current format/API 5 implementation, with full-descendant physical deletion (including shared children), pre-deletion uncommitted warnings and default HEAD-relative D ghosts until committed. A shared, unprivileged DOM/SVG canvas communicates through narrow VS Code or Electron adapters with a shared GraphSession and bounded, shell-free Python CLI bridge. Python owns the Markdown schema, snapshot construction, rooted DAG rules, edit planning, journaled managed writes, Git snapshots and semantic/source impact. Saved nodes live directly in _specspec; managed transaction state lives separately in .specspec-local. Blue arrows are control calls; teal arrows are records, bytes or text; orange arrows persist state or files; dashed purple arrows are refresh hints. A refresh flow shows coalesced watcher/document/Git events, overlay reads, last-valid-graph reconciliation, and token/full-membership render acknowledgements. Two save flows distinguish managed CLI/Electron/project-panel transactions from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native saves are not Python-journaled and can save invalid text. A final source map explains where to change domain rules, shared presentation, coordination and host adapters, and why serious Git/host tests clone the independently maintained Gantt bundle. No obsolete schema readers, approval gates, daemon or agent connectors are implied. Architectural arrows omit incidental calls; see architecture.md and the canonical specification graph for details.</desc>
-  <metadata>Documentation of the current checkout, not a proposed architecture. Source references are repository-relative. Hand-authored, self-contained SVG: no scripts, external fonts, images or remote assets. Companion: docs/architecture.md. Canonical reasoning: docs/own-spec.md and _specspec/.</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1930" viewBox="0 0 1840 1930" role="img" aria-labelledby="architecture-title architecture-description">
+  <title id="architecture-title">SpecSpec architecture: one graph, human and agent workflows</title>
+  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the SpecSpec CLI. Their conversation takes place outside SpecSpec; built-in agent connectors are future work. The unprivileged renderer sends SpecSpecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and API 5 JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in _specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
+  <metadata>Current format/API 5 implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: _specspec/ and docs/own-spec.md.</metadata>
   <defs>
     <style>
-      text { font-family: "Segoe UI", Arial, sans-serif; fill: #172e46; }
-      .kicker { font-size: 17px; font-weight: 700; letter-spacing: 2px; fill: #547087; }
-      .title { font-size: 48px; font-weight: 700; letter-spacing: -1px; }
-      .subtitle { font-size: 24px; fill: #486078; }
-      .section-title { font-size: 28px; font-weight: 700; }
-      .section-note { font-size: 21px; fill: #546a7e; }
-      .boundary-title { font-size: 18px; font-weight: 700; letter-spacing: 1.1px; fill: #4b657d; }
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
+      .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: 1.8px; fill: #637776; }
+      .title { font-size: 56px; font-weight: 700; letter-spacing: -1.8px; }
+      .subtitle { font-size: 21px; fill: #536d70; }
+      .section { font-size: 29px; font-weight: 650; letter-spacing: -.4px; }
       .heading { font-size: 24px; font-weight: 650; }
-      .body { font-size: 22px; fill: #3d5369; }
-      .small { font-size: 19px; fill: #52697d; }
-      .foot { font-size: 17px; fill: #667b8d; }
-      .code { font-family: Consolas, "Cascadia Code", monospace; font-size: 19px; fill: #2a4e70; }
-      .label { font-size: 17px; font-weight: 600; }
-      .control-label { fill: #315fc4; }
-      .data-label { fill: #087f85; }
-      .write-label { fill: #ad5b17; }
-      .event-label { fill: #7851ae; }
-      .boundary { fill: #f0f4f9; stroke: #c4d0df; stroke-width: 1.5; stroke-dasharray: 9 6; }
-      .data-boundary { fill: #edf5f2; stroke: #bbd5cc; stroke-width: 1.5; stroke-dasharray: 9 6; }
-      .card { fill: #fff; stroke: #d0dbe6; stroke-width: 1.5; }
-      .runtime-card { fill: #fff; stroke: #b2cbc3; stroke-width: 1.5; }
-      .row { fill: #fff; stroke: #d3dee8; stroke-width: 1.5; }
-      .step { fill: #f6f8fb; stroke: #d4deea; stroke-width: 1.5; }
-      .managed-step { fill: #fff7ee; stroke: #e1c5a6; stroke-width: 1.5; }
-      .native-step { fill: #f0f5ff; stroke: #bbceee; stroke-width: 1.5; }
-      .control { fill: none; stroke: #315fc4; stroke-width: 3; marker-end: url(#control-arrow); }
-      .data { fill: none; stroke: #087f85; stroke-width: 3; marker-end: url(#data-arrow); }
-      .write { fill: none; stroke: #ad5b17; stroke-width: 3; marker-end: url(#write-arrow); }
-      .event { fill: none; stroke: #7851ae; stroke-width: 3; stroke-dasharray: 7 6; marker-end: url(#event-arrow); }
+      .body { font-size: 19px; fill: #466167; }
+      .small { font-size: 17px; fill: #587274; }
+      .caption { font-size: 16px; fill: #637776; }
+      .code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 17px; }
+      .label { font-size: 16px; font-weight: 600; }
+      .purple { fill: #7056a8; }
+      .teal { fill: #16796d; }
+      .gold { fill: #a55a28; }
+      .white { fill: #f7faf6; }
+      .light { fill: #c6dad5; }
+      .request { fill: none; stroke: #7056a8; stroke-width: 2.5; marker-end: url(#request-arrow); }
+      .response { fill: none; stroke: #16796d; stroke-width: 2.5; marker-end: url(#response-arrow); }
+      .write { fill: none; stroke: #b86e35; stroke-width: 3; marker-end: url(#write-arrow); }
+      .hint { fill: none; stroke: #788987; stroke-width: 2; stroke-dasharray: 5 6; marker-end: url(#hint-arrow); }
+      .hairline { fill: none; stroke: #d7dfd8; stroke-width: 1.5; }
     </style>
-    <marker id="control-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#315fc4"/></marker>
-    <marker id="data-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#087f85"/></marker>
-    <marker id="write-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ad5b17"/></marker>
-    <marker id="event-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#7851ae"/></marker>
+    <marker id="request-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#7056a8"/></marker>
+    <marker id="response-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#16796d"/></marker>
+    <marker id="write-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#b86e35"/></marker>
+    <marker id="hint-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L9 5L0 9Z" fill="#788987"/></marker>
   </defs>
 
-  <rect width="2400" height="2660" fill="#f7f9fc"/>
-  <rect width="2400" height="269" fill="#fff"/>
-  <path d="M64 269H2336" stroke="#d8e2eb" stroke-width="1.5"/>
-
-  <g id="introduction">
-    <text x="64" y="70" class="kicker">ENGINEERING FIELD GUIDE / CURRENT FORMAT &amp; API 5</text>
-    <text x="64" y="126" class="title">SpecSpec: control &amp; data flow</text>
-    <text x="64" y="173" class="subtitle">One canonical Markdown DAG. One Python authority. One shared canvas. Two save lifecycles.</text>
-    <rect x="1998" y="63" width="338" height="48" rx="24" fill="#edf5f2"/>
-    <text x="2167" y="94" text-anchor="middle" class="small" style="font-weight:700;fill:#2c6a58">LOCAL-FIRST · NO DAEMON</text>
+  <rect width="1840" height="1930" fill="#f8f9f4"/>
+  <g id="introduction" aria-label="Overview and visual key">
+    <text x="64" y="66" class="eyebrow">SPECSPEC / ARCHITECTURE</text>
+    <text x="64" y="132" class="title">One graph, two ways in.</text>
+    <text x="64" y="176" class="subtitle">A visual workspace for the owner. A CLI for the coding agent. Shared rules beneath both.</text>
+    <rect x="1496" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
+    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · FORMAT / API 5</text>
+    <path d="M1572 140H1618" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1644 140H1690" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1716 140H1762" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
+    <path d="M64 214H102" class="request"/>
+    <text x="114" y="220" class="caption">Request / interaction</text>
+    <path d="M402 214H440" class="response"/>
+    <text x="452" y="220" class="caption">Returned data / plan</text>
+    <path d="M738 214H776" class="write"/>
+    <text x="788" y="220" class="caption">Persist files</text>
+    <path d="M1012 214H1050" class="hint"/>
+    <text x="1062" y="220" class="caption">Notification / feedback</text>
+    <path d="M64 244H1776" class="hairline"/>
   </g>
 
-  <g id="legend" aria-label="Arrow legend">
-    <path d="M64 226H128" class="control"/>
-    <text x="146" y="233" class="small">Control / invocation</text>
-    <path d="M590 226H654" class="data"/>
-    <text x="672" y="233" class="small">Data / text / records</text>
-    <path d="M1190 226H1254" class="write"/>
-    <text x="1272" y="233" class="small">Persist / replace files</text>
-    <path d="M1810 226H1874" class="event"/>
-    <text x="1892" y="233" class="small">Event / refresh hint (dashed)</text>
+  <!-- The dominant map describes access, not every internal module or function. -->
+  <g id="access-map" aria-label="Two entrances converge on one domain authority and canonical project files">
+    <text x="64" y="288" class="eyebrow">01 / ACCESS</text>
+    <text x="314" y="288" class="section">The owner sees the graph. The agent asks the graph.</text>
+
+    <g id="owner-entry" aria-label="Owner: browse, edit and review through the visual workspace">
+      <circle cx="94" cy="367" r="24" fill="#ece6f4"/>
+      <circle cx="94" cy="360" r="7" fill="none" stroke="#7056a8" stroke-width="2"/>
+      <path d="M81 378C81 366 107 366 107 378" fill="none" stroke="#7056a8" stroke-width="2" stroke-linecap="round"/>
+      <text x="64" y="431" class="heading" style="font-size:28px">Owner</text>
+      <text x="64" y="463" class="body">Intent &amp; review</text>
+      <path d="M216 420H314" class="request"/>
+      <text x="265" y="402" text-anchor="middle" class="label purple">view / edit</text>
+    </g>
+
+    <g id="conversation" aria-label="Owner-agent conversation is external to SpecSpec">
+      <path d="M94 501V720" class="hint"/>
+      <path d="M90 502L94 493L98 502Z" fill="#788987"/>
+      <text x="114" y="564" class="small" style="font-weight:600">Intent + feedback</text>
+      <text x="114" y="592" class="caption">Conversation lives in</text>
+      <text x="114" y="615" class="caption">your agent environment.</text>
+      <text x="114" y="652" class="caption">Built-in connectors:</text>
+      <text x="114" y="675" class="caption">future work.</text>
+    </g>
+
+    <g id="visual-workspace" aria-label="One unprivileged canvas and narrow VS Code or Electron adapters">
+      <rect x="314" y="326" width="626" height="360" rx="18" fill="#fff" stroke="#d8d4e5" stroke-width="1.5"/>
+      <path d="M334 349V663" stroke="#bca9d7" stroke-width="4" stroke-linecap="round"/>
+      <text x="356" y="369" class="heading" style="font-size:30px">Visual workspace</text>
+      <text x="356" y="402" class="body">VS Code or Electron · one shared canvas</text>
+      <g id="canvas-miniature" aria-label="Illustrative graph canvas">
+        <circle cx="377" cy="454" r="20" fill="#f0edf5" stroke="#aa94c4" stroke-width="1.5"/>
+        <rect x="443" y="438" width="58" height="32" rx="12" fill="#f0edf5" stroke="#aa94c4" stroke-width="1.5"/>
+        <rect x="550" y="438" width="38" height="32" fill="#edf4ef" stroke="#77a598" stroke-width="1.5"/>
+        <path d="M400 454H440M504 454H547" class="request" style="stroke-width:1.8"/>
+      </g>
+      <text x="620" y="446" class="body" style="font-weight:650;fill:#203a40">Navigate / compare / edit</text>
+      <text x="620" y="476" class="caption">Forms, drafts, cameras, Git cues</text>
+      <text x="356" y="513" class="code">graph-ui-common/media/ + view.cjs</text>
+      <path d="M356 536H914" class="hairline"/>
+      <path d="M900 490V550" class="request"/>
+      <path d="M878 550V490" class="response"/>
+      <text x="356" y="568" class="small" style="font-weight:600">VS Code extension ↔ webview</text>
+      <text x="650" y="568" class="small" style="font-weight:600">Electron main ↔ preload / IPC</text>
+      <text x="356" y="600" class="code purple">window.SpecSpecHost</text>
+      <text x="578" y="600" class="small">message + presentation-state port</text>
+      <text x="356" y="642" class="body" style="font-weight:650;fill:#203a40">GraphSession · guarded queue · bounded CLI bridge</text>
+      <text x="356" y="669" class="caption">The canvas cannot access project files or spawn tools.</text>
+      <text x="340" y="713" class="caption">Host trust / authorization, dialogs and watchers stay in the adapters.</text>
+    </g>
+
+    <g id="agent-entry" aria-label="Coding agent: call the CLI from its own shell, also available to people">
+      <rect x="64" y="747" width="60" height="44" rx="8" fill="#e5eee7"/>
+      <text x="77" y="776" class="code teal" style="font-size:25px;font-weight:700">&gt;_</text>
+      <text x="64" y="832" class="heading">Coding agent</text>
+      <text x="64" y="861" class="small">CLI tools in its harness</text>
+      <path d="M254 782H314" class="request"/>
+      <rect x="314" y="739" width="626" height="134" rx="12" fill="#e9f0e9"/>
+      <text x="340" y="774" class="heading">Shell / terminal</text>
+      <text x="730" y="772" class="caption">People can use this too.</text>
+      <text x="340" y="813" class="code" style="font-size:21px">specspec context &lt;id&gt; --json</text>
+      <text x="340" y="848" class="small">impact · diff · sources · add · update · delete · validate</text>
+    </g>
+
+    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; API 5 JSON, records and diagnostics come back">
+      <path d="M940 610H1104" class="request"/>
+      <text x="1022" y="589" text-anchor="middle" class="label purple">argv + stdin</text>
+      <path d="M1104 646H940" class="response"/>
+      <text x="1022" y="674" text-anchor="middle" class="label teal">API 5 JSON</text>
+      <text x="1022" y="702" text-anchor="middle" class="caption">shell: false</text>
+      <path d="M940 782H1104" class="request"/>
+      <text x="1022" y="760" text-anchor="middle" class="label purple">read / change</text>
+      <path d="M1104 818H940" class="response"/>
+      <text x="1022" y="848" text-anchor="middle" class="label teal">records / errors</text>
+    </g>
+
+    <g id="python-authority" aria-label="The CLI and reusable Python library own specification meaning, not the renderer">
+      <rect x="1104" y="326" width="320" height="548" rx="18" fill="#193f43"/>
+      <text x="1132" y="363" class="eyebrow" style="fill:#b9d3c0;font-size:13px">SHARED AUTHORITY</text>
+      <text x="1132" y="410" class="heading white" style="font-size:30px">specspec CLI</text>
+      <text x="1132" y="450" class="heading white" style="font-size:28px">+ Python library</text>
+      <text x="1132" y="485" class="code light">src/specspec/</text>
+      <path d="M1132 508H1396" stroke="#4c6869" stroke-width="1.5"/>
+      <text x="1132" y="542" class="body white" style="font-size:21px;font-weight:650">Schema + rooted DAG</text>
+      <text x="1132" y="573" class="small light">Markdown → nodes → graph</text>
+      <text x="1132" y="618" class="body white" style="font-weight:650">Context, impact, Git diffs</text>
+      <text x="1132" y="648" class="small light">Source-region resolution</text>
+      <path d="M1132 678H1396" stroke="#4c6869" stroke-width="1.5"/>
+      <text x="1132" y="715" class="body white" style="font-weight:650">Plans or managed writes</text>
+      <text x="1132" y="745" class="code light" style="font-size:16px">editor.py · workspace.py</text>
+      <text x="1132" y="804" class="body white" style="font-weight:650">Snapshots + diagnostics</text>
+      <text x="1132" y="839" class="small light">Rebuilt per call · no daemon</text>
+    </g>
+
+    <g id="project-data" aria-label="Canonical saved Markdown DAG, Git snapshots and linked product sources">
+      <text x="1518" y="305" class="eyebrow" style="font-size:13px">YOUR PROJECT</text>
+      <rect x="1530" y="326" width="258" height="320" rx="5" fill="#e2e9df"/>
+      <rect x="1518" y="340" width="258" height="320" rx="5" fill="#fff" stroke="#afc5b6" stroke-width="1.5"/>
+      <text x="1540" y="382" class="code" style="font-size:27px;font-weight:700">_specspec/</text>
+      <text x="1540" y="416" class="code">&lt;id&gt;&lt;slug&gt;.md</text>
+      <g id="canonical-dag" aria-label="One manifesto, multi-parent requirements and implementation leaves">
+        <circle cx="1559" cy="484" r="16" fill="#e8eee7" stroke="#91aa99" stroke-width="1.5"/>
+        <rect x="1610" y="440" width="47" height="28" rx="10" fill="#efe9f5" stroke="#ad99c7" stroke-width="1.5"/>
+        <rect x="1610" y="500" width="47" height="28" rx="10" fill="#efe9f5" stroke="#ad99c7" stroke-width="1.5"/>
+        <rect x="1721" y="470" width="30" height="28" fill="#e9f2ea" stroke="#80a58e" stroke-width="1.5"/>
+        <path d="M1578 479C1593 479 1592 454 1607 454M1578 489C1593 489 1592 514 1607 514M1660 454C1690 454 1688 479 1718 479M1660 514C1690 514 1688 489 1718 489" class="response" style="stroke-width:1.8"/>
+      </g>
+      <text x="1540" y="559" class="body" style="font-size:18px;font-weight:650">Goals → choices → code</text>
+      <text x="1540" y="590" class="small">IDs + parent links in YAML</text>
+      <text x="1540" y="619" class="small">Binding text in Markdown</text>
+      <text x="1540" y="647" class="caption">Saved files, not UI state</text>
+      <path d="M1518 686H1776" class="hairline"/>
+      <text x="1518" y="727" class="heading" style="font-size:22px">Git + product code</text>
+      <text x="1518" y="762" class="small">Commits / HEAD / exact index</text>
+      <text x="1518" y="795" class="small" style="font-size:16px">sources: paths + blob/ranges</text>
+      <text x="1518" y="831" class="caption">Source anchors + earlier specs.</text>
+      <text x="1518" y="858" class="caption">Git operations stay with you.</text>
+    </g>
+
+    <g id="project-interface" aria-label="Python reads files and Git snapshots; managed operations write files. Native saves are detailed in section two.">
+      <path d="M1518 467H1424" class="response"/>
+      <text x="1471" y="446" text-anchor="middle" class="label teal">read</text>
+      <path d="M1424 577H1518" class="write"/>
+      <text x="1471" y="558" text-anchor="middle" class="label gold">managed</text>
+      <text x="1471" y="605" text-anchor="middle" class="label gold">write</text>
+      <path d="M1518 779H1424" class="response"/>
+      <text x="1471" y="758" text-anchor="middle" class="label teal">Git / code</text>
+    </g>
+    <text x="314" y="902" class="caption">The CLI reads saved files. VS Code working views also overlay open text buffers; commit targets are read-only.</text>
   </g>
 
-  <g id="runtime-map" aria-label="Runtime ownership and process boundaries">
-    <text x="64" y="307" class="section-title">A. Runtime &amp; ownership</text>
-    <text x="650" y="307" class="section-note">Follow calls and results across boundaries; the lower rows expand the lifecycles.</text>
-    <rect x="64" y="338" width="476" height="790" rx="16" class="boundary"/>
-    <rect x="630" y="338" width="560" height="790" rx="16" class="boundary"/>
-    <rect x="1280" y="338" width="580" height="790" rx="16" class="boundary"/>
-    <rect x="1950" y="338" width="386" height="790" rx="16" class="data-boundary"/>
-    <text x="88" y="376" class="boundary-title">BROWSER / UNPRIVILEGED</text>
-    <text x="654" y="376" class="boundary-title">HOST / AUTHORIZED</text>
-    <text x="1304" y="376" class="boundary-title">PYTHON / SUBPROCESS</text>
-    <text x="1974" y="376" class="boundary-title">PROJECT / FILES + GIT</text>
-
-    <g id="shared-canvas">
-      <rect x="88" y="412" width="428" height="278" rx="10" class="card"/>
-      <rect x="88" y="412" width="5" height="278" rx="2" fill="#315fc4"/>
-      <text x="112" y="450" class="heading">Shared graph canvas</text>
-      <text x="112" y="486" class="code">graph-ui-common/media/graph.js</text>
-      <text x="112" y="519" class="code">graph-ui-common/media/graph.css</text>
-      <text x="112" y="556" class="body">Literal DOM cards + SVG connections</text>
-      <text x="112" y="588" class="body">Inline forms, drafts, caret, selection</text>
-      <text x="112" y="620" class="body">No filesystem, Git or process access</text>
-      <text x="112" y="658" class="code">window.SpecSpecHost</text>
-    </g>
-    <g id="presentation-model">
-      <rect x="88" y="800" width="428" height="287" rx="10" class="card"/>
-      <text x="112" y="838" class="heading">Presentation, not domain rules</text>
-      <text x="112" y="875" class="code">graph-ui-common/media/</text>
-      <text x="112" y="908" class="code">graph-model.js · graph-camera.js</text>
-      <text x="112" y="946" class="body">Dagre: relations + intrinsic card sizes</text>
-      <text x="112" y="979" class="body">D3: curves and camera transform</text>
-      <text x="112" y="1012" class="body">Metrics use each full revision</text>
-      <text x="112" y="1052" class="body">Camera / hover never mutate the DAG</text>
-      <text x="88" y="1112" class="foot">View state ≠ canonical node metadata.</text>
-    </g>
-
-    <g id="host-adapters">
-      <rect x="654" y="412" width="512" height="180" rx="10" class="card"/>
-      <text x="678" y="450" class="heading">Host-specific services</text>
-      <text x="678" y="488" class="code">vscode/src/{extension,project}.ts</text>
-      <text x="678" y="521" class="code">electron/main.cjs · preload.cjs</text>
-      <text x="678" y="558" class="body">Project trust · dialogs · assets · state</text>
-    </g>
-    <g id="shared-session">
-      <rect x="654" y="686" width="512" height="222" rx="10" class="card"/>
-      <text x="678" y="724" class="heading">GraphSession / per-view coordination</text>
-      <text x="678" y="761" class="code">graph-ui-common/host/session.cjs</text>
-      <text x="678" y="799" class="body">Serialize actions; coalesce typing / refresh</text>
-      <text x="678" y="832" class="body">Authorize; confirm same-node overwrites</text>
-      <text x="678" y="871" class="body">Keep last valid graph; await render token</text>
-    </g>
-    <g id="cli-bridge">
-      <rect x="654" y="982" width="512" height="112" rx="10" class="card"/>
-      <text x="678" y="1019" class="heading">Bounded CLI bridge</text>
-      <text x="678" y="1055" class="code">graph-ui-common/host/cli.cjs</text>
-      <text x="654" y="1112" class="foot">argv + UTF-8 stdin · shell:false · API 5 stdout</text>
-    </g>
-
-    <g id="python-core">
-      <rect x="1304" y="412" width="532" height="240" rx="10" class="card"/>
-      <rect x="1304" y="412" width="5" height="240" rx="2" fill="#087f85"/>
-      <text x="1328" y="450" class="heading">Shared snapshot + DAG engine</text>
-      <text x="1328" y="487" class="code">workspace.py → format.py + model.py</text>
-      <text x="1328" y="520" class="code">→ graph.py (all in src/specspec/)</text>
-      <text x="1328" y="558" class="body">Bytes → strict nodes → parent/child maps</text>
-      <text x="1328" y="591" class="body">One root; types; links; cycles; deletion</text>
-      <text x="1328" y="628" class="body">Snapshot + diagnostics + deterministic order</text>
-    </g>
-    <g id="python-operation-ports">
-      <rect x="1304" y="742" width="532" height="166" rx="10" class="card"/>
-      <text x="1328" y="780" class="heading">Operation-specific I/O</text>
-      <text x="1328" y="816" class="code">workspace.py</text>
-      <text x="1483" y="816" class="small">journaled managed writer</text>
-      <text x="1328" y="850" class="code">editor.py</text>
-      <text x="1483" y="850" class="small">overlays + non-writing plans</text>
-      <text x="1328" y="884" class="code">git.py</text>
-      <text x="1483" y="884" class="small">revisions / index / source impact</text>
-    </g>
-    <g id="python-entrypoint">
-      <rect x="1304" y="982" width="532" height="112" rx="10" class="card"/>
-      <text x="1328" y="1019" class="heading">CLI entrypoint / versioned JSON</text>
-      <text x="1328" y="1055" class="code">src/specspec/cli.py · Click</text>
-      <text x="1304" y="1112" class="foot">Also called directly by engineers, agents &amp; hooks.</text>
-    </g>
-
-    <g id="canonical-store">
-      <rect x="1974" y="412" width="338" height="240" rx="10" class="runtime-card"/>
-      <text x="1998" y="450" class="heading">_specspec/</text>
-      <text x="1998" y="487" class="code">&lt;id&gt;&lt;slug&gt;.md</text>
-      <text x="1998" y="520" class="small">YAML frontmatter + Markdown</text>
-      <text x="1998" y="558" class="body">Saved graph / stable IDs</text>
-      <text x="1998" y="591" class="body">parents[] is authoritative</text>
-      <text x="1998" y="628" class="body">Editable by humans + tools</text>
-    </g>
-    <g id="git-and-source-data">
-      <rect x="1974" y="742" width="338" height="166" rx="10" class="runtime-card"/>
-      <text x="1998" y="780" class="heading">Git &amp; linked source paths</text>
-      <text x="1998" y="816" class="small">Commit trees · staged blobs</text>
-      <text x="1998" y="850" class="small">Linked sources: path + symbol?</text>
-      <text x="1998" y="884" class="small">Symbols are descriptive only</text>
-    </g>
-    <g id="runtime-journal">
-      <rect x="1974" y="982" width="338" height="112" rx="10" class="runtime-card"/>
-      <text x="1998" y="1019" class="heading">.specspec-local/</text>
-      <text x="1998" y="1055" class="small">Lock · stages · recovery journal</text>
-      <text x="1974" y="1112" class="foot">Ignored state, not specification data.</text>
-    </g>
-
-    <g id="runtime-connectors">
-      <path d="M232 690V800" class="control"/>
-      <text x="136" y="750" class="label control-label">layout</text>
-      <path d="M392 800V690" class="data"/>
-      <text x="278" y="750" class="label data-label">geometry</text>
-      <path d="M516 502H654" class="control"/>
-      <text x="584" y="484" text-anchor="middle" class="label control-label">actions</text>
-      <path d="M910 592V686" class="control"/>
-      <text x="934" y="644" class="label control-label">guarded messages</text>
-      <path d="M654 836H584V650H516" class="data"/>
-      <rect x="540" y="722" width="90" height="56" rx="6" fill="#f7f9fc"/>
-      <text x="585" y="743" text-anchor="middle" class="label data-label">snapshot</text>
-      <text x="585" y="768" text-anchor="middle" class="label data-label">+ diff</text>
-      <path d="M820 908V982" class="control"/>
-      <text x="731" y="951" class="label control-label">request</text>
-      <path d="M1054 982V908" class="data"/>
-      <text x="1071" y="951" class="label data-label">result</text>
-      <path d="M1166 1025H1304" class="control"/>
-      <text x="1235" y="1008" text-anchor="middle" class="label control-label">argv</text>
-      <path d="M1304 1068H1166" class="data"/>
-      <text x="1235" y="1101" text-anchor="middle" class="label data-label">JSON</text>
-      <path d="M1430 982V908" class="control"/>
-      <text x="1328" y="951" class="label control-label">dispatch</text>
-      <path d="M1700 908V982" class="data"/>
-      <text x="1722" y="951" class="label data-label">result</text>
-      <path d="M1430 742V652" class="control"/>
-      <text x="1328" y="706" class="label control-label">shared rules</text>
-      <path d="M1700 652V742" class="data"/>
-      <text x="1534" y="706" class="label data-label">records</text>
-      <path d="M1974 521H1836" class="data"/>
-      <text x="1905" y="503" text-anchor="middle" class="label data-label">bytes</text>
-      <path d="M1836 803H1905V606H1974" class="write"/>
-      <rect x="1859" y="669" width="92" height="57" rx="6" fill="#f7f9fc"/>
-      <text x="1905" y="690" text-anchor="middle" class="label write-label">managed</text>
-      <text x="1905" y="715" text-anchor="middle" class="label write-label">write</text>
-      <path d="M1974 857H1836" class="data"/>
-      <text x="1905" y="839" text-anchor="middle" class="label data-label">Git / sources</text>
-      <path d="M1836 890H1881V1038H1974" class="write"/>
-      <text x="1892" y="952" class="label write-label">journal</text>
-    </g>
+  <g id="refresh-loop" aria-label="Live feedback: events prompt coalesced rereads, snapshots and acknowledged canvas rendering">
+    <rect x="64" y="918" width="1712" height="86" rx="9" fill="#eaf0e8"/>
+    <text x="88" y="954" class="eyebrow" style="font-size:13px;fill:#507465">LIVE FEEDBACK</text>
+    <path d="M266 948H298" class="hint"/>
+    <text x="320" y="954" class="body" style="font-size:18px">Files / buffers / Git</text>
+    <path d="M511 948H553" class="hint"/>
+    <text x="575" y="954" class="body" style="font-size:18px">Coalesce + reread</text>
+    <path d="M763 948H805" class="response"/>
+    <text x="827" y="954" class="body" style="font-size:18px">Snapshot + diff</text>
+    <path d="M1007 948H1049" class="response"/>
+    <text x="1071" y="954" class="body" style="font-size:18px">Canvas</text>
+    <path d="M1170 948H1212" class="response"/>
+    <text x="1234" y="954" class="body" style="font-size:18px">Render ack: token + visible IDs</text>
+    <text x="320" y="986" class="caption">Invalid: marked last-valid view; drafts stay. Watchers are hints · polling off by default · explicit Refresh available.</text>
   </g>
 
-  <g id="refresh-lifecycle" aria-label="Read, render and reconcile flow">
-    <text x="64" y="1184" class="section-title">B. Read → render → reconcile</text>
-    <rect x="64" y="1220" width="2272" height="244" rx="14" class="row"/>
-    <g id="refresh-triggers">
-      <rect x="88" y="1244" width="472" height="170" rx="9" class="step"/>
-      <text x="112" y="1281" class="heading">1 / Trigger &amp; coalesce</text>
-      <text x="112" y="1316" class="body">Watchers / text or Git events / Refresh</text>
-      <text x="112" y="1349" class="code">session.cjs → scheduleRefresh()</text>
-      <text x="112" y="1384" class="body">Retry partial saves; polling defaults off</text>
+  <!-- Save ownership is expanded once, separately from the main access map. -->
+  <g id="persistence" aria-label="Same graph rules, different persistence lifecycles">
+    <text x="64" y="1064" class="eyebrow">02 / PERSISTENCE</text>
+    <text x="314" y="1064" class="section">Same graph rules. Different owners of Save.</text>
+    <text x="314" y="1097" class="body">A form is not a file. Follow the path for the host you use.</text>
+
+    <g id="managed-save" aria-label="CLI, Electron and VS Code project actions use Python's locked, journaled managed writer">
+      <rect x="64" y="1130" width="1712" height="188" rx="9" fill="#f4eee2"/>
+      <path d="M64 1144V1304" stroke="#b86e35" stroke-width="4"/>
+      <text x="88" y="1169" class="eyebrow gold">MANAGED</text>
+      <text x="88" y="1205" class="body" style="font-size:20px;font-weight:650;fill:#203a40">CLI / Electron /</text>
+      <text x="88" y="1234" class="body" style="font-size:20px;font-weight:650;fill:#203a40">VS Code project panel</text>
+      <text x="88" y="1267" class="caption">Explicit project actions</text>
+      <text x="352" y="1169" class="heading" style="font-size:22px">add / update / delete</text>
+      <text x="352" y="1205" class="small">Body text + parent IDs</text>
+      <text x="352" y="1234" class="code" style="font-size:16px">specspec … --json</text>
+      <path d="M590 1178H653" class="request"/>
+      <text x="684" y="1169" class="heading">Python owns the write</text>
+      <text x="684" y="1205" class="small">Lock → validate current + candidate</text>
+      <text x="684" y="1234" class="small">Stage + journal → byte checks → replace / unlink</text>
+      <text x="684" y="1267" class="code" style="font-size:16px">workspace.py · .specspec-local/</text>
+      <path d="M1187 1178H1482" class="write"/>
+      <text x="1334" y="1158" text-anchor="middle" class="label gold">persist → revalidate</text>
+      <text x="1217" y="1215" class="caption">Interrupted? retain journal</text>
+      <text x="1217" y="1242" class="caption">and use recover.</text>
+      <path d="M1514 1149H1538L1550 1161V1196H1514ZM1538 1149V1161H1550" fill="#fff" stroke="#b86e35" stroke-width="1.7"/>
+      <text x="1570" y="1169" class="heading" style="font-size:22px">Saved nodes</text>
+      <text x="1570" y="1205" class="code" style="font-size:16px">_specspec/*.md</text>
+      <text x="1570" y="1234" class="caption">Valid result → reload</text>
+      <text x="352" y="1298" class="caption">Delete previews all descendants (even shared children) + uncommitted warnings; reviewed scope is rechecked under lock.</text>
     </g>
-    <g id="overlay-read">
-      <rect x="672" y="1244" width="472" height="170" rx="9" class="step"/>
-      <text x="696" y="1281" class="heading">2 / Read a current graph</text>
-      <text x="696" y="1316" class="body">VS Code: disk + open text overlays</text>
-      <text x="696" y="1349" class="body">Electron: export + optional Git diff</text>
-      <text x="696" y="1384" class="body">Commit target: diff only; read-only</text>
+
+    <g id="native-save" aria-label="VS Code node-file forms use non-writing Python plans, WorkspaceEdit, native TextDocuments and native Save; raw edits go straight to the buffer">
+      <rect x="64" y="1346" width="1712" height="183" rx="9" fill="#eeeaf4"/>
+      <path d="M64 1360V1515" stroke="#7056a8" stroke-width="4"/>
+      <text x="88" y="1388" class="eyebrow purple" style="letter-spacing:1px">NATIVE DOCUMENT</text>
+      <text x="88" y="1424" class="body" style="font-size:20px;font-weight:650;fill:#203a40">VS Code node-file</text>
+      <text x="88" y="1453" class="body" style="font-size:20px;font-weight:650;fill:#203a40">editor</text>
+      <text x="88" y="1486" class="caption">Form or raw Markdown</text>
+      <text x="352" y="1388" class="heading" style="font-size:22px">Python plans</text>
+      <text x="352" y="1424" class="code">editor --json</text>
+      <text x="352" y="1453" class="small">before / after + diagnostics</text>
+      <text x="352" y="1486" class="caption">No file write here</text>
+      <path d="M609 1402H666" class="response"/>
+      <text x="637" y="1382" text-anchor="middle" class="label teal">plan</text>
+      <text x="694" y="1388" class="heading" style="font-size:22px">VS Code TextDocument</text>
+      <text x="694" y="1424" class="small">WorkspaceEdit · text/version guards</text>
+      <text x="694" y="1453" class="small">Dirty state · undo/redo · split text</text>
+      <text x="694" y="1486" class="caption">Raw edits go straight to this buffer</text>
+      <path d="M1110 1402H1248" class="request"/>
+      <text x="1179" y="1382" text-anchor="middle" class="label purple">Save / autosave</text>
+      <text x="1276" y="1388" class="heading" style="font-size:22px">VS Code saves</text>
+      <text x="1276" y="1424" class="caption">No Python lock / journal</text>
+      <path d="M1459 1402H1506" class="write"/>
+      <path d="M1514 1369H1538L1550 1381V1416H1514ZM1538 1369V1381H1550" fill="#fff" stroke="#7056a8" stroke-width="1.7"/>
+      <text x="1570" y="1388" class="heading" style="font-size:22px">Saved nodes</text>
+      <text x="1570" y="1424" class="code" style="font-size:16px">_specspec/*.md</text>
+      <text x="352" y="1510" class="caption">Native Save may persist invalid text. Managed project mutations require clean SpecSpec documents.</text>
     </g>
-    <g id="record-reconciliation">
-      <rect x="1256" y="1244" width="472" height="170" rx="9" class="step"/>
-      <text x="1280" y="1281" class="heading">3 / Reconcile records</text>
-      <text x="1280" y="1316" class="body">No change: skip redraw</text>
-      <text x="1280" y="1349" class="body">Invalid: keep last valid view + diagnostics</text>
-      <text x="1280" y="1384" class="body">Retain drafts, caret &amp; original records</text>
-    </g>
-    <g id="render-acknowledgement">
-      <rect x="1840" y="1244" width="472" height="170" rx="9" class="step"/>
-      <text x="1864" y="1281" class="heading">4 / Render &amp; acknowledge</text>
-      <text x="1864" y="1316" class="body">Snapshot + diff → display union</text>
-      <text x="1864" y="1349" class="body">Metrics stay revision-local</text>
-      <text x="1864" y="1384" class="body">rendered: token + complete visible IDs</text>
-    </g>
-    <path d="M560 1329H672" class="event"/>
-    <text x="616" y="1311" text-anchor="middle" class="label event-label">hint</text>
-    <path d="M1144 1329H1256" class="data"/>
-    <text x="1200" y="1311" text-anchor="middle" class="label data-label">records</text>
-    <path d="M1728 1329H1840" class="data"/>
-    <text x="1784" y="1311" text-anchor="middle" class="label data-label">snapshot</text>
-    <text x="88" y="1442" class="small">Invalid reloads disable managed writes, not native-buffer repair. Watchers are hints; no automatic file repair or delivery guarantee.</text>
+    <text x="314" y="1559" class="caption">Manual Markdown edits are allowed. Cameras, colors and view state stay outside the canonical specification.</text>
   </g>
 
-  <g id="persistence-lifecycles" aria-label="Managed transactions versus native VS Code text-document persistence">
-    <text x="64" y="1535" class="section-title">C. Two edit lifecycles — same graph rules, different owners of Save</text>
-    <g id="managed-save">
-      <rect x="64" y="1560" width="2272" height="235" rx="14" class="row"/>
-      <rect x="64" y="1560" width="6" height="235" rx="3" fill="#ad5b17"/>
-      <rect x="88" y="1584" width="472" height="149" rx="9" class="managed-step"/>
-      <text x="112" y="1620" class="heading" style="fill:#994e12">Managed actions</text>
-      <text x="112" y="1655" class="code">CLI / Electron / VS Code project panels</text>
-      <text x="112" y="1691" class="body">UI ports guard trust + draft conflicts</text>
-      <rect x="672" y="1584" width="472" height="149" rx="9" class="step"/>
-      <text x="696" y="1620" class="heading">Validate under a writer lock</text>
-      <text x="696" y="1655" class="code">src/specspec/workspace.py: mutate()</text>
-      <text x="696" y="1691" class="body">Valid current → build valid candidate</text>
-      <rect x="1256" y="1584" width="472" height="149" rx="9" class="step"/>
-      <text x="1280" y="1620" class="heading">Stage, journal, compare bytes</text>
-      <text x="1280" y="1655" class="code">.specspec-local/ → old + new bytes</text>
-      <text x="1280" y="1691" class="body">Reject external changes before replacement</text>
-      <rect x="1840" y="1584" width="472" height="149" rx="9" class="managed-step"/>
-      <text x="1864" y="1620" class="heading">Replace → revalidate → refresh</text>
-      <text x="1864" y="1655" class="code">_specspec/*.md · os.replace() per file</text>
-      <text x="1864" y="1691" class="body">Clean state; return snapshot on success</text>
-      <path d="M560 1657H672" class="control"/>
-      <text x="616" y="1640" text-anchor="middle" class="label control-label">command</text>
-      <path d="M1144 1657H1256" class="write"/>
-      <text x="1200" y="1640" text-anchor="middle" class="label write-label">prepare</text>
-      <path d="M1728 1657H1840" class="write"/>
-      <text x="1784" y="1640" text-anchor="middle" class="label write-label">persist</text>
-      <text x="88" y="1772" class="small">Interrupted batch → retained journal → recover refuses unknown external bytes. Recovery is not atomic multi-file or full power-loss durability.</text>
+  <g id="review-loop" aria-label="Recommended agent working loop and deliberate exact-index validation before authorized commits">
+    <text x="64" y="1615" class="eyebrow">03 / WORKFLOW</text>
+    <text x="314" y="1615" class="section">Agent work returns to owner judgment.</text>
+    <text x="314" y="1648" class="body">Recommended workflow, not an automated product pipeline.</text>
+    <g id="inspect-workbench" aria-label="Inspect owner edits and read complete ancestor context">
+      <circle cx="326" cy="1697" r="12" fill="#dbe8dd"/>
+      <text x="326" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">1</text>
+      <text x="348" y="1704" class="body" style="font-weight:650;fill:#203a40">Read the workbench</text>
+      <text x="314" y="1736" class="caption">Owner edits + complete ancestors</text>
+      <text x="314" y="1763" class="code" style="font-size:16px">git diff · context · impact</text>
     </g>
-    <g id="native-save">
-      <rect x="64" y="1820" width="2272" height="235" rx="14" class="row"/>
-      <rect x="64" y="1820" width="6" height="235" rx="3" fill="#315fc4"/>
-      <rect x="88" y="1844" width="472" height="149" rx="9" class="native-step"/>
-      <text x="112" y="1880" class="heading" style="fill:#315fc4">VS Code node-file form</text>
-      <text x="112" y="1915" class="code">GraphSession + ProjectDocuments</text>
-      <text x="112" y="1951" class="body">Coalesce typing; overlay open documents</text>
-      <rect x="672" y="1844" width="472" height="149" rx="9" class="step"/>
-      <text x="696" y="1880" class="heading">Non-writing edit plan</text>
-      <text x="696" y="1915" class="code">src/specspec/editor.py: editor_request()</text>
-      <text x="696" y="1951" class="body">Return exact before/after + diagnostics</text>
-      <rect x="1256" y="1844" width="472" height="149" rx="9" class="native-step"/>
-      <text x="1280" y="1880" class="heading">Native TextDocument</text>
-      <text x="1280" y="1915" class="code">WorkspaceEdit · text/version guards</text>
-      <text x="1280" y="1951" class="body">Minimal diff; shared buffers; undo / redo</text>
-      <rect x="1840" y="1844" width="472" height="149" rx="9" class="native-step"/>
-      <text x="1864" y="1880" class="heading">Native Save / autosave</text>
-      <text x="1864" y="1915" class="code">VS Code persists _specspec/*.md</text>
-      <text x="1864" y="1951" class="body">Not Python-locked or journaled</text>
-      <path d="M560 1917H672" class="control"/>
-      <text x="616" y="1900" text-anchor="middle" class="label control-label">edit</text>
-      <path d="M1144 1917H1256" class="data"/>
-      <text x="1200" y="1900" text-anchor="middle" class="label data-label">plan</text>
-      <path d="M1728 1917H1840" class="write"/>
-      <text x="1784" y="1900" text-anchor="middle" class="label write-label">save</text>
-      <text x="88" y="2032" class="small">Native Save can persist invalid text. Unapplied forms have per-view backups; managed project mutations refuse dirty native documents.</text>
+    <path d="M609 1700H669" class="request"/>
+    <g id="reason-and-refine" aria-label="Reason about intentions and deepen independently revisable conclusions">
+      <circle cx="721" cy="1697" r="12" fill="#dbe8dd"/>
+      <text x="721" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">2</text>
+      <text x="743" y="1704" class="body" style="font-weight:650;fill:#203a40">Reason &amp; refine</text>
+      <text x="709" y="1736" class="caption">Intentions → revisable conclusions</text>
+      <text x="709" y="1763" class="caption">Planning edits when requested</text>
     </g>
+    <path d="M994 1700H1054" class="request"/>
+    <g id="implement" aria-label="Implement and maintain source and verification links">
+      <circle cx="1108" cy="1697" r="12" fill="#dbe8dd"/>
+      <text x="1108" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">3</text>
+      <text x="1130" y="1704" class="body" style="font-weight:650;fill:#203a40">Implement</text>
+      <text x="1096" y="1736" class="caption">Code + tests + implementation links</text>
+      <text x="1096" y="1763" class="caption">Deepen detail; report conflicts</text>
+    </g>
+    <path d="M1381 1700H1441" class="request"/>
+    <g id="verify-and-review" aria-label="Validate, compare and return bounded evidence to the owner">
+      <circle cx="1491" cy="1697" r="12" fill="#dbe8dd"/>
+      <text x="1491" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">4</text>
+      <text x="1513" y="1704" class="body" style="font-weight:650;fill:#203a40">Verify &amp; review</text>
+      <text x="1479" y="1736" class="code" style="font-size:16px">validate · diff · owner feedback</text>
+      <text x="1479" y="1763" class="caption">Evidence informs the next choice</text>
+    </g>
+    <text x="314" y="1810" class="eyebrow" style="font-size:12px;letter-spacing:1px">WHEN A COMMIT IS AUTHORIZED</text>
+    <text x="662" y="1810" class="code" style="font-size:17px">git add → specspec hook check [--sources] → git commit</text>
+    <text x="314" y="1839" class="caption">The hook checks exact staged blobs. SpecSpec never stages or commits for you; hook installation is opt-in.</text>
+    <path d="M1744 1782V1861H304V1782" class="hint"/>
+    <rect x="958" y="1847" width="302" height="26" fill="#f8f9f4"/>
+    <text x="1109" y="1867" text-anchor="middle" class="caption">Feedback → next revision</text>
   </g>
 
-  <g id="engineering-seams" aria-label="Source map and change boundaries">
-    <text x="64" y="2130" class="section-title">D. Engineering seams &amp; invariants</text>
-    <g id="domain-change-map">
-      <rect x="64" y="2160" width="730" height="285" rx="12" class="row"/>
-      <text x="88" y="2200" class="heading">Change domain meaning here</text>
-      <text x="88" y="2239" class="code">src/specspec/{format,model,graph}.py</text>
-      <text x="88" y="2275" class="body">Schema, DAG, cascade deletion and warnings</text>
-      <text x="88" y="2311" class="code">src/specspec/{workspace,editor,git}.py</text>
-      <text x="88" y="2347" class="body">Writer/recovery, native plans, diffs / exact index</text>
-      <text x="88" y="2387" class="small">Tests: tests/ · staged hook check validates blobs, not worktree.</text>
-      <text x="88" y="2420" class="small">New choices are conclusions, never per-node approval gates.</text>
-    </g>
-    <g id="shared-ui-change-map">
-      <rect x="818" y="2160" width="730" height="285" rx="12" class="row"/>
-      <text x="842" y="2200" class="heading">Change one canvas / one session</text>
-      <text x="842" y="2239" class="code">graph-ui-common/media/ + host/</text>
-      <text x="842" y="2275" class="body">Model/layout/camera vs coordination/documents</text>
-      <text x="842" y="2311" class="code">graph-ui-common/scripts/build.cjs</text>
-      <text x="842" y="2347" class="body">One source → generated VS Code / Electron assets</text>
-      <text x="842" y="2387" class="small">Do not hand-edit generated media or runtime copies.</text>
-      <text x="842" y="2420" class="small">Focus, colors, cameras and drafts are presentation, not node data.</text>
-    </g>
-    <g id="host-change-map">
-      <rect x="1572" y="2160" width="764" height="285" rx="12" class="row"/>
-      <text x="1596" y="2200" class="heading">Change adapters / verify independent history</text>
-      <text x="1596" y="2239" class="code">vscode/src/ · electron/</text>
-      <text x="1596" y="2275" class="body">Trust, lifecycle, transport, state &amp; host security</text>
-      <text x="1596" y="2311" class="code">example/gantt/history/gantt.bundle</text>
-      <text x="1596" y="2347" class="body">Clone outside this repo for temporal / host tests.</text>
-      <text x="1596" y="2387" class="small">Rewrite every maintained example ref after a node-schema change.</text>
-      <text x="1596" y="2420" class="small">No daemon, approval workflow or implemented agent connector.</text>
-    </g>
-  </g>
-
-  <g id="canonical-contract">
-    <rect x="64" y="2480" width="2272" height="120" rx="12" fill="#172e46"/>
-    <text x="88" y="2517" class="heading" style="fill:#fff">Canonical contract</text>
-    <text x="88" y="2550" class="small" style="fill:#d9e6ef">Format/API 5 only · five random bytes → padded Base64url IDs (keep “=”) · one manifesto → multi-parent requirements → terminal implementations.</text>
-    <text x="88" y="2582" class="small" style="fill:#d9e6ef">Delete all descendants, even shared children; warn before uncommitted removal. HEAD ghosts remain until commit. Project Markdown is data, not executable HTML.</text>
-  </g>
-  <text x="64" y="2633" class="foot">Companion: docs/architecture.md · Canonical reasoning: docs/own-spec.md + _specspec/ · Architectural flows, not an exhaustive call graph.</text>
+  <path d="M64 1884H1776" class="hairline"/>
+  <text x="64" y="1911" class="caption" style="font-size:14px">Source map &amp; detail: docs/architecture.md · Binding graph: _specspec/ · Reading guide: docs/own-spec.md</text>
+  <text x="1776" y="1911" text-anchor="end" class="caption" style="font-size:14px">Descriptive overview · not a call graph</text>
 </svg>

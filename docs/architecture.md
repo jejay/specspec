@@ -1,17 +1,22 @@
-# Architecture: an engineer's map
+# Architecture: user and agent workflows
 
-[Open the control and data flow SVG](architecture.svg) at full size and zoom in.
-Read **A** for ownership, **B** for refreshes, **C** for persistence, and **D** for
-change locations. Paths in the diagram are repository-relative; arrows summarize
-architectural flows rather than every function call.
+[Open the architecture SVG](architecture.svg) at full size. Read it top to bottom:
+**01** follows the owner and agent into the tooling; **02** separates the two Save
+owners; **03** follows agent work back to owner review. The live-feedback strip
+connects file/document/Git changes to refreshed views. The source map below expands
+these boundaries without putting every module into the overview.
 
-![SpecSpec runtime architecture, refresh flow and two edit lifecycles](architecture.svg)
+![SpecSpec: owner and agent entry points, shared Python authority, two Save paths and review loop](architecture.svg)
 
-This documents the current implementation, not a new product decision. The
+This is descriptive documentation of the current implementation. The
 [specification tour](own-spec.md) and tool-managed [`_specspec/`](../_specspec/)
-graph explain the intentions, revisable choices and superseded designs. Some
-implementation records retain historical descriptions; read their later
-corrections rather than treating those descriptions as current contracts.
+graph explain binding intentions and revisable choices; Git retains earlier designs.
+Arrows summarize named architectural flows, not every function call.
+
+**Second diagram:** [CLI / Python library / UI interface zoom](architecture-interfaces.svg)
+opens the message, subprocess and in-process boundaries, shows concrete payloads,
+and traces a native form edit. It also shows how an agent bypasses the UI to use
+that same CLI contract, or imports the library into its own Python process.
 
 ## The mental model
 
@@ -34,6 +39,40 @@ corrections rather than treating those descriptions as current contracts.
   remain D through staging and disappear after commit; no retired status exists. Agent context is implemented as CLI
   exports; Claude Code/Codex connectors are not implemented.
 
+## How the owner and agent use the tooling
+
+| Entry point | Workflow and interface |
+| --- | --- |
+| Owner in VS Code | Open a canonical node file for a native graph/text-document editor; use **Open Graph** for project actions or **Compare Revisions** for independent comparisons. Browse relationships, edit forms, inspect source previews and review Git differences. |
+| Owner in Electron | **Trust and Open** a local project, then use the same canvas, forms and comparisons. Saves use Python-managed commands rather than VS Code documents. |
+| Agent in its own harness | Invoke `specspec` from the shell with `--json`, or use the Python library. Read context/impact, deepen conclusions, link implementation sources and validate changes. People can use this CLI too. |
+| Direct Markdown and Git | Manual node edits are allowed. Ordinary editor/Git tools own raw text, staging, commits and branch selection. SpecSpec supplies graph-aware diagnostics, diffs and opt-in exact-index checks. |
+
+The **owner–agent conversation is outside SpecSpec**. The current product does not
+embed an agent or provide a Claude Code/Codex connector. `AGENTS.md` describes the
+working process, not an orchestration service. Requested planning and implementation
+use the same tools as other CLI clients; meaningful choices remain revisable.
+
+A typical agent loop is:
+
+1. Inspect owner edits and the working/index state before acting; read the selected
+   node and its complete ancestor context with `context <id> --json`.
+2. Use `impact <id> --json` and `diff --base <ref> --json` to understand dependencies
+   and changes. Discuss consequential scope changes with the owner; use `add`/`update`
+   for requested graph refinement and preview destructive `delete` operations.
+3. Implement under those intentions, keep implementation explanations and `sources`
+   current, then run graph validation and the relevant code tests.
+4. Return differences, evidence and material uncertainty to the owner. When a commit
+   is authorized, stage deliberately and run `hook check` (optionally `--sources`)
+   against that exact index before committing through ordinary Git tooling.
+
+**The CLI reads saved files, not VS Code's unsaved buffers.** Working VS Code views
+also use open-document overlays; an agent must coordinate with those documents'
+save owner rather than assume a CLI read includes pending form/raw-text edits.
+Direct CLI/library calls do not run UI confirmation queues, the UI's per-node draft
+checks or VS Code dirty-document guards. Their caller supplies process controls and
+coordinates with open documents; Python still enforces domain and managed-writer rules.
+
 ## A. Follow the runtime boundaries
 
 | Layer | Start reading here | Responsibility |
@@ -48,9 +87,18 @@ The bridge spawns the trusted executable with argument arrays, `--root`, and
 `shell: false`. Bodies or editor requests go through UTF-8 stdin. JSON stdout has
 `{api_version: 5, ok, result, diagnostics}`; process time and output are bounded.
 CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
-or I/O failures. An editor plan can succeed while reporting
-`snapshot.valid: false`: it preserves repairable intermediate text, not a valid
-graph claim.
+or I/O failures. Invocation failures can lack JSON; the host also handles stderr,
+malformed stdout, timeouts and output limits. Bridge defaults are 120 seconds and
+16 MiB combined stdout/stderr, not limits imposed on an agent's own subprocess tool.
+An editor plan can succeed while reporting `snapshot.valid: false`: it preserves
+repairable intermediate text, not a valid graph claim.
+
+The CLI and library run in the **same Python process**. `cli.py` parses inputs,
+calls module functions, converts results to dictionaries and emits the envelope.
+Library clients instead receive Python types such as `Snapshot`/`Graph` or ordinary
+result dictionaries and handle `SpecError` directly. For example, `load_snapshot()`
+returns diagnostics and a `.valid` flag; `.require_valid()` raises for an unusable
+graph. There is no library RPC hop, UI-to-Python import or shared Python daemon.
 
 `list`, `show`, `context`, `impact` and `export` are read-side CLI entry points for
 engineers and agents. `context` includes the selected node and complete ancestor
@@ -218,11 +266,18 @@ npm --prefix electron run test:host
 To render this diagram locally (the SVG itself has no external dependencies):
 
 ```sh
-resvg --width 1800 docs/architecture.svg architecture-preview.png
+mkdir -p .specspec-local
+resvg --width 1840 docs/architecture.svg .specspec-local/architecture-preview.png
+resvg --width 2000 docs/architecture-interfaces.svg .specspec-local/interfaces-preview.png
 ```
 
 ### Canonical reasoning behind these boundaries
 
+- [Descriptive engineering map](../_specspec/yJnnDfM=describe-runtime-boundaries-in-an-offline-engineering-map.md),
+  [actor-first overview choice](../_specspec/Rmh2lfc=actor-first-architecture-overview.md)
+  and [map implementation](../_specspec/58igdyQ=actor-first-architecture-map-implementation.md).
+- [Interface zoom choice](../_specspec/Pxcs6Oc=tooling-interface-detail-zoom.md)
+  and [interface documentation implementation](../_specspec/Ryqivvg=tooling-interface-detail-implementation.md).
 - [Shared Python backend](../_specspec/LvYBN_4=shared-python-json-backend.md)
   and [shared UI/session](../_specspec/YOPhqYc=shared-ui-and-host-session.md).
 - [Managed transactions/recovery](../_specspec/6SyZ-BU=recoverable-workspace-mutations.md)
