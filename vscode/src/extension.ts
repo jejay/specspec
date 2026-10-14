@@ -48,7 +48,8 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
   }
   private async project(resource: vscode.Uri): Promise<GraphProject> {
     if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before executing the SpecSpec CLI.');
-    if (resource.scheme !== 'file') throw new Error('The current CLI integration requires a local project folder.');
+    if (resource.scheme !== 'file') throw new Error('SpecSpec requires a real filesystem on its workspace extension host. Install it in the connected remote window; virtual/client-local resources are unavailable here.');
+    const started = Date.now();
     const root = vscode.Uri.file(await findProjectRoot(resource.fsPath));
     if (this.disposed) throw new Error('SpecSpec editors are closed.');
     const key = process.platform === 'win32' ? root.fsPath.toLowerCase() : root.fsPath;
@@ -56,10 +57,11 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
     if (!project) {
       project = new GraphProject(root, this.context, this.output); this.projects.set(key, project);
     }
+    project.trace('discovery-and-watch-setup', Date.now() - started);
     this.lastRoot = root; return project;
   }
-  private attach(project: GraphProject, panel: vscode.WebviewPanel, document?: vscode.TextDocument, node?: SpecNode, recovery?: FormRecovery): GraphView {
-    const view = new GraphView(project, panel, this.context, this.output, document, node, recovery,
+  private attach(project: GraphProject, panel: vscode.WebviewPanel, document?: vscode.TextDocument, node?: SpecNode, recovery?: FormRecovery, bootstrap?: any): GraphView {
+    const view = new GraphView(project, panel, this.context, this.output, document, node, recovery, bootstrap,
       () => { void this.open(undefined, false, true); }, () => { void this.open(project.root, true); });
     this.views.add(view); project.references++;
     panel.onDidChangeViewState(event => { if (event.webviewPanel.active) this.lastRoot = project.root; });
@@ -78,8 +80,8 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
       const project = await this.project(document.uri);
       const path = project.documentPath(document);
       if (!path) throw new Error('Only direct canonical _specspec node files can use the graph editor.');
-      const loaded = await project.documents.request();
-      const node: SpecNode | undefined = loaded.snapshot.nodes.find((item: SpecNode) => item.path === path);
+      const bootstrap = await project.documents.bootstrap();
+      const node: SpecNode | undefined = bootstrap.result.snapshot.nodes.find((item: SpecNode) => item.path === path);
       if (!node) throw new Error('This node cannot be parsed. Reopen it with Text Editor to repair the Markdown.');
       const prefix = `specspec.pendingForm:${document.uri.toString()}:`;
       const active = new Set([...this.views].map(view => view.recoveryKey));
@@ -87,7 +89,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
       const form = key ? this.context.workspaceState.get<FormEdit>(key) : undefined;
       const recovery = key && form && form.id === node.id && typeof form.body === 'string' && typeof form.sources === 'string'
         && Array.isArray(form.parents) && form.parents.every(p => typeof p === 'string') ? { key, form } : undefined;
-      const view = this.attach(project, panel, document, node, recovery);
+      const view = this.attach(project, panel, document, node, recovery, bootstrap);
       // VS Code completes custom-editor wiring after resolve returns. Awaiting a
       // webview render acknowledgement here can deadlock that lifecycle.
       void view.open().catch(error => this.report(error, document.uri));
@@ -153,7 +155,12 @@ class GraphProject implements vscode.Disposable {
     }));
     const gitWatcher = new GitWatcher(root.fsPath, () => this.documents.changed(), (error: Error) => this.output.appendLine(error.message));
     this.disposables.push({ dispose: () => gitWatcher.close() });
+    this.output.appendLine(`Execution: workspace host (${vscode.env?.remoteName || 'local'}); install Python/Git and configure SpecSpec on this host.`);
     void this.connectGit();
+  }
+  trace(phase: string, durationMs: number, nodes?: number): void {
+    if (vscode.workspace.getConfiguration('specspec', this.root).get<boolean>('traceLoading', false))
+      this.output.appendLine(`Loading ${JSON.stringify({ phase, durationMs, ...(nodes === undefined ? {} : { nodes }) })}`);
   }
   documentPath(document: vscode.TextDocument): string | undefined {
     if (document.uri.scheme !== 'file') return;
@@ -178,7 +185,9 @@ class GraphProject implements vscode.Disposable {
       this.context.extensionMode !== vscode.ExtensionMode.Production ? process.env.SPECSPEC_PYTHON : undefined,
       explicit('command') || explicit('args'));
     this.output.appendLine(`CLI: ${invocation.command} ${[...invocation.args, ...args].join(' ')}`);
-    return invoke<T>(invocation.command, invocation.args, this.root.fsPath, args, input);
+    const start = Date.now();
+    try { return await invoke<T>(invocation.command, invocation.args, this.root.fsPath, args, input); }
+    finally { this.trace(`cli-${args[0]}`, Date.now() - start); }
   }
   private async connectGit(): Promise<void> {
     try {
@@ -190,7 +199,7 @@ class GraphProject implements vscode.Disposable {
       api.repositories.forEach(subscribe); this.disposables.push(api.onDidOpenRepository(subscribe));
     } catch { /* Git notifications are optional; canonical-file watching still works. */ }
   }
-  dispose(): void { this.disposed = true; this.disposables.forEach(d => d.dispose()); }
+  dispose(): void { this.disposed = true; this.documents.dispose(); this.disposables.forEach(d => d.dispose()); }
 }
 
 class GraphView implements vscode.Disposable {
@@ -198,7 +207,7 @@ class GraphView implements vscode.Disposable {
   private readonly session: any;
   readonly recoveryKey: string;
   constructor(private project: GraphProject, panel: vscode.WebviewPanel, context: vscode.ExtensionContext,
-    output: vscode.OutputChannel, readonly document: vscode.TextDocument | undefined, node: SpecNode | undefined, recovery: FormRecovery | undefined,
+    output: vscode.OutputChannel, readonly document: vscode.TextDocument | undefined, node: SpecNode | undefined, recovery: FormRecovery | undefined, bootstrap: any,
     selectProject: () => void, compare: () => void) {
     this.recoveryKey = `specspec.pendingForm:${document?.uri.toString()}:${randomBytes(16).toString('hex')}`;
     let latestEditSequence: number | undefined;
@@ -221,7 +230,9 @@ class GraphView implements vscode.Disposable {
     this.session = new GraphSession({
       cli: (args: string[], input?: string) => ['add', 'update', 'delete'].includes(args[0])
         ? project.documents.mutate(args, input) : project.cli(args, input),
+      initialGraph: () => project.documents.initial(bootstrap),
       readGraph: (base: string) => project.documents.readGraph(base),
+      trace: (phase: string, duration: number, nodes?: number) => project.trace(phase, duration, nodes),
       authorized: () => vscode.workspace.isTrusted,
       post: async (message: any) => {
         if (document && message.type === 'document-status' && message.editSequence === latestEditSequence) {

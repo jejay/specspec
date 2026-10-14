@@ -13,6 +13,7 @@ from typing import Any
 
 from .format import json_value, read_document, yaml_parser
 from .git import git_snapshot, semantic_diff, source_change_impact
+from .git_objects import OBJECT_ID
 from .model import FORMAT_VERSION, MAX_FILE_BYTES, Diagnostic, SpecError
 from .workspace import SPEC_DIR, read_files, runtime_diagnostics, snapshot_from_files
 
@@ -50,8 +51,28 @@ def same_items(left: Any, right: Any) -> bool:
 
 def editor_request(root: Path, request: Any, base: str | None = None) -> dict[str, Any]:
     """Overlay existing files and optionally plan one document change, without IO writes."""
-    if not isinstance(request, dict) or set(request) - {"documents", "edit"}:
-        fail("Expected documents and an optional edit object.")
+    if not isinstance(request, dict) or set(request) - {"documents", "edit", "base_cache", "cache"}:
+        fail("Expected documents, optional edit and bounded cache hints.")
+    cache = request.get("base_cache")
+    if "cache" in request and type(request["cache"]) is not bool:
+        fail("cache must be a boolean.")
+    if cache is not None:
+        if (
+            not isinstance(cache, dict)
+            or set(cache) != {"commit", "files"}
+            or not isinstance(cache["commit"], str)
+            or not OBJECT_ID.fullmatch(cache["commit"])
+            or not isinstance(cache["files"], dict)
+        ):
+            fail("Invalid baseline cache hint.")
+        total = 0
+        for path, text in cache["files"].items():
+            document_path(path)
+            if not isinstance(text, str) or len(text.encode("utf-8")) > MAX_FILE_BYTES:
+                fail("Invalid cached node bytes.")
+            total += len(text.encode("utf-8"))
+        if total > 2 * MAX_FILE_BYTES:
+            fail("Baseline cache exceeds its 2 MiB budget.")
     documents = request.get("documents", {})
     if not isinstance(documents, dict):
         fail("documents must map canonical paths to UTF-8 text.")
@@ -151,16 +172,25 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
     }
     if base and snapshot.valid:
         try:
-            old = git_snapshot(root, base, allow_empty=True)
-            if old.files:
+            old = git_snapshot(root, base, allow_empty=True, cache=cache)
+            if old.files or not old.valid:
                 old.require_valid()
             comparison = semantic_diff(old, snapshot)
-            comparison.update(source_change_impact(root, base, None, old, snapshot))
+            comparison.update(source_change_impact(root, old.commit or base, None, old, snapshot))
             comparison["affected"] = sorted(
                 set(comparison["affected"]) | set(comparison["source_affected"])
             )
             comparison.update({"base_ref": base, "target_ref": "workspace + open documents"})
             result["diff"] = comparison
+            if (
+                request.get("cache")
+                and old.commit
+                and sum(map(len, old.files.values())) <= 2 * MAX_FILE_BYTES
+            ):
+                result["base_cache"] = {
+                    "commit": old.commit,
+                    "files": {path: raw.decode("utf-8") for path, raw in old.files.items()},
+                }
         except SpecError as error:
             result["note"] = "Diff unavailable: " + "; ".join(
                 item.message for item in error.diagnostics

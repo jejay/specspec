@@ -157,6 +157,10 @@ Hooks guard against inconsistent graphs, not manual edits, adversarial modificat
 
 ## VS Code extension
 
+[Remote SSH/tunnel setup and qualification](docs/remote-workspaces.md) explains workspace-host
+installation and real-filesystem boundaries. [Phased loading and diagnostics](docs/loading.md)
+describes bounded Git batches, verified derived caches and `specspec.traceLoading`.
+
 ```sh
 npm --prefix graph-ui-common ci
 npm --prefix vscode ci

@@ -24,3 +24,6 @@ uses both snapshots' file references and requirement ancestry.
 `install_hook` is opt-in, respects Git's hook path and preserves existing hooks.
 Disposable current-schema and maintained Gantt tests cover partial staging,
 corruption masked by repaired worktrees, renames/edges, sources, baselines and hooks.
+
+Canonical object reads use bounded metadata/content batches with verified blob bytes.
+Derived baseline hints retain fresh ref/tree/object checks and exact index semantics.

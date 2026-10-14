@@ -65,3 +65,7 @@ retain unapplied form text with explicit recovery. Shared typing/sequence handli
 preserves newer input and caret against late peer acknowledgements. Tests cover
 races, invalid-buffer repair, bound actions, split synchronization/cameras, independent
 tabs and CRLF/Unicode native saves. Executable/trust/startup errors are reported.
+
+The adapter declares workspace-host execution for real remote filesystems and
+uses shared version-checked reads, native bootstrap context and working-first
+comparison delivery. Opt-in loading phases and remote qualification expose scope.

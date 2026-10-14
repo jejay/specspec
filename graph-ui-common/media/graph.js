@@ -8,7 +8,7 @@
   let colorMode = model.COLOR_MODES.includes(restored.colorMode) ? restored.colorMode : 'distance';
   let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
   let editSequence = 0, documentVersion;
-  let layoutFrame, layout, layoutKey, cameraScene;
+  let layoutFrame, layout, layoutKey, cameraScene, snapshotReceivedAt;
   let drawnEdges = [], hoveredNode, hoverPoint;
   // Visual experiment only: never put these labels in drafts, host state or messages.
   const previewLabels = new Map();
@@ -67,13 +67,13 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 5 || state.readonly || pending || Boolean(state.document);
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 5 || state.readonly || state.provisional || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
     $('delete').title = 'Deletes this node and every descendant, including shared children. Uncommitted nodes are warned about before deletion; HEAD ghosts remain D until committed.';
-    $('save').disabled = !editable() || pending;
-    $('delete').disabled = !editable() || creating || dirty || Boolean(state?.document?.dirty) || pending || currentNode()?.type === 'manifesto';
+    $('save').disabled = !editable() || pending || Boolean(state?.provisional && !state.document);
+    $('delete').disabled = !editable() || state?.provisional || creating || dirty || Boolean(state?.document?.dirty) || pending || currentNode()?.type === 'manifesto';
     for (const id of elements) $(id).disabled = !editable() || pending;
     for (const id of ['body', 'sources']) {
       // Keep retained text selectable/copyable when files are invalid or deleted.
@@ -84,7 +84,7 @@
     $('add-parent').disabled = !parentsEditable() || !$('parent-candidate').value;
     for (const button of $('parent-links').querySelectorAll('button')) button.disabled = !parentsEditable();
     $('source-tools').hidden = formNodeType() !== 'implementation';
-    $('capture-source').disabled = !editable() || pending || creating || !currentNode();
+    $('capture-source').disabled = !editable() || state?.provisional || pending || creating || !currentNode();
     for (const id of ['source-path', 'source-ranges', 'source-mode', 'source-staged']) $(id).disabled = $('capture-source').disabled;
   }
 
@@ -310,7 +310,7 @@
     }
     send({ type: 'rendered', renderToken: state.renderToken, view, selectedId: selected, creating: draftCard() && view === 'focus',
       visibleIds: ids, draftParents: draftCard() && view === 'focus' ? [...related.parents] : undefined,
-      nodeCount: $('cards').children.length });
+      nodeCount: $('cards').children.length, clientRenderMs: snapshotReceivedAt === undefined ? undefined : performance.now() - snapshotReceivedAt });
   }
 
   function applyLayout() {
@@ -598,6 +598,7 @@
     if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Displayed graph is out of date; ${state?.document ? 'the bound document can be repaired' : 'editing is disabled'}.\n${message.message}` : message.message); updateButtons(); return; }
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;
+    snapshotReceivedAt = performance.now();
     state = message; sourceInvalid = false; pending = false; graph = model.displayGraph(state);
     if (state.document) documentVersion = state.document.version;
     if (!restored.used && state.document?.recoveredForm && !restored.draft) {
@@ -607,7 +608,7 @@
     }
     if (!restored.used && message.selectedId && !restored.draft) { selected = message.selectedId; view = 'focus'; }
     targetMetrics = model.metrics(state.snapshot); baseMetrics = state.diff ? model.metrics(state.diff.base) : undefined;
-    $('revision').textContent = state.diff ? `${state.diff.base_ref} → ${state.diff.target_ref}${state.readonly ? ' (read-only)' : ''}` : 'Workspace';
+    $('revision').textContent = state.diff ? `${state.diff.base_ref} → ${state.diff.target_ref}${state.readonly ? ' (read-only)' : ''}` : state.provisional ? 'HEAD → workspace (comparison loading)' : 'Workspace';
     showSnapshotNotes();
     if (message.force) { select(message.selectedId || selected, true); return; }
     if (!restored.used && restored.draft && (restored.dirty || restored.creating)) {

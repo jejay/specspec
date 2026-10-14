@@ -9,14 +9,23 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .model import MAX_FILE_BYTES, Diagnostic, SpecError
+from .git_objects import read_blobs
+from .model import Diagnostic, SpecError
 from .workspace import SPEC_DIR, Snapshot, snapshot_from_files
 
 
 def run_git(root: Path, *args: str) -> bytes:
     try:
         completed = subprocess.run(
-            ["git", "-C", str(root), *args], capture_output=True, check=False
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            check=False,
+            env={
+                **os.environ,
+                "GIT_NO_LAZY_FETCH": "1",
+                "GIT_OPTIONAL_LOCKS": "0",
+                "GIT_ALLOW_PROTOCOL": "",
+            },
         )
     except OSError as error:
         raise SpecError([Diagnostic("GIT", str(error))], 2) from error
@@ -56,19 +65,29 @@ def unborn_head(root: Path) -> bool:
 
 
 def git_snapshot(
-    root: Path, ref: str | None = None, *, staged: bool = False, allow_empty: bool = False
+    root: Path,
+    ref: str | None = None,
+    *,
+    staged: bool = False,
+    allow_empty: bool = False,
+    cache: dict | None = None,
 ) -> Snapshot:
     repository, prefix = repository_paths(root)
     files: dict[str, bytes] = {}
     diagnostics: list[Diagnostic] = []
     if staged:
-        records = run_git(repository, "ls-files", "--stage", "-z", "--", prefix).split(b"\0")
+        records = run_git(
+            repository, "--literal-pathspecs", "ls-files", "--stage", "-z", "--", prefix
+        ).split(b"\0")
     else:
         # Resolve refs first; never pass user input as an option to ls-tree.
         if allow_empty and ref == "HEAD" and unborn_head(repository):
             return snapshot_from_files(root, {}, allow_empty=True)
         commit = resolve_commit(repository, str(ref))
-        records = run_git(repository, "ls-tree", "-r", "-z", commit, "--", prefix).split(b"\0")
+        records = run_git(
+            repository, "--literal-pathspecs", "ls-tree", "-r", "-z", commit, "--", prefix
+        ).split(b"\0")
+    entries: list[tuple[str, str]] = []
     for record in records:
         if not record:
             continue
@@ -90,12 +109,24 @@ def git_snapshot(
         if not path.endswith(".md") or len(Path(path).parts) != 2:
             diagnostics.append(Diagnostic("ENTRY", "Only direct Markdown nodes are allowed.", path))
             continue
-        size = int(run_git(repository, "cat-file", "-s", object_id))
-        if size > MAX_FILE_BYTES:
-            diagnostics.append(Diagnostic("FORMAT", "Node exceeds the 1 MiB limit.", path))
-            continue
-        files[path] = run_git(repository, "cat-file", "blob", object_id)
-    return snapshot_from_files(root, files, diagnostics, allow_empty=allow_empty)
+        entries.append((path, object_id))
+    hints = {}
+    if not staged and cache and cache.get("commit") == commit:
+        for path, oid in entries:
+            value = cache.get("files", {}).get(path)
+            if isinstance(value, str):
+                hints[oid] = value.encode("utf-8")
+    blobs, failures = read_blobs(repository, [oid for _, oid in entries], hints)
+    for path, oid in entries:
+        if oid in failures:
+            code = "FORMAT" if "1 MiB" in failures[oid] else "GIT"
+            diagnostics.append(Diagnostic(code, failures[oid], path))
+        else:
+            files[path] = blobs[oid]
+    result = snapshot_from_files(root, files, diagnostics, allow_empty=allow_empty)
+    if not staged:
+        result.commit = commit
+    return result
 
 
 def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:

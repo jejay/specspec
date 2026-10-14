@@ -29,6 +29,7 @@ class Snapshot:
     nodes: list[SpecNode]
     diagnostics: list[Diagnostic]
     graph: Graph | None
+    commit: str | None = None
 
     @property
     def valid(self) -> bool:

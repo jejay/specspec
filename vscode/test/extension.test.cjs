@@ -21,6 +21,7 @@ function fixture(t, options = {}) {
   const output = { appendLine: line => calls.logs.push(line), show() {}, dispose() {} };
   let current = options.snapshot || snapshot;
   const vscode = {
+    env: { remoteName: options.remoteName },
     ExtensionMode: { Production: 1, Development: 2, Test: 3 },
     EndOfLine: { LF: 1, CRLF: 2 },
     ViewColumn: { One: 1, Active: -1 },
@@ -265,7 +266,7 @@ test('renderer crashes and incomplete DOM rendering are surfaced instead of sile
 test('unsupported project URI schemes are explained instead of silently ignored', async t => {
   const { root, calls } = fixture(t);
   await calls.commands.get('specspec.openGraph')({ scheme: 'vscode-remote', fsPath: root });
-  assert.match(calls.errors[0], /requires a local project folder/);
+  assert.match(calls.errors[0], /real filesystem on its workspace extension host/);
   assert.equal(calls.cli.length, 0);
 });
 
@@ -322,7 +323,28 @@ test('opening a nested project creates an independent graph tab', async t => {
   await calls.commands.get('specspec.openGraph')();assert.equal(calls.cli.at(-1).root,nested);
 });
 
+test('remote workspace placement uses host-file resources, remote executable settings and opt-in timings', async t => {
+  const f = fixture(t, { remoteName: 'ssh-remote', settings: { command: '/remote/venv/bin/python', args: ['-m', 'specspec'], traceLoading: true } });
+  await f.calls.commands.get('specspec.openGraph')();
+  assert.ok(f.calls.cli.every(c => c.command === '/remote/venv/bin/python' && c.root === f.root));
+  assert.match(f.calls.logs.find(s => s.startsWith('Execution:')), /workspace host.*ssh-remote/);
+  assert.ok(f.calls.logs.some(s => s.includes('first-working-render')));
+  assert.equal(f.calls.panels[0].messages.find(m => m.type === 'snapshot').provisional, true);
+  assert.equal(f.calls.panels[0].messages.at(-1).provisional, undefined);
+  const manifest = require('../package.json');
+  assert.deepEqual(manifest.extensionKind, ['workspace']);
+  assert.equal(manifest.capabilities.virtualWorkspaces.supported, false);
+  assert.equal(manifest.capabilities.untrustedWorkspaces.supported, false);
+});
+
 const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '_specspec/node--summary.md' };
+test('native bootstrap supplies the first working render with one no-baseline read', async t => {
+  const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
+  const { panel } = await f.openDocument(fileNode);
+  await waitFor(() => panel.messages.some(m => m.type === 'snapshot' && !m.provisional));
+  assert.equal(f.calls.cli.filter(c => c.args[0] === 'editor' && !c.args.includes('--base')).length, 1);
+  assert.equal(f.calls.cli.filter(c => c.args.includes('--base')).length, 1);
+});
 test('custom text editor binds a real document, marks edits dirty, and saves without CLI update', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { doc, panel } = await f.openDocument(fileNode);

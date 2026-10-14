@@ -32,7 +32,11 @@ class GraphSession {
       if (value.renderToken !== this.renderSequence) return;
       if (!this.renderState || !this.host.renderMatches(this.renderState, value)) {
         this.renderError = new Error(`Graph rendering is incomplete or inconsistent; expected ${this.expectedCount} known nodes in the overview or a complete selected neighborhood.`);
-      } else this.lastRendered = value.renderToken;
+      } else {
+        if (this.lastRendered !== value.renderToken && Number.isFinite(value.clientRenderMs) && value.clientRenderMs >= 0)
+          this.host.trace?.('client-render', value.clientRenderMs, value.nodeCount);
+        this.lastRendered = value.renderToken;
+      }
       this.listeners.forEach(f => f()); return;
     }
     if (value.type === 'edit' && this.host.document) {
@@ -44,7 +48,21 @@ class GraphSession {
   }
   async open() {
     try {
-      await this.waitReady(); await this.run(() => this.refresh()); return this.snapshot;
+      const start = Date.now();
+      await this.waitReady(); this.host.trace?.('ready', Date.now() - start);
+      await this.run(async () => {
+        if (!this.hasOpened && !this.target && this.host.initialGraph) {
+          let initial;
+          try { initial = await this.host.initialGraph(); } catch (error) { this.log(error); }
+          if (initial?.snapshot?.valid) {
+            await this.display(initial, false, undefined, false, true);
+            this.host.trace?.('first-working-render', Date.now() - start, initial.snapshot.nodes.length);
+          }
+        }
+        await this.refresh();
+      });
+      this.host.trace?.('complete-comparison-render', Date.now() - start, this.snapshot?.nodes.length);
+      return this.snapshot;
     } catch (error) { await this.post({ type: 'error', message: error.message }); throw error; }
   }
   async waitReady() {
@@ -129,16 +147,19 @@ class GraphSession {
         }
       }
     } catch (error) { await this.invalid(error); if (!automatic) throw error; this.log(error); return; }
+    await this.display(loaded, force, selectedId, automatic);
+  }
+  async display(loaded, force, selectedId, automatic = false, provisional = false) {
     if (this.disposed) return;
     const document = this.host.document?.state();
-    const payload = { ...loaded, ...(document ? { document } : {}), note: [this.warning, loaded.note].filter(Boolean).join('\n'), readonly: Boolean(this.target) };
+    const payload = { ...loaded, ...(document ? { document } : {}), ...(provisional ? { provisional: true } : {}), note: [this.warning, loaded.note, provisional ? 'Working graph — HEAD comparison loading…' : ''].filter(Boolean).join('\n'), readonly: Boolean(this.target) };
     // Direct record comparison, not a saved or calculated graph digest.
     if (automatic && !this.sourceInvalid && isDeepStrictEqual(payload, this.lastPayload)) return;
     this.sourceInvalid = false; this.lastPayload = payload; this.snapshot = loaded.snapshot;
     this.renderError = undefined; this.renderState = loaded;
     this.expectedCount = new Set([...(loaded.diff?.base.nodes || []), ...loaded.snapshot.nodes].map(n => n.id)).size;
     const renderToken = ++this.renderSequence;
-    const initialId = this.host.document && !this.hasOpened ? document.nodeId : undefined;
+    const initialId = this.host.document ? document.nodeId : undefined;
     this.hasOpened = true;
     await this.post({ type: 'snapshot', ...payload, force, selectedId: selectedId || initialId, renderToken });
     await this.waitRender(renderToken);

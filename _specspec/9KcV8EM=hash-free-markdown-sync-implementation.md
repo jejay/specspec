@@ -47,3 +47,7 @@ Invalid reads retain a marked last valid view and diagnostics. Missing-node form
 remain copyable/unsavable. Sequence/full-membership acknowledgements check visible
 render completion. Unit and host fixtures exercise external saves, incomplete/invalid
 files, watcher errors, disposal, overlays and retained user input.
+
+Initial VS Code working context is visibly provisional while comparison loads.
+Shared in-flight reads and verified derived hints preserve current-read and
+mutation guards; complete comparisons retain sequence/membership acknowledgements.

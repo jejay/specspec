@@ -24,7 +24,12 @@ BAD_OUTCOMES = {"conflict", "missing", "ambiguous", "unavailable"}
 
 
 def git_environment():
-    return {**os.environ, "GIT_NO_LAZY_FETCH": "1", "GIT_OPTIONAL_LOCKS": "0"}
+    return {
+        **os.environ,
+        "GIT_NO_LAZY_FETCH": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_ALLOW_PROTOCOL": "",
+    }
 
 
 def run_git(root: Path, *args: str) -> bytes:

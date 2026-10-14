@@ -113,6 +113,25 @@ constrains preload/IPC/assets and authorizes local projects with trusted launch
 settings. Python/Git are external prerequisites. [Agent connectors](../_specspec/3FThKz4=later-agent-host-integration.md)
 are separately scoped future transport/authorization work.
 
+## Remote workspaces and prompt loading
+
+[Remote intention](../_specspec/CmZafVM=vscode-remote-workspace-experience.md) and
+[workspace-host boundaries](../_specspec/uY3KPsM=remote-workspace-host-and-execution-boundaries.md)
+place the Node/Python/Git adapter beside real local or remote project files while
+VS Code owns transport and client rendering. See [remote setup/qualification](remote-workspaces.md).
+
+[Loading intention](../_specspec/tGpRMLM=prompt-valid-working-graph-loading.md) is
+refined by [Git batching](../_specspec/wAp9Qz8=bounded-batched-canonical-git-object-reads.md),
+[shared/bootstrap reads](../_specspec/3V6SdSA=version-checked-shared-and-bootstrap-reads.md),
+[derived caches](../_specspec/L0KGXB8=bounded-derived-git-and-frontmatter-caches.md),
+[working-first comparison](../_specspec/VDss3KM=working-first-loading-and-fresh-comparison-adoption.md)
+and [measurement scope](../_specspec/FJj-9xY=loading-stage-and-remote-qualification-evidence.md).
+[Loading diagnostics](loading.md) explain current controls and cache safeguards;
+[investigations](investigations/vscode-loading.md) retain the motivating evidence.
+[Backend realization](../_specspec/FhVjOvo=batched-git-and-verified-read-cache-implementation.md)
+and [workspace/phased-host realization](../_specspec/N7IR7Fw=remote-and-phased-graph-loading-implementation.md)
+map the code, diagnostic controls and verification seams.
+
 ## Neighborhood UI revision
 
 [Focused editing](../_specspec/t8RQMdE=focused-node-editing.md) expands the same native

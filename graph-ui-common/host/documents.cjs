@@ -13,7 +13,7 @@ function minimalTextEdit(before, after) {
   return { start, end, text: after.slice(start, nextEnd) };
 }
 class ProjectDocuments {
-  constructor(host) { this.host = host; this.queue = Promise.resolve(); this.listeners = new Set(); this.generation = 0; }
+  constructor(host) { this.host = host; this.queue = Promise.resolve(); this.listeners = new Set(); this.generation = 0; this.reads = new Map(); }
   run(operation) {
     const result = this.queue.then(operation); this.queue = result.catch(() => {}); return result;
   }
@@ -21,21 +21,41 @@ class ProjectDocuments {
   subscribe(listener) { this.listeners.add(listener); return { dispose: () => this.listeners.delete(listener) }; }
   changed() { this.generation++; this.listeners.forEach(listener => listener()); }
   documents() { return this.host.documents().filter(d => !d.closed); }
+  stamp() { return this.documents().map(d => [d.path, d.text, d.version, d.dirty, d.eol]).sort(([a], [b]) => a.localeCompare(b)); }
   async request(edit, base) {
+    if (this.disposed) throw new Error('Project documents are closed.');
     const documents = Object.fromEntries(this.documents().map(d => [d.path, d.text]));
-    const result = await this.host.cli(['editor', ...(base ? ['--base', base] : []), '--json'], JSON.stringify({ documents, ...(edit ? { edit } : {}) }));
-    return result.result;
+    const result = await this.host.cli(['editor', ...(base ? ['--base', base] : []), '--json'], JSON.stringify({ documents, ...(edit ? { edit } : {}),
+      ...(base ? { cache: true, ...(this.baseCache ? { base_cache: this.baseCache } : {}) } : {}) }));
+    const { base_cache, ...loaded } = result.result;
+    // The backend validates these immutable byte hints against freshly read Git metadata.
+    if (!this.disposed && base_cache && Buffer.byteLength(JSON.stringify(base_cache)) <= 3 * 1024 * 1024) this.baseCache = base_cache;
+    return loaded;
   }
-  async readGraph(base) {
-    const stamp = () => this.documents().map(d => [d.path, d.text, d.version, d.dirty, d.eol]).sort(([a], [b]) => a.localeCompare(b));
-    const before = stamp(), generation = this.generation;
-    const result = await this.request(undefined, base);
-    // Don't attach a new document version to graph data read from an older buffer.
-    // GraphSession retries boundedly and keeps the last valid graph during typing.
-    if (generation !== this.generation || !isDeepStrictEqual(before, stamp())) throw new Error('Documents changed during graph loading; retry with current text.');
-    if (!result.snapshot.valid) throw new Error(result.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n') || 'Invalid open specification documents.');
-    return result;
+  async readGraph(base, allowInvalid = false) {
+    const before = this.stamp(), generation = this.generation;
+    const key = JSON.stringify([base, generation, before]);
+    let pending = this.reads.get(key);
+    if (!pending) {
+      pending = this.request(undefined, base);
+      if (this.reads.size < 32) this.reads.set(key, pending);
+      const clear = () => { if (this.reads.get(key) === pending) this.reads.delete(key); };
+      pending.then(clear, clear);
+    }
+    const result = await pending;
+    if (this.disposed || generation !== this.generation || !isDeepStrictEqual(before, this.stamp())) throw new Error('Documents changed during graph loading; retry with current text.');
+    if (!allowInvalid && !result.snapshot.valid) throw new Error(result.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n') || 'Invalid open specification documents.');
+    return structuredClone(result);
   }
+  async bootstrap() {
+    const stamp = this.stamp(), generation = this.generation;
+    return { result: await this.readGraph(undefined, true), stamp, generation };
+  }
+  async initial(lease) {
+    if (lease && !this.disposed && lease.generation === this.generation && isDeepStrictEqual(lease.stamp, this.stamp()) && lease.result.snapshot.valid) return structuredClone(lease.result);
+    return this.readGraph();
+  }
+  dispose() { this.disposed = true; this.generation++; this.reads.clear(); this.baseCache = undefined; this.listeners.clear(); }
   edit(adapter, message) {
     return this.run(async () => {
       const current = adapter.get();

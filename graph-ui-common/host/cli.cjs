@@ -12,6 +12,10 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
         let size = 0;
         let settled = false;
         let failure;
+        let started = false;
+        child.on('spawn', () => { started = true; });
+        const uncertain = error => started && ['add', 'update', 'delete'].includes(args[0])
+            ? new Error(`${error.message} The action outcome was not confirmed; inspect current project/recovery state before retrying.`) : error;
         const fail = (error) => {
             if (settled || failure)
                 return;
@@ -39,7 +43,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
             settled = true;
             clearTimeout(timer);
             if (failure) {
-                reject(failure);
+                reject(uncertain(failure));
                 return;
             }
             const output = Buffer.concat(stdout).toString('utf8');
@@ -49,11 +53,11 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
                 envelope = JSON.parse(output);
             }
             catch {
-                reject(new Error(errors || output || `CLI exited with ${code} without JSON.`));
+                reject(uncertain(new Error(errors || output || `CLI exited with ${code} without JSON.`)));
                 return;
             }
             if (envelope.api_version !== 5 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
-                reject(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 5; upgrade the Python CLI.'));
+                reject(uncertain(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 5; upgrade the Python CLI.')));
                 return;
             }
             if (code !== 0 || !envelope.ok) {

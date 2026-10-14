@@ -14,10 +14,12 @@
     "Other"
   ],
   "main": "./out/extension.js",
+  "extensionKind": ["workspace"],
   "activationEvents": [
     "workspaceContains:_specspec/*.md"
   ],
   "capabilities": {
+    "virtualWorkspaces": { "supported": false },
     "untrustedWorkspaces": {
       "supported": false
     }
@@ -47,6 +49,12 @@
           "default": "specspec",
           "scope": "machine-overridable",
           "description": "Python CLI executable; executed without a shell."
+        },
+        "specspec.traceLoading": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Log loading phase durations/counts, without project text, in the SpecSpec output channel."
         },
         "specspec.pollIntervalMs": {
           "type": "integer",

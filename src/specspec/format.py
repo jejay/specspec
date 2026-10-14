@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import copy
 import io
 import math
+import threading
+from collections import OrderedDict
 from collections.abc import Mapping
 from pathlib import PurePosixPath
 from typing import Any
@@ -63,8 +66,21 @@ def split_document(raw: bytes, path: str) -> tuple[str, str]:
     raise AssertionError("unreachable")
 
 
+# Exact header bytes, isolated round-trip copies; body and current validation stay fresh.
+_HEADER_CACHE: OrderedDict[str, Mapping[str, Any]] = OrderedDict()
+_HEADER_LOCK = threading.RLock()
+HEADER_CACHE_BYTES = 8 * 1024 * 1024
+HEADER_CACHE_COUNT = 256
+_header_bytes = 0
+
+
 def read_document(raw: bytes, path: str) -> tuple[Mapping[str, Any], str]:
+    global _header_bytes
     header, body = split_document(raw, path)
+    with _HEADER_LOCK:
+        if header in _HEADER_CACHE:
+            _HEADER_CACHE.move_to_end(header)
+            return copy.deepcopy(_HEADER_CACHE[header]), body
     parser = yaml_parser()
     try:
         for token in parser.scan(header):
@@ -87,6 +103,14 @@ def read_document(raw: bytes, path: str) -> tuple[Mapping[str, Any], str]:
         ) from error
     if not isinstance(data, Mapping):
         raise SpecError([Diagnostic("SCHEMA", "Frontmatter must be a mapping.", path)])
+    size = len(header.encode("utf-8"))
+    with _HEADER_LOCK:
+        if size <= HEADER_CACHE_BYTES and header not in _HEADER_CACHE:
+            _HEADER_CACHE[header] = copy.deepcopy(data)
+            _header_bytes += size
+            while len(_HEADER_CACHE) > HEADER_CACHE_COUNT or _header_bytes > HEADER_CACHE_BYTES:
+                old_header, _ = _HEADER_CACHE.popitem(last=False)
+                _header_bytes -= len(old_header.encode("utf-8"))
     return data, body
 
 
