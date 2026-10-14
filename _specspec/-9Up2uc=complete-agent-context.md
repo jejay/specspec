@@ -10,7 +10,7 @@ parents:
 
 Export the selected node and all required ancestors in parent-before-child order.
 Supply direct children and siblings as separately identified optional context.
-Deduplicate records deterministically. Measure the complete serialized envelope
+Deduplicate records deterministically. Measure actual encoded output, including the JSON envelope when selected,
 against the byte budget. If required text exceeds it, report a budget error;
 optional omissions have an explicit ID list.
 

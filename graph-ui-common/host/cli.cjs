@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.invoke = invoke;
 const node_child_process_1 = require("node:child_process");
+const { expandResult } = require('./wire.cjs');
 function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutputBytes = 16 * 1024 * 1024) {
     return new Promise((resolve, reject) => {
         const child = (0, node_child_process_1.spawn)(command, [...prefix, '--root', root, ...args], {
@@ -56,15 +57,17 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
                 reject(uncertain(new Error(errors || output || `CLI exited with ${code} without JSON.`)));
                 return;
             }
-            if (envelope.api_version !== 5 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
-                reject(uncertain(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 5; upgrade the Python CLI.')));
+            if (envelope.api_version !== 6 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
+                reject(uncertain(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 6; upgrade the Python CLI.')));
                 return;
             }
             if (code !== 0 || !envelope.ok) {
                 reject(new Error(envelope.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n') || errors || 'CLI failed.'));
             }
-            else
-                resolve(envelope);
+            else {
+                try { resolve({ ...envelope, result: expandResult(envelope.result) }); }
+                catch (error) { reject(uncertain(error)); }
+            }
         });
     });
 }

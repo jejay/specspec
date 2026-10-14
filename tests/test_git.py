@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import shlex
 import subprocess
+import sys
 from pathlib import Path
 
-import pytest
+from click.testing import CliRunner
 
-from specspec.git import git_snapshot, install_hook, semantic_diff
-from specspec.model import SpecError
+from specspec.cli import main
+from specspec.git import git_snapshot, semantic_diff
 from specspec.workspace import add_node, load_snapshot, update_node
 
 
@@ -88,18 +90,19 @@ def test_empty_baseline(workspace):
     assert semantic_diff(base, load_snapshot(root))["changes"][0]["kind"] == "added"
 
 
-def test_hook_installer_preserves_hooks_and_respects_config(workspace):
+def test_owner_configured_hook_calls_current_exact_index_check(workspace):
     root, _ = workspace
     setup_repository(root)
     git(root, "config", "core.hooksPath", ".hooks")
-    path = install_hook(root)
-    assert path == root / ".hooks" / "pre-commit"
+    path = root / ".hooks/pre-commit"
+    path.parent.mkdir()
+    python = shlex.quote(sys.executable.replace("\\", "/"))
+    path.write_text(f"#!/bin/sh\nexec {python} -m specspec check --staged\n", encoding="utf8")
+    path.chmod(path.stat().st_mode | 0o111)
     original = path.read_bytes()
-    with pytest.raises(SpecError, match="Existing hook preserved"):
-        install_hook(root)
+    # Hook management is ordinary owner Git tooling, not a SpecSpec installer.
+    assert CliRunner().invoke(main, ["--root", str(root), "hook", "install"]).exit_code == 2
     assert path.read_bytes() == original
-    assert "hook check" in path.read_text()
-    # Run the actual installed script through Git, not only the helper function.
     git(root, "commit", "--allow-empty", "-m", "Hook passed")
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]

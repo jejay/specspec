@@ -7,6 +7,7 @@ const { APP_URL, assetName, trustedSender, validMessage, webPreferences } = requ
 const { PresentationStore } = require('./store.cjs');
 const { resolveExecutable } = require('./launch.cjs');
 const { GraphSession, pollInterval } = require('./build/common/host/session.cjs');
+const { ProjectReads } = require('./build/common/host/reads.cjs');
 const { GraphWatcher } = require('./build/common/host/watch.cjs');
 const { GitWatcher } = require('./build/common/host/git-watch.cjs');
 const { invoke } = require('./build/common/host/cli.cjs');
@@ -17,7 +18,7 @@ const { renderMatches, sameNode } = require('./build/media/graph-model.js');
 protocol.registerSchemesAsPrivileged([{ scheme: 'specspec', privileges: { standard: true, secure: true, supportFetchAPI: false } }]);
 const option = name => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 if (option('--profile')) app.setPath('userData', resolve(option('--profile')));
-let window, root, graph, store, watcher, gitWatcher, generation = randomBytes(16).toString('hex');
+let window, root, graph, reads, store, watcher, gitWatcher, generation = randomBytes(16).toString('hex');
 let selection = Promise.resolve(); const prompts = new Map();
 const launchDirectory = process.cwd();
 const polling = pollInterval(Number(option('--poll-interval-ms') ?? process.env.SPECSPEC_POLL_INTERVAL_MS ?? 0));
@@ -41,20 +42,29 @@ function cancelPrompts() { for (const p of prompts.values()) { clearTimeout(p.ti
 async function loadProject(next) {
   cancelPrompts();
   if (graph) { await graph.run(async () => {}); graph.dispose(); }
-  watcher?.close(); gitWatcher?.close(); store.flush(); root = next; generation = randomBytes(16).toString('hex');
+  reads?.dispose(); watcher?.close(); gitWatcher?.close(); store.flush(); root = next; generation = randomBytes(16).toString('hex');
   if (root) {
     const scope = root;
+    const cli = async (args, input) => {
+      console.log(`CLI: ${command} ${[...prefix, ...args].join(' ')}`);
+      const result = await invoke(command, prefix, scope, args, input);
+      if (['add', 'update', 'delete'].includes(args[0])) projectReads.changed();
+      return result;
+    };
+    const projectReads = new ProjectReads({ cli });
+    reads = projectReads;
     graph = new GraphSession({
       authorized: () => root === scope && !window.isDestroyed(),
-      cli: (args, input) => { console.log(`CLI: ${command} ${[...prefix, ...args].join(' ')}`); return invoke(command, prefix, scope, args, input); },
+      cli, initialGraph: () => projectReads.initial(), readGraph: (base, target) => projectReads.readGraph(base, false, target),
       post, log: text => console.log(text), renderMatches, sameNode, revisions,
       confirm: async message => (await dialog.showMessageBox(window, { type: 'warning', message,
         buttons: ['Cancel', 'Confirm'], defaultId: 0, cancelId: 0, noLink: true })).response === 1,
     });
     const session = graph;
     session.configurePolling(polling);
-    watcher = new GraphWatcher(scope, () => session.scheduleRefresh(), failure => session.warn(failure));
-    gitWatcher = new GitWatcher(scope, () => session.scheduleRefresh(), failure => session.warn(failure));
+    const changed = () => { projectReads.changed(); session.scheduleRefresh(); };
+    watcher = new GraphWatcher(scope, changed, failure => session.warn(failure));
+    gitWatcher = new GitWatcher(scope, changed, failure => session.warn(failure));
     window.setTitle(`SpecSpec — ${root}`);
   } else { graph = undefined; window.setTitle('SpecSpec — Open a project'); }
   await window.loadURL(APP_URL);
@@ -120,7 +130,7 @@ app.whenReady().then(async () => {
     prompts.delete(value.id); clearTimeout(p.timer); p.resolve(result || undefined);
   });
   window.webContents.on('render-process-gone', (_event, details) => { cancelPrompts(); graph?.dispose(); console.error('Renderer exited:', details.reason); });
-  window.on('closed', () => { cancelPrompts(); graph?.dispose(); watcher?.close(); gitWatcher?.close(); try { store.flush(); } catch (failure) { console.error(failure); } });
+  window.on('closed', () => { cancelPrompts(); graph?.dispose(); reads?.dispose(); watcher?.close(); gitWatcher?.close(); try { store.flush(); } catch (failure) { console.error(failure); } });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: 'Project', submenu: [{ label: 'Open project…', accelerator: 'CmdOrCtrl+O', click: selectProject },
       { label: 'Refresh graph', accelerator: 'CmdOrCtrl+R', click: () => graph?.enqueue(() => graph.refresh()) },

@@ -11,6 +11,7 @@ from specspec.cli import main
 from specspec.editor import editor_request
 from specspec.git import git_snapshot, semantic_diff
 from specspec.model import SpecError
+from specspec.wire import expand_comparison
 from specspec.workspace import add_node, delete_nodes, load_snapshot, recover
 
 
@@ -28,9 +29,9 @@ def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(wo
     for staged in [False, True]:
         if staged:
             git(root, "add", "-u", "_specspec")
-        response = runner.invoke(main, ["--root", str(root), "diff", "--base", "HEAD", "--json"])
+        response = runner.invoke(main, ["--root", str(root), "diff", "HEAD", "--json"])
         assert response.exit_code == 0, response.output
-        result = json.loads(response.output)["result"]
+        result = expand_comparison(json.loads(response.output)["result"])
         assert result["changes"] == [{"id": child, "kind": "removed", "fields": []}]
         assert child in {n["id"] for n in result["base"]["nodes"]}
         assert child not in {n["id"] for n in result["target"]["nodes"]}
@@ -44,18 +45,15 @@ def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(wo
 def test_unborn_head_is_empty_but_arbitrary_bad_refs_and_non_git_are_not(workspace):
     root, manifesto = workspace
     runner = CliRunner()
-    args = ["--root", str(root), "diff", "--base", "HEAD", "--json"]
+    args = ["--root", str(root), "diff", "HEAD", "--json"]
     assert runner.invoke(main, args).exit_code == 2
     git(root, "init")
     result = runner.invoke(main, args)
     assert result.exit_code == 0, result.output
-    diff = json.loads(result.output)["result"]
+    diff = expand_comparison(json.loads(result.output)["result"])
     assert diff["base"]["nodes"] == [] and diff["base"]["valid"]
     assert diff["changes"] == [{"id": manifesto, "kind": "added", "fields": []}]
-    assert (
-        runner.invoke(main, ["--root", str(root), "diff", "--base", "missing", "--json"]).exit_code
-        == 2
-    )
+    assert runner.invoke(main, ["--root", str(root), "diff", "missing", "--json"]).exit_code == 2
 
 
 def test_uncommitted_created_then_deleted_node_has_no_head_ghost(workspace):

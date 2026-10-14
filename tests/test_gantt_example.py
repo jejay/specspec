@@ -58,18 +58,18 @@ def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index
     git(tmp_path, "init")
     git(tmp_path, "config", "core.autocrlf", "false")
     git(tmp_path, "add", "_specspec", "example/gantt/_specspec")
-    assert invoke(tmp_path, "hook", "check")[0] == 0
-    assert invoke(nested, "hook", "check")[0] == 0
+    assert invoke(tmp_path, "check", "--staged")[0] == 0
+    assert invoke(nested, "check", "--staged")[0] == 0
 
     node = next(n for n in original.nodes if n.type == "requirement")
     file = nested / node.path
     file.write_bytes(original.files[node.path].replace(b"parents:", b"unknown:"))
-    assert invoke(nested, "validate")[0] == 1
-    assert invoke(nested, "hook", "check")[0] == 0, "Unstaged corruption is not in the index."
+    assert invoke(nested, "check")[0] == 1
+    assert invoke(nested, "check", "--staged")[0] == 0, "Unstaged corruption is not in the index."
     git(tmp_path, "add", "example/gantt/" + node.path)
-    code, envelope = invoke(nested, "hook", "check")
+    code, envelope = invoke(nested, "check", "--staged")
     assert code == 1 and any(d["code"] == "SCHEMA" for d in envelope["diagnostics"])
-    assert invoke(tmp_path, "hook", "check")[0] == 0, "The parent graph was not corrupted."
+    assert invoke(tmp_path, "check", "--staged")[0] == 0, "The parent graph was not corrupted."
     assert load_snapshot(GANTT).files == original.files
 
 

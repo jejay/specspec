@@ -10,11 +10,13 @@ from specspec.workspace import add_node, load_snapshot
 
 
 def request(root, payload, *args):
-    result = CliRunner().invoke(
-        main, ["--root", str(root), "editor", "--json", *args], input=json.dumps(payload)
-    )
+    value = {"api_version": 6, "op": "plan" if "edit" in payload else "read", **payload}
+    if args:
+        value["base"] = args[1]
+    result = CliRunner().invoke(main, ["--root", str(root), "api"], input=json.dumps(value))
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["result"]
+    response = json.loads(result.output)
+    return {**response["result"], "diagnostics": response["diagnostics"]}
 
 
 def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
@@ -224,7 +226,7 @@ def test_git_comparison_includes_unsaved_changes_without_writing(workspace):
 def test_editor_has_bounded_structured_input_errors(workspace):
     root, _ = workspace
     for raw in ["{", "[]", '{"documents": []}', '{"documents": {"_specspec/a.md": 42}}']:
-        result = CliRunner().invoke(main, ["--root", str(root), "editor", "--json"], input=raw)
+        result = CliRunner().invoke(main, ["--root", str(root), "api"], input=raw)
         assert result.exit_code == 2
         assert json.loads(result.output)["ok"] is False
     node = load_snapshot(root).nodes[0]

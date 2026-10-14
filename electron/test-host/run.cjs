@@ -51,7 +51,7 @@ async function run() {
       for(let i=0;i<500;i++){if(await evaluate(`!document.getElementById('revision').textContent.includes('read-only')`))break;await delay(100);}
       assert.ok(!await evaluate(`document.getElementById('revision').textContent.includes('read-only')`));
     } finally { client.close(); }
-    project.cli(['validate','--warnings-as-errors','--json']);
+    project.cli(['check','--warnings-as-errors','--json']);
     console.log('SPECSPEC_ELECTRON_HOST_OK: real canvas, themed A/M/D, sandbox/blocked network, actual save, watcher-only manual/invalid-file sync, persisted draft reload and historical/workspace switching.'); ok = true;
   } finally {
     clearTimeout(timer); child.kill(); await exit;

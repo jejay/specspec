@@ -180,7 +180,12 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
             comparison["affected"] = sorted(
                 set(comparison["affected"]) | set(comparison["source_affected"])
             )
-            comparison.update({"base_ref": base, "target_ref": "workspace + open documents"})
+            comparison.update(
+                {
+                    "base_ref": base,
+                    "target_ref": "workspace + open documents" if documents else "workspace",
+                }
+            )
             result["diff"] = comparison
             if (
                 request.get("cache")

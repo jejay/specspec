@@ -13,7 +13,7 @@ exposed port, credential store or remote shell wrapper.
    Use Developer: Show Running Extensions to check placement. A local-only install
    is not a substitute for the remote installation. This application is not yet a
    published Marketplace/PyPI release.
-3. Install Python 3.11+, the matching API-5 SpecSpec application and Git on that host.
+3. Install Python 3.11+, the matching API-6 SpecSpec application and Git on that host.
    Use an isolated installation from your authorized checkout/Git URL. Confirm the
    CLI works from the remote terminal before opening a graph.
 4. Trust that workspace if appropriate. Use Remote Settings for the executable:
@@ -79,8 +79,8 @@ Windows passes.
 
 ### Current dispatched evidence
 
-A Windows VS Code 1.141.1 desktop client connected to a real Linux WSL workspace
-host passed this smoke: 22-node completed graph render (3.09 seconds in that run),
+The preceding API-5 build's Windows VS Code 1.141.1 desktop client connected to a
+real Linux WSL workspace host passed this smoke: 22-node completed graph render (3.09 seconds in that run),
 native dirty/save/Unicode overlays and an anchored source-object preview. The test
 used a new persistent-home Gantt clone and an isolated client profile. It is narrower
 than the complete local Windows host regressions and is not SSH/tunnel qualification.
@@ -90,7 +90,9 @@ background launches, and remote asset HTTP 401/ready timeouts. A fresh foregroun
 launch with normalized `wsl+ubuntu` authority passed; profile/launch differences mean
 this is not proof of a single cause. Keep connection authority/resource routing
 consistent and inspect webview resource errors rather than loosening CSP or resource
-roots. SSH and desktop/browser tunnel runs still require operator-supplied endpoints
-and authentication. No server service, SSH keys or global Python packages were installed.
+roots. API-6 remote sessions and SSH/desktop/browser tunnel runs still require fresh
+qualification with operator-supplied endpoints and authentication. The current API-6
+Windows installed-host regression uses an isolated portable VS Code Insiders build;
+it does not prove any remote transport. No server service, SSH keys or global Python packages were installed.
 
 Background rationale: [remote investigation](investigations/vscode-remote-development.md).

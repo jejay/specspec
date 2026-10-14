@@ -31,10 +31,10 @@ async function run() {
   // changes to the self-referencing design graph. Native lifecycle uses a compact graph.
   const nativeRoot = join(project.root, 'native-documents'); mkdirSync(nativeRoot);
   const nativeCli = (args, input) => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', nativeRoot, ...args], { input, encoding: 'utf8' })).result;
-  const manifesto = nativeCli(['init', '--manifesto', '-', '--json'], '# Native document fixture\n').changed_ids[0];
+  const manifesto = nativeCli(['init', '-', '--json'], '# Native document fixture\n').changed_ids[0];
   const nativeNode = nativeCli(['add', '--parent', manifesto, '--slug', 'native-node', '--body', '-', '--json'], '# Native node\n').changed_ids[0];
   const nativeOther = nativeCli(['add', '--parent', nativeNode, '--slug', 'other-node', '--body', '-', '--json'], '# Other node\n').changed_ids[0];
-  const nativeSnapshot = nativeCli(['list', '--json']);
+  const nativeSnapshot = nativeCli(['show', '--json']);
   const otherPath = join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path);
   writeFileSync(otherPath, readFileSync(otherPath, 'utf8').replace(/\n/g, '\r\n'));
   const nativeProject = { root: nativeRoot, modified: nativeNode, cli: nativeCli };

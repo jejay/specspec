@@ -231,7 +231,7 @@ class GraphView implements vscode.Disposable {
       cli: (args: string[], input?: string) => ['add', 'update', 'delete'].includes(args[0])
         ? project.documents.mutate(args, input) : project.cli(args, input),
       initialGraph: () => project.documents.initial(bootstrap),
-      readGraph: (base: string) => project.documents.readGraph(base),
+      readGraph: (base: string, target?: string) => project.documents.readGraph(base, false, target),
       trace: (phase: string, duration: number, nodes?: number) => project.trace(phase, duration, nodes),
       authorized: () => vscode.workspace.isTrusted,
       post: async (message: any) => {

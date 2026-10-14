@@ -111,11 +111,11 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args, input) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args, input });
     if (options.cliError) throw new Error(options.cliErrorMessage || 'Cannot run Python backend');
-    if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:5,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
-    if (args[0] === 'editor') {
+    if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:6,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
+    if (args[0] === 'api') {
       const request = JSON.parse(input);
       if (options.editError && request.edit) throw new Error('Planner temporarily unavailable');
-      let overlaid = { ...current, valid: options.invalidOverlay ? false : current.valid, nodes: current.nodes.map(n => ({ ...n, body: request.documents[n.path]?.split('\n---\n')[1] ?? n.body })) };
+      let overlaid = { ...current, valid: !request.target && options.invalidOverlay ? false : current.valid, nodes: current.nodes.map(n => ({ ...n, body: request.documents?.[n.path]?.split('\n---\n')[1] ?? n.body })) };
       const changes = [];
       if (request.edit) {
         const n = overlaid.nodes.find(n => n.id === request.edit.id);
@@ -124,12 +124,9 @@ function fixture(t, options = {}) {
         changes.push({ path: n.path, before, after });
         overlaid = { ...overlaid, nodes: overlaid.nodes.map(item => item.id === n.id ? { ...item, body: request.edit.body } : item) };
       }
-      return { api_version: 5, ok: true, diagnostics: [], result: { snapshot: overlaid, diagnostics: [], changes, note: '' } };
+      return { api_version: 6, ok: true, diagnostics: [], result: { snapshot: overlaid, changes, note: '', ...(request.base ? { diff: {base:overlaid,target:overlaid,changes:[],added_edges:[],removed_edges:[],base_ref:request.base,target_ref:request.target || 'workspace',source_changes:[],source_affected:[]} } : {}) } };
     }
-    return { api_version: 5, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
-      base: current, target: current, changes: [], added_edges: [], removed_edges: [],
-      base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
-    } : current };
+    return { api_version: 6, ok: true, diagnostics: [], result: current };
   };
   // Exercise the actual command and panel lifecycle without requiring Electron.
   const originalLoad = Module._load;
@@ -342,8 +339,8 @@ test('native bootstrap supplies the first working render with one no-baseline re
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { panel } = await f.openDocument(fileNode);
   await waitFor(() => panel.messages.some(m => m.type === 'snapshot' && !m.provisional));
-  assert.equal(f.calls.cli.filter(c => c.args[0] === 'editor' && !c.args.includes('--base')).length, 1);
-  assert.equal(f.calls.cli.filter(c => c.args.includes('--base')).length, 1);
+  assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && !JSON.parse(c.input).base).length, 1);
+  assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).base).length, 1);
 });
 test('custom text editor binds a real document, marks edits dirty, and saves without CLI update', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
@@ -374,7 +371,7 @@ test('native Delete is bound, confirmed and managed, never a retired buffer edit
   panel.send({ type: 'delete', id: 'node' });
   await waitFor(() => f.calls.cli.some(c => c.args[0] === 'delete' && !c.args.includes('--dry-run')));
   assert.deepEqual(f.calls.cli.find(c => c.args[0] === 'delete' && !c.args.includes('--dry-run')).args, ['delete', 'node', '--yes', '--reviewed-plan', '-', '--json']);
-  assert.ok(!f.calls.cli.some(c => c.args[0] === 'editor' && JSON.parse(c.input).edit?.retired !== undefined));
+  assert.ok(!f.calls.cli.some(c => c.args[0] === 'api' && JSON.parse(c.input).edit?.retired !== undefined));
   assert.equal(doc.isDirty, false);
 });
 test('native cascade confirmation warns about a saved staged descendant, and dirty descendant tabs block deletion', async t => {
@@ -459,5 +456,5 @@ test('commit comparisons load independently even when open-document overlays are
   const f = fixture(t, { invalidOverlay: true, revisions: ['HEAD', 'HEAD'] });
   const result = await f.calls.commands.get('specspec.compareRevisions')();
   assert.equal(result.valid, true); assert.equal(f.calls.panels[0].messages.at(-1).readonly, true);
-  assert.ok(!f.calls.cli.some(c => c.args[0] === 'editor'));
+  assert.ok(!f.calls.cli.some(c => c.args[0] === 'api' && JSON.parse(c.input).edit));
 });

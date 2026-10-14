@@ -6,6 +6,7 @@ const node = { id: 'node', type: 'requirement', body: '# Original', parents: [],
 const snapshot = { valid: true, format_version: 5, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(check) { for (let i = 0; i < 100; i++) { if (check()) return; await pause(5); } assert.ok(check()); }
+const isComparison = c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read' && Boolean(JSON.parse(c.input).base);
 function fixture(t, options = {}) {
   let current = options.snapshot || snapshot, authorized = true, failure = false, remainingFailures = 0;
   const calls = [], messages = [], confirmations = [];
@@ -16,15 +17,16 @@ function fixture(t, options = {}) {
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
       if (args[0] === 'delete') {
-        if (args.includes('--dry-run')) return { api_version: 5, ok: true, diagnostics: options.deleteWarnings || [], result: options.deletePlan || { requested_ids: [args[1]], deleted_ids: [args[1]], nodes: [{ id: args[1], path: node.path }], uncommitted: [], git_available: true, git_note: '' } };
+        if (args.includes('--dry-run')) return { api_version: 6, ok: true, diagnostics: options.deleteWarnings || [], result: options.deletePlan || { requested_ids: [args[1]], deleted_ids: [args[1]], nodes: [{ id: args[1], path: node.path }], uncommitted: [], git_available: true, git_note: '' } };
         if (options.deleteError) throw new Error(options.deleteError);
         const plan = JSON.parse(input);
         current = { ...current, nodes: current.nodes.filter(n => !plan.deleted_ids.includes(n.id)), changed_ids: plan.deleted_ids };
       }
-      return { api_version: 5, ok: true, diagnostics: [], result: args[0] === 'diff' ? {
+      const value = args[0] === 'api' ? JSON.parse(input) : undefined;
+      return { api_version: 6, ok: true, diagnostics: [], result: value ? { snapshot: current, changes: [], note: '', ...(value.base ? {diff: {
         base: current, target: current, changes: [], added_edges: [], removed_edges: [],
-        base_ref: 'HEAD', target_ref: 'workspace', source_changes: [], source_affected: [],
-      } : current };
+        base_ref: value.base, target_ref: value.target || 'workspace', source_changes: [], source_affected: [],
+      }} : {}) } : current };
     },
     post: async value => { messages.push(value); if (value.type === 'snapshot' && !options.noRender) s.receive({ type: 'rendered',
       renderToken: value.renderToken, view: 'overview',
@@ -38,7 +40,7 @@ function fixture(t, options = {}) {
 test('source capture invokes only a validated preview and never a writer or Git operation', async t => {
   const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]}});await f.s.open();
   await f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});
-  const c=f.calls.at(-1);assert.deepEqual(c.args,['sources','capture','node','code.js','--range','2:4','--range','9:10','--mode','strict','--staged','--preview','--json']);
+  const c=f.calls.at(-1);assert.deepEqual(c.args,['api']);assert.deepEqual(JSON.parse(c.input),{api_version:6,op:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});
   assert.equal(f.calls.some(c=>['update','add'].includes(c.args[0])),false);
   await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['--bad'],mode:'strict'}),/Invalid/);
   f.revoke();await assert.rejects(f.s.handle({type:'source-view',id:'node',reference:'{}'}),/authorization/);
@@ -47,7 +49,7 @@ test('source capture invokes only a validated preview and never a writer or Git 
 test('source previews in historical views use selected code revisions but never permit capture', async t => {
   const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]},revisions:['older','newer']});await f.s.open();await f.s.chooseRevisions();
   await f.s.handle({type:'source-view',id:'node',reference:JSON.stringify({path:'code.js'})});
-  assert.deepEqual(f.calls.at(-1).args,['sources','view','--reference','{"path":"code.js"}','--ref','newer','--json']);
+  assert.deepEqual(f.calls.at(-1).args,['api']);assert.deepEqual(JSON.parse(f.calls.at(-1).input),{api_version:6,op:'source-view',reference:{path:'code.js'},ref:'newer'});
   await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['1:2'],mode:'strict'}),/editable/);
 });
 
@@ -90,7 +92,7 @@ test('unrelated changes do not block drafts; every save re-reads actual files', 
   await f.s.handle(save(node));
   assert.equal(f.confirmations.length, 0);
   const write = f.calls.findIndex(c => c.args[0] === 'update');
-  assert.equal(f.calls[write - 1].args[0], 'export');
+  assert.equal(f.calls[write - 1].args[0], 'show');
   assert.ok(f.calls[write].args.every(a => a !== '--expect'));
 });
 test('same-node external changes ask before overwrite; cancellation retains current contents', async t => {
@@ -109,7 +111,7 @@ test('watcher bursts coalesce, identical data does not redraw, and changed conte
   const f = fixture(t); await f.s.open(); const first = f.messages.filter(m => m.type === 'snapshot').length;
   for (let i = 0; i < 50; i++) f.s.scheduleRefresh();
   await pause(25); await f.s.queue;
-  assert.equal(f.calls.filter(c => c.args[0] === 'export').length, 2);
+  assert.equal(f.calls.filter(isComparison).length, 2);
   assert.equal(f.messages.filter(m => m.type === 'snapshot').length, first);
   f.change({ ...snapshot, nodes: [{ ...node, body: '# Manual change' }] }); f.s.scheduleRefresh();
   await waitFor(() => f.messages.filter(m => m.type === 'snapshot').length === first + 1);
@@ -124,7 +126,7 @@ test('invalid reloads retain the last graph, disable editing, and later valid ev
 });
 test('partial writes retry a bounded number of times without a false invalid view', async t => {
   const f = fixture(t); await f.s.open(); f.failNext(2); f.s.scheduleRefresh();
-  await waitFor(() => f.calls.filter(c => c.args[0] === 'export').length >= 4); await f.s.queue;
+  await waitFor(() => f.calls.filter(isComparison).length >= 4); await f.s.queue;
   assert.ok(!f.messages.some(m => m.type === 'sync-error'));
 });
 test('polling is off by default, configurable, coalesced, and cancelled on disposal', async t => {
@@ -138,7 +140,7 @@ test('polling is off by default, configurable, coalesced, and cancelled on dispo
 test('polls do not pile up behind slow reads or refresh immutable historical targets', async t => {
   const f = fixture(t, { slow: 15, revisions: ['HEAD', 'HEAD'] }); await f.s.open(); f.s.configurePolling(1);
   await pause(70); f.s.configurePolling(0); await pause(10); await f.s.queue;
-  assert.ok(f.calls.filter(c => c.args[0] === 'export').length < 7);
+  assert.ok(f.calls.filter(isComparison).length < 7);
   await f.s.chooseRevisions(); const count = f.calls.length; f.s.configurePolling(2); f.s.scheduleRefresh(); await pause(25);
   assert.equal(f.calls.length, count);
 });

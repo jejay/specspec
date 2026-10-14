@@ -148,17 +148,17 @@ def test_only_current_schema_is_readable_and_never_converted(workspace, version)
     assert result.exit_code == 2
 
 
-def test_full_id_round_trips_cli_editor_context_and_mermaid(workspace):
+def test_full_id_round_trips_cli_native_plan_context_and_dependents(workspace):
     root, manifesto = workspace
     snapshot, child = add_node(root, "requirement", [manifesto], "# Child\n", "child")
     runner = CliRunner()
-    for command in ["show", "context", "impact"]:
-        result = runner.invoke(main, ["--root", str(root), command, child, "--json"])
+    for command in [["show"], ["context"], ["show", "--dependents"]]:
+        result = runner.invoke(main, ["--root", str(root), *command, child, "--json"])
         assert result.exit_code == 0, result.output
         assert child in result.output
-    result = runner.invoke(main, ["--root", str(root), "export", "--format", "mermaid"])
+    result = runner.invoke(main, ["--root", str(root), "show", manifesto, "--dependents", "--json"])
     assert result.exit_code == 0
-    assert f"n_{manifesto.encode().hex()} --> n_{child.encode().hex()}" in result.output
+    assert child in json.loads(result.output)["result"]["affected"]
     node = snapshot.graph.nodes[child]
     result = editor_request(
         root, {"edit": {"path": node.path, "id": child, "body": "# Native edit\n"}}
@@ -197,8 +197,8 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     )
     assert added.exit_code == 0, added.output
     assert json.loads(added.output)["result"]["changed_ids"] == [node_id]
-    for command in ["show", "context", "impact"]:
-        result = runner.invoke(main, [*prefix, command, node_id, "--json"])
+    for command in [["show"], ["context"], ["show", "--dependents"]]:
+        result = runner.invoke(main, [*prefix, *command, node_id, "--json"])
         assert result.exit_code == 0, result.output
     result = runner.invoke(
         main, [*prefix, "update", node_id, "--body", "-", "--json"], input="# Updated\n"

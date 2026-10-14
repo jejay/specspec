@@ -1,5 +1,6 @@
 /* No editor/Electron imports: every host uses the same graph operations. */
 const { isDeepStrictEqual } = require('node:util');
+const { ProjectReads } = require('./reads.cjs');
 
 function pollInterval(value) {
   if (!Number.isSafeInteger(value) || value < 0 || value > 2_147_483_647) throw new Error('Polling interval must be an integer from 0 to 2147483647 ms (0 disables polling).');
@@ -9,6 +10,7 @@ function pollInterval(value) {
 class GraphSession {
   constructor(host) {
     this.host = host; this.base = 'HEAD'; this.queue = Promise.resolve();
+    this.reads = host.readGraph ? undefined : new ProjectReads({ cli: (args, input) => this.cli(args, input) });
     this.renderSequence = 0; this.lastRendered = 0; this.listeners = new Set();
     this.ready = new Promise(resolve => { this.resolveReady = resolve; });
   }
@@ -51,9 +53,9 @@ class GraphSession {
       const start = Date.now();
       await this.waitReady(); this.host.trace?.('ready', Date.now() - start);
       await this.run(async () => {
-        if (!this.hasOpened && !this.target && this.host.initialGraph) {
+        if (!this.hasOpened && !this.target && (this.host.initialGraph || this.reads)) {
           let initial;
-          try { initial = await this.host.initialGraph(); } catch (error) { this.log(error); }
+          try { initial = await (this.host.initialGraph ? this.host.initialGraph() : this.reads.initial()); } catch (error) { this.log(error); }
           if (initial?.snapshot?.valid) {
             await this.display(initial, false, undefined, false, true);
             this.host.trace?.('first-working-render', Date.now() - start, initial.snapshot.nodes.length);
@@ -110,18 +112,7 @@ class GraphSession {
     this.scheduleRefresh();
   }
   async readGraph() {
-    if (this.target) {
-      const response = await this.cli(['diff', '--base', this.base, '--target', this.target, '--json']);
-      return { diff: response.result, snapshot: response.result.target, diagnostics: response.diagnostics, note: '' };
-    }
-    if (this.host.readGraph) return this.host.readGraph(this.base);
-    const response = await this.cli(['export', '--format', 'json']);
-    let snapshot = response.result, diff, note = '', diagnostics = response.diagnostics;
-    try {
-      const comparison = await this.cli(['diff', '--base', this.base, '--json']);
-      diff = comparison.result; snapshot = diff.target; diagnostics = comparison.diagnostics;
-    } catch (error) { note = `Diff unavailable: ${error.message}`; }
-    return { snapshot, diff, note, diagnostics };
+    return this.host.readGraph ? this.host.readGraph(this.base, this.target) : this.reads.readGraph(this.base, false, this.target);
   }
   warn(error) {
     this.log(error); this.warning = error.message;
@@ -201,13 +192,13 @@ class GraphSession {
       if (message.type === 'source-view') {
         if (typeof message.reference !== 'string' || Buffer.byteLength(message.reference, 'utf8') > 65536) throw new Error('Invalid source reference.');
         const ref = this.snapshot.nodes.some(n => n.id === message.id) ? this.target : this.base;
-        const response = await this.cli(['sources', 'view', '--reference', message.reference, ...(ref ? ['--ref', ref] : []), '--json']);
+        const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'source-view', reference: JSON.parse(message.reference), ...(ref ? { ref } : {}) }));
         await this.post({ type: 'source-preview', ...response.result }); return;
       }
       if (this.target || !this.snapshot.nodes.some(n => n.id === message.id) || this.sourceInvalid) throw new Error('Capture requires a live editable implementation.');
       if (this.host.document && message.id !== this.host.document.state().nodeId) throw new Error('Capture belongs to the bound node.');
       if (typeof message.path !== 'string' || message.path.length > 4096 || !Array.isArray(message.ranges) || message.ranges.length > 64 || message.ranges.some(r => typeof r !== 'string' || !/^\d+:\d+$/.test(r)) || !['strict', 'expanding'].includes(message.mode)) throw new Error('Invalid source capture parameters.');
-      const response = await this.cli(['sources', 'capture', message.id, message.path, ...message.ranges.flatMap(r => ['--range', r]), '--mode', message.mode, ...(message.staged === true ? ['--staged'] : []), '--preview', '--json']);
+      const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'source-capture', id: message.id, path: message.path, ranges: message.ranges, mode: message.mode, staged: message.staged === true }));
       await this.post({ type: 'source-captured', id: message.id, reference: response.result.reference }); return;
     }
     if (this.host.document && message.type === 'delete') {
@@ -236,7 +227,7 @@ class GraphSession {
     // Always validate actual current files, including changes whose watcher event was missed.
     let current;
     try {
-      current = (await this.cli(['export', '--format', 'json'])).result;
+      current = (await this.cli(['show', '--json'])).result;
       if (!current?.valid) throw new Error('Invalid specification graph.');
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
@@ -255,7 +246,7 @@ class GraphSession {
       } else {
         // No graph-wide stale gate: only overwriting this node needs user attention.
         if (!this.host.sameNode(message.originalNode, nodes.get(id)) && !await this.host.confirm('This node changed outside your draft (or its original contents are unavailable). Save your draft over its current text, parents and sources? Cancel keeps your unsaved text.')) { await this.post({ type: 'cancelled' }); return; }
-        args = ['update', id, ...parents, ...(parents.length ? [] : ['--clear-parents']), '--body', '-'];
+        args = ['update', id, ...parents, '--body', '-'];
       }
       if (typeof message.sources !== 'string' || Buffer.byteLength(message.sources, 'utf8') > 1024 * 1024) throw new Error('Invalid source references.');
       if ((message.type === 'add' ? message.nodeType : nodes.get(id).type) === 'implementation') args.push('--sources', message.sources);
@@ -272,11 +263,12 @@ class GraphSession {
       input = JSON.stringify(plan);
     } else throw new Error('Unknown graph action.');
     const response = await this.cli([...args, ...common], input);
+    this.reads?.changed();
     await this.refresh(true, response.result.changed_ids?.[0]);
   }
   dispose() {
     this.disposed = true; clearTimeout(this.refreshTimer); clearInterval(this.pollTimer); clearTimeout(this.retryTimer);
-    this.retryResolve?.(); this.resolveReady(); this.listeners.forEach(f => f());
+    this.reads?.dispose(); this.retryResolve?.(); this.resolveReady(); this.listeners.forEach(f => f());
   }
 }
 module.exports = { GraphSession, pollInterval };

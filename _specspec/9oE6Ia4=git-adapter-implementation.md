@@ -21,7 +21,8 @@ from unavailable revisions. `semantic_diff` compares full IDs, body/parent/metad
 records, file paths and edges, deriving old/new potential impact. Source impact
 uses both snapshots' file references and requirement ancestry.
 
-`install_hook` is opt-in, respects Git's hook path and preserves existing hooks.
+Owner-managed hooks/CI invoke check --staged against exact index bytes.
+Hook files, existing commands and environment selection remain owner-controlled.
 Disposable current-schema and maintained Gantt tests cover partial staging,
 corruption masked by repaired worktrees, renames/edges, sources, baselines and hooks.
 

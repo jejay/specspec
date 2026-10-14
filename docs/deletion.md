@@ -1,7 +1,7 @@
 # Removing nodes and the default workspace graph
 
 **Withdraw by deleting node files.** There is no retired flag, retire/restore
-command, live/retired filter or withdrawal badge in current format/API **5**.
+command, live/retired filter or withdrawal badge in current node format **5** / API **6**.
 Earlier text and relationships remain in Git history. Explain your reason in the
 normal Git commit, rather than maintaining a separate lifecycle state.
 

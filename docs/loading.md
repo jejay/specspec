@@ -1,7 +1,7 @@
 # Graph loading, derived caches and diagnostics
 
-VS Code first displays a validated working graph with **HEAD comparison loading**
-explicitly marked, then adopts the fresh HEAD/source comparison. Native bootstrap
+Both hosts first display a validated working graph with **HEAD comparison loading**
+explicitly marked, then adopt the fresh HEAD/source comparison. VS Code native bootstrap
 supplies that first snapshot when its actual document/generation stamp still matches.
 Historical panels load their selected comparison directly. Provisional project
 mutations/deletion/source capture stay disabled in the form; native input retains
@@ -31,17 +31,18 @@ header-text budget. Body text, node schema, graph, source paths and runtime reco
 lock checks remain current. This avoids repeated parsing of unchanged headers
 within overlays, worktree/base reads and library use; it is not a persistent server.
 
-VS Code's project coordinator shares identical **in-flight** reads using actual
-open-document contents, versions, dirty/EOL state, generation and base. Each view
+The shared project read coordinator serves Electron and VS Code. Electron supplies
+saved files; VS Code adds native overlays. It shares identical **in-flight** reads using
+actual open-document contents, versions, dirty/EOL state, generation and base/target. Each view
 receives an isolated payload. Later/explicit refreshes do fresh reads, even if no
 watch notification arrived. Failed/changed/closed reads are not adopted as current.
 
-An optional editor `cache: true` read returns bounded `base_cache` byte hints, held
+An optional API-6 application `read` with `cache: true` returns bounded `base_cache` byte hints, held
 only in project memory and removed before sending display data to the renderer.
 They contain a resolved commit and at most 2 MiB of canonical Git file text. A later
 read may send those hints; Python freshly resolves the ref and lists current entries,
 batch-checks object availability/type/size, and verifies hinted bytes against each
-Git blob address before reuse. Mismatches are fetched normally; missing blobs remain
+Git blob address before reuse. Mismatches are reread locally; missing blobs remain
 unavailable. HEAD movement changes applicability; staging never substitutes index
 membership for HEAD. The internal Snapshot commit is not canonical node metadata.
 Git content addressing for a reader cache does not introduce node edit fingerprints,
@@ -51,6 +52,12 @@ Managed actions reread/validate authoritative files under their existing writer
 lock, replan reviewed deletion scope/warnings and compare original bytes. Exact-index
 checks still assess exact staged objects. Caches do not authorize mutations. Polling
 remains default-off; notifications are hints, with explicit Refresh available.
+
+API 6 transports a single target snapshot plus previous records only for changed/
+deleted nodes. The shared adapter reconstructs complete revision structures for the
+renderer; normal refreshes no longer run export followed by diff. Historical reads
+bypass workspace buffers. Native plans and managed writes retain separate owners.
+See [command/protocol details](cli.md).
 
 ## Loading diagnostics
 

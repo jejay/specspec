@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2320" viewBox="0 0 2000 2320" role="img" aria-labelledby="interface-title interface-description">
   <title id="interface-title">SpecSpec interface detail: renderer messages, CLI processes, Python calls and agent use</title>
-  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the SpecSpecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, optional project-level native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A single short-lived Python process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an API 5 JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through editor JSON overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar distinguishes Electron working reads, VS Code overlay reads, commit targets, managed mutations and source previews. There is no Python daemon, HTTP service or implemented agent connector.</desc>
-  <metadata>Descriptive documentation of the current format/API 5 implementation. Self-contained offline SVG with system font fallbacks and local markers only. Companion overview: docs/architecture.svg. Guide and source links: docs/architecture.md. Payload snippets are illustrative; an empty result in the response example stands in for command-specific data.</metadata>
+  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the SpecSpecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, shared project reads and optional native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A single short-lived Python process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an API 6 JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through API-6 native plan overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar shows shared Electron/VS Code reads with optional overlays, commit targets, managed mutations and source previews. There is no Python daemon, HTTP service or implemented agent connector.</desc>
+  <metadata>Descriptive documentation of current node format 5 and API 6. Self-contained offline SVG with system font fallbacks and local markers only. Companion overview: docs/architecture.svg. Guide and source links: docs/architecture.md. Payload snippets are illustrative; an empty result in the response example stands in for command-specific data.</metadata>
   <defs>
     <style>
       text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
@@ -37,7 +37,7 @@
     <text x="64" y="132" class="title">Inside the interface.</text>
     <text x="64" y="176" class="subtitle">UI messages become host commands. The CLI calls a Python library—not another service.</text>
     <rect x="1656" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
-    <text x="1796" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">COMPANION / CURRENT API 5</text>
+    <text x="1796" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">COMPANION / CURRENT API 6</text>
     <path d="M1732 140H1778" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
     <path d="M1804 140H1850" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
     <path d="M1876 140H1922" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
@@ -79,7 +79,7 @@
       <text x="568" y="495" class="small">Per view: guarded / serialized actions</text>
       <text x="568" y="525" class="small">Checks trust, IDs and form conflicts</text>
       <text x="568" y="557" class="code" style="font-size:16px">graph-ui-common/host/session.cjs</text>
-      <text x="568" y="594" class="body" style="font-weight:650;fill:#203a40">ProjectDocuments (VS Code)</text>
+      <text x="568" y="594" class="body" style="font-weight:650;fill:#203a40">ProjectReads + native documents</text>
       <text x="568" y="625" class="small">Per project: overlays, plan / apply queue</text>
       <text x="568" y="671" class="body" style="font-weight:650;fill:#203a40">invoke() / bounded CLI bridge</text>
       <text x="568" y="702" class="small">Trusted executable + configured prefix</text>
@@ -109,7 +109,7 @@
         <text x="1152" y="560" class="body" style="font-weight:650;fill:#203a40">Dispatch</text>
         <text x="1152" y="589" class="small">SpecError / I/O</text>
         <text x="1152" y="632" class="code" style="font-size:20px">emit()</text>
-        <text x="1152" y="661" class="small">API 5 envelope</text>
+        <text x="1152" y="661" class="small">API 6 envelope</text>
         <text x="1152" y="690" class="small">JSON stdout</text>
         <text x="1152" y="721" class="caption">+ exit status</text>
       </g>
@@ -144,7 +144,7 @@
       <path d="M954 672H1128" class="request"/>
       <text x="1041" y="650" text-anchor="middle" class="label purple">argv + stdin</text>
       <path d="M1128 708H954" class="response"/>
-      <text x="1041" y="736" text-anchor="middle" class="label teal">API 5 JSON</text>
+      <text x="1041" y="736" text-anchor="middle" class="label teal">API 6 JSON</text>
     </g>
 
     <g id="agent-cli" aria-label="The agent calls the same CLI directly, bypassing renderer messages and JavaScript host coordination">
@@ -152,7 +152,7 @@
       <text x="88" y="837" class="heading" style="font-size:26px">Agent / external shell</text>
       <text x="655" y="834" class="caption">No UI port or built-in connector</text>
       <text x="88" y="880" class="code" style="font-size:21px">specspec --root &lt;project&gt; context &lt;id&gt; --json</text>
-      <text x="88" y="908" class="caption">Read: context / impact / diff · write: add / update / delete · checks: validate / hook check</text>
+      <text x="88" y="908" class="caption">Read: show / context / diff · write: add / update / delete · check [--staged]</text>
       <text x="88" y="936" class="caption" style="font-size:15px">Check stdout + exit status. Context preserves the selected node + all required ancestors.</text>
       <path d="M954 841H1197V744" class="request"/>
       <text x="1068" y="819" text-anchor="middle" class="label purple">same CLI contract</text>
@@ -201,7 +201,7 @@
       <rect x="1276" y="1152" width="660" height="175" rx="8" fill="#193f43"/>
       <text id="json-envelope" x="1300" y="1180" class="code white" xml:space="preserve">
         <tspan x="1300" y="1180">{</tspan>
-        <tspan x="1300" y="1206">  "api_version": 5,</tspan>
+        <tspan x="1300" y="1206">  "api_version": 6,</tspan>
         <tspan x="1300" y="1232">  "ok": true,</tspan>
         <tspan x="1300" y="1258">  "result": {},</tspan>
         <tspan x="1300" y="1284">  "diagnostics": []</tspan>
@@ -212,9 +212,9 @@
     </g>
     <g id="validity-contract" aria-label="A successful editor request may return an invalid snapshot; process success is not graph validity">
       <path d="M64 1424H1936" class="hairline"/>
-      <text x="64" y="1459" class="code gold">editor: ok=true ≠ snapshot.valid=true</text>
+      <text x="64" y="1459" class="code gold">plan: ok=true ≠ snapshot.valid=true</text>
       <text x="568" y="1459" class="body" style="font-size:18px">A non-writing plan can preserve repairable invalid text. Native Save can persist it.</text>
-      <text x="64" y="1491" class="caption">editor stdin is JSON { documents, edit? }, not raw body text. Diagnostics carry code, message, severity and optional path / node_id / line.</text>
+      <text x="64" y="1491" class="caption">api stdin is JSON { api_version: 6, op, documents, edit? }, not raw body text. Diagnostics carry code, message, severity and optional path / node_id / line.</text>
     </g>
     <g id="render-handshake" aria-label="Host results become UI snapshot or document-status events; a rendered token and visible membership acknowledge drawing">
       <text x="64" y="1521" class="caption">Host → UI: snapshot + diff + renderToken, or document-status + editSequence. UI → host: rendered (token + visible membership).</text>
@@ -242,7 +242,7 @@
     </g>
     <g id="trace-editor-request" aria-label="The host sends all open document overlays plus the requested edit on editor stdin">
       <path d="M475 1793H870" class="request"/>
-      <text x="504" y="1778" class="code">editor --json</text>
+      <text x="504" y="1778" class="code">api · op: plan</text>
       <text x="504" y="1823" class="caption">stdin: { documents, edit: {path, id, …} }</text>
       <rect x="862" y="1785" width="16" height="78" rx="3" fill="#cee0d3"/>
       <text x="900" y="1811" class="code" style="font-size:15px">editor_request()</text>
@@ -251,7 +251,7 @@
     <g id="trace-editor-result" aria-label="The CLI returns exact before/after text, snapshot and diagnostics to project-level coordination">
       <path d="M870 1871H475" class="response"/>
       <text x="504" y="1859" class="code" style="font-size:16px">changes: [{path, before, after}]</text>
-      <text x="504" y="1901" class="caption">+ snapshot + diagnostics, inside API 5 JSON</text>
+      <text x="504" y="1901" class="caption">+ snapshot + diagnostics, inside API 6 JSON</text>
     </g>
     <g id="trace-apply" aria-label="The host checks version and before text, then applies a minimal WorkspaceEdit to the native document">
       <path d="M475 1952H1240" class="request"/>
@@ -277,18 +277,18 @@
     <path d="M1382 1606V2239" class="hairline"/>
     <text x="1412" y="1643" class="heading">Other UI routes</text>
     <text x="1412" y="1685" class="body" style="font-weight:650;fill:#203a40">Electron working graph</text>
-    <text x="1412" y="1715" class="code">export --format json</text>
-    <text x="1412" y="1743" class="code">+ diff --base HEAD --json</text>
-    <text x="1412" y="1771" class="caption">Saved snapshot + Git comparison where available</text>
+    <text x="1412" y="1715" class="code">api · op: read · base: HEAD</text>
+    <text x="1412" y="1743" class="code">ProjectReads · saved files</text>
+    <text x="1412" y="1771" class="caption">Working first, then comparison · shared hints/cache</text>
     <path d="M1412 1791H1936" class="hairline"/>
 
     <text x="1412" y="1827" class="body" style="font-weight:650;fill:#203a40">VS Code working graph</text>
-    <text x="1412" y="1857" class="code">editor --base HEAD --json</text>
+    <text x="1412" y="1857" class="code">Same read + native documents</text>
     <text x="1412" y="1885" class="caption">stdin: { documents } · no edit · no file write</text>
     <path d="M1412 1905H1936" class="hairline"/>
 
     <text x="1412" y="1941" class="body" style="font-weight:650;fill:#203a40">Commit-target comparison</text>
-    <text x="1412" y="1971" class="code">diff --base &lt;b&gt; --target &lt;t&gt; --json</text>
+    <text x="1412" y="1971" class="code">api · op: read · base / target</text>
     <text x="1412" y="1999" class="caption">Git trees · overlays ignored · read-only</text>
     <path d="M1412 2019H1936" class="hairline"/>
 
@@ -299,7 +299,7 @@
     <path d="M1412 2161H1936" class="hairline"/>
 
     <text x="1412" y="2197" class="body" style="font-weight:650;fill:#203a40">Source preview / capture</text>
-    <text x="1412" y="2227" class="code">sources view / capture --preview</text>
+    <text x="1412" y="2227" class="code">api · source-view / source-capture</text>
     <text x="1412" y="2255" class="caption">Capture returns a reference; the form's Save persists it.</text>
   </g>
 

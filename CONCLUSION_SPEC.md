@@ -29,12 +29,13 @@ src/specspec/
   graph.py                 # Rooted DAG, deterministic order, iterative closures
   workspace.py             # Discovery, validated byte transactions and recovery
   deletion.py              # Descendant scope and uncommitted-file assessment
-  git.py                   # Index/revision reads, semantic/source impact, hooks
+  git.py                   # Index/revision reads and semantic/source impact
   editor.py                # Non-writing native overlays and document plans
   source_schema.py         # Shared whole-file/region validation
   sources.py               # Bounded blob/range resolution and retention
-  source_commands.py       # Capture/resolve/check/reanchor/view
-  cli.py                   # Commands and API-5 envelopes
+  source_commands.py       # Inspect/capture/reanchor; deliberate source writes
+  application.py / wire.py # Shared reads/plans and compact comparison projection
+  output.py / cli.py       # Readable review presentation and API-6 envelopes
 graph-ui-common/            # One DOM/SVG renderer, session, camera, build/template
 vscode/                     # Document/project/view adapter and native facilities
 electron/                   # Authorized main/preload/renderer and local storage
@@ -42,10 +43,17 @@ electron/                   # Authorized main/preload/renderer and local storage
 
 Adapters call the CLI with argument arrays, bounded UTF-8 stdin/output and a fixed
 trusted executable. The Python library owns graph/schema/serialization rules.
-API 5 stdout is one `{api_version, ok, result, diagnostics}` envelope; exit 0 means
+API 6 structured stdout is one `{api_version, ok, result, diagnostics}` envelope; exit 0 means
 success, 1 validation/rejected operation, 2 invocation/I/O failure. Diagnostics have
 stable codes, severity, path/optional ID and actionable text. Body input supports files
 or `-` stdin. Full-parent updates explicitly replace the supplied set.
+
+The [compact command guide](docs/cli.md) defines eight everyday verbs with readable
+text/Markdown defaults and explicit compact JSON. Full review diffs show all canonical
+file hunks, semantic node/relationship changes and separate linked-source impact.
+Comparison transport shares unchanged records; both hosts use the same read coordinator
+with optional native overlays and working-first loading. Native persistence stays
+separate from managed writes. Node format remains **5** while protocol is **6**.
 
 ## Canonical files and grammar
 
@@ -59,8 +67,7 @@ JSON-compatible `extensions`. Bodies are binding current text; summaries aid dis
 IDs are padded RFC 4648 Base64url over `secrets.token_bytes(5)`: **40 random bits**,
 seven payload symbols plus `=`. Filename is `<id><ascii-slug>.md`. Lock-scoped
 creation retries exact/casefold collisions; input validation detects portable aliases.
-Full identities and zero pad bits are canonical. Mermaid uses injective ASCII-safe
-encoding. VS Code associates `**/_specspec/???????=*.md` and asks Python to validate
+Full identities and zero pad bits are canonical. VS Code associates `**/_specspec/???????=*.md` and asks Python to validate
 the actual resource. Stable IDs survive body/parent/summary changes.
 
 Bootstrap the unique manifesto/version, then validate typed metadata, YAML keys,
@@ -101,9 +108,9 @@ unapplied-form recovery has separate explicit handling.
 
 ## Git snapshots, source regions and refresh
 
-Read exact staged/commit blobs through NUL-delimited Git paths/object reads. Hooks
-validate the intended index, respecting existing/custom hooks. Optional `--sources`
-adds exact staged source resolution/retention. Compare full IDs, normalized records,
+Read exact staged/commit blobs through NUL-delimited Git paths/object reads.
+`check --staged` validates the intended index; owner-managed hooks/CI call it without
+a SpecSpec installer. Optional `--sources` adds staged source resolution/retention. Compare full IDs, normalized records,
 raw files, filename-only changes and added/removed edges. Potential impact uses both
 old/new closures and source references. Absent base graphs/genuinely unborn HEAD are
 empty baselines; invalid/unavailable revisions receive diagnostics.

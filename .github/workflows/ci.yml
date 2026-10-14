@@ -20,9 +20,9 @@ jobs:
           node-version: '22'
       - run: python -m pip install -e ".[dev]"
       - name: Validate the repository specification
-        run: python -m specspec validate --warnings-as-errors
+        run: python -m specspec check --warnings-as-errors
       - name: Validate the tracked Gantt fixture snapshot
-        run: python -m specspec --root example/gantt validate --warnings-as-errors
+        run: python -m specspec --root example/gantt check --warnings-as-errors
       - name: Verify example CLI receipts and Git history
         run: python example/gantt/history/verify.py --history
       - run: python -m ruff check .

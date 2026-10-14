@@ -76,10 +76,12 @@ format metadata, hashes, approval stages, Git staging, or commits are introduced
 
 ## Non-writing Python API
 
-`specspec editor --json [--base HEAD]` consumes JSON on stdin:
+The hidden `specspec api` integration adapter consumes bounded API-6 JSON on stdin:
 
 ```json
 {
+  "api_version": 6,
+  "op": "plan",
   "documents": {"_specspec/Zm9vYmE=summary.md": "---\n..."},
   "edit": {
     "path": "_specspec/Zm9vYmE=summary.md",
@@ -91,12 +93,14 @@ format metadata, hashes, approval stages, Git staging, or commits are introduced
 }
 ```
 
-Omit `edit` for a read. `sources` is JSON text for implementation nodes; shared forms may send neutral
+Use `op: "read"` without `edit` for a graph read; optional `base: "HEAD"` requests
+comparison. Electron uses the same operation without native overlays. `sources` in a
+plan is JSON text for implementation nodes; shared forms may send neutral
 `[]` for other types without adding a sources field. The backend uses the current
 text's type, including raw-editor changes, not an initial tab type. No `retired`
 field/edit exists. Delete is a confirmed managed project-file operation requiring
-clean SpecSpec documents, not a native metadata change pending Save. The result has `snapshot`, `diagnostics`,
-`changes` (`path`, exact `before`/`after` text), optional `diff`, and `note`.
+clean SpecSpec documents, not a native metadata change pending Save. The result has `snapshot`, `changes` (`path`, exact `before`/`after` text), optional
+compact `diff`, and `note`; structured diagnostics are in the envelope.
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
 explicit diagnostics, not successful graph validation. Unsafe paths, edits to
 missing files, identity changes, unsupported schemas, locks/recovery and oversized
@@ -106,8 +110,8 @@ count and uncommitted affected-node warnings (staged is not committed), then
 rechecks the reviewed scope under the writer lock. Dirty descendant documents
 remain protected by the project-wide save/revert guard. Reads skip overlays for already deleted files, so retained open
 buffers do not resurrect nodes. The planner never writes files or recreates a
-deleted node. The current planner uses API version 5;
-upgrade the development CLI and extension together to gain this new command.
+deleted node. The current application protocol is API 6 with unchanged node format 5;
+upgrade the CLI and both host builds together. See [compact commands](cli.md).
 
 ## Verification
 

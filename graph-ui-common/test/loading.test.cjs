@@ -47,7 +47,7 @@ test('valid working context renders before a delayed comparison with explicit pr
 test('historical comparisons bypass provisional working data',async t=>{
  let initial=0,session;const messages=[];
  session=new GraphSession({authorized:()=>true,initialGraph:async()=>{initial++;return {snapshot};},
- cli:async()=>({result:{base:snapshot,target:snapshot}}),renderMatches:()=>true,
+ readGraph:async()=>({snapshot,diff:{base:snapshot,target:snapshot},diagnostics:[],note:''}),renderMatches:()=>true,
  post:async m=>{messages.push(m);if(m.type==='snapshot')session.receive({type:'rendered',renderToken:m.renderToken});}});
  t.after(()=>session.dispose());session.target='HEAD';session.receive({type:'ready'});await session.open();assert.equal(initial,0);assert.equal(messages.at(-1).readonly,true);
 });

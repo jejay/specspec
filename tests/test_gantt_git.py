@@ -91,13 +91,13 @@ def test_historical_redirects_load_through_the_ui_diff_protocol(
     root = gantt_history
     original_index = git(root, "ls-files", "--stage")
     original_worktree = load_snapshot(root).files
-    result = CliRunner().invoke(
-        main, ["--root", str(root), "diff", "--base", base, "--target", target, "--json"]
-    )
+    result = CliRunner().invoke(main, ["--root", str(root), "diff", base, target, "--json"])
     assert result.exit_code == 0, result.output
     envelope = json.loads(result.output)
     assert envelope["ok"] and not envelope["diagnostics"]
-    diff = envelope["result"]
+    from specspec.wire import expand_comparison
+
+    diff = expand_comparison(envelope["result"])
     assert diff["base"]["valid"] and diff["target"]["valid"] and diff["impact_complete"]
     assert sum(change["kind"] == "removed" for change in diff["changes"]) == deleted
     assert diff["removed_edges"]
@@ -119,8 +119,8 @@ try {
     root: project.root, top: git('rev-parse','--show-toplevel'),
     commits: git('rev-list','--count','--all'),
     modified: project.modified, added: project.added, removed: project.removed,
-    diff: project.cli(['diff','--base','HEAD','--json']),
-    history: project.cli(['diff','--base','stage/02-code','--target','stage/03-spec','--json']),
+    diff: project.cli(['diff','HEAD','--json']),
+    history: project.cli(['diff','stage/02-code','stage/03-spec','--json']),
   }));
 } finally { project.cleanup(); }
 """

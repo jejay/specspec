@@ -22,7 +22,7 @@ def test_repository_spec_is_valid_and_has_no_missing_sources():
         if node.type == "implementation":
             assert node.sources, f"Implementation {node.id} needs real code or verification links."
     result = CliRunner().invoke(
-        main, ["--root", str(ROOT), "validate", "--warnings-as-errors", "--json"]
+        main, ["--root", str(ROOT), "check", "--warnings-as-errors", "--json"]
     )
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["ok"]

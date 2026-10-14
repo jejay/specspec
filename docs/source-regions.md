@@ -1,8 +1,8 @@
 # Implementation source regions
 
 Implementation `sources` supports whole-file hints and Git-addressed text regions.
-This is **current format/API 5**, retaining the source-region contract introduced
-in API 4, without an old-schema reader or permanent converter.
+Canonical **node format 5** and **application API 6** retain the source-region
+contract, with a compact current command surface.
 Node IDs still use five random bytes and padded Base64url, including `=`.
 
 ```yaml
@@ -72,13 +72,14 @@ specspec sources capture <implementation-id> src/other.py \
   --range 13:15 --mode expanding --staged
 # Review/stage the changed spec node normally; don't forget the source file.
 
-specspec sources resolve <implementation-id> --json
-specspec sources check <implementation-id> --json
-specspec sources resolve --staged --json
-specspec sources resolve --ref <revision> --json
+specspec sources show <implementation-id>
+specspec sources show <implementation-id> --source 1
+specspec check <implementation-id> --sources --json
+specspec sources show --staged --json
+specspec sources show --ref <revision> --json
 ```
 
-Resolve/check default to working graph/files. `--staged` reads **both metadata and
+Source inspection/checks default to working graph/files. `--staged` reads **both metadata and
 code from the index**; `--ref` reads both from that revision. `--graph-ref` can
 explicitly select different committed metadata. Selecting historical code for
 capture does not require an obsolete node-schema reader: the live node is current.
@@ -93,7 +94,7 @@ specspec sources reanchor <implementation-id> --source 1 \
 Source numbers are 1-based in the canonical JSON source ordering. Reanchor keeps
 mode/description, updates blob/path/ranges only after an explicit command and never
 approves implementation meaning. `capture --replace N` replaces a selected source;
-otherwise capture appends. `--preview` on capture/reanchor returns metadata without
+otherwise capture appends. `--dry-run` on capture/reanchor returns metadata without
 canonical writes. Ordinary writes use the existing lock/journal/byte transaction.
 
 ## Durability and checks
@@ -107,14 +108,14 @@ substitute another source version. No custom retention refs or orphan-object
 creation are implemented.
 
 ```sh
-specspec hook check --sources --json
+specspec check --staged --sources --json
 ```
 
 This optional check inspects exact staged nodes, staged source bytes and retention.
 It reports strict conflicts/missing/ambiguous/unavailable links with nonzero exit.
 Expanding modifications remain reported but don't fail this contract check. Default
-`hook check` still checks graph/schema only. Installation remains explicit and
-preserves existing hooks; this implementation installs none.
+`check --staged` checks graph/schema only. Owner-controlled Git hooks or CI can
+invoke it; SpecSpec does not install or replace hooks.
 
 Whole-file source impact reporting remains conservative. A change outside a linked
 region may alter imports, callers or other semantics; region mapping is **not** a

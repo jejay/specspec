@@ -13,7 +13,7 @@ function fixture(options = {}) {
       if (options.slow) await new Promise(resolve => setTimeout(resolve, 5));
       if (options.concurrent) { doc.version++; doc.text = '# External'; }
       const changes = request.edit ? [{ path: doc.path, before: request.documents[doc.path], after: request.edit.body ?? '# Unchanged' }] : [];
-      return { result: { snapshot: { valid: !options.invalid, nodes: [] }, diagnostics: options.invalid ? [{ code: 'SCHEMA', message: 'Invalid buffer' }] : [], changes } };
+      return { diagnostics: options.invalid ? [{ code: 'SCHEMA', message: 'Invalid buffer' }] : [], result: { snapshot: { valid: !options.invalid, nodes: [] }, changes } };
     },
   });
   const adapter = { id: 'node', nodeType: 'requirement', get: () => ({ ...doc }),
@@ -28,13 +28,13 @@ test('document planning never invokes a writer and serializes rapid edits agains
   await Promise.all([f.project.edit(f.adapter, edit('# First')), f.project.edit(f.adapter, edit('# Second'))]);
   assert.equal(f.doc.text, '# Second'); assert.equal(f.doc.dirty, true);
   assert.equal(f.confirmations.length, 0); assert.equal(notifications, 2);
-  assert.deepEqual(f.calls.map(c => c.args), [['editor', '--json'], ['editor', '--json']]);
+  assert.deepEqual(f.calls.map(c => c.args), [['api'], ['api']]);
   assert.equal(JSON.parse(f.calls[1].input).documents[f.doc.path], '# First');
 });
 test('native/other-view changes ask before overwriting; concurrent planning changes are refused', async () => {
   const f = fixture({ confirm: false }); f.doc.version = 2; f.doc.text = '# Native';
   assert.equal(await f.project.edit(f.adapter, edit('# Mine')), false);
-  assert.equal(f.doc.text, '# Native'); assert.equal(f.calls.length, 1); assert.equal(f.calls[0].args[0], 'editor');
+  assert.equal(f.doc.text, '# Native'); assert.equal(f.calls.length, 1); assert.equal(f.calls[0].args[0], 'api');
   assert.match(f.confirmations[0], /outside this form/);
   const concurrent = fixture({ concurrent: true });
   await assert.rejects(concurrent.project.edit(concurrent.adapter, edit('# Mine')), /changed while planning/);

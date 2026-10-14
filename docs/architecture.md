@@ -23,7 +23,7 @@ that same CLI contract, or imports the library into its own Python process.
 - **Canonical data is a Markdown DAG, not a database.** Each direct
   `_specspec/<id><slug>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only format/API 5
+  potentially multiple parents, and terminal implementations. Only node format 5, API 6
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
@@ -45,7 +45,7 @@ that same CLI contract, or imports the library into its own Python process.
 | --- | --- |
 | Owner in VS Code | Open a canonical node file for a native graph/text-document editor; use **Open Graph** for project actions or **Compare Revisions** for independent comparisons. Browse relationships, edit forms, inspect source previews and review Git differences. |
 | Owner in Electron | **Trust and Open** a local project, then use the same canvas, forms and comparisons. Saves use Python-managed commands rather than VS Code documents. |
-| Agent in its own harness | Invoke `specspec` from the shell with `--json`, or use the Python library. Read context/impact, deepen conclusions, link implementation sources and validate changes. People can use this CLI too. |
+| Agent in its own harness | Invoke `specspec` from the shell with `--json`, or use the Python library. Read context/dependents, deepen conclusions, link implementation sources and validate changes. People can use this CLI too. |
 | Direct Markdown and Git | Manual node edits are allowed. Ordinary editor/Git tools own raw text, staging, commits and branch selection. SpecSpec supplies graph-aware diagnostics, diffs and opt-in exact-index checks. |
 
 The **owner–agent conversation is outside SpecSpec**. The current product does not
@@ -57,13 +57,13 @@ A typical agent loop is:
 
 1. Inspect owner edits and the working/index state before acting; read the selected
    node and its complete ancestor context with `context <id> --json`.
-2. Use `impact <id> --json` and `diff --base <ref> --json` to understand dependencies
+2. Use `show <id> --dependents --json` and `diff <ref> --json` to understand dependencies
    and changes. Discuss consequential scope changes with the owner; use `add`/`update`
    for requested graph refinement and preview destructive `delete` operations.
 3. Implement under those intentions, keep implementation explanations and `sources`
    current, then run graph validation and the relevant code tests.
 4. Return differences, evidence and material uncertainty to the owner. When a commit
-   is authorized, stage deliberately and run `hook check` (optionally `--sources`)
+   is authorized, stage deliberately and run `check --staged` (optionally `--sources`)
    against that exact index before committing through ordinary Git tooling.
 
 **The CLI reads saved files, not VS Code's unsaved buffers.** Working VS Code views
@@ -85,7 +85,7 @@ coordinates with open documents; Python still enforces domain and managed-writer
 
 The bridge spawns the trusted executable with argument arrays, `--root`, and
 `shell: false`. Bodies or editor requests go through UTF-8 stdin. JSON stdout has
-`{api_version: 5, ok, result, diagnostics}`; process time and output are bounded.
+`{api_version: 6, ok, result, diagnostics}`; process time and output are bounded.
 CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
 or I/O failures. Invocation failures can lack JSON; the host also handles stderr,
 malformed stdout, timeouts and output limits. Bridge defaults are 120 seconds and
@@ -100,10 +100,11 @@ result dictionaries and handle `SpecError` directly. For example, `load_snapshot
 returns diagnostics and a `.valid` flag; `.require_valid()` raises for an unusable
 graph. There is no library RPC hop, UI-to-Python import or shared Python daemon.
 
-`list`, `show`, `context`, `impact` and `export` are read-side CLI entry points for
-engineers and agents. `context` includes the selected node and complete ancestor
-closure; immediate children/live siblings are optional. A byte budget reports
-omitted optional IDs and fails rather than truncating required binding text.
+`show`, `context`, `show ID --dependents` and `diff` are the compact read-side entry
+points for engineers/agents. Text/Markdown is default; explicit `--json` selects compact
+API 6. `context` contains complete selected/ancestor bindings and identifies surrounding
+IDs without dumping their bodies. Its explicit byte budget fails rather than truncating
+required text. [The command guide](cli.md) describes all eight everyday verbs.
 
 The renderer uses local assets and a nonce-protected CSP, inserting project text
 through `textContent`/`value`, never executable Markdown. Electron's
@@ -119,12 +120,14 @@ IPC API. VS Code requires workspace trust before invoking the tool.
    parent and node directory, reattaching after directory replacement. Events are
    hints, not a change log. The session coalesces bursts and retries transient reads;
    configurable polling defaults to **0/off**, and explicit Refresh remains.
-2. Working VS Code views use `ProjectDocuments.readGraph()` → `editor --json`,
-   overlaying all open node-document text on saved files. Electron uses `export`
-   and then a selected-base `diff` where available. A commit target instead uses
-   `diff --base ... --target ...`: it never checks out files or consumes invalid
-   working buffers. A valid workspace graph can still display with a
-   **diff-unavailable** note when its baseline cannot be read.
+2. Both hosts use `ProjectReads.readGraph()` → hidden `api`, `op: read` with an
+   optional base/target. Electron supplies saved files; VS Code adds native document
+   text through `ProjectDocuments`. Working-first startup is explicitly provisional;
+   normal comparison refresh uses one request with bounded verified baseline hints.
+   Historical targets use Git trees and ignore working buffers. A valid workspace
+   remains usable with a **diff-unavailable** note when its baseline cannot be read.
+   API 6 sends one target plus previous records only for differing/deleted nodes;
+   the shared adapter reconstructs both complete revision graphs for rendering.
 3. Identical automatic-refresh payloads do not redraw. Invalid reads preserve the
    last valid graph, explicitly mark it out of date, retain input and disable
    managed mutations. Bound native forms remain available for repair. No invalid
@@ -198,9 +201,9 @@ Electron intentionally retains the managed-save path.
 ## Git is another snapshot source, not another writer
 
 [`git.py`](../src/specspec/git.py) reads commit trees or the **exact staged blobs**
-through Git, then passes those bytes into the same snapshot engine. `hook check`
-validates the index, not repaired/unstaged working files; hook installation is
-opt-in and preserves existing hooks. Ordinary exploration never stages, commits or
+through Git, then passes those bytes into the same snapshot engine. `check --staged`
+validates the index, not repaired/unstaged working files. Owner-controlled hook/CI
+setup preserves existing commands; SpecSpec does not install or replace hooks. Ordinary exploration never stages, commits or
 switches branches.
 
 Semantic diffs match full IDs, distinguishing body/parent/metadata
@@ -251,7 +254,7 @@ history to work. See the [history walkthrough](../example/gantt/history/WALKTHRO
 From the development Python environment:
 
 ```sh
-python -m specspec validate --warnings-as-errors
+python -m specspec check --warnings-as-errors
 python -m ruff check .
 python -m ruff format --check .
 python -m pytest

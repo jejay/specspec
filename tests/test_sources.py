@@ -122,7 +122,7 @@ def test_capture_preview_resolve_and_reanchor_preserve_index_and_history(project
         "2:3",
         "--mode",
         "expanding",
-        "--preview",
+        "--dry-run",
     )
     assert code == 0 and not data["result"]["written"]
     assert load_snapshot(root).files == before and git(root, "ls-files", "--stage") == index
@@ -136,7 +136,7 @@ def test_capture_preview_resolve_and_reanchor_preserve_index_and_history(project
     )
     canonical = load_snapshot(root).files
     (root / "code.py").write_text("new\nbefore\nalpha\ninside\nbeta\nafter\n")
-    code, result = invoke(root, "sources", "resolve", node_id)
+    code, result = invoke(root, "sources", "show", node_id)
     assert code == 0 and result["result"]["sources"][0]["ranges"] == [[3, 5]]
     assert load_snapshot(root).files == canonical
     # Index deliberately remains the old code; explicit staged reanchor uses it.
@@ -153,7 +153,7 @@ def test_strict_check_rejects_internal_edit_but_explicit_reanchor_can_replace(pr
         == 0
     )
     (root / "code.py").write_text("before\nalpha\nadded\nbeta\nafter\n")
-    code, result = invoke(root, "sources", "check", node_id)
+    code, result = invoke(root, "check", node_id, "--sources")
     assert code == 1 and result["diagnostics"][0]["code"] == "SOURCE_LINK"
     git(root, "add", "code.py")
     assert invoke(root, "sources", "reanchor", node_id, "--source", "1", "--staged")[0] == 1
@@ -187,10 +187,10 @@ def test_same_commit_index_blob_capture_and_hook_reads_exact_index(project):
     git(root, "add", "_specspec")
     index = git(root, "ls-files", "--stage")
     (root / "new.py").write_text("one\nchanged\nthree\n")
-    assert invoke(root, "hook", "check", "--sources")[0] == 0
+    assert invoke(root, "check", "--staged", "--sources")[0] == 0
     assert git(root, "ls-files", "--stage") == index
     git(root, "add", "new.py")
-    assert invoke(root, "hook", "check", "--sources")[0] == 1
+    assert invoke(root, "check", "--staged", "--sources")[0] == 1
 
 
 def test_unretained_blob_and_wrong_object_type_are_explicit(project):
@@ -280,8 +280,13 @@ def test_view_is_literal_and_nonwriting(project):
     root, node_id = project
     source = SourceReader(root, ref="HEAD").capture("code.py", [[2, 3]], "strict")
     before = load_snapshot(root).files
-    code, result = invoke(root, "sources", "view", "--reference", json.dumps(source))
-    assert code == 0 and result["result"]["chunks"][0]["selected"] == [2, 3]
+    response = CliRunner().invoke(
+        main,
+        ["--root", str(root), "api"],
+        input=json.dumps({"api_version": 6, "op": "source-view", "reference": source}),
+    )
+    result = json.loads(response.output)
+    assert response.exit_code == 0 and result["result"]["chunks"][0]["selected"] == [2, 3]
     assert load_snapshot(root).files == before
 
 

@@ -6,6 +6,11 @@ function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
   return {
     before: async ({ evaluate, screenshot, delay }) => {
+      // Working-first is intentionally a usable graph without Git classification.
+      // Git-paint assertions need the completed comparison, not the first cards.
+      const compared = () => evaluate(`${JSON.stringify([[added,'A'],[modified,'M'],[removed,'D']])}.every(([id,letter])=>document.querySelector('[data-node-id="'+id+'"] .git-corner')?.textContent===letter)`);
+      for (let i=0;i<300 && !await compared();i++) await delay(100);
+      assert.ok(await compared(), 'Completed HEAD comparison must supply all A/M/D markers.');
       const check = () => evaluate(`(() => {
         const cases=${JSON.stringify([[added,'A'],[modified,'M'],[removed,'D']])};
         return cases.map(([id,letter])=>{const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===id),mark=c?.querySelector('.git-corner'),head=c?.querySelector('strong,h2');
@@ -35,7 +40,7 @@ function platformChecks(fixture, host) {
       }
       // A real root change in the independent disposable clone exercises the new
       // revision-mode exception, not a synthetic renderer-only status injection.
-      const root=fixture.cli(['list','--json']).nodes.find(n=>n.type==='manifesto');
+      const root=fixture.cli(['show','--json']).nodes.find(n=>n.type==='manifesto');
       fixture.cli(['update',root.id,'--body','-','--json'],root.body+'\nRoot revision-color fixture.\n');
       for(let i=0;i<300;i++) {
         if(await evaluate(`document.querySelector('#cards .card.manifesto.changed')!==null`)) break;
@@ -53,7 +58,7 @@ function platformChecks(fixture, host) {
       // Stage only the already deleted fixture file, not unrelated A/M drafts.
       await evaluate(`document.getElementById('back').click()`);
       assert.ok(await evaluate(`document.querySelector('[data-node-id="${removed}"].removed')!==null`));
-      const base = fixture.cli(['diff','--base','HEAD','--json']).base;
+      const base = fixture.cli(['diff','HEAD','--json']).base;
       const deletedPath = base.nodes.find(n=>n.id===removed).path;
       assert.equal(existsSync(join(fixture.root,deletedPath)),false);
       const git = (...args) => execFileSync('git',['-C',fixture.root,...args],{stdio:'pipe'});
@@ -68,7 +73,7 @@ function platformChecks(fixture, host) {
       console.log(`${host}: physical deletion D survives staging and vanishes after commit through Git watching without Refresh/polling.`);
       // A whole descendant cascade, including two levels shared with an outside
       // parent, over the maintained history (not an invented one-commit baseline).
-      const current = fixture.cli(['list','--json']);
+      const current = fixture.cli(['show','--json']);
       const manifesto = current.nodes.find(n=>n.type==='manifesto');
       const outside = current.nodes.find(n=>n.id===fixture.modified);
       const outsideBytes = readFileSync(join(fixture.root,outside.path));
@@ -78,11 +83,11 @@ function platformChecks(fixture, host) {
       const partial = add([branch,outside.id],'cascade-partial-child');
       const deep = add([partial,outside.id],'cascade-deeper-partial-child');
       const committed = [branch,full,partial,deep];
-      const files = fixture.cli(['list','--json']).nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
+      const files = fixture.cli(['show','--json']).nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
       git('add','--',...files);
       git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable full and shared descendant branch');
       const fresh = add([deep,outside.id],'cascade-never-committed-child');
-      const deepPath = fixture.cli(['list','--json']).nodes.find(n=>n.id===deep).path;
+      const deepPath = fixture.cli(['show','--json']).nodes.find(n=>n.id===deep).path;
       fixture.cli(['update',deep,'--body','-','--json'],'# Staged but uncommitted descendant\n');
       git('add','--',deepPath);
       const plan = fixture.cli(['delete',branch,'--dry-run','--json']);

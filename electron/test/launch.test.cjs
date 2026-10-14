@@ -28,10 +28,10 @@ test('launch-resolved executable actually runs with a different project cwd', as
   const project = mkdtempSync(join(tmpdir(), 'specspec-relative-interpreter-'));
   t.after(() => rmSync(project, { recursive: true, force: true }));
   const script = join(project, 'cli.cjs');
-  writeFileSync(script, 'process.stdout.write(JSON.stringify({api_version:5,ok:true,result:{cwd:process.cwd(),argv:process.argv.slice(2)},diagnostics:[]}));');
+  writeFileSync(script, 'process.stdout.write(JSON.stringify({api_version:6,ok:true,result:{cwd:process.cwd(),argv:process.argv.slice(2)},diagnostics:[]}));');
   const launch = resolve(__dirname, '..');
   const executable = resolveExecutable(relative(launch, process.execPath), launch);
-  const result = await invoke(executable, [script], project, ['list', '--json']);
+  const result = await invoke(executable, [script], project, ['show', '--json']);
   assert.equal(result.result.cwd, project);
-  assert.deepEqual(result.result.argv, ['--root', project, 'list', '--json']);
+  assert.deepEqual(result.result.argv, ['--root', project, 'show', '--json']);
 });

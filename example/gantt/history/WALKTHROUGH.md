@@ -39,9 +39,9 @@ From the new example folder:
 ```sh
 git rev-parse --show-toplevel  # Must be this example folder, not SpecSpec.
 git log --oneline --all
-python -m specspec validate --warnings-as-errors
-python -m specspec diff --base stage/01-code --target stage/02-spec --json
-python -m specspec diff --base stage/02-code --target stage/03-spec --json
+python -m specspec check --warnings-as-errors
+python -m specspec diff stage/01-code stage/02-spec
+python -m specspec diff stage/02-code stage/03-spec
 ```
 
 In the graph UI, choose the clone as the project, then **Compare Revisions** with
@@ -109,7 +109,7 @@ python -m pytest tests/test_example_checkout.py tests/test_gantt_example.py test
 
 The verifier clones temporarily and checks **all retained refs/commits**, current
 schema/DAG, positive current bindings, agent specification commit names, independent
-Git/index, tags, actual receipt/context/impact contents,
+Git/index, tags, actual receipt/context/dependent contents,
 stage ordering, both deletion sets/reasons, semantic/edge/source diffs and all runnable
 model stages. It compares the final runtime/tests and graph with the tracked
 snapshot to catch drift. Git integration and real-host fixtures use the same clone
@@ -117,6 +117,11 @@ helper; host fixtures add disposable A/M/D worktree changes without discarding
 history. CI runs the final model/browser app in an independent clone. Focused unit
 fixtures may be smaller independently generated current-schema projects. No test
 requires obsolete SpecSpec development revisions or a full root-history fetch.
+
+The current receipts use application API 6 and node format 5 throughout the maintained
+history. Command/protocol cutovers refresh actual receipts, teaching text, ledgers,
+refs, source retention, bundle and snapshot together; runnable application code and
+historical node identities remain stable. Old manual clones remain preserved.
 
 ## Every schema change requires a full example-history rewrite
 

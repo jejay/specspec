@@ -1,11 +1,9 @@
-"""Git snapshots, semantic graph diffs, and index-validation hooks."""
+"""Git snapshots, semantic graph diffs and exact-index validation."""
 
 from __future__ import annotations
 
 import os
-import shlex
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -250,45 +248,3 @@ def source_change_impact(
                         affected.update(snapshot.graph.closure(node.id, ancestors=True))
         changes.append({"path": path, "implementation_ids": sorted(implementation_ids)})
     return {"source_changes": changes, "source_affected": sorted(affected)}
-
-
-def install_hook(root: Path) -> Path:
-    resolved = (
-        run_git(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/pre-commit")
-        .decode()
-        .strip()
-    )
-    path = Path(resolved)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # Exclusive creation avoids overwriting existing hooks, including a racing installer.
-    command = " ".join(
-        shlex.quote(arg)
-        for arg in [
-            sys.executable.replace("\\", "/"),
-            "-m",
-            "specspec",
-            "--root",
-            str(root.resolve()).replace("\\", "/"),
-            "hook",
-            "check",
-        ]
-    )
-    script = (
-        "#!/bin/sh\n# Installed by SpecSpec; validates staged nodes, not working files.\n"
-        f"exec {command}\n"
-    )
-    try:
-        with path.open("x", encoding="utf-8", newline="\n") as stream:
-            stream.write(script)
-    except FileExistsError as error:
-        raise SpecError(
-            [
-                Diagnostic(
-                    "HOOK_EXISTS",
-                    "Existing hook preserved; chain specspec hook check manually.",
-                    str(path),
-                )
-            ]
-        ) from error
-    os.chmod(path, path.stat().st_mode | 0o111)
-    return path

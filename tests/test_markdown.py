@@ -38,21 +38,18 @@ def test_cli_outputs_have_no_content_hashes(workspace):
     root, manifesto = workspace
     runner = CliRunner()
     for args in [
-        ["list"],
+        ["show"],
         ["show", manifesto],
-        ["impact", manifesto],
+        ["show", manifesto, "--dependents"],
         ["context", manifesto],
-        ["validate"],
-        ["export", "--format", "json"],
+        ["check"],
     ]:
         result = runner.invoke(
             main,
-            ["--root", str(root), *args, "--json"]
-            if args[0] != "export"
-            else ["--root", str(root), *args],
+            ["--root", str(root), *args, "--json"],
         )
         assert result.exit_code == 0, result.output
         envelope = json.loads(result.output)
-        assert envelope["api_version"] == 5
+        assert envelope["api_version"] == 6
         assert "fingerprint" not in envelope["result"]
         assert "managed_hash" not in result.output

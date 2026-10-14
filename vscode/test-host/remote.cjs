@@ -22,7 +22,7 @@ exports.run = async () => {
     assert.equal(extension.extensionKind, vscode.ExtensionKind.Workspace);
     assert.equal(extension.extensionUri.scheme, 'file');
     const cli = args => JSON.parse(execFileSync(config.python, ['-m','specspec','--root',root.fsPath,...args], {encoding:'utf8',timeout:120000})).result;
-    const saved = cli(['export','--format','json']);
+    const saved = cli(['show','--json']);
     const started = Date.now();
     const graph = await vscode.commands.executeCommand('specspec.openGraph', root);
     assert.equal(graph.valid,true);assert.deepEqual(graph.nodes.map(n=>n.id),saved.nodes.map(n=>n.id));
@@ -41,7 +41,8 @@ exports.run = async () => {
     report.phases.push({phase:'remote-native-document-and-overlay',ok:true});
     const impl = saved.nodes.find(n=>n.sources.some(s=>s.blob));
     if (impl) {
-      const preview = cli(['sources','view','--reference',JSON.stringify(impl.sources.find(s=>s.blob)),'--json']);
+      const number = impl.sources.findIndex(s=>s.blob) + 1;
+      const preview = cli(['sources','show',impl.id,'--source',String(number),'--json']);
       assert.ok(preview.chunks.length);report.phases.push({phase:'remote-source-object-preview',ok:true});
     }
     report.ok=true;

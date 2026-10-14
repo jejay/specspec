@@ -46,7 +46,7 @@ files; frontmatter holds identity/type/parents and the body holds binding text.
 choose padded RFC 4648 Base64url over five random bytes: **40 bits**, seven payload
 symbols and the full trailing `=`. Filename form: `<id><slug>.md`. Lock-scoped
 creation retries exact/casefold collisions; validation checks portable aliases.
-Current **format/API 5** defines the sole supported node scheme. Schema errors and
+Current **node format 5** defines the sole supported node scheme; **API 6** defines the compact application protocol. Schema errors and
 unsupported historical formats receive diagnostics. Source blob IDs address code
 contents; transaction protection compares original bytes.
 
@@ -88,14 +88,14 @@ objects and mapping budgets remain explicit. Git trees retain anchor objects.
 
 [Implementation](../_specspec/vQFml0Y=blob-source-regions-implementation-and-current-history-evidence.md)
 links its own strict schema and expanding resolver/command anchors. Whole-file hints
-remain usable. [The source guide](source-regions.md) documents capture/resolve/check/
-reanchor/view, literal previews, retention and limits. Capture uses the existing
+remain usable. [The source guide](source-regions.md) documents inspection/capture/check/
+reanchor, literal previews, retention and limits. Capture uses the existing
 native or managed form's save owner. File-level source impact stays conservative.
 
 [Exact-index and revision reasoning](../_specspec/Yfy0414=staged-validation-and-semantic-diffs.md)
-checks staged blobs and compares full IDs/edges/sources without checkout. Opt-in hook
-installation respects existing hooks. `hook check --sources` also assesses staged
-code mapping/retention. Git operations remain under owner control.
+checks staged blobs and compares full IDs/edges/sources without checkout.
+Owner-configured hooks/CI call `check --staged`; adding `--sources` assesses staged
+code mapping/retention. Hook files and Git operations remain under owner control.
 
 ## Shared host experience
 
@@ -142,7 +142,11 @@ and [compact API 6](../_specspec/cpFRqIM=compact-versioned-json-with-reconstruct
 Canonical node format remains **5**. The [shared read path](../_specspec/-UedVEw=shared-electron-and-vscode-graph-read-path.md)
 serves both hosts with optional native overlays; [safeguards](../_specspec/nIj9fmE=compact-interface-preserves-deletion-and-source-guards.md)
 and [coordinated examples/cutover](../_specspec/4ZvnSGw=current-cli-receipts-and-coordinated-protocol-cutover.md)
-retain their domain and verification boundaries.
+retain their domain and verification boundaries. The [command guide](cli.md) gives
+current operational recipes; original owner source remains unchanged in AGENTS.md.
+[CLI/review implementation](../_specspec/SF12qpA=compact-cli-and-full-review-implementation.md)
+and [shared host implementation](../_specspec/GG_koyg=shared-read-coordinator-and-compact-host-adapter-implementation.md)
+map the code and verification seams.
 
 ## Neighborhood UI revision
 
@@ -234,14 +238,14 @@ tracks shared launch files. Diagnostics, backups and experiments stay available.
 Use the installed CLI or development Python; this checkout already has a graph:
 
 ```sh
-python -m specspec list --json
-python -m specspec context <full-id> --json
-python -m specspec impact <full-id> --json
+python -m specspec show
+python -m specspec context <full-id>
+python -m specspec show <full-id> --dependents
 python -m specspec update <full-id> --body <body-file>
 python -m specspec delete <full-id> --dry-run --json
-python -m specspec validate --warnings-as-errors
-python -m specspec hook check --sources
-python -m specspec --root example/gantt hook check --sources
+python -m specspec check --warnings-as-errors
+python -m specspec check --staged --sources
+python -m specspec --root example/gantt check --staged --sources
 python example/gantt/history/verify.py --history
 ```
 

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1930" viewBox="0 0 1840 1930" role="img" aria-labelledby="architecture-title architecture-description">
   <title id="architecture-title">SpecSpec architecture: one graph, human and agent workflows</title>
-  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the SpecSpec CLI. Their conversation takes place outside SpecSpec; built-in agent connectors are future work. The unprivileged renderer sends SpecSpecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and API 5 JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in _specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
-  <metadata>Current format/API 5 implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: _specspec/ and docs/own-spec.md.</metadata>
+  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the SpecSpec CLI. Their conversation takes place outside SpecSpec; built-in agent connectors are future work. The unprivileged renderer sends SpecSpecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and API 6 JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in _specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
+  <metadata>Current node format 5 / API 6 implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: _specspec/ and docs/own-spec.md.</metadata>
   <defs>
     <style>
       text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
@@ -38,7 +38,7 @@
     <text x="64" y="132" class="title">One graph, two ways in.</text>
     <text x="64" y="176" class="subtitle">A visual workspace for the owner. A CLI for the coding agent. Shared rules beneath both.</text>
     <rect x="1496" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
-    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · FORMAT / API 5</text>
+    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · FORMAT 5 / API 6</text>
     <path d="M1572 140H1618" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
     <path d="M1644 140H1690" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
     <path d="M1716 140H1762" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
@@ -114,14 +114,14 @@
       <text x="340" y="774" class="heading">Shell / terminal</text>
       <text x="730" y="772" class="caption">People can use this too.</text>
       <text x="340" y="813" class="code" style="font-size:21px">specspec context &lt;id&gt; --json</text>
-      <text x="340" y="848" class="small">impact · diff · sources · add · update · delete · validate</text>
+      <text x="340" y="848" class="small">show · diff · sources · add · update · delete · check</text>
     </g>
 
-    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; API 5 JSON, records and diagnostics come back">
+    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; API 6 JSON, records and diagnostics come back">
       <path d="M940 610H1104" class="request"/>
       <text x="1022" y="589" text-anchor="middle" class="label purple">argv + stdin</text>
       <path d="M1104 646H940" class="response"/>
-      <text x="1022" y="674" text-anchor="middle" class="label teal">API 5 JSON</text>
+      <text x="1022" y="674" text-anchor="middle" class="label teal">API 6 JSON</text>
       <text x="1022" y="702" text-anchor="middle" class="caption">shell: false</text>
       <path d="M940 782H1104" class="request"/>
       <text x="1022" y="760" text-anchor="middle" class="label purple">read / change</text>
@@ -240,7 +240,7 @@
       <text x="88" y="1453" class="body" style="font-size:20px;font-weight:650;fill:#203a40">editor</text>
       <text x="88" y="1486" class="caption">Form or raw Markdown</text>
       <text x="352" y="1388" class="heading" style="font-size:22px">Python plans</text>
-      <text x="352" y="1424" class="code">editor --json</text>
+      <text x="352" y="1424" class="code">api · op: plan</text>
       <text x="352" y="1453" class="small">before / after + diagnostics</text>
       <text x="352" y="1486" class="caption">No file write here</text>
       <path d="M609 1402H666" class="response"/>
@@ -271,7 +271,7 @@
       <text x="326" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">1</text>
       <text x="348" y="1704" class="body" style="font-weight:650;fill:#203a40">Read the workbench</text>
       <text x="314" y="1736" class="caption">Owner edits + complete ancestors</text>
-      <text x="314" y="1763" class="code" style="font-size:16px">git diff · context · impact</text>
+      <text x="314" y="1763" class="code" style="font-size:16px">git diff · context · dependents</text>
     </g>
     <path d="M609 1700H669" class="request"/>
     <g id="reason-and-refine" aria-label="Reason about intentions and deepen independently revisable conclusions">
@@ -294,12 +294,12 @@
       <circle cx="1491" cy="1697" r="12" fill="#dbe8dd"/>
       <text x="1491" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">4</text>
       <text x="1513" y="1704" class="body" style="font-weight:650;fill:#203a40">Verify &amp; review</text>
-      <text x="1479" y="1736" class="code" style="font-size:16px">validate · diff · owner feedback</text>
+      <text x="1479" y="1736" class="code" style="font-size:16px">check · diff · owner feedback</text>
       <text x="1479" y="1763" class="caption">Evidence informs the next choice</text>
     </g>
     <text x="314" y="1810" class="eyebrow" style="font-size:12px;letter-spacing:1px">WHEN A COMMIT IS AUTHORIZED</text>
-    <text x="662" y="1810" class="code" style="font-size:17px">git add → specspec hook check [--sources] → git commit</text>
-    <text x="314" y="1839" class="caption">The hook checks exact staged blobs. SpecSpec never stages or commits for you; hook installation is opt-in.</text>
+    <text x="662" y="1810" class="code" style="font-size:17px">git add → specspec check --staged [--sources] → git commit</text>
+    <text x="314" y="1839" class="caption">Check exact staged blobs. SpecSpec never stages, commits or installs hooks; hook setup belongs to you.</text>
     <path d="M1744 1782V1861H304V1782" class="hint"/>
     <rect x="958" y="1847" width="302" height="26" fill="#f8f9f4"/>
     <text x="1109" y="1867" text-anchor="middle" class="caption">Feedback → next revision</text>

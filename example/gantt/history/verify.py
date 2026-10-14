@@ -112,7 +112,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             node = records[argv[3]]
             if "--body" in argv:
                 node.body = receipt["stdin"]
-            if "--parent" in argv or "--clear-parents" in argv:
+            if "--parent" in argv:
                 node.parents = [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"]
             if "--sources" in argv:
                 node.sources = json.loads(argv[argv.index("--sources") + 1])
@@ -134,10 +134,10 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             assert set(result["required_ids"]) == graph.closure(selected, ancestors=True) | {
                 selected
             }
-        elif action == "impact":
+        elif action == "show" and "--dependents" in argv:
             assert result["id"] == argv[3]
             assert set(result["affected"]) == graph.closure(argv[3])
-        elif action == "validate":
+        elif action == "check":
             assert result["node_count"] == len(records)
         assert action in {
             "init",
@@ -145,8 +145,8 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             "update",
             "delete",
             "context",
-            "impact",
-            "validate",
+            "show",
+            "check",
         }
         recorded_graphs[ordinal] = {key: node.to_dict() for key, node in records.items()}
     assert recorded_graphs[len(receipts)] == contents(current), (
@@ -180,7 +180,11 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 fixture, "rev-parse", "stage/04-audit"
             )
             # Check ALL retained refs, not just main: no obsolete branch/tag may hide.
-            commits = run_git(fixture, "rev-list", "--reverse", "--all").decode().splitlines()
+            commits = (
+                run_git(fixture, "rev-list", "--topo-order", "--reverse", "--all")
+                .decode()
+                .splitlines()
+            )
             assert len(commits) == 8, commits
             for index, ref in enumerate(commits):
                 snapshot = git_snapshot(fixture, ref, allow_empty=index == 0)

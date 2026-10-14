@@ -58,12 +58,12 @@ def test_generated_documents_validate_before_hashing_bad_library_inputs(workspac
         serialize(replace(node, type="implementation", format_version=None, sources=[{}]))
 
 
-def test_export_errors_use_json_for_the_extension(workspace):
+def test_show_errors_use_json_for_the_extension(workspace):
     import json
 
     root, _ = workspace
     (root / "_specspec" / "bad.txt").write_text("bad")
-    result = CliRunner().invoke(main, ["--root", str(root), "export", "--format", "json"])
+    result = CliRunner().invoke(main, ["--root", str(root), "show", "--json"])
     assert result.exit_code == 1
     assert not json.loads(result.output)["ok"]
 

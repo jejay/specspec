@@ -1,6 +1,7 @@
 # SpecSpec
 
-Tool-managed Markdown specification graphs, with a Python CLI and a VS Code graph editor.
+Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
+[Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
 
 New engineers: [architecture guide](docs/architecture.md) and
 [owner/agent workflow SVG](docs/architecture.svg).
@@ -37,13 +38,13 @@ explains the recurring obligation. Plausible graph emergence/revision is enough;
 
 ## Implementation source regions
 
-[Source-region guide](docs/source-regions.md): current format/API 5 supports
+[Source-region guide](docs/source-regions.md): canonical node format 5 supports
 whole-file hints and full Git blob anchors with multiple inclusive ranges.
 **Strict** (specific) reports internal changes; **expanding** (broad) includes them.
 Positions resolve without renumbering the spec; ambiguity/deletion/unavailable
 objects remain explicit. Both hosts offer literal source previews and capture
-into their existing forms. `sources capture/resolve/check/reanchor` and optional
-`hook check --sources` keep writes, staging and object retention deliberate.
+into their existing forms. `sources show/capture/reanchor` and optional
+`check --staged --sources` keep writes, staging and object retention deliberate.
 No node fingerprints, approval gates or automatic Git writes return.
 
 ## Install from this checkout
@@ -72,10 +73,10 @@ python -m ruff check .
 After installation, from this repository root:
 
 ```sh
-specspec validate --warnings-as-errors
-specspec list --json
-specspec context qowy5AI= --json
-specspec export --format mermaid
+specspec check --warnings-as-errors
+specspec show
+specspec context qowy5AI=
+specspec diff
 ```
 
 The context example follows the current compact-ID conclusion back to its intentions.
@@ -89,10 +90,10 @@ root schemas. Review is a spectrum of confidence: users often spend more attenti
 This checkout already has a graph: do not run `init` here. In a different project, write manifesto **body text** in a file outside `_specspec`, then:
 
 ```sh
-specspec init --manifesto manifesto.md
-specspec list --json
-specspec add --parent <manifesto-id> --slug validate-edits --body requirement.md
-specspec validate
+specspec init manifesto.md
+specspec show
+specspec add --parent <manifesto-id> --body requirement.md
+specspec check
 specspec update <requirement-id> --body revised-requirement.md
 specspec context <requirement-id> --json
 ```
@@ -112,7 +113,7 @@ The flat `_specspec` directory contains nodes only. Global `format_version` meta
 
 ## Schema, deletion and the default HEAD comparison
 
-Format/API **5** has no `managed_hash`, `status` or `retired` field. Withdraw a node
+Canonical node format **5** has no `managed_hash`, `status` or `retired` field. Withdraw a node
 by deleting its Markdown file (`specspec delete <id>...` or a valid manual deletion).
 Explain why in your normal Git commit. Earlier content stays in Git history, not
 flagged files. Managed deletion cascades through every full/partial child at every
@@ -128,7 +129,7 @@ nodes. Unborn Git has an empty baseline; non-Git/invalid baselines show a clear
 comparison-unavailable note. No default polling, staging, commits or status-restore
 workflow is introduced. Native-document Delete requires saved project documents.
 
-Only the current compact-ID format/API **5** schema is supported. Obsolete
+Only the current compact-ID node format **5** schema and structured API **6** are supported. Obsolete
 node formats, UUID IDs and unknown fields are rejected, not silently normalized.
 There is no permanent migration command or editor conversion control. Both working
 graphs were converted once through a temporary journaled tool. Old root-history
@@ -139,21 +140,20 @@ rebuilt through current CLI executions and is cloned from its bundle for tests.
 ## Git
 
 ```sh
-specspec hook install
 # Stage your node changes normally, then:
-specspec hook check
-specspec diff --base HEAD --json
-specspec diff --base <older-commit> --target <newer-commit> --json
+specspec check --staged
+specspec diff --json
+specspec diff <older-commit> <newer-commit> --json
 ```
 
-The pre-commit hook validates the **staged** node blobs, including schema and graph relationships. It does not confuse unstaged edits with the contents being committed. Installation refuses existing hooks and respects `core.hooksPath`; chain `specspec --root <project> hook check` manually when another hook already exists. The installed hook uses the Python environment from installation, which must remain available; reinstall it after moving environments.
+`check --staged` validates **exact staged** node blobs, including partially staged files, without confusing them with unstaged repairs. Configure your own hook framework or manually managed Git hook to call `specspec --root <project> check --staged`, preserving existing commands and executable selection. SpecSpec does not install/replace hooks. Existing hook recipes using old commands need an explicit owner-controlled update.
 
 Comparisons require current-schema graph snapshots. For a compliant historical
 corpus, run `python example/gantt/history/checkout.py` and use the independent
 clone as described in its walkthrough. Do not run historical comparisons in the
 tracked snapshot or reuse obsolete development-repository commit IDs.
 
-Hooks guard against inconsistent graphs, not manual edits, adversarial modification, or proof of review. Hooks can be bypassed. Add CI validation for repository-wide protection. Installing a hook does not stage files, commit changes, or modify project ignore rules; keep `.specspec-local/` ignored in the target repository.
+Hooks guard against inconsistent graphs, not manual edits, adversarial modification or proof of review. Hooks can be bypassed. Add CI checks for repository-wide protection; keep `.specspec-local/` ignored in the target repository.
 
 ## VS Code extension
 

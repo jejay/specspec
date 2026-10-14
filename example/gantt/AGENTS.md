@@ -37,7 +37,8 @@ and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
 manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
-Use `list`, `context` and `impact` before code changes. Current format/API 5 uses
+Use `show`, `context` and `show ID --dependents` before code changes.
+Canonical node format 5 and application API 6 use
 canonical padded Base64url IDs over five bytes, including `=`, and `<id><slug>.md`
 files. Valid manual Markdown is usable; graph-aware CLI/UI edits are recommended.
 Delete removes the full descendant closure, including shared children, with warnings
@@ -59,10 +60,10 @@ commits, and existing clones retain their experiments.
 Before an authorized SpecSpec-checkout commit, run from its root:
 
 ```sh
-python -m specspec hook check --sources
-python -m specspec --root example/gantt hook check --sources
+python -m specspec check --staged --sources
+python -m specspec --root example/gantt check --staged --sources
 ```
 
-In a standalone clone, check its own exact index. Hook installation is explicit and
-preserves existing hooks. Browser runtime uses local scripts and literal project
+In a standalone clone, check its own exact index. Git hook/CI setup is owner-managed;
+call check --staged while preserving existing hook commands. Browser runtime uses local scripts and literal project
 text; model tests run with Node and browser tests use an installed browser.

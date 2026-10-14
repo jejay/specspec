@@ -30,9 +30,9 @@ Open **that clone** as the project in VS Code/Electron. From the clone:
 
 ```sh
 git rev-parse --show-toplevel
-python -m specspec validate --warnings-as-errors
-python -m specspec diff --base stage/01-code --target stage/02-spec --json
-python -m specspec diff --base stage/02-code --target stage/03-spec --json
+python -m specspec check --warnings-as-errors
+python -m specspec diff stage/01-code stage/02-spec
+python -m specspec diff stage/02-code stage/03-spec
 ```
 
 Use the same tags in **Compare Revisions**. The clone has its own Git root, index,
@@ -96,8 +96,8 @@ is unrelated to obsolete SpecSpec node schemas.
 From the clone:
 
 ```sh
-python -m specspec list --json
-python -m specspec diff --base HEAD --json
+python -m specspec show
+python -m specspec diff
 python -m specspec context <full-id> --json
 npm test
 npm run test:browser
@@ -123,6 +123,6 @@ history. Existing Windows browser evidence is bounded prototype verification,
 not exhaustive accessibility/platform/performance/security proof or a remote CI claim.
 
 Before an authorized SpecSpec-checkout commit, validate both **exact staged** graphs
-from its root: `python -m specspec hook check` and
-`python -m specspec --root example/gantt hook check`. In an independent example
-repository, only its own `hook check` applies. No hooks are installed automatically.
+from its root: `python -m specspec check --staged` and
+`python -m specspec --root example/gantt check --staged`. In an independent example
+repository, only its own `check --staged` applies. No hooks are installed automatically.

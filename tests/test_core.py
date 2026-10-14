@@ -211,9 +211,7 @@ def test_symlink_rejection(workspace, tmp_path):
 def test_cli_end_to_end_and_budget(tmp_path):
     runner = CliRunner()
     prefix = ["--root", str(tmp_path)]
-    result = runner.invoke(
-        main, [*prefix, "init", "--manifesto", "-", "--json"], input="# Purpose\n"
-    )
+    result = runner.invoke(main, [*prefix, "init", "-", "--json"], input="# Purpose\n")
     assert result.exit_code == 0, result.output
     manifesto = json.loads(result.output)["result"]["changed_ids"][0]
     result = runner.invoke(
@@ -224,7 +222,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     assert result.exit_code == 0, result.output
     node_id = json.loads(result.output)["result"]["changed_ids"][0]
     assert runner.invoke(main, [*prefix, "accept", node_id, "--json"]).exit_code == 2
-    assert json.loads(result.output)["api_version"] == 5
+    assert json.loads(result.output)["api_version"] == 6
     assert (
         runner.invoke(
             main,
@@ -238,9 +236,8 @@ def test_cli_end_to_end_and_budget(tmp_path):
     result = runner.invoke(main, [*prefix, "context", node_id, "--max-bytes", "10", "--json"])
     assert result.exit_code == 1
     assert json.loads(result.output)["diagnostics"][0]["code"] == "BUDGET"
-    assert runner.invoke(main, [*prefix, "export", "--format", "mermaid"]).output.startswith(
-        "graph TD"
-    )
+    assert runner.invoke(main, [*prefix, "export", "--format", "mermaid"]).exit_code == 2
+    assert "Child" in runner.invoke(main, [*prefix, "show"]).output
     assert runner.invoke(main, [*prefix, "update", node_id, "--json"]).exit_code == 2
 
 

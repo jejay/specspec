@@ -19,14 +19,19 @@ sources:
 - path: vscode/test-host/remote.cjs
 - path: docs/remote-workspaces.md
 - path: docs/loading.md
+- path: graph-ui-common/host/reads.cjs
+- path: graph-ui-common/host/wire.cjs
+- path: graph-ui-common/test/wire.test.cjs
+- path: electron/main.cjs
 ---
 # Adapt workspace-host execution and working-first graph delivery
 
 The VS Code manifest declares workspace placement, real-filesystem capability,
 and opt-in loading diagnostics. The adapter uses host-file resources, remote
 executable settings, VS Code asset routing/messages and native persistence.
-ProjectDocuments shares identical in-flight reads with before/after actual document
-stamps, isolated view payloads and bounded verified baseline hints. Native bootstrap
+ProjectReads shares identical in-flight reads in Electron and VS Code with
+before/after document/generation stamps, isolated view payloads and bounded verified
+baseline hints. ProjectDocuments adds native planning and persistence coordination. Native bootstrap
 supplies initial usable context while preserving asynchronous editor wiring.
 GraphSession first renders explicit provisional working context, then a fresh
 comparison; historical views retain their selected read-only comparison. The renderer
