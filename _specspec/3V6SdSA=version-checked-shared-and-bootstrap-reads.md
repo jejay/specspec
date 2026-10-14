@@ -17,3 +17,7 @@ fresh comparison phase. Invalid documents retain their established repair behavi
 Notifications remain hints; ongoing refreshes reread files and resolve current refs.
 Explicit Refresh performs a current read. Managed actions retain fresh validation,
 project-wide dirty guards, writer locking and reviewed deletion rechecking.
+
+The shared read/comparison coordinator also serves Electron with an empty native
+document set. Both hosts retain fresh reads and verified baseline hints; VS Code
+alone supplies native document overlays, bootstrap and edit/Save ownership.

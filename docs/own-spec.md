@@ -132,6 +132,18 @@ and [measurement scope](../_specspec/FJj-9xY=loading-stage-and-remote-qualificat
 and [workspace/phased-host realization](../_specspec/N7IR7Fw=remote-and-phased-graph-loading-implementation.md)
 map the code, diagnostic controls and verification seams.
 
+## Compact command and shared-read contract
+
+[Compact command intention](../_specspec/0dvOn3A=compact-useful-command-interface.md)
+leads the [eight-command vocabulary](../_specspec/7tMgRa8=eight-everyday-commands-and-focused-advanced-tools.md),
+[readable defaults](../_specspec/sJ5dyh4=readable-default-results-and-complete-context.md),
+[full review diffs](../_specspec/7kYVG_E=complete-node-aware-text-and-relationship-diffs.md)
+and [compact API 6](../_specspec/cpFRqIM=compact-versioned-json-with-reconstructible-comparisons.md).
+Canonical node format remains **5**. The [shared read path](../_specspec/-UedVEw=shared-electron-and-vscode-graph-read-path.md)
+serves both hosts with optional native overlays; [safeguards](../_specspec/nIj9fmE=compact-interface-preserves-deletion-and-source-guards.md)
+and [coordinated examples/cutover](../_specspec/4ZvnSGw=current-cli-receipts-and-coordinated-protocol-cutover.md)
+retain their domain and verification boundaries.
+
 ## Neighborhood UI revision
 
 [Focused editing](../_specspec/t8RQMdE=focused-node-editing.md) expands the same native

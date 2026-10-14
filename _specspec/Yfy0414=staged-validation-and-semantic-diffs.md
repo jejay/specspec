@@ -10,8 +10,8 @@ parents:
 
 Check exactly the staged node blobs, including partially staged files, using
 NUL-delimited Git paths and object reads. Conflicted stages, unsafe entries,
-unsupported schema and invalid graphs produce diagnostics. An opt-in hook respects
-Git's hook directory and preserves an existing hook. Manual chaining is explicit.
+unsupported schema and invalid graphs produce diagnostics. Owner-configured hooks/CI call check --staged. Hook files and chaining remain
+under ordinary Git tooling and preserve existing hook policy.
 
 Read worktree, index and historical snapshots with their current schema. Compare
 full IDs to return added/removed nodes, semantic body/parent/metadata changes,
@@ -23,4 +23,4 @@ using references in both snapshots, with conservative file-level impact.
 Absent base specifications and genuinely unborn HEAD have explicit empty baselines.
 Invalid revisions report incomplete comparison/impact with actionable diagnostics.
 Git reads leave checkout, staging, branches and refs under the user's control.
-Optional `hook check --sources` assesses staged source mapping and retention.
+Optional `check --staged --sources` assesses staged source mapping and retention.

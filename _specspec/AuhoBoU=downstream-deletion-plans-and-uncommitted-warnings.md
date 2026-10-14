@@ -32,7 +32,7 @@ committed CLI batches proceed. Cancel/refusal retains canonical files and a comp
 transaction state. Success reports every actually removed ID.
 
 Both hosts show the backend scope/shared-child count and warnings in confirmation,
-then submit `--yes --reviewed-plan` as bounded JSON stdin. Replan under the writer
+then submit explicit consent and the reviewed plan through bounded integration input. Replan under the writer
 lock and compare requested/affected IDs, paths and assessment records directly;
 a changed plan fails `DELETE_PLAN_CHANGED` before unlinking. Original-byte checks
 protect the ensuing transaction. Native dirty documents remain project-wide protected.

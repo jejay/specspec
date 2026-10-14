@@ -19,7 +19,7 @@ an existing commit tree or the upcoming commit's staged source tree; blob refere
 in Markdown are textual addresses while Git trees supply reachability. Support full
 SHA-1/SHA-256 object IDs, batched reads and per-request caches with explicit limits.
 
-Expose capture/resolve/check/reanchor/view and literal source previews in both
-hosts. UI capture updates the existing form and respects its native/managed save
+Expose source inspection/capture/reanchor, integrated checks and literal previews
+in both hosts. UI capture updates the existing form and respects its native/managed save
 owner. Whole-file/non-Git use and conservative file-level impact remain available.
 Blob identity addresses immutable contents; review assesses lineage and meaning.

@@ -17,7 +17,7 @@ current node, independently of its summary. Validate casefold aliases for portab
 filename safety. Random IDs are project references; branch-merge collision checking
 remains part of graph validation.
 
-Current format/API 5 fields are: required `id`, `type`, unique `parents`; manifesto
+Current node format 5 fields are: required `id`, `type`, unique `parents`; manifesto
 integer `format_version: 5`; optional implementation `sources`; optional namespaced
 JSON-compatible `extensions`. Types are manifesto, requirement and implementation.
 Requirement parents are manifesto/requirement; implementation parents are requirements.
@@ -27,7 +27,6 @@ invalid UTF-8 and files exceeding 1 MiB produce explicit diagnostics. Direct reg
 node files are the canonical entries. Source-region syntax is specified separately.
 
 Preserve unaffected frontmatter comments and body bytes on targeted writes.
-Normalize tool-controlled fields and summaries when writing them. Mermaid uses
-injective ASCII-safe identifiers. CLI arguments and hosts retain full IDs, including
+Normalize tool-controlled fields and summaries when writing them. CLI arguments and hosts retain full IDs, including
 hyphen-leading identities; VS Code associates `**/_specspec/???????=*.md` and verifies
 the actual resource through the backend.
