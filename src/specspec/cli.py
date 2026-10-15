@@ -11,6 +11,7 @@ from typing import Any
 import click
 
 from . import __version__, wire
+from .annotation_commands import register as register_annotations
 from .application import compare
 from .application import request as application_request
 from .deletion import deletion_plan, deletion_warnings
@@ -93,7 +94,7 @@ class Commands(click.Group):
                 "Everyday commands",
                 ["init", "show", "context", "add", "update", "delete", "check", "diff"],
             ),
-            ("Advanced tools", ["sources", "recover"]),
+            ("Advanced tools", ["sources", "spotlight", "recover"]),
         ]:
             with formatter.section(label):
                 formatter.write_dl(
@@ -522,3 +523,4 @@ def api(root):
 
 
 register_sources(main, root_path, emit, guarded, json_option)
+register_annotations(main, root_path, emit, guarded, json_option)

@@ -5,6 +5,8 @@ const { join } = require('node:path');
 function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
   return {
+    submitSpotlights: id => ['red','blue','green','purple','turquoise','yellow'].map(color =>
+      fixture.cli(['spotlight', 'add', color, id, `${color} answer for ${id}`, '--json']).shots[0]),
     before: async ({ evaluate, screenshot, delay }) => {
       // Working-first is intentionally a usable graph without Git classification.
       // Git-paint assertions need the completed comparison, not the first cards.

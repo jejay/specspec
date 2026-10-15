@@ -10,10 +10,6 @@
   let editSequence = 0, documentVersion;
   let layoutFrame, layout, layoutKey, cameraScene, snapshotReceivedAt;
   let drawnEdges = [], hoveredNode, hoverPoint;
-  // Visual experiment only: never put these labels in drafts, host state or messages.
-  const previewLabels = new Map();
-  const labelCycle = [undefined, ['red', '#e65e66'], ['blue', '#5c9eff'], ['green', '#58ba7a'],
-    ['purple', '#aa79df'], ['turquoise', '#35bdbe'], ['yellow', '#dfc24d']];
   const cameraAPI = window.SpecSpecCamera;
   const cameras = Object.fromEntries(Object.entries(restored.cameras || {})
     .map(([key, value]) => [key, cameraAPI.validTransform(value)]).filter(([, value]) => value));
@@ -45,7 +41,7 @@
   const distanceFor = id => (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
 
   function saveDraft() {
-    host.setState({ selected, view, colorMode, cameras: { ...cameras }, dirty, creating, originalNode, draft: dirty || creating ? {
+    host.setState({ selected, view, colorMode, cameras: { ...cameras }, ...annotations.presentation(), dirty, creating, originalNode, draft: dirty || creating ? {
       body: $('body').value, sources: $('sources').value, slug: $('slug').value,
       nodeType: $('node-type').value, parents: [...formParents],
     } : undefined });
@@ -121,30 +117,8 @@
     return card?.parentElement === $('cards') ? card.dataset.nodeId : undefined;
   }
 
-  const labelIdFor = card => card.dataset.nodeId === '__draft__' && orphaned() ? selected : card.dataset.nodeId;
-  function applyPreviewLabel(card) {
-    const label = labelCycle[previewLabels.get(labelIdFor(card)) || 0];
-    if (label) {
-      card.dataset.previewLabel = label[0];
-      card.style.setProperty('--preview-label-ink', label[1]);
-      card.setAttribute('aria-description', `${label[0]} label preview only; not saved. Right-click card to cycle.`);
-    } else {
-      delete card.dataset.previewLabel;
-      card.style.removeProperty('--preview-label-ink');
-      card.removeAttribute('aria-description');
-    }
-  }
-  $('viewport').addEventListener('contextmenu', event => {
-    // Keep native editing/copy/link/button menus; card chrome is the experiment.
-    if (event.defaultPrevented || event.target.closest?.('input, textarea, select, a, [contenteditable]:not([contenteditable="false"]), button:not(.card)')) return;
-    const id = cardIdAt(event.target);
-    if (id === undefined) return;
-    const card = event.target.closest('.card'), key = labelIdFor(card);
-    event.preventDefault(); event.stopPropagation();
-    const next = ((previewLabels.get(key) || 0) + 1) % labelCycle.length;
-    if (next) previewLabels.set(key, next); else previewLabels.delete(key);
-    applyPreviewLabel(card);
-  });
+  const annotations = window.SpecSpecAnnotations.create({ restored, snapshot: () => state, cards: () => $('cards'),
+    save: saveDraft, send, frame: frameAnnotations });
 
   function updateHoverAppearance() {
     const plain = [], highlighted = [], neighbors = new Set([hoveredNode]);
@@ -302,7 +276,7 @@
       card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
     }
-    for (const card of $('cards').children) applyPreviewLabel(card);
+    annotations.changed();
     drawLegend(); updateButtons(); applyLayout();
     if ($('cards').contains(activeInput) && !activeInput.disabled) {
       activeInput.focus({ preventScroll: true });
@@ -393,6 +367,7 @@
   }
 
   function updateEdgeAppearance(scale) {
+    $('edges').style.setProperty('--normal-edge-strength', `${model.neutralEdgeStrength(scale) * 100}%`);
     for (const { route, path, head } of drawnEdges) {
       const appearance = model.edgeAppearance(route, scale);
       path.setAttribute('d', appearance.d); head.setAttribute('d', appearance.head);
@@ -486,6 +461,18 @@
     if (cameraScene) cameras[cameraScene] = camera.value();
   }
   function frameAll() { if (layout) camera.frame({ x: 0, y: 0, width: layout.width, height: layout.height }); }
+  function frameAnnotations(ids) {
+    if (!state || pending || !ids.length) return;
+    rememberCamera(); view = 'overview'; draw();
+    const boxes = ids.map(id => layout?.positions.get(id)).filter(Boolean);
+    if (boxes.length) {
+      const x = Math.min(...boxes.map(box => box.x)), y = Math.min(...boxes.map(box => box.y));
+      const bounds = { x, y, width: Math.max(...boxes.map(box => box.x + box.width)) - x,
+        height: Math.max(...boxes.map(box => box.y + box.height)) - y };
+      camera.frame(bounds);
+    }
+    saveDraft();
+  }
   $('zoom-out').addEventListener('click', () => camera.scaleBy(0.8));
   $('zoom-in').addEventListener('click', () => camera.scaleBy(1.25));
   $('zoom-reset').addEventListener('click', () => camera.scaleTo(1));
@@ -511,7 +498,7 @@
     if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 5) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
-    rememberCamera(); delete cameras.draft; previewLabels.delete('__draft__');
+    rememberCamera(); delete cameras.draft;
     creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
     $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'Unsaved new node';
@@ -565,6 +552,8 @@
   }
 
   host.onMessage(message => {
+    if (message.type === 'annotations') { annotations.receive(message.shots); return; }
+    if (message.type === 'annotations-error') { annotations.error(message.message); return; }
     if (message.type === 'source-captured') {
       if (message.id !== selected || !editable()) return;
       try {

@@ -288,6 +288,16 @@ test('old relations cannot pull live ranks away from the origin; base-only branc
   assert.ok(!layout.guides.has(JSON.stringify(['c', 'shallow'])));
 });
 
+test('ordinary neutral ink is darker at rest and darkens monotonically toward the overview limit', () => {
+  assert.equal(model.neutralEdgeStrength(1), 0.7);
+  assert.equal(model.neutralEdgeStrength(2.5), 0.7);
+  assert.equal(model.neutralEdgeStrength(0.12), 0.35);
+  assert.equal(model.neutralEdgeStrength(0.01), 0.35);
+  const scales = [0.12, 0.25, 0.5, 0.75, 1];
+  for (let i = 1; i < scales.length; i++) assert.ok(model.neutralEdgeStrength(scales[i]) > model.neutralEdgeStrength(scales[i - 1]));
+  for (const invalid of [undefined, 0, -1, NaN, Infinity, '0.5']) assert.equal(model.neutralEdgeStrength(invalid), 0.7);
+});
+
 test('strong bends settle tangentially before scale-stable heads, with no stroke through the tip', () => {
   const { MIN_SCALE, MAX_SCALE } = require('../media/graph-camera.js');
   const boxes = new Map([['a', { x: 0, y: 0, width: 264, height: 128 }],

@@ -3,6 +3,8 @@ const assert=require('node:assert/strict');
 const {ProjectDocuments}=require('../host/documents.cjs');
 const {GraphSession}=require('../host/session.cjs');
 const snapshot={valid:true,format_version:5,nodes:[],edges:[]};
+const annotationCli=async()=>({result:{shots:[]}});
+const lastSnapshot=messages=>messages.filter(m=>m.type==='snapshot').at(-1);
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 
 test('identical concurrent project reads share work, not mutable view payloads; later reads stay fresh',async()=>{
@@ -33,21 +35,21 @@ test('changed document text without a notification rejects shared late results; 
 
 test('valid working context renders before a delayed comparison with explicit provisional meaning',async t=>{
  const gate=deferred(),messages=[],timings=[];let session;
- session=new GraphSession({authorized:()=>true,initialGraph:async()=>({snapshot,diagnostics:[],note:''}),
+ session=new GraphSession({authorized:()=>true,cli:annotationCli,initialGraph:async()=>({snapshot,diagnostics:[],note:''}),
  readGraph:async()=>{await gate.promise;return {snapshot,diagnostics:[],note:'Diff unavailable: deliberate test'};},
  trace:(...args)=>timings.push(args),renderMatches:()=>true,
  post:async value=>{messages.push(value);if(value.type==='snapshot')session.receive({type:'rendered',renderToken:value.renderToken});}});
  t.after(()=>session.dispose());session.receive({type:'ready'});const opening=session.open();
  for(let i=0;i<20&&!messages.some(m=>m.provisional);i++)await new Promise(r=>setTimeout(r,1));
  assert.equal(messages.find(m=>m.type==='snapshot').provisional,true);assert.match(messages.find(m=>m.provisional).note,/comparison loading/);
- gate.resolve();await opening;assert.equal(messages.at(-1).provisional,undefined);assert.match(messages.at(-1).note,/unavailable/);
+ gate.resolve();await opening;assert.equal(lastSnapshot(messages).provisional,undefined);assert.match(lastSnapshot(messages).note,/unavailable/);
  assert.ok(timings.some(([phase])=>phase==='first-working-render'));assert.ok(timings.some(([phase])=>phase==='complete-comparison-render'));
 });
 
 test('historical comparisons bypass provisional working data',async t=>{
  let initial=0,session;const messages=[];
- session=new GraphSession({authorized:()=>true,initialGraph:async()=>{initial++;return {snapshot};},
+ session=new GraphSession({authorized:()=>true,cli:annotationCli,initialGraph:async()=>{initial++;return {snapshot};},
  readGraph:async()=>({snapshot,diff:{base:snapshot,target:snapshot},diagnostics:[],note:''}),renderMatches:()=>true,
  post:async m=>{messages.push(m);if(m.type==='snapshot')session.receive({type:'rendered',renderToken:m.renderToken});}});
- t.after(()=>session.dispose());session.target='HEAD';session.receive({type:'ready'});await session.open();assert.equal(initial,0);assert.equal(messages.at(-1).readonly,true);
+ t.after(()=>session.dispose());session.target='HEAD';session.receive({type:'ready'});await session.open();assert.equal(initial,0);assert.equal(lastSnapshot(messages).readonly,true);
 });

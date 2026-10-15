@@ -8,6 +8,7 @@ const { join, resolve } = require('node:path');
 const extensionPath = require.resolve('../out/extension.js');
 const snapshot = { format_version: 5, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
+const lastSnapshot = panel => panel.messages.filter(m => m.type === 'snapshot').at(-1);
 
 function fixture(t, options = {}) {
   const root = mkdtempSync(join(tmpdir(), 'specspec-extension-'));
@@ -114,6 +115,7 @@ function fixture(t, options = {}) {
     if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:6,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
     if (args[0] === 'api') {
       const request = JSON.parse(input);
+      if (request.op === 'annotations') return { api_version: 6, ok: true, diagnostics: [], result: { shots: options.shots || [] } };
       if (options.editError && request.edit) throw new Error('Planner temporarily unavailable');
       let overlaid = { ...current, valid: !request.target && options.invalidOverlay ? false : current.valid, nodes: current.nodes.map(n => ({ ...n, body: request.documents?.[n.path]?.split('\n---\n')[1] ?? n.body })) };
       const changes = [];
@@ -211,7 +213,8 @@ test('empty development windows use a filesystem folder picker and load the grap
   assert.equal(result.format_version, 5);
   assert.equal('fingerprint' in result, false);
   assert.equal(calls.cli[0].root, root);
-  assert.equal(calls.panels[0].messages.at(-1).type, 'snapshot');
+  assert.equal(lastSnapshot(calls.panels[0]).type, 'snapshot');
+  assert.deepEqual(calls.panels[0].messages.find(m => m.type === 'annotations').shots, []);
   assert.deepEqual(calls.errors, []);
 });
 
@@ -327,11 +330,24 @@ test('remote workspace placement uses host-file resources, remote executable set
   assert.match(f.calls.logs.find(s => s.startsWith('Execution:')), /workspace host.*ssh-remote/);
   assert.ok(f.calls.logs.some(s => s.includes('first-working-render')));
   assert.equal(f.calls.panels[0].messages.find(m => m.type === 'snapshot').provisional, true);
-  assert.equal(f.calls.panels[0].messages.at(-1).provisional, undefined);
+  assert.equal(lastSnapshot(f.calls.panels[0]).provisional, undefined);
   const manifest = require('../package.json');
   assert.deepEqual(manifest.extensionKind, ['workspace']);
   assert.equal(manifest.capabilities.virtualWorkspaces.supported, false);
   assert.equal(manifest.capabilities.untrustedWorkspaces.supported, false);
+});
+
+test('external annotation shots notify all project views without reloading their graphs', async t => {
+  const options = { shots: [] }, f = fixture(t, options);
+  await f.calls.commands.get('specspec.openGraph')(); await f.calls.commands.get('specspec.openGraph')();
+  const reads = f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length;
+  const path = join(f.root, '.specspec-local', 'annotations');
+  mkdirSync(path, { recursive: true });
+  options.shots = [{ id: '1'.repeat(32), groups: [{ text: 'External answer', color: '#aa79df', nodes: [] }] }];
+  writeFileSync(join(path, '1'.repeat(32) + '.json'), '{}');
+  await waitFor(() => f.calls.panels.every(panel => panel.messages.some(m => m.type === 'annotations' && m.shots.length === 1)));
+  assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length, reads);
+  assert.ok(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations').every(c => c.root === f.root));
 });
 
 const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '_specspec/node--summary.md' };
@@ -339,14 +355,14 @@ test('native bootstrap supplies the first working render with one no-baseline re
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { panel } = await f.openDocument(fileNode);
   await waitFor(() => panel.messages.some(m => m.type === 'snapshot' && !m.provisional));
-  assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && !JSON.parse(c.input).base).length, 1);
+  assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read' && !JSON.parse(c.input).base).length, 1);
   assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).base).length, 1);
 });
 test('custom text editor binds a real document, marks edits dirty, and saves without CLI update', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { doc, panel } = await f.openDocument(fileNode);
-  assert.equal(panel.messages.at(-1).document.nodeId, 'node');
-  assert.equal(panel.messages.at(-1).selectedId, 'node');
+  assert.equal(lastSnapshot(panel).document.nodeId, 'node');
+  assert.equal(lastSnapshot(panel).selectedId, 'node');
   panel.send({ type: 'edit', id: 'node', body: '# Native draft', parents: [], sources: '[]', documentVersion: 1, editSequence: 1 });
   await waitFor(() => doc.isDirty);
   assert.match(doc.text, /# Native draft$/); assert.equal(doc.version, 2);
@@ -422,8 +438,8 @@ test('node-file comparisons open an independent panel instead of rebinding the w
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] }, revisions: ['HEAD', 'HEAD'] });
   const { doc, panel } = await f.openDocument(fileNode);
   panel.send({ type: 'compare' });
-  await waitFor(() => f.calls.panels.length === 2 && f.calls.panels[1].messages.at(-1).readonly);
-  assert.equal(panel.messages.at(-1).readonly, false); assert.equal(doc.isDirty, false);
+  await waitFor(() => f.calls.panels.length === 2 && lastSnapshot(f.calls.panels[1])?.readonly);
+  assert.equal(lastSnapshot(panel).readonly, false); assert.equal(doc.isDirty, false);
 });
 test('the manifest selects only canonical node patterns and has no Activity Bar container', () => {
   const manifest = require('../package.json');
@@ -439,7 +455,7 @@ test('unapplied form input survives a closed tab/backend failure without claimin
   assert.equal(doc.isDirty, false); assert.equal(f.context.workspaceState.keys().length, 1);
   panel.dispose(); doc.isClosed = true; await waitFor(() => f.calls.watchers[0].disposed);
   const reopened = await f.openDocument(fileNode);
-  assert.equal(reopened.panel.messages.at(-1).document.recoveredForm.body, '# Recover me');
+  assert.equal(lastSnapshot(reopened.panel).document.recoveredForm.body, '# Recover me');
   assert.equal(reopened.doc.isDirty, false);
   reopened.panel.send({ type: 'discard-form' });
   await waitFor(() => f.context.workspaceState.keys().length === 0);
@@ -455,6 +471,6 @@ test('unparseable files have an escaped actionable fallback instead of a blank c
 test('commit comparisons load independently even when open-document overlays are invalid', async t => {
   const f = fixture(t, { invalidOverlay: true, revisions: ['HEAD', 'HEAD'] });
   const result = await f.calls.commands.get('specspec.compareRevisions')();
-  assert.equal(result.valid, true); assert.equal(f.calls.panels[0].messages.at(-1).readonly, true);
+  assert.equal(result.valid, true); assert.equal(lastSnapshot(f.calls.panels[0]).readonly, true);
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'api' && JSON.parse(c.input).edit));
 });

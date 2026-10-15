@@ -38,12 +38,17 @@ async function run() {
       for(let i=0;i<300;i++){if(await evaluate(`document.getElementById('body')?.value==='# Retained stale desktop draft'`))break;await delay(100);}
       assert.equal(await evaluate(`document.getElementById('body').value`),'# Retained stale desktop draft');
       assert.ok(await evaluate(`window.SpecSpecHost.getState().dirty`));
+      const retained = project.cli(['spotlight','show','--json']).shots.length;
+      assert.equal(retained,18);
+      for(let i=0;i<300;i++){if(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length===${retained}`))break;await delay(100);}
+      assert.equal(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length`),retained,'Reload republishes the complete retained spotlight list.');
+      assert.ok(await evaluate(`document.getElementById('spotlights-count').hidden`),'Existing spotlights form the new renderer baseline, not unread arrivals.');
       await evaluate(`document.getElementById('discard').click();document.getElementById('compare').click()`);await delay(200);
-      assert.ok(await evaluate(`document.querySelector('dialog:not(#source-preview)').open`));
+      assert.ok(await evaluate(`document.querySelector('dialog[aria-label="Compare revisions"]').open`));
       // Exercise a real redirect in the independent history, not HEAD against itself.
       await evaluate(`const inputs=document.querySelectorAll('dialog input');inputs[0].value='stage/02-code';inputs[1].value='stage/03-spec';document.querySelector('dialog button[value="apply"]').click()`);
       for(let i=0;i<500;i++){if(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`))break;await delay(100);}
-      assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`), JSON.stringify(await evaluate(`({revision:document.getElementById('revision').textContent,message:document.getElementById('message').textContent,dialog:document.querySelector('dialog:not(#source-preview)').open,returnValue:document.querySelector('dialog:not(#source-preview)').returnValue})`)));
+      assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`), JSON.stringify(await evaluate(`({revision:document.getElementById('revision').textContent,message:document.getElementById('message').textContent,dialog:document.querySelector('dialog[aria-label="Compare revisions"]').open,returnValue:document.querySelector('dialog[aria-label="Compare revisions"]').returnValue})`)));
       assert.ok(await evaluate(`document.getElementById('save').disabled`));
       assert.ok(await evaluate(`document.getElementById('revision').textContent.includes('stage/02-code')&&document.getElementById('revision').textContent.includes('stage/03-spec')`));
       assert.ok(await evaluate(`document.querySelectorAll('#cards .card').length>0`));
@@ -52,7 +57,7 @@ async function run() {
       assert.ok(!await evaluate(`document.getElementById('revision').textContent.includes('read-only')`));
     } finally { client.close(); }
     project.cli(['check','--warnings-as-errors','--json']);
-    console.log('SPECSPEC_ELECTRON_HOST_OK: real canvas, themed A/M/D, sandbox/blocked network, actual save, watcher-only manual/invalid-file sync, persisted draft reload and historical/workspace switching.'); ok = true;
+    console.log('SPECSPEC_ELECTRON_HOST_OK: real canvas, themed A/M/D, sandbox/blocked network, actual save, watcher-only manual/invalid-file sync, persisted draft and complete spotlight-list reload with zero-count baseline, and historical/workspace switching.'); ok = true;
   } finally {
     clearTimeout(timer); child.kill(); await exit;
     if (ok) { project.cleanup(); rmSync(profile, { recursive: true, force: true, maxRetries: 30, retryDelay: 200 }); }

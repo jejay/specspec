@@ -21,6 +21,12 @@ Updates replace the supplied parent list; valid manifesto parents stay empty.
 Delete retains --dry-run and --yes with its complete descendant and warning contract.
 
 Advanced sources show/capture/reanchor and recover retain source and recovery controls.
+Spotlight add/show/flush provides immutable checkout-local spotlights. Add takes
+color names, full node IDs and one message directly as arguments; optional --ref
+selects capture revision. Show resolves workspace/HEAD and requested revisions;
+flush requires explicit consent. The application adapter supplies independent
+spotlight list/reviewed-flush operations and retained-byte reads, alongside derived
+target/base blob identities on graph reads.
 Sources show consolidates resolution and optional literal preview; capture/reanchor
 use --dry-run for non-writing previews. Source number, mode, ranges, explicit revision
 and staged selection remain meaningful. Raw source JSON, mixed graph/code revision

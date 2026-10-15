@@ -10,6 +10,7 @@ parents:
 - NsFLK9o=
 - fdB9ZLM=
 - mAZgRy8=
+- yCYr-E0=
 sources:
 - path: graph-ui-common/host/cli.cjs
 - path: graph-ui-common/host/project.cjs
@@ -43,3 +44,8 @@ operations with sequence/render acknowledgements. Adapters supply native host
 facilities. Builds copy common bytes and offline pinned vendor/license notices.
 Pure model/DOM/session tests and one real-host harness check relationship membership,
 revision isolation, low-zoom paint, focus/drafts/caret, camera and rendering bounds.
+
+Neutral curve/head ink uses the camera's bounded 70% to 35% strength while retaining
+stroke/head dimensions and distinct diff/hover paint. Pure tests check its scale
+function, DOM tests check camera propagation, and real-host probes inspect computed
+curve/head colors across actual-size, intermediate and minimum magnification.

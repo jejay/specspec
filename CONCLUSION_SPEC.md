@@ -34,6 +34,8 @@ src/specspec/
   source_schema.py         # Shared whole-file/region validation
   sources.py               # Bounded blob/range resolution and retention
   source_commands.py       # Inspect/capture/reanchor; deliberate source writes
+  annotations.py           # Immutable local spotlights, retained bytes and resolution
+  annotation_commands.py   # Public spotlight add/show/flush
   application.py / wire.py # Shared reads/plans and compact comparison projection
   output.py / cli.py       # Readable review presentation and API-6 envelopes
 graph-ui-common/            # One DOM/SVG renderer, session, camera, build/template
@@ -171,9 +173,27 @@ Git theme titles/corners and edge patterns retain independent meaning.
 Shared tints are 15% rest / 24% hover. Colored hovered borders/incident inks use
 OKLCH L+.10 (cap .95), C×1.30, same H; neutral distance/type root hover is white.
 Darken outside immediate displayed hover context with card brightness(.45) and
-35% ink / 65% black. Keep forms/caret/geometry stable and restore on exit. Temporary
-labels cycle six colors in renderer memory with a 6px inset outline and native-menu
-exceptions. New views start empty.
+35% ink / 65% black. Keep forms/caret/geometry stable and restore on exit.
+
+Agent answers arrive through `spotlight add` with color names, full node IDs and
+one message as direct arguments. Each color applies to following IDs; initial IDs
+use purple. One immutable spotlight holds every colored set and its shared message.
+Store it and retained node bytes in Git-excluded `.specspec-local/annotations/`
+until explicit flush. The toolbar's Spotlights dropdown has one text entry per shot.
+Selection paints all its exact-version colored 8px inset rings, closes the dropdown
+and frames their union in the full canvas, retaining focused drafts. Compact version
+counts replace detail/preview UI. Clear highlight removes rings explicitly.
+A round red badge counts new shots since opening; initial entries count zero and
+reload starts a fresh in-memory baseline. Arrivals preserve editing and camera.
+Dropdown/selection preferences are per view; contents are shared per checkout.
+Watching is independent of graph refresh, including historical views. Internal
+store/transport names remain independent of public naming. [The spotlight guide](docs/spotlights.md)
+specifies arguments, version resolution, storage limits and verification.
+
+Ordinary curves and heads share darker neutral ink: 70% theme ink mixed with black
+at actual size and above, decreasing linearly to 35% at 12% zoom. Diff/draft and
+incident-hover inks stay distinct. Minimum screen dimensions, shape ports and world
+layout retain their existing contracts.
 
 ## Examples, documentation and verification
 

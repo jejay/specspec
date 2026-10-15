@@ -121,6 +121,9 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.ok(Math.min(hue,360-hue)<0.1, message+' must retain its hue.');
     };
     async function checkHover(id, selector, image) {
+      // Keep the real pointer outside the graph while synthetic hover probes run;
+      // closing a spotlight overlay must not re-hit-test an unrelated OS cursor.
+      await active.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }, context.session);
       const paint = () => evaluate(`(() => {
         const oklch=${toOKLCH};
         const paths=[...document.querySelectorAll('#edges .link')],heads=[...document.querySelectorAll('#edges .arrow-head')];
@@ -192,48 +195,106 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.deepEqual(await cardPaint(),beforeCards,'Exiting hover restores all card paint, including semantic borders.');
       await evaluate(`delete window.__hoverPaths`);
     }
-    async function checkLabelPreview(id, selector, image) {
+    async function checkSpotlight(id, selector, image) {
       const world=await positions(),pose=await camera();
-      const saved=await evaluate(`JSON.stringify(window.SpecSpecHost.getState())`);
-      const geometry=()=>evaluate(`JSON.stringify([...document.querySelectorAll('#edges path')].map(p=>[p.getAttribute('d'),getComputedStyle(p).strokeWidth,getComputedStyle(p).strokeDasharray]))`);
+      const editing=()=>evaluate(`JSON.stringify((({selected,view,colorMode,dirty,creating,originalNode,draft})=>({selected,view,colorMode,dirty,creating,originalNode,draft}))(window.SpecSpecHost.getState()))`);
+      const saved=await editing();
+      const geometry=()=>evaluate(`JSON.stringify([...document.querySelectorAll('#edges path')].map(p=>[p.dataset.parent,p.dataset.child,p.classList.contains('arrow-head'),p.getAttribute('d'),getComputedStyle(p).strokeWidth,getComputedStyle(p).strokeDasharray]).sort((a,b)=>JSON.stringify(a.slice(0,3)).localeCompare(JSON.stringify(b.slice(0,3)))))`);
       const paths=await geometry();
-      const colors=[['red','rgb(230, 94, 102)'],['blue','rgb(92, 158, 255)'],['green','rgb(88, 186, 122)'],['purple','rgb(170, 121, 223)'],['turquoise','rgb(53, 189, 190)'],['yellow','rgb(223, 194, 77)'],[undefined,undefined]];
-      for(const [name,color] of colors) {
+      const focus=await evaluate(`(() => {const e=document.activeElement;return {id:e.id,start:e.selectionStart,end:e.selectionEnd};})()`);
+      const answers=await options.submitSpotlights(id);
+      const section=`document.querySelector('[data-shot-id="${answers.at(-1).id}"]')`;
+      for(let i=0;i<300&&!await evaluate(`!!${section}`);i++) await delay(100);
+      assert.ok(await evaluate(`!!${section}`),'An external CLI shot must arrive through watching, without Refresh or polling.');
+      assert.equal(await evaluate(`document.getElementById('annotations-panel').hidden`),true);
+      assert.equal(await evaluate(`document.getElementById('annotation-arrival')`),null);
+      assert.deepEqual(await evaluate(`(() => {const b=document.getElementById('spotlights-count'),s=getComputedStyle(b);return {hidden:b.hidden,text:b.textContent,background:s.backgroundColor,color:s.color,round:parseFloat(s.borderRadius)>parseFloat(s.height)/2};})()`),
+        {hidden:false,text:'6',background:'rgb(198, 40, 40)',color:'rgb(255, 255, 255)',round:true});
+      assert.equal(await evaluate(`document.getElementById('annotations-toggle').getAttribute('aria-label')`),'Spotlights, 6 new');
+      assert.deepEqual(await evaluate(`(() => {const e=document.activeElement;return {id:e.id,start:e.selectionStart,end:e.selectionEnd};})()`),focus);
+      assert.equal(await editing(),saved);assert.equal(await positions(),world);assert.deepEqual(await camera(),pose);assert.equal(await geometry(),paths);
+      if(image) await screenshot(image+'-arrival-badge');
+      await evaluate(`document.getElementById('annotations-toggle').click()`);
+      assert.ok(await evaluate(`document.getElementById('spotlights-count').hidden`));
+      assert.equal(await evaluate(`document.getElementById('annotations-heading').textContent`),'Spotlights');
+      assert.equal(await evaluate(`document.querySelectorAll('#annotation-filter,.annotation-swatch,.annotation-members,#annotation-preview').length`),0);
+      const colors=['rgb(230, 94, 102)','rgb(92, 158, 255)','rgb(88, 186, 122)','rgb(170, 121, 223)','rgb(53, 189, 190)','rgb(223, 194, 77)'];
+      for(let index=0;index<colors.length;index++) {
+        if(index) await evaluate(`document.getElementById('annotations-toggle').click()`);
         const result=await evaluate(`(() => {
+          document.querySelector('[data-shot-id="${answers[index].id}"]').click();
           const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});
-          const target=${JSON.stringify(selector)}?c.querySelector(${JSON.stringify(selector)}):c;
-          const event=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,button:2});target.dispatchEvent(event);
           const style=getComputedStyle(c),probe=document.createElement('span');
-          probe.style.outline='6px solid red';probe.style.outlineOffset='-6px';document.body.append(probe);
+          probe.style.outline='8px solid red';probe.style.outlineOffset='-8px';document.body.append(probe);
           const expected=getComputedStyle(probe),expectedWidth=expected.outlineWidth,expectedOffset=expected.outlineOffset;probe.remove();
-          return {prevented:event.defaultPrevented,name:c.dataset.previewLabel,
-            color:style.outlineColor,width:style.outlineWidth,offset:style.outlineOffset,expectedWidth,expectedOffset,description:c.getAttribute('aria-description')};
+          return {label:c.dataset.annotationLabel,color:style.outlineColor,width:style.outlineWidth,offset:style.outlineOffset,expectedWidth,expectedOffset,description:c.getAttribute('aria-description')};
         })()`);
-        assert.equal(result.prevented,true);assert.equal(result.name,name);
-        if(name) {
-          assert.equal(result.color,color);assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/not saved/);
-          // Ordinary semantic hover must not repaint the label ring.
-          await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});c.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));})()`);
-          assert.equal(await evaluate(`getComputedStyle([...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)})).outlineColor`),color);
-          if(name==='red'&&image) await screenshot(image);
-          await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
-        } else assert.equal(result.description,null);
-        assert.equal(await positions(),world);assert.deepEqual(await camera(),pose);assert.equal(await geometry(),paths);
-        assert.equal(await evaluate(`JSON.stringify(window.SpecSpecHost.getState())`),saved,'Label clicks never write persisted host state.');
+        assert.equal(result.label,answers[index].id);assert.equal(result.color,colors[index]);assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/Exact captured/);
+        await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});c.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));})()`);
+        assert.equal(await evaluate(`getComputedStyle([...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)})).outlineColor`),colors[index]);
+        if(index===0&&image) await screenshot(image);
+        await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
+        assert.ok(await evaluate(`document.getElementById('annotations-panel').hidden`));
+        assert.equal(await evaluate(`window.SpecSpecHost.getState().view`),'overview');
+        assert.ok(await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)}),r=c.getBoundingClientRect(),v=document.getElementById('viewport').getBoundingClientRect();return Math.abs((r.left+r.right-v.left-v.right)/2)<1&&Math.abs((r.top+r.bottom-v.top-v.bottom)/2)<1;})()`),'Selection frames in the full canvas, without dropdown inset.');
       }
+      await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click()`);
+      const prior=JSON.parse(saved);
+      if(prior.view==='focus') {
+        await evaluate(`document.querySelector('[data-node-id="${prior.selected}"]').click()`);
+      } else await evaluate(`document.getElementById('frame-all').click()`);
+      if(selector) await evaluate(`document.querySelector(${JSON.stringify(selector)}).focus()`);
+      await delay(250);
+      assert.equal(await positions(),world);assert.equal(await editing(),saved);
+      // Selection intentionally reframes. Its scale-dependent arrowheads/strokes
+      // may change; restoring the prior view must preserve the form/world.
+      assert.equal(await evaluate(`document.querySelector('[data-annotation-label]')`),null);
       assert.ok(await evaluate(`(() => {
-        const viewport=document.getElementById('viewport'),targets=[viewport,...document.querySelectorAll('#cards textarea,#cards input,#cards select,#cards button:not(.card)')];
-        // Probe the renderer listener, not VS Code's own document-level menu
-        // handler. Avoid opening synthetic host menus during the remaining suite.
+        const viewport=document.getElementById('viewport'),targets=[viewport,...document.querySelectorAll('#cards .card,#cards textarea,#cards input,#cards select,#cards button:not(.card)')];
         const stop=event=>event.stopPropagation();viewport.addEventListener('contextmenu',stop);
         try {return targets.every(target=>{
-          const before=[...document.querySelectorAll('#cards .card')].map(c=>c.dataset.previewLabel).join(',');
           const event=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,button:2});let preventedByRenderer=false;
           const prevent=event.preventDefault.bind(event);event.preventDefault=()=>{if(event.currentTarget===viewport)preventedByRenderer=true;prevent();};
-          target.dispatchEvent(event);
-          return !preventedByRenderer&&before===[...document.querySelectorAll('#cards .card')].map(c=>c.dataset.previewLabel).join(',');
+          target.dispatchEvent(event);return !preventedByRenderer;
         });}finally{viewport.removeEventListener('contextmenu',stop);}
-      })()`),'Renderer leaves native field/button/background context menus untouched.');
+      })()`),'Renderer leaves native card/field/button/background context menus untouched.');
+    }
+    async function checkQuietArrows() {
+      await active.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 }, context.session);
+      await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
+      const pose=await camera(),world=await positions();
+      assert.equal(pose.k,1,'Probe neutral ink from a settled actual-size camera.');
+      await evaluate(`window.__quietPaths=[...document.querySelectorAll('#edges path')]`);
+      const paint=()=>evaluate(`(() => {
+        const oklch=${toOKLCH},svg=document.getElementById('edges'),values=[];
+        const raw=document.createElement('span');raw.style.color='var(--edge-normal)';document.body.append(raw);
+        const rawLightness=oklch(getComputedStyle(raw).color)[0];raw.remove();
+        for(const kind of ['normal','normal incident-highlight','added','removed','draft']) {
+          const p=document.createElementNS('http://www.w3.org/2000/svg','path'),h=p.cloneNode();
+          p.setAttribute('class','link '+kind);h.setAttribute('class','arrow-head '+kind);svg.append(p,h);
+          const a=getComputedStyle(p),b=getComputedStyle(h);
+          values.push({kind,stroke:a.stroke,fill:b.fill,lightness:oklch(a.stroke)[0],opacity:a.opacity});p.remove();h.remove();
+        }
+        return {values,rawLightness,actual:getComputedStyle(svg.querySelector('.link.normal')).stroke};
+      })()`);
+      const samples=[];
+      for(const stage of ['actual','intermediate','minimum']) {
+        if(stage==='intermediate') await evaluate(`for(let i=0;i<3;i++)document.getElementById('zoom-out').click()`);
+        if(stage==='minimum') await evaluate(`(() => {const v=document.getElementById('viewport'),r=v.getBoundingClientRect();v.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:6000,clientX:r.left+r.width/2,clientY:r.top+r.height/2}));})()`);
+        await delay(100);const value=await paint();samples.push(value);
+        for(const pair of value.values) {assert.equal(pair.stroke,pair.fill);assert.equal(pair.opacity,'1');}
+        assert.equal(value.actual,value.values[0].stroke,'The actual ordinary curve uses the same paired neutral ink.');
+        if(samples.length===1) assert.ok(value.values[0].lightness<value.rawLightness,'Resting ordinary ink is darker than the theme neutral.');
+        else {
+          assert.ok(value.values[0].lightness<samples.at(-2).values[0].lightness,'Zooming out darkens ordinary curves and heads further.');
+          assert.deepEqual(value.values.slice(1),samples[0].values.slice(1),'Diff/draft and incident-hover inks stay independent of neutral zoom dimming.');
+        }
+        assert.ok(await arrowJoins());assert.equal(await positions(),world);
+        assert.ok(await evaluate(`window.__quietPaths.every(p=>p.isConnected)`));
+        await screenshot('spotlights-quiet-arrows-'+stage);
+      }
+      assert.equal((await camera()).k,0.12);
+      await restoreActualSize(pose);await evaluate(`delete window.__quietPaths`);
     }
     async function checkHoverPalette() {
       // Real browser CSS probes cover every colored link kind (including draft),
@@ -405,6 +466,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.deepEqual(await curveCollisions(), [], 'Curves must not cross node content.');
     await screenshot('origin-initial');
     await checkHeadlineRendering();
+    await checkQuietArrows();
     assert.equal(await positions(),initialPositions);
     // Actual browser event handling; no special production test commands.
     const beforeZoom = await camera();
@@ -434,9 +496,9 @@ exports.checkUI = async function checkUI(port, options = {}) {
       return [...document.querySelectorAll('#cards .card.requirement')].find(c=>{const r=c.getBoundingClientRect();return r.right>v.left&&r.left<v.right&&r.bottom>v.top&&r.top<v.bottom&&paths.some(p=>p.dataset.parent===c.dataset.nodeId)&&paths.some(p=>p.dataset.child===c.dataset.nodeId);})?.dataset.nodeId;
     })()`);
     assert.ok(hoverNode);
-    await checkLabelPreview(hoverNode,undefined,'label-preview-compact');
+    await checkSpotlight(hoverNode,undefined,'spotlights-compact');
     const labelRoot=await evaluate(`document.querySelector('#cards .card.manifesto').dataset.nodeId`);
-    await checkLabelPreview(labelRoot,undefined,'label-preview-manifesto');
+    await checkSpotlight(labelRoot,undefined,'spotlights-manifesto');
     await checkHover(hoverNode, undefined, 'hover-overview');
     for(const kind of ['added','changed','removed']) {
       const id=await evaluate(`document.querySelector('#cards .card.${kind}').dataset.nodeId`);
@@ -538,7 +600,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await checkShapes();assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`),circleWidth);
     await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     await screenshot('roomier-markdown-root');await screenshot('node-shapes-expanded-manifesto');
-    assert.equal(await evaluate(`document.querySelectorAll('aside').length`), 0);
+    assert.equal(await evaluate(`document.querySelectorAll('aside:not(#annotations-panel)').length`), 0);
+    assert.ok(await evaluate(`document.getElementById('annotations-panel').hidden&&!document.getElementById('annotations-panel').contains(document.getElementById('editor'))`));
     const branch = await evaluate(`(() => { const cards = [...document.querySelectorAll('[data-relation="child"]')].sort((a,b) => Number(b.dataset.downstream)-Number(a.dataset.downstream)); return cards[0]?.dataset.nodeId; })()`);
     assert.ok(branch);
     await evaluate(`document.querySelector('[data-node-id="' + ${JSON.stringify(branch)} + '"]').click()`);
@@ -641,7 +704,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),await evaluate(`window.SpecSpecGraph.REVISION_COLORS.changed`));
     await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     const expandedRoot=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
-    await checkLabelPreview(expandedRoot,'#title','label-preview-expanded');
+    await checkSpotlight(expandedRoot,'#title','spotlights-expanded');
     await checkHover(expandedRoot,'#body','hover-revision-expanded-root');
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.equal(await evaluate(`document.querySelectorAll('#parent-links li').length`), 0);
@@ -652,7 +715,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, transient right-click label cycle/equal inset ring with zero persisted-state or geometry changes, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

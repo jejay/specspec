@@ -7,6 +7,7 @@ import { graphHtml } from './view';
 const { GraphSession } = require('./common/host/session.cjs');
 const { ProjectDocuments } = require('./common/host/documents.cjs');
 const { GitWatcher } = require('./common/host/git-watch.cjs');
+const { AnnotationWatcher } = require('./common/host/annotations.cjs');
 const presentation = require('../media/graph-model.js');
 
 const VIEW_TYPE = 'specspec.graphEditor';
@@ -139,6 +140,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
 class GraphProject implements vscode.Disposable {
   readonly documents: any;
   references = 0;
+  private readonly annotationListeners = new Set<(error?: Error) => void>();
   private readonly disposables: vscode.Disposable[] = [];
   private disposed = false;
   constructor(readonly root: vscode.Uri, private context: vscode.ExtensionContext, private output: vscode.OutputChannel) {
@@ -155,8 +157,16 @@ class GraphProject implements vscode.Disposable {
     }));
     const gitWatcher = new GitWatcher(root.fsPath, () => this.documents.changed(), (error: Error) => this.output.appendLine(error.message));
     this.disposables.push({ dispose: () => gitWatcher.close() });
+    const annotationWatcher = new AnnotationWatcher(root.fsPath,
+      () => this.annotationListeners.forEach(listener => listener()),
+      (error: Error) => { this.output.appendLine(error.message); this.annotationListeners.forEach(listener => listener(error)); });
+    this.disposables.push({ dispose: () => annotationWatcher.close() });
     this.output.appendLine(`Execution: workspace host (${vscode.env?.remoteName || 'local'}); install Python/Git and configure SpecSpec on this host.`);
     void this.connectGit();
+  }
+  subscribeAnnotations(listener: (error?: Error) => void): vscode.Disposable {
+    this.annotationListeners.add(listener);
+    return { dispose: () => { this.annotationListeners.delete(listener); } };
   }
   trace(phase: string, durationMs: number, nodes?: number): void {
     if (vscode.workspace.getConfiguration('specspec', this.root).get<boolean>('traceLoading', false))
@@ -274,7 +284,8 @@ class GraphView implements vscode.Disposable {
       try { this.session.configurePolling(vscode.workspace.getConfiguration('specspec', project.root).get<number>('pollIntervalMs', 0)); }
       catch (error) { this.session.warn(error); }
     };
-    configure(); this.disposables.push(project.documents.subscribe(() => { configure(); this.session.scheduleRefresh(); }));
+    configure(); this.disposables.push(project.documents.subscribe(() => { configure(); this.session.scheduleRefresh(); }),
+      project.subscribeAnnotations(error => error ? this.session.annotationWarning(error) : this.session.scheduleAnnotationsRefresh()));
     const resource = (name: string) => panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', name)).toString();
     panel.webview.html = graphHtml(resource, panel.webview.cspSource, randomBytes(16).toString('hex'), { scope: project.root.fsPath });
   }

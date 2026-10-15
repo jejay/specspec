@@ -34,12 +34,11 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .canvas-help { position: absolute; bottom: 12px; right: 14px; margin: 0; font-size: 11px; color: var(--vscode-descriptionForeground); pointer-events: none; }
 @media (max-width: 1450px) { .canvas-help { display: none; } }
 /* World-space widths/dashes are camera-compensated in graph.js. No endpoint dots. */
-.link.normal, .arrow-head.normal { --edge-ink: var(--edge-normal); }
+.link.normal, .arrow-head.normal { --edge-ink: color-mix(in srgb, var(--edge-normal) var(--normal-edge-strength, 70%), #000); --edge-hover-ink: color-mix(in srgb, var(--edge-normal) 50%, var(--vscode-editor-foreground, #fff)); }
 .link.added, .arrow-head.added { --edge-ink: var(--edge-added); }
 .link.removed, .arrow-head.removed { --edge-ink: var(--edge-removed); }
 .link.draft, .arrow-head.draft { --edge-ink: var(--edge-draft); }
 .link { fill: none; stroke: var(--edge-ink); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: butt; }
-.link.normal { opacity: .8; }
 .link.removed { stroke-dasharray: 6 5; }
 .link.draft { stroke-dasharray: 3 4; }
 .arrow-head { fill: var(--edge-ink); }
@@ -67,9 +66,9 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.implementation { border-radius: 0px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
-/* Temporary label ring: equal on all sides, inside the existing box. No layout change. */
-#cards .card[data-preview-label] { outline: 6px solid var(--preview-label-ink); outline-offset: -6px; }
-#cards .card[data-preview-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
+/* Active spotlight: exact versions only; paint never changes the card's box. */
+#cards .card[data-annotation-label] { outline: 8px solid var(--annotation-ink); outline-offset: -8px; }
+#cards .card[data-annotation-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 26px; }
 .card.added strong, .card.added h2, .git-corner.added { color: var(--git-added); }
 .card.changed strong, .card.changed h2, .card.renamed strong, .card.renamed h2, .git-corner.changed, .git-corner.renamed { color: var(--git-modified); }
@@ -106,6 +105,22 @@ textarea { resize: vertical; }
 .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vscode-textCodeBlock-background); padding: 8px; }
 footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscode-descriptionForeground); border-top: 1px solid var(--vscode-panel-border); }
+/* Local spotlight chrome overlays the canvas: no world reflow or camera changes. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#annotations-toggle { display: inline-flex; align-items: center; gap: 6px; }
+.spotlights-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #c62828; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+#annotations-panel { position: fixed; z-index: 10; box-sizing: border-box; width: min(370px, calc(100vw - 16px)); display: flex; flex-direction: column; gap: 4px; padding: 4px; background: var(--vscode-menu-background, var(--vscode-editorWidget-background, #252526)); color: var(--vscode-menu-foreground, var(--vscode-foreground)); border: 1px solid var(--vscode-menu-border, var(--vscode-panel-border, #777)); border-radius: 5px; box-shadow: 0 4px 16px #0006; overflow: auto; }
+#annotations-panel > .form-help { margin: 3px 6px; font-size: 10px; }
+#annotation-error { margin: 4px 6px; font-size: 12px; color: var(--vscode-editorWarning-foreground, #e2c08d); overflow-wrap: anywhere; }
+#annotation-list { flex: 1; min-height: 0; overflow: auto; overflow-anchor: none; }
+.annotation-new { font-size: 10px; color: var(--vscode-focusBorder, #5c9eff); border: 1px solid currentColor; border-radius: 3px; padding: 1px 4px; }
+.annotation-label { display: flex; width: 100%; gap: 8px; align-items: flex-start; text-align: left; padding: 7px 9px; border-radius: 3px; background: transparent; color: inherit; }
+.annotation-label:hover, .annotation-panel-footer button:hover { background: var(--vscode-menu-selectionBackground, #094771); color: var(--vscode-menu-selectionForeground, #fff); }
+.annotation-label[aria-checked="true"] { border-color: var(--vscode-focusBorder, #5c9eff); }
+.annotation-label-text { flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.annotation-label-text small { display: block; margin-top: 3px; font-size: 10px; opacity: .8; }
+.annotation-panel-footer { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--vscode-panel-border, #777); padding-top: 4px; }
+.annotation-panel-footer button { text-align: left; background: transparent; color: inherit; font-size: 11px; }
 [hidden] { display: none !important; }
 body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); }
 body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { background: var(--vscode-editor-background); }

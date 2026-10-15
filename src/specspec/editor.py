@@ -11,6 +11,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from .annotations import blob_ids
 from .format import json_value, read_document, yaml_parser
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .git_objects import OBJECT_ID
@@ -166,6 +167,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
     snapshot = snapshot_from_files(root, files, check_sources=True)
     result: dict[str, Any] = {
         "snapshot": snapshot.to_dict(),
+        "node_blobs": blob_ids(snapshot),
         "diagnostics": [item.to_dict() for item in snapshot.diagnostics],
         "changes": changes,
         "note": "",
@@ -187,6 +189,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 }
             )
             result["diff"] = comparison
+            result["base_node_blobs"] = blob_ids(old)
             if (
                 request.get("cache")
                 and old.commit

@@ -11,6 +11,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <button id="back" hidden>← Total graph</button><button id="refresh">Refresh</button>
     <button id="compare">Compare revisions</button><button id="workspace">HEAD / workspace</button>
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
+    <button id="annotations-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="annotations-panel" aria-label="Spotlights"><span>Spotlights</span><span id="spotlights-count" class="spotlights-count" aria-hidden="true" hidden></span></button>
     <label class="color-control" for="color-mode">Color by <select id="color-mode">
     <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="type">Node type</option><option value="git-revision">Git/Revision Status</option></select></label>
     <span id="revision"></span></header>
@@ -18,7 +19,16 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <p id="message" role="status">Loading specification graph…</p>
     <p id="sync-notice" role="status" hidden>Displayed graph is out of date. Fix the Markdown files and refresh; graph changes are disabled.</p>
     <details id="linked-sources" hidden><summary id="source-summary"></summary><ul id="source-files"></ul></details>
-    <div class="canvas-shell"><main id="viewport" tabindex="0" aria-label="Specification node canvas" aria-describedby="canvas-help"><div id="graph">
+    <p id="annotation-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="canvas-shell">
+    <aside id="annotations-panel" hidden role="menu" aria-labelledby="annotations-heading">
+      <h2 id="annotations-heading" class="sr-only">Spotlights</h2>
+      <p id="annotation-error" role="status" hidden></p>
+      <p id="annotation-list-summary" class="form-help"></p>
+      <div id="annotation-list" role="group" aria-label="Retained spotlights"></div>
+      <div class="annotation-panel-footer" role="group" aria-label="Spotlight actions"><button id="annotation-clear" role="menuitem">Clear highlight</button><button id="annotation-flush" role="menuitem">Flush local spotlights…</button></div>
+    </aside>
+    <main id="viewport" tabindex="0" aria-label="Specification node canvas" aria-describedby="canvas-help"><div id="graph">
     <svg id="edges" aria-hidden="true"></svg><div id="cards"></div></div></main>
     <nav class="camera-controls" aria-label="Canvas navigation">
     <button id="zoom-out" title="Zoom out (-)" aria-label="Zoom out">−</button>
@@ -48,11 +58,12 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="delete">Delete node &amp; descendants</button><button type="button" id="discard">Discard form edits</button></div></form>
     <section id="before-section" hidden><h3>Base revision text</h3><pre id="before"></pre></section></section></div>
     <dialog id="source-preview" aria-labelledby="source-preview-title"><h2 id="source-preview-title">Source preview</h2><p id="source-preview-status"></p><pre id="source-preview-code" tabindex="0"></pre><button id="close-source-preview" type="button">Close</button></dialog>
-    <footer>Click a node to explore and edit its neighborhood. Right-click card chrome to cycle label previews: red → blue → green → purple → turquoise → yellow → none. Preview only, not saved; persistence may come later. Fills: selected color mode. Git title/corner: A added, M modified, D deleted, R renamed. Default workspace compares to HEAD; deleted nodes remain visible as D until committed. Linked-source cues are not node M. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
+    <footer>Click a node to explore and edit its neighborhood. Spotlights shows immutable local agent answers; inset rings identify exact matching node versions. The red badge counts arrivals since the list was last opened. New spotlights never move the camera or interrupt editing. Fills: selected color mode. Git title/corner: A added, M modified, D deleted, R renamed. Default workspace compares to HEAD; deleted nodes remain visible as D until committed. Linked-source cues are not node M. Downstream counts include all depths, deduplicated per child; overlapping totals are not additive. Git staging remains manual.</footer>
     <script nonce="${nonce}" src="${resource('host.js')}"></script>
     <script nonce="${nonce}" src="${resource('vendor/graph-vendor.js')}"></script>
     <script nonce="${nonce}" src="${resource('graph-model.js')}"></script>
     <script nonce="${nonce}" src="${resource('graph-camera.js')}"></script>
+    <script nonce="${nonce}" src="${resource('graph-annotations.js')}"></script>
     <script nonce="${nonce}" src="${resource('graph.js')}"></script></body></html>`;
 }
 

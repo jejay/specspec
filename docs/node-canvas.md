@@ -69,7 +69,7 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   ports retain 3-unit clearance; circle ports span the middle 40% vertically so
   thick minimum-zoom strokes clear the arc. Flat departure/settling segments clear
   conservative bounding boxes before curves turn. Git markers move inside the
-  circle; palettes, tints, hover and temporary labels remain unchanged. The offline
+  circle; palettes, tints, hover and spotlight inset rings retain their independent roles. The offline
   playground's gray manifesto sample is likewise circular, without changing exports.
 - **D3 zoom** applies one transform to cards and SVG. The viewport clips overflow;
   panning is unconstrained and scale is 12–250%. Wheel/pinch anchoring and drag
@@ -102,11 +102,22 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;
   source-only, rename and deletion labels preserve their distinct meanings.
   Existing title/letter theme colors and connection inks stay independent.
-- **Temporary label preview** cycles card-chrome right-clicks through red, blue,
-  green, purple, turquoise, yellow and none. A six-pixel equal inset outline keeps
-  card/port geometry unchanged and preserves native field/control context menus.
-  Labels live only in renderer memory, not host state or canonical data, and reset
-  on view reload. Persistence will likely be explored later; it is not implemented.
+- **Spotlights** persist complete text/color/node-version batches in Git-excluded
+  project-local storage shared by the CLI and both hosts. A round red toolbar badge
+  counts new batches since this view last opened its list; existing initial entries
+  count zero. Opening the list clears the count, and reload starts a new in-memory
+  baseline. Arrivals preserve editing, focus and camera. A newest-first dropdown
+  anchored to Spotlights shows one text entry per spotlight. Selection activates
+  all its colors with eight-pixel exact-version inset rings, closes the dropdown
+  and frames the matching union in the full canvas, retaining focused drafts.
+  Compact version counts replace member/detail/preview UI. Dropdown/selection
+  preferences are per view; immutable batches survive
+  sessions until explicit flush. See [spotlight design and storage](spotlights.md).
+- **Ordinary arrows** use darker shared neutral ink, mixed with black at 70% at
+  actual size and above, decreasing linearly to 35% at the 12% camera limit. The
+  existing curve/head pair and minimum pixel dimensions remain intact. Diff/draft
+  colors and incident-hover emphasis keep independent paint so the overview mesh
+  stays quiet beside spotlight batches.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
   layout positions, magnification, colors, or derived scores enter `_specspec`.
 
@@ -154,7 +165,7 @@ shorter-card fit, same-pose native headline rendering at 250%, confirms circle-f
 parent neighborhood, restores the overview camera, and switches semantic colors. Optional
 `SPECSPEC_SCREENSHOT_DIR` captures screenshots of overview and focused views;
 `SPECSPEC_SCREENSHOT_FILTER` optionally restricts capture to names containing that
-substring (for example `label-preview`) without skipping any assertions. The
+substring (for example `spotlights`) without skipping any assertions. The
 agent inspected these on Windows; this does not replace full human editing/review
 or revision-picker verification. Only this isolated automated test disables trust.
 

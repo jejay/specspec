@@ -178,8 +178,43 @@ Cards use shared 15% resting/24% hover tint and ordinary theme text.
 [Hue-emphasizing hover](../_specspec/bLBNk80=hue-preserving-hover-lightness-and-chroma.md)
 increases colored border/incident ink lightness and chroma. The neutral manifesto's
 hover border is white. [Immediate-context darkening](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
-is transient and preserves geometry/native forms. [Temporary label rings](../_specspec/E7O_6GU=view-local-label-cycle-with-inset-border.md)
-cycle six inks in renderer memory with a 6px inset outline and native-menu exceptions.
+is transient and preserves geometry/native forms. [Spotlight rings](../_specspec/E7O_6GU=view-local-label-cycle-with-inset-border.md)
+paint exact versions in every colored set of the active spotlight with an 8px inset outline.
+
+[Quiet ordinary arrows](../_specspec/u8tHkaE=keep-ordinary-relationship-arrows-quiet-as-the-graph-is-zoomed-out.md)
+keep the overview mesh subordinate to spotlight batches. [Neutral-ink scaling](../_specspec/yCYr-E0=scale-neutral-arrow-ink-from-seventy-to-thirty-five-percent-with-zoom.md)
+chooses 70% theme neutral ink mixed with black at actual size, decreasing linearly
+to 35% at 12% zoom. Diff/draft colors and incident-hover emphasis remain independent;
+minimum stroke/head geometry stays intact. The [shared canvas realization](../_specspec/asaRDK0=shared-graph-ui-implementation.md)
+maps the pure, DOM and real-host paint checks.
+
+## Persistent local spotlights
+
+[Agent answers](../_specspec/DG-JpDc=temporary-node-label-border-preview.md) are immutable
+spotlights, each one message with colored node/version sets. The [local-store
+choice](../_specspec/P2i_png=keep-immutable-annotation-shots-in-a-checkout-local-store.md)
+keeps shot files and exact retained node bytes in `.specspec-local/annotations`,
+Git-excluded and shared by both hosts for the same checkout until explicit flush.
+[Version resolution](../_specspec/63jO49Q=resolve-annotation-references-against-exact-snapshot-bytes.md)
+uses full node IDs and exact SHA-1/SHA-256 Git blob addresses against actual saved,
+native-overlay or selected revision bytes. Canonical node format remains 5.
+
+[Attention and list integration](../_specspec/rvz48KY=integrate-arrivals-into-an-inspectable-annotation-list-without-interruption.md)
+use a round red toolbar badge counting only new batches since this view last opened
+its dropdown. Existing entries establish a zero-count baseline; opening clears the
+count, and reload starts a new in-memory baseline. The anchored newest-first dropdown
+has one text entry per spotlight. Selection activates all its colored sets, closes
+the menu and frames the exact matching union in the full canvas, retaining drafts.
+Compact version counts replace member/detail/preview UI. Arrivals retain editing,
+focus, camera, selection and older spotlights. Independent watching works in historical views too. [Storage/identity realization](../_specspec/n-Bk32Q=implement-immutable-local-shots-and-derived-snapshot-blob-identities.md)
+and [shared UI/host realization](../_specspec/JTezmL0=transient-node-label-preview-implementation.md)
+map code and verification seams. The [spotlight guide](spotlights.md) gives the
+`spotlight add/show/flush` contract, storage/lifetime limits and verification scope.
+[Argument parsing](../_specspec/rQTg56g=parse-spotlight-arguments-by-named-colors-and-canonical-ids.md)
+recognizes named colors and full IDs before the shared message, uses purple for
+initial uncolored IDs and rejects duplicate members.
+Public naming is independent of internal store/transport keys; retained immutable
+submissions keep their original bytes.
 
 [Type shapes](../_specspec/AZbsoEA=type-radii-and-content-fitting-circular-manifesto.md)
 are Implementation **0px**, Requirement **24px**, and a true manifesto circle.

@@ -25,7 +25,7 @@ class GraphSession {
   }
   receive(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return;
-    if (value.type === 'ready') { this.resolveReady(); return; }
+    if (value.type === 'ready') { this.annotationInitial = true; this.resolveReady(); return; }
     if (value.type === 'client-error' && typeof value.message === 'string') {
       this.renderError = new Error(`Graph renderer failed: ${value.message}`); this.log(this.renderError);
       this.listeners.forEach(f => f()); return;
@@ -137,8 +137,42 @@ class GraphSession {
           if (this.disposed) return;
         }
       }
-    } catch (error) { await this.invalid(error); if (!automatic) throw error; this.log(error); return; }
+    } catch (error) { await this.invalid(error); await this.refreshAnnotations(); if (!automatic) throw error; this.log(error); return; }
     await this.display(loaded, force, selectedId, automatic);
+    await this.refreshAnnotations();
+  }
+  async refreshAnnotations() {
+    try {
+      const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotations' }));
+      const shots = response.result?.shots;
+      if (!Array.isArray(shots)) throw new Error('The backend did not return a local spotlight list.');
+      if (this.annotationInitial || !isDeepStrictEqual(shots, this.annotationShots) || this.annotationError) {
+        this.annotationInitial = false;
+        this.annotationShots = shots; this.annotationError = undefined;
+        await this.post({ type: 'annotations', shots });
+      }
+    } catch (error) { this.annotationWarning(error); }
+  }
+  annotationWarning(error) {
+    this.log(error); this.annotationError = error.message;
+    void this.post({ type: 'annotations-error', message: error.message });
+  }
+  scheduleAnnotationsRefresh() {
+    if (this.disposed) return;
+    clearTimeout(this.annotationTimer);
+    this.annotationTimer = setTimeout(() => this.requestAnnotationsRefresh(), this.host.debounceMs ?? 200);
+  }
+  requestAnnotationsRefresh() {
+    if (this.disposed) return;
+    if (this.annotationsQueued) { this.annotationsAgain = true; return; }
+    this.annotationsQueued = true;
+    this.enqueue(async () => {
+      try { await this.waitReady(); await this.refreshAnnotations(); }
+      finally {
+        this.annotationsQueued = false;
+        if (this.annotationsAgain) { this.annotationsAgain = false; this.scheduleAnnotationsRefresh(); }
+      }
+    });
   }
   async display(loaded, force, selectedId, automatic = false, provisional = false) {
     if (this.disposed) return;
@@ -164,7 +198,7 @@ class GraphSession {
   }
   configurePolling(interval = 0) {
     interval = pollInterval(interval); clearInterval(this.pollTimer); this.pollTimer = undefined;
-    if (interval && !this.disposed) this.pollTimer = setInterval(() => this.requestRefresh(), interval);
+    if (interval && !this.disposed) this.pollTimer = setInterval(() => this.target ? this.requestAnnotationsRefresh() : this.requestRefresh(), interval);
   }
   scheduleRefresh() {
     if (this.disposed || this.target) return;
@@ -184,6 +218,22 @@ class GraphSession {
     });
   }
   async handle(message) {
+    if (message.type === 'annotation-view' || message.type === 'annotation-flush') {
+      if (!this.host.authorized()) throw new Error('Project authorization is required for local spotlights.');
+      if (message.type === 'annotation-view') {
+        const shot = this.annotationShots?.find(s => s.id === message.shot);
+        if (!shot || !Number.isInteger(message.group) || !Number.isInteger(message.member) || message.group < 0 || message.member < 0 || !shot.groups[message.group]?.nodes[message.member]) throw new Error('Select an existing spotlight member.');
+        const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-view', shot: message.shot, group: message.group, member: message.member }));
+        await this.post({ type: 'annotation-preview', ...response.result }); return;
+      }
+      const expected = (this.annotationShots || []).map(s => s.id);
+      if (!expected.length) return;
+      if (!await this.host.confirm(`Flush all ${expected.length} local spotlights and their captured node contents? This affects both UIs for this checkout. Specification files, Git and recovery data are kept.`)) return;
+      try {
+        await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-flush', expected }));
+      } finally { await this.refreshAnnotations(); }
+      return;
+    }
     if (['source-view', 'source-capture'].includes(message.type)) {
       if (!this.host.authorized()) throw new Error('Project authorization is required to read sources.');
       const nodes = new Map([...(this.lastPayload?.diff?.base.nodes || []), ...(this.snapshot?.nodes || [])].map(n => [n.id, n]));
@@ -267,7 +317,7 @@ class GraphSession {
     await this.refresh(true, response.result.changed_ids?.[0]);
   }
   dispose() {
-    this.disposed = true; clearTimeout(this.refreshTimer); clearInterval(this.pollTimer); clearTimeout(this.retryTimer);
+    this.disposed = true; clearTimeout(this.refreshTimer); clearTimeout(this.annotationTimer); clearInterval(this.pollTimer); clearTimeout(this.retryTimer);
     this.reads?.dispose(); this.retryResolve?.(); this.resolveReady(); this.listeners.forEach(f => f());
   }
 }

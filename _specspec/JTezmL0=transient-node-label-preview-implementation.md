@@ -3,22 +3,57 @@ id: JTezmL0=
 type: implementation
 parents:
 - E7O_6GU=
+- rvz48KY=
 sources:
-- path: graph-ui-common/media/graph.js
-- path: graph-ui-common/media/graph.css
-- path: graph-ui-common/view.cjs
-- path: graph-ui-common/test/graph.test.cjs
-- path: graph-ui-common/test-host/ui.cjs
+- path: docs/spotlights.md
 - path: docs/own-spec.md
+- path: electron/main.cjs
+- path: electron/security.cjs
+- path: electron/test-host/run.cjs
+- path: graph-ui-common/host/annotations.cjs
+- path: graph-ui-common/host/session.cjs
+- path: graph-ui-common/media/graph-annotations.js
+- path: graph-ui-common/media/graph.css
+- path: graph-ui-common/media/graph.js
+- path: graph-ui-common/test-host/platform.cjs
+- path: graph-ui-common/test-host/ui.cjs
+- path: graph-ui-common/test/annotations.test.cjs
+- path: graph-ui-common/test/graph.test.cjs
+- path: graph-ui-common/test/session.test.cjs
+- path: graph-ui-common/view.cjs
+- path: vscode/src/extension.ts
+- path: vscode/test/extension.test.cjs
 ---
-# Render ephemeral right-click label rings
+# Render a spotlight dropdown with whole-record rings and framing
 
-Renderer-local `previewLabels` entries drive the exact none/red/blue/green/purple/
-turquoise/yellow cycle on card chrome. Same-view redraw/focus/mode/Refresh reapplies
-them; new views and new draft previews initialize empty. Native fields, links,
-buttons and background retain normal menus.
+The shared renderer integrates immutable checkout-local spotlights into a compact
+newest-first dropdown anchored below the Spotlights button. Each text-only entry
+represents a whole shot and its shared message, with time and version counts.
+Existing retained records with different group texts display those texts together.
+Selecting a shot paints all its exact members in their groups' colors, closes the
+dropdown and frames their union using the existing camera frame operation over the
+full canvas. Repeated selection frames again. Explicit clear removes rings.
+Focused drafts survive the transition to overview. Compact status counts replace
+member/detail/preview UI. The dropdown supports keyboard navigation, Escape,
+outside dismissal, viewport clamping and scrolling. Native node menus stay usable.
 
-CSS paints a 6px inset outline at -6px offset plus an independent focus cue. Labels
-retain their hue on hover and follow unrelated darkening. Accessible preview-only
-text identifies the state. Tests verify equal ring paint, native-menu boundaries,
-cycle/reset, zero persisted entries/messages and stable forms/caret/camera/routes.
+A round red toolbar badge counts one per new shot since dropdown opening, starting
+with a zero-count baseline. Counts/New cues stay in renderer memory. Arrivals
+preserve editing focus/caret, camera, selection, dropdown choice and older entries.
+One active shot and dropdown choice remain per-view preferences. Exact members
+paint an 8px inset outline at -8px offset, separate from keyboard focus and fills.
+Flush uses host confirmation and a locked reviewed-list check.
+
+The shared session reads spotlights independently of graph validity and historical
+selection. Ready/reload republishes retained entries for a new baseline. Directory
+watching serves both hosts; polling and Refresh remain fallbacks. Adapters retain
+trust, action/asset allowlists and disposal boundaries. Shared DOM tests cover
+multicolor whole-shot selection, full-width framing, keyboard/outside dismissal,
+baselines/counts, retained drafts, errors and flush. Real-host probes add records
+through spotlight add and inspect arrival/ring paint, framing and native menus.
+
+Verification is bounded: Python, shared renderer and both host-adapter unit suites
+pass. Installed-window runs reach the spotlight arrival/ring/framing assertions;
+the full broader regression runs remain inconclusive because their later shared
+descendant-deletion checks time out. These runs do not establish successful full
+host integration or persisted-list reload coverage for this realization.

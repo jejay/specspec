@@ -77,7 +77,7 @@ coordinates with open documents; Python still enforces domain and managed-writer
 
 | Layer | Start reading here | Responsibility |
 | --- | --- | --- |
-| Browser canvas | [`graph.js`](../graph-ui-common/media/graph.js), [`graph-model.js`](../graph-ui-common/media/graph-model.js), [`graph-camera.js`](../graph-ui-common/media/graph-camera.js), [`view.cjs`](../graph-ui-common/view.cjs) | Literal DOM text/native forms, SVG curves, revision overlays, metrics, Dagre layout and D3 navigation. Calls `window.SpecSpecHost`; cannot access project files or spawn tools. |
+| Browser canvas | [`graph.js`](../graph-ui-common/media/graph.js), [`graph-annotations.js`](../graph-ui-common/media/graph-annotations.js), [`graph-model.js`](../graph-ui-common/media/graph-model.js), [`graph-camera.js`](../graph-ui-common/media/graph-camera.js), [`view.cjs`](../graph-ui-common/view.cjs) | Literal DOM text/native forms, SVG curves, revision overlays, metrics, Dagre layout and D3 navigation. Calls `window.SpecSpecHost`; cannot access project files or spawn tools. |
 | Shared host coordination | [`session.cjs`](../graph-ui-common/host/session.cjs), [`documents.cjs`](../graph-ui-common/host/documents.cjs), [`cli.cjs`](../graph-ui-common/host/cli.cjs) | Per-view `GraphSession`, project-level `ProjectDocuments`, serialized work, conflict guards, render handshakes and bounded subprocess invocation. No VS Code/Electron SDK imports. |
 | Host adapters | [`vscode/src/extension.ts`](../vscode/src/extension.ts), [`electron/main.cjs`](../electron/main.cjs), [`electron/preload.cjs`](../electron/preload.cjs) | Trust, project discovery, dialogs, file/Git notifications, assets, messaging and presentation storage; VS Code also supplies native documents. |
 | Python backend | [`cli.py`](../src/specspec/cli.py), [`workspace.py`](../src/specspec/workspace.py), [`format.py`](../src/specspec/format.py), [`model.py`](../src/specspec/model.py), [`graph.py`](../src/specspec/graph.py) | Click dispatch, byte snapshots, version bootstrap, strict schema/round-trip YAML, normalized records, adjacency maps, deterministic ordering and iterative traversals. |
@@ -230,9 +230,21 @@ not proof that every listed node is invalid.
 pinned Dagre/D3 dependencies and license notices and copies shared runtime sources.
 The VS Code and Electron build wrappers add their small adapters. **Edit common
 sources, not generated `vscode/media`, `vscode/out` or `electron/build` copies.**
-Temporary right-click node labels live only in renderer memory; they do not
-enter host state or canonical data. Ordinary focus/camera/draft preferences use
-presentation storage. VS Code webview state is scoped per view/project; Electron's
+Immutable agent spotlights and exact node-byte copies live in the Git-excluded
+project-local `.specspec-local/annotations/` store, shared by CLI and both hosts.
+[`annotations.py`](../src/specspec/annotations.py) validates/captures/publishes complete
+shots; `spotlight add/show/flush` supplies the direct-argument public interface.
+[`AnnotationWatcher`](../graph-ui-common/host/annotations.cjs) reports arrivals separately
+from graph reloads, including historical views. The hidden application API reads the
+list, previews captured text and flushes a reviewed list. Snapshot read metadata supplies
+derived exact blob addresses; these are neither canonical fields nor edit gates.
+See [spotlight semantics and UI](spotlights.md). Public naming is independent of
+internal storage keys, paths and transport operation names.
+
+Ordinary focus/camera/draft and spotlight dropdown/selection preferences use presentation
+storage; unread arrivals stay in renderer memory and reset when the list is opened
+or the renderer reloads. Spotlight contents stay in the shared local store. VS Code webview
+state is scoped per view/project; Electron's
 [`PresentationStore`](../electron/store.cjs) uses project-scoped
 `graph-presentation.json` in user data. Neither is canonical graph storage.
 

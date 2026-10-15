@@ -10,6 +10,7 @@ const { GraphSession, pollInterval } = require('./build/common/host/session.cjs'
 const { ProjectReads } = require('./build/common/host/reads.cjs');
 const { GraphWatcher } = require('./build/common/host/watch.cjs');
 const { GitWatcher } = require('./build/common/host/git-watch.cjs');
+const { AnnotationWatcher } = require('./build/common/host/annotations.cjs');
 const { invoke } = require('./build/common/host/cli.cjs');
 const { findProjectRoot } = require('./build/common/host/project.cjs');
 const { graphHtml } = require('./build/common/view.cjs');
@@ -18,7 +19,7 @@ const { renderMatches, sameNode } = require('./build/media/graph-model.js');
 protocol.registerSchemesAsPrivileged([{ scheme: 'specspec', privileges: { standard: true, secure: true, supportFetchAPI: false } }]);
 const option = name => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 if (option('--profile')) app.setPath('userData', resolve(option('--profile')));
-let window, root, graph, reads, store, watcher, gitWatcher, generation = randomBytes(16).toString('hex');
+let window, root, graph, reads, store, watcher, gitWatcher, annotationWatcher, generation = randomBytes(16).toString('hex');
 let selection = Promise.resolve(); const prompts = new Map();
 const launchDirectory = process.cwd();
 const polling = pollInterval(Number(option('--poll-interval-ms') ?? process.env.SPECSPEC_POLL_INTERVAL_MS ?? 0));
@@ -42,7 +43,7 @@ function cancelPrompts() { for (const p of prompts.values()) { clearTimeout(p.ti
 async function loadProject(next) {
   cancelPrompts();
   if (graph) { await graph.run(async () => {}); graph.dispose(); }
-  reads?.dispose(); watcher?.close(); gitWatcher?.close(); store.flush(); root = next; generation = randomBytes(16).toString('hex');
+  reads?.dispose(); watcher?.close(); gitWatcher?.close(); annotationWatcher?.close(); store.flush(); root = next; generation = randomBytes(16).toString('hex');
   if (root) {
     const scope = root;
     const cli = async (args, input) => {
@@ -65,6 +66,7 @@ async function loadProject(next) {
     const changed = () => { projectReads.changed(); session.scheduleRefresh(); };
     watcher = new GraphWatcher(scope, changed, failure => session.warn(failure));
     gitWatcher = new GitWatcher(scope, changed, failure => session.warn(failure));
+    annotationWatcher = new AnnotationWatcher(scope, () => session.scheduleAnnotationsRefresh(), failure => session.annotationWarning(failure));
     window.setTitle(`SpecSpec — ${root}`);
   } else { graph = undefined; window.setTitle('SpecSpec — Open a project'); }
   await window.loadURL(APP_URL);
@@ -130,7 +132,7 @@ app.whenReady().then(async () => {
     prompts.delete(value.id); clearTimeout(p.timer); p.resolve(result || undefined);
   });
   window.webContents.on('render-process-gone', (_event, details) => { cancelPrompts(); graph?.dispose(); console.error('Renderer exited:', details.reason); });
-  window.on('closed', () => { cancelPrompts(); graph?.dispose(); reads?.dispose(); watcher?.close(); gitWatcher?.close(); try { store.flush(); } catch (failure) { console.error(failure); } });
+  window.on('closed', () => { cancelPrompts(); graph?.dispose(); reads?.dispose(); watcher?.close(); gitWatcher?.close(); annotationWatcher?.close(); try { store.flush(); } catch (failure) { console.error(failure); } });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: 'Project', submenu: [{ label: 'Open project…', accelerator: 'CmdOrCtrl+O', click: selectProject },
       { label: 'Refresh graph', accelerator: 'CmdOrCtrl+R', click: () => graph?.enqueue(() => graph.refresh()) },

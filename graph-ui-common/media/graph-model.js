@@ -283,6 +283,12 @@
     });
   }
 
+  function neutralEdgeStrength(scale = 1) {
+    const k = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    // Quiet neutral ink at actual size, half as strong at the 12% overview limit.
+    return 0.35 + 0.35 * Math.max(0, Math.min(1, (k - 0.12) / 0.88));
+  }
+
   function edgeAppearance(route, scale = 1) {
     const k = Number.isFinite(scale) && scale > 0 ? scale : 1;
     const strokeWidth = Math.max(1.7, MIN_STROKE_PIXELS / k);
@@ -297,5 +303,5 @@
 
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
-    sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, edgeAppearance };
+    sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, neutralEdgeStrength, edgeAppearance };
 });

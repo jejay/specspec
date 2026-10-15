@@ -2,7 +2,7 @@
 
 One host-neutral implementation of the native DOM/SVG canvas. `media/` contains
 the renderer, camera and presentation model; `view.cjs` supplies the safe local
-HTML shell; `host/session.cjs` serializes API-3 operations/render handshakes;
+HTML shell; `host/session.cjs` serializes API-6 operations/render handshakes;
 `host/cli.cjs` bounds shell-free Python processes. Python still validates and mutates
 canonical data. No host SDK is imported by these files. `host/documents.cjs`
 provides portable project-level document coordination and minimal text edits;
@@ -17,6 +17,18 @@ retries and render waits. `host/watch.cjs` supplies non-recursive Electron direc
 watching with parent-directory reattachment; VS Code uses its filesystem API.
 Events are reload hints, not an exact change log. Invalid reloads retain the last
 valid view marked out of date; valid data is compared directly, without hashes.
+`host/annotations.cjs` watches the checkout-local immutable spotlight store independently,
+including while a revision graph is open. `media/graph-annotations.js` owns the retained
+dropdown, round red arrival-count badge and active whole-spotlight multicolor 8px
+rings. Selection closes the menu and frames the matching union in the full canvas,
+retaining drafts. Existing initial entries establish a zero-count baseline; opening resets
+new arrivals, and reload starts a new in-memory count. Python owns immutable storage
+and exact blob metadata, shared by the CLI and both hosts. Dropdown/selection preferences
+are per view; unread counts are not persisted. Internal paths/transport names remain
+independent of public Spotlights naming. Neutral curve/head ink darkens continuously
+from 70% at actual size to 35% at minimum zoom; diff and hover inks stay distinct.
+See [spotlight semantics](../docs/spotlights.md).
+
 State must be project-scoped and per-view when a host supports multiple tabs. A host must not expose arbitrary CLI or filesystem
 operations to project content. Future agent integration is a seam, not an implemented
 Claude Code/Codex connector.
@@ -31,7 +43,7 @@ notices and copies runtime sources into a host's output. Generated copies aren't
 hand-edited or canonical sources. Both hosts build the exact same renderer bytes.
 Native draft DOM/caret, original node records, revision metrics, layout/hover/camera
 and safe literal project text are covered by the migrated regression suite.
-VS Code node-file edits use Python's non-writing `editor` API and native text buffers;
+VS Code node-file edits use Python's non-writing `api` planning operation and native text buffers;
 Electron retains managed saves. Shared document tests cover planning, coalescing,
 sequence acknowledgements, version/text conflicts and UTF-16/CRLF-safe edits. See
 [document/persistence semantics](../docs/native-editors.md).

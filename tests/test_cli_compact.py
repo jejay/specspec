@@ -36,9 +36,11 @@ def test_eight_commands_advanced_help_and_no_parallel_legacy_surface(workspace):
         "check",
         "diff",
         "sources",
+        "spotlight",
         "recover",
     }
     assert set(main.commands["sources"].commands) == {"show", "capture", "reanchor"}
+    assert set(main.commands["spotlight"].commands) == {"add", "show", "flush"}
     help_text = call(root, "--help").stdout
     assert "Everyday commands:" in help_text and "Advanced tools:" in help_text
     assert "api" not in help_text and "editor" not in help_text
@@ -49,6 +51,7 @@ def test_eight_commands_advanced_help_and_no_parallel_legacy_surface(workspace):
         ("validate",),
         ("hook", "check"),
         ("editor",),
+        ("annotations",),
     ]:
         assert call(root, *args).exit_code == 2
     assert "--slug" not in call(root, "add", "--help").stdout

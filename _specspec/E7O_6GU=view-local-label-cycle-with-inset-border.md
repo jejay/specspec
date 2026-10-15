@@ -6,16 +6,16 @@ parents:
 - LtROyww=
 - bLBNk80=
 ---
-# Draw view-local label rings inside unchanged card outlines
+# Paint active spotlight rings inside unchanged card outlines
 
-Keep a renderer-memory map keyed by node ID, separate from persisted drafts and
-presentation. Same-view redraw/focus/color-mode/Refresh retains labels; a new view
-starts empty. New-draft previews reset on a new draft. Delegate chrome/headline
-contextmenu to the six-color cycle and keep native field/link/button/background
-menus usable. Historical/removed cards support this transient visualization.
+One active spotlight supplies an 8px solid outline at -8px offset around exact
+matching members in the displayed graph, including base-revision removed cards.
+Each member uses the color of its set; all sets activate together. The outline
+follows the existing type shape, stays equal on all sides, retains its hue on
+hover and follows unrelated-card darkening. Keyboard focus has an independent cue.
 
-Use a 6px solid outline at -6px offset with inherited type shape, equal around the
-border box, plus a separate keyboard-focus cue. Fixed label inks retain their hue
-on hover and follow unrelated-card darkening. Show accessible preview-only text.
-Canonical files, host state and mutation messages contain ordinary node data;
-label entries stay in renderer memory. Geometry, ports, forms and camera stay stable.
+Keep spotlight selection separate from canonical data, native forms, drafts and
+semantic fills. Selection repaints cards and explicitly frames its matching set;
+arrivals and dropdown opening/dismissal preserve camera, native input and caret.
+Node chrome and native controls retain normal context menus. Compact counts
+explain changed-version, absent and unavailable members without ringing them.
