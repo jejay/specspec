@@ -110,9 +110,12 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   anchored to Spotlights shows one text entry per spotlight. Selection activates
   all its colors with eight-pixel exact-version inset rings, closes the dropdown
   and frames the matching union in the full canvas, retaining focused drafts.
-  Compact version counts replace member/detail/preview UI. Dropdown/selection
-  preferences are per view; immutable batches survive
-  sessions until explicit flush. See [spotlight design and storage](spotlights.md).
+  Compact version counts replace member/detail/preview UI. Shift-click cycles
+  manual and spotlight-applied highlights through red/blue/green/purple/turquoise/
+  yellow/off; Ctrl/Command+Shift-click clears a node. The dropdown can save the
+  current highlights with a message for the agent, without saving native documents
+  or managed forms. Version-aware highlight references and dropdown preferences
+  are per view; immutable batches survive sessions until explicit flush. See [spotlight design and storage](spotlights.md).
 - **Ordinary arrows** use darker shared neutral ink, mixed with black at 70% at
   actual size and above, decreasing linearly to 35% at the 12% camera limit. The
   existing curve/head pair and minimum pixel dimensions remain intact. Diff/draft

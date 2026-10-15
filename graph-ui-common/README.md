@@ -19,11 +19,15 @@ Events are reload hints, not an exact change log. Invalid reloads retain the las
 valid view marked out of date; valid data is compared directly, without hashes.
 `host/annotations.cjs` watches the checkout-local immutable spotlight store independently,
 including while a revision graph is open. `media/graph-annotations.js` owns the retained
-dropdown, round red arrival-count badge and active whole-spotlight multicolor 8px
-rings. Selection closes the menu and frames the matching union in the full canvas,
+dropdown, round red arrival-count badge and editable multicolor 8px rings.
+Shift-click cycles colors and Ctrl/Command+Shift clears one member, identically
+for manual and spotlight-applied highlights. A local message dialog sends exact
+references to the guarded session's creation API; the VS Code adapter supplies
+actual native buffers without invoking Save. Immutable records are then available
+through spotlight show for owner-to-agent messages. Selection closes the menu and frames the matching union in the full canvas,
 retaining drafts. Existing initial entries establish a zero-count baseline; opening resets
 new arrivals, and reload starts a new in-memory count. Python owns immutable storage
-and exact blob metadata, shared by the CLI and both hosts. Dropdown/selection preferences
+and exact blob metadata, shared by the CLI and both hosts. Dropdown/highlight preferences
 are per view; unread counts are not persisted. Internal paths/transport names remain
 independent of public Spotlights naming. Neutral curve/head ink darkens continuously
 from 70% at actual size to 35% at minimum zoom; diff and hover inks stay distinct.

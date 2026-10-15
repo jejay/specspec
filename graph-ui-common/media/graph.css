@@ -66,7 +66,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.implementation { border-radius: 0px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
-/* Active spotlight: exact versions only; paint never changes the card's box. */
+/* Editable highlights: exact versions only; paint never changes the card's box. */
 #cards .card[data-annotation-label] { outline: 8px solid var(--annotation-ink); outline-offset: -8px; }
 #cards .card[data-annotation-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 26px; }
@@ -116,11 +116,14 @@ footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscod
 .annotation-new { font-size: 10px; color: var(--vscode-focusBorder, #5c9eff); border: 1px solid currentColor; border-radius: 3px; padding: 1px 4px; }
 .annotation-label { display: flex; width: 100%; gap: 8px; align-items: flex-start; text-align: left; padding: 7px 9px; border-radius: 3px; background: transparent; color: inherit; }
 .annotation-label:hover, .annotation-panel-footer button:hover { background: var(--vscode-menu-selectionBackground, #094771); color: var(--vscode-menu-selectionForeground, #fff); }
-.annotation-label[aria-checked="true"] { border-color: var(--vscode-focusBorder, #5c9eff); }
 .annotation-label-text { flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
 .annotation-label-text small { display: block; margin-top: 3px; font-size: 10px; opacity: .8; }
 .annotation-panel-footer { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--vscode-panel-border, #777); padding-top: 4px; }
 .annotation-panel-footer button { text-align: left; background: transparent; color: inherit; font-size: 11px; }
+#annotation-compose { width: min(90vw, 520px); max-height: 85vh; overflow: auto; padding: 20px; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-panel-border, #777); }
+#annotation-compose::backdrop { background: #0009; }
+#annotation-message { max-height: 50vh; }
+#annotation-compose-error { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 [hidden] { display: none !important; }
 body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); }
 body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { background: var(--vscode-editor-background); }

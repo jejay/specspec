@@ -185,7 +185,14 @@ and frames their union in the full canvas, retaining focused drafts. Compact ver
 counts replace detail/preview UI. Clear highlight removes rings explicitly.
 A round red badge counts new shots since opening; initial entries count zero and
 reload starts a fresh in-memory baseline. Arrivals preserve editing and camera.
-Dropdown/selection preferences are per view; contents are shared per checkout.
+The dropdown and version-aware editable highlights are per view; contents are shared
+per checkout. Shift-click cycles red/blue/green/purple/turquoise/yellow/off and
+Ctrl/Command+Shift clears one node. Manual and spotlight-applied rings share this
+set; whole-set clear applies to both. The dropdown saves highlights with a message
+as a new immutable spotlight, readable by an agent through spotlight show. Exact
+retained/target/base/native-overlay bytes are captured without saving forms or
+claiming a common commit; assembled records use highlights provenance. Flush
+removes the store, leaving editable references independently clearable.
 Watching is independent of graph refresh, including historical views. Internal
 store/transport names remain independent of public naming. [The spotlight guide](docs/spotlights.md)
 specifies arguments, version resolution, storage limits and verification.

@@ -50,6 +50,23 @@ def same_items(left: Any, right: Any) -> bool:
         return False
 
 
+def document_files(root: Path, documents: Any) -> dict[str, bytes]:
+    """Read actual canonical bytes with bounded native text overlays, without saves."""
+    if not isinstance(documents, dict):
+        fail("documents must map canonical paths to UTF-8 text.")
+    files, diagnostics = read_files(root)
+    diagnostics.extend(runtime_diagnostics(root))
+    if diagnostics:
+        raise SpecError(diagnostics)
+    for path, text in documents.items():
+        document_path(path)
+        if not isinstance(text, str) or len(text.encode("utf-8")) > MAX_FILE_BYTES:
+            fail("Document text exceeds the 1 MiB limit or is not a string.", path)
+        if path in files:
+            files[path] = text.encode("utf-8")
+    return files
+
+
 def editor_request(root: Path, request: Any, base: str | None = None) -> dict[str, Any]:
     """Overlay existing files and optionally plan one document change, without IO writes."""
     if not isinstance(request, dict) or set(request) - {"documents", "edit", "base_cache", "cache"}:
@@ -75,22 +92,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
         if total > 2 * MAX_FILE_BYTES:
             fail("Baseline cache exceeds its 2 MiB budget.")
     documents = request.get("documents", {})
-    if not isinstance(documents, dict):
-        fail("documents must map canonical paths to UTF-8 text.")
-    files, diagnostics = read_files(root)
-    diagnostics.extend(runtime_diagnostics(root))
-    # Runtime recovery/locks and unsafe directory entries cannot be hidden by overlays.
-    if diagnostics:
-        raise SpecError(diagnostics)
-    for path, text in documents.items():
-        document_path(path)
-        if not isinstance(text, str) or len(text.encode("utf-8")) > MAX_FILE_BYTES:
-            fail("Document text exceeds the 1 MiB limit or is not a string.", path)
-        if path not in files:
-            # An open buffer can outlive a deleted file. Keep it in the editor,
-            # never resurrect it in the graph; editing it still fails below.
-            continue
-        files[path] = text.encode("utf-8")
+    files = document_files(root, documents)
     changes = []
     edit = request.get("edit")
     if edit is not None:

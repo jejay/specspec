@@ -28,3 +28,8 @@ Internal ordered groups carry the shared message, color and full node IDs with
 exact blob addresses. Existing immutable submissions keep their original bytes;
 internal paths and keys are independent of public naming. Submissions retain
 capture provenance and independently generated shot identity.
+
+UI-created spotlights capture the editable highlight set through the application
+API, preserving exact member bytes from retained content or trusted view inputs.
+Their origin kind is highlights: the set may combine revisions and native overlays.
+The CLI lists these alongside agent-created workspace/commit spotlights.

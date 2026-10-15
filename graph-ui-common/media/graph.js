@@ -554,6 +554,8 @@
   host.onMessage(message => {
     if (message.type === 'annotations') { annotations.receive(message.shots); return; }
     if (message.type === 'annotations-error') { annotations.error(message.message); return; }
+    if (message.type === 'annotation-created') { annotations.created(); return; }
+    if (message.type === 'annotation-create-error') { annotations.created(message.message); return; }
     if (message.type === 'source-captured') {
       if (message.id !== selected || !editable()) return;
       try {

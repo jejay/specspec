@@ -5,6 +5,7 @@ parents:
 - P2i_png=
 - 63jO49Q=
 - rQTg56g=
+- RY5LFw8=
 sources:
 - path: docs/spotlights.md
 - path: docs/cli.md
@@ -15,6 +16,7 @@ sources:
 - path: src/specspec/editor.py
 - path: tests/test_annotations.py
 - path: tests/test_cli_compact.py
+- path: tests/test_spotlight_backchannel.py
 ---
 # Implement immutable local shots and derived snapshot blob identities
 
@@ -42,3 +44,14 @@ local Git exclusion, corruption, budgets and reviewed-flush races. Temporal test
 exercise renames, changed commits and branch switching in an independent clone of
 the maintained current-schema Gantt history. These are bounded local persistence
 and membership checks, not semantic answer validation or exhaustive history indexing.
+
+The application creation operation captures exact highlight references from the
+retained store or trusted selected target/base/native-overlay bytes and reuses the
+locked publisher. New assembled shots declare highlights provenance; failed exact
+resolution leaves the previous shots and canonical files intact.
+
+Backchannel tests verify API-to-CLI readability, exact native unsaved UTF-8 bytes,
+retained-version reuse with invalid current files, mixed target/base-ghost capture
+in independent current-schema Gantt history, malformed/changed member rejection,
+corruption and shared publication budgets. Overlay file extraction is shared with
+the native planner; creation never saves a native document or managed form draft.

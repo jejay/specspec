@@ -4,6 +4,7 @@ type: implementation
 parents:
 - E7O_6GU=
 - rvz48KY=
+- RY5LFw8=
 sources:
 - path: docs/spotlights.md
 - path: docs/own-spec.md
@@ -23,6 +24,7 @@ sources:
 - path: graph-ui-common/view.cjs
 - path: vscode/src/extension.ts
 - path: vscode/test/extension.test.cjs
+- path: electron/test/security.test.cjs
 ---
 # Render a spotlight dropdown with whole-record rings and framing
 
@@ -30,7 +32,7 @@ The shared renderer integrates immutable checkout-local spotlights into a compac
 newest-first dropdown anchored below the Spotlights button. Each text-only entry
 represents a whole shot and its shared message, with time and version counts.
 Existing retained records with different group texts display those texts together.
-Selecting a shot paints all its exact members in their groups' colors, closes the
+Selecting a shot replaces highlights with its exact members and colors, closes the
 dropdown and frames their union using the existing camera frame operation over the
 full canvas. Repeated selection frames again. Explicit clear removes rings.
 Focused drafts survive the transition to overview. Compact status counts replace
@@ -39,10 +41,11 @@ outside dismissal, viewport clamping and scrolling. Native node menus stay usabl
 
 A round red toolbar badge counts one per new shot since dropdown opening, starting
 with a zero-count baseline. Counts/New cues stay in renderer memory. Arrivals
-preserve editing focus/caret, camera, selection, dropdown choice and older entries.
-One active shot and dropdown choice remain per-view preferences. Exact members
-paint an 8px inset outline at -8px offset, separate from keyboard focus and fills.
-Flush uses host confirmation and a locked reviewed-list check.
+preserve editing focus/caret, camera, selection, dropdown choice and older
+entries. A version-aware editable highlight map and dropdown choice remain per-
+view preferences. Exact members paint an 8px inset outline at -8px offset,
+separate from keyboard focus and fills. Flush uses host confirmation and a locked
+reviewed-list check.
 
 The shared session reads spotlights independently of graph validity and historical
 selection. Ready/reload republishes retained entries for a new baseline. Directory
@@ -53,7 +56,15 @@ baselines/counts, retained drafts, errors and flush. Real-host probes add record
 through spotlight add and inspect arrival/ring paint, framing and native menus.
 
 Verification is bounded: Python, shared renderer and both host-adapter unit suites
-pass. Installed-window runs reach the spotlight arrival/ring/framing assertions;
-the full broader regression runs remain inconclusive because their later shared
-descendant-deletion checks time out. These runs do not establish successful full
-host integration or persisted-list reload coverage for this realization.
+pass. Installed Windows Electron exercises the backchannel in compact, circular
+manifesto and expanded contexts; installed VS Code exercises compact and circular
+manifesto cases. Both verify message capture and external agent CLI readback.
+Complete broader smoke runs remain inconclusive: Electron reaches later manual
+invalid-file synchronization before a timeout, while VS Code exceeds its
+interaction guard. Final installed-host persisted-list reload remains unconfirmed.
+Command/Meta+Shift has synthetic-event coverage; actual macOS behavior is untested.
+
+The shared renderer handles Shift-click cycling and Ctrl/Command+Shift removal
+on node chrome, whole-set clear and a message dialog for immutable spotlight
+creation. The guarded shared session supplies view revisions and native overlays
+to the backend, and both adapters authorize the new creation action.

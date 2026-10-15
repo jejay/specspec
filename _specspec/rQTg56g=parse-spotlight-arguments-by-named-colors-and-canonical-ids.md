@@ -22,6 +22,6 @@ and --json for output. Show and confirmed flush keep their existing read/lifetim
 semantics. Commands accept arguments directly rather than file/JSON input.
 
 One stored shot represents the whole spotlight. Ordered internal color groups
-repeat its single message, reusing the existing checkout-local storage format.
-The dropdown selects the shot ID and paints all its groups together. For retained
-records with overlapping groups, later groups determine the ring color.
+repeat its single message, reusing the existing checkout-local storage format. The
+dropdown applies all exact matching groups to the editable highlight set. For
+retained records with overlapping groups, later groups determine the ring color.

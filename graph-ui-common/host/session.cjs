@@ -218,6 +218,20 @@ class GraphSession {
     });
   }
   async handle(message) {
+    if (message.type === 'annotation-create') {
+      try {
+        if (!this.host.authorized()) throw new Error('Project authorization is required for local spotlights.');
+        if (!Array.isArray(message.groups) || !message.groups.length || message.groups.length > 64 || Buffer.byteLength(JSON.stringify(message.groups), 'utf8') > 512 * 1024) throw new Error('Invalid or oversized highlight set.');
+        await this.flushDocument();
+        const documents = this.target ? {} : await this.host.annotationDocuments?.() || {};
+        await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-create', groups: message.groups,
+          ...(this.lastPayload?.diff ? { base: this.lastPayload.diff.base_commit || this.base } : {}),
+          ...(this.target ? { target: this.lastPayload?.diff?.target_commit || this.target } : { documents }) }));
+        await this.refreshAnnotations();
+        await this.post({ type: 'annotation-created' });
+      } catch (error) { this.log(error); await this.post({ type: 'annotation-create-error', message: error.message }); }
+      return;
+    }
     if (message.type === 'annotation-view' || message.type === 'annotation-flush') {
       if (!this.host.authorized()) throw new Error('Project authorization is required for local spotlights.');
       if (message.type === 'annotation-view') {

@@ -19,6 +19,10 @@ function fixture(t, options = {}) {
         if (annotationFailure) throw new Error('Malformed local shot');
         return { api_version: 6, ok: true, diagnostics: [], result: { shots } };
       }
+      if (value?.op === 'annotation-create') {
+        if (options.creationFailure) throw new Error('Highlighted version changed.');
+        return { api_version: 6, ok: true, result: { shots: [] } };
+      }
       if (value?.op === 'annotation-flush') { shots = []; return { api_version: 6, ok: true, result: { flushed: 1 } }; }
       if (value?.op === 'annotation-view') return { api_version: 6, ok: true, result: { text: 'Captured bytes', reference: shots[0].groups[0].nodes[0], origin: shots[0].origin } };
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
@@ -44,6 +48,46 @@ function fixture(t, options = {}) {
   t.after(() => s.dispose()); s.receive({ type: 'ready' });
   return { s, calls, messages, confirmations, change: value => { current = value; }, fail: value => { failure = value; }, failNext: count => { remainingFailures = count; }, changeShots: value => { shots = value; }, failAnnotations: value => { annotationFailure = value; }, revoke: () => { authorized = false; } };
 }
+test('highlight creation uses the guarded local API with trusted overlays, not canonical mutations', async t => {
+  const f = fixture(t); await f.s.open();
+  let drained = false;
+  f.s.documentEdits = Promise.resolve().then(() => { drained = true; });
+  f.s.host.annotationDocuments = async () => { assert.ok(drained); return { '_specspec/node.md': 'Native dirty text' }; };
+  const groups = [{ text: 'Please reconsider', color: '#e65e66', nodes: [{ id: 'Zm9vYmE=', blob: 'a'.repeat(40) }] }];
+  const count = f.calls.length;
+  await f.s.handle({ type: 'annotation-create', groups, documents: { 'forged.md': 'ignored' }, target: 'forged' });
+  const request = JSON.parse(f.calls.slice(count).find(c => JSON.parse(c.input).op === 'annotation-create').input);
+  assert.deepEqual(request, { api_version: 6, op: 'annotation-create', groups, base: 'HEAD', documents: { '_specspec/node.md': 'Native dirty text' } });
+  assert.equal(f.messages.at(-1).type, 'annotation-created');
+  assert.ok(!f.calls.slice(count).some(c => ['add','update','delete'].includes(c.args[0])));
+  f.revoke(); const before = f.calls.length;
+  await f.s.handle({type:'annotation-create',groups});
+  assert.equal(f.calls.length,before); assert.equal(f.messages.at(-1).type,'annotation-create-error');
+  assert.match(f.messages.at(-1).message,/authorization/);
+});
+
+test('historical highlight creation pins selected commits and excludes live documents', async t => {
+  const f=fixture(t,{revisions:['older','newer']}); await f.s.open(); await f.s.chooseRevisions();
+  f.s.lastPayload.diff.base_commit='b'.repeat(40); f.s.lastPayload.diff.target_commit='c'.repeat(40);
+  f.s.host.annotationDocuments=()=>{throw new Error('Historical capture must not read live documents.');};
+  const groups=[{text:'Old intent',color:'blue',nodes:[{id:'Zm9vYmE=',blob:'a'.repeat(40)}]}];
+  await f.s.handle({type:'annotation-create',groups});
+  const call=f.calls.find(c=>c.args[0]==='api'&&JSON.parse(c.input).op==='annotation-create');
+  assert.deepEqual(JSON.parse(call.input),{api_version:6,op:'annotation-create',groups,base:'b'.repeat(40),target:'c'.repeat(40)});
+  assert.equal(f.messages.at(-1).type,'annotation-created');
+});
+
+test('creation errors return a retryable compose response and never publish a false success', async t => {
+  const f=fixture(t,{creationFailure:true}); await f.s.open();
+  const groups=[{text:'Retry me',color:'red',nodes:[{id:'Zm9vYmE=',blob:'a'.repeat(40)}]}];
+  await f.s.handle({type:'annotation-create',groups});
+  assert.equal(f.messages.at(-1).type,'annotation-create-error'); assert.match(f.messages.at(-1).message,/version changed/);
+  assert.equal(f.messages.some(m=>m.type==='annotation-created'),false);
+  const count=f.calls.length;
+  for(const invalid of [[],null,[{text:'x'.repeat(512*1024)}]]) await f.s.handle({type:'annotation-create',groups:invalid});
+  assert.equal(f.calls.length,count); assert.equal(f.messages.at(-1).type,'annotation-create-error');
+});
+
 test('source capture invokes only a validated preview and never a writer or Git operation', async t => {
   const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]}});await f.s.open();
   await f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});

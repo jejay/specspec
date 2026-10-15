@@ -179,7 +179,7 @@ Cards use shared 15% resting/24% hover tint and ordinary theme text.
 increases colored border/incident ink lightness and chroma. The neutral manifesto's
 hover border is white. [Immediate-context darkening](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
 is transient and preserves geometry/native forms. [Spotlight rings](../_specspec/E7O_6GU=view-local-label-cycle-with-inset-border.md)
-paint exact versions in every colored set of the active spotlight with an 8px inset outline.
+paint exact versions in one editable colored highlight set with an 8px inset outline.
 
 [Quiet ordinary arrows](../_specspec/u8tHkaE=keep-ordinary-relationship-arrows-quiet-as-the-graph-is-zoomed-out.md)
 keep the overview mesh subordinate to spotlight batches. [Neutral-ink scaling](../_specspec/yCYr-E0=scale-neutral-arrow-ink-from-seventy-to-thirty-five-percent-with-zoom.md)
@@ -188,7 +188,7 @@ to 35% at 12% zoom. Diff/draft colors and incident-hover emphasis remain indepen
 minimum stroke/head geometry stays intact. The [shared canvas realization](../_specspec/asaRDK0=shared-graph-ui-implementation.md)
 maps the pure, DOM and real-host paint checks.
 
-## Persistent local spotlights
+## Persistent local spotlights and the owner backchannel
 
 [Agent answers](../_specspec/DG-JpDc=temporary-node-label-border-preview.md) are immutable
 spotlights, each one message with colored node/version sets. The [local-store
@@ -215,6 +215,18 @@ recognizes named colors and full IDs before the shared message, uses purple for
 initial uncolored IDs and rejects duplicate members.
 Public naming is independent of internal store/transport keys; retained immutable
 submissions keep their original bytes.
+
+[The owner backchannel](../_specspec/7UOmpHw=send-owner-intent-back-to-agents-through-editable-highlights.md)
+unifies manual and spotlight-applied highlights. Shift-click node chrome cycles
+red/blue/green/purple/turquoise/yellow/off; Ctrl+Shift or macOS Command+Shift removes
+one member. Clear highlight removes the set. The dropdown can save it with a
+message as a new immutable spotlight for `spotlight show` to expose to the agent.
+[Version-aware capture](../_specspec/RY5LFw8=capture-one-version-aware-per-view-highlight-set.md)
+keeps exact references as per-view state and resolves retained, target/base and
+trusted native-overlay bytes atomically. Creation preserves forms/camera and uses
+highlights provenance for possibly mixed revisions; originals stay immutable.
+Native controls keep their modified clicks. Mac event handling is covered
+synthetically only; actual Mac host behavior remains unverified.
 
 [Type shapes](../_specspec/AZbsoEA=type-radii-and-content-fitting-circular-manifesto.md)
 are Implementation **0px**, Requirement **24px**, and a true manifesto circle.

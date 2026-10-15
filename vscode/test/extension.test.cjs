@@ -116,6 +116,7 @@ function fixture(t, options = {}) {
     if (args[0] === 'api') {
       const request = JSON.parse(input);
       if (request.op === 'annotations') return { api_version: 6, ok: true, diagnostics: [], result: { shots: options.shots || [] } };
+      if (request.op === 'annotation-create') return { api_version: 6, ok: true, diagnostics: [], result: { shots: [] } };
       if (options.editError && request.edit) throw new Error('Planner temporarily unavailable');
       let overlaid = { ...current, valid: !request.target && options.invalidOverlay ? false : current.valid, nodes: current.nodes.map(n => ({ ...n, body: request.documents?.[n.path]?.split('\n---\n')[1] ?? n.body })) };
       const changes = [];
@@ -335,6 +336,24 @@ test('remote workspace placement uses host-file resources, remote executable set
   assert.deepEqual(manifest.extensionKind, ['workspace']);
   assert.equal(manifest.capabilities.virtualWorkspaces.supported, false);
   assert.equal(manifest.capabilities.untrustedWorkspaces.supported, false);
+});
+
+test('native spotlight creation includes actual dirty buffers without invoking Save or managed node writes', async t => {
+  const node={id:'Zm9vYmE=',type:'requirement',parents:[],body:'# Original',sources:[],path:'_specspec/Zm9vYmE=node.md'};
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[node]}}), {doc,panel}=await f.openDocument(node);
+  doc.text=doc.text.replace('# Original','# Unsaved intent'); doc.version++; doc.isDirty=true;
+  f.calls.textListeners.forEach(fn=>fn({document:doc}));
+  const groups=[{text:'Please review',color:'#e65e66',nodes:[{id:node.id,blob:'a'.repeat(40)}]}];
+  await panel.send({type:'annotation-create',groups,documents:{'../forged':'ignored'}});
+  await waitFor(()=>panel.messages.some(m=>m.type==='annotation-created'));
+  const call=f.calls.cli.find(c=>c.args[0]==='api'&&JSON.parse(c.input).op==='annotation-create');
+  assert.deepEqual(JSON.parse(call.input).documents,{[node.path]:doc.text});
+  assert.equal(doc.isDirty,true); assert.equal(f.calls.edits.length,0);
+  assert.equal(f.calls.cli.some(c=>['add','update','delete'].includes(c.args[0])),false);
+  f.workspace.isTrusted=false; const count=f.calls.cli.length;
+  await panel.send({type:'annotation-create',groups});
+  await waitFor(()=>panel.messages.some(m=>m.type==='annotation-create-error'));
+  assert.equal(f.calls.cli.length,count);
 });
 
 test('external annotation shots notify all project views without reloading their graphs', async t => {

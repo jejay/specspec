@@ -1,11 +1,15 @@
-/* Immutable spotlight data is separate from per-view selection and session-only arrivals. */
+/* Immutable spotlights exchange messages; one editable per-view set owns all rings. */
 (() => {
   function create({ restored, snapshot, cards, save, send, frame }) {
     const $ = id => document.getElementById(id);
-    let shots = [], loaded = false, error, active = restored.activeAnnotation;
+    let shots = [], loaded = false, error, draft, creating = false;
     let open = Boolean(restored.annotationPanelOpen);
-    const fresh = new Set();
-    const activeShot = () => shots.find(shot => shot.id === active);
+    const fresh = new Set(), highlights = new Map();
+    const inks = ['#e65e66', '#5c9eff', '#58ba7a', '#aa79df', '#35bdbe', '#dfc24d'];
+    for (const member of Array.isArray(restored.annotationHighlights) ? restored.annotationHighlights : []) {
+      if (member && typeof member.id === 'string' && /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(member.blob) && /^#[0-9a-f]{6}$/i.test(member.color))
+        highlights.set(member.id, { id: member.id, blob: member.blob, color: member.color.toLowerCase() });
+    }
     const message = shot => [...new Set(shot.groups.map(group => group.text))].join(' · ');
     function resolution(member) {
       const state = snapshot();
@@ -17,20 +21,13 @@
       if (!Array.isArray(versions)) return 'unavailable';
       return versions.includes(member.blob) ? 'exact' : 'changed';
     }
-    function matches(shot) {
-      const result = new Map();
-      for (const group of shot?.groups || []) for (const member of group.nodes)
-        if (resolution(member) === 'exact') result.set(member.id, group.color);
-      return result;
-    }
     function paint() {
-      const current = activeShot(), matching = matches(current);
       for (const card of cards().children) {
-        const color = matching.get(card.dataset.nodeId);
-        if (color) {
-          card.dataset.annotationLabel = active;
-          card.style.setProperty('--annotation-ink', color);
-          card.setAttribute('aria-description', `Spotlight: ${message(current)}. Exact captured node version.`);
+        const member = highlights.get(card.dataset.nodeId);
+        if (member && resolution(member) === 'exact') {
+          card.dataset.annotationLabel = 'highlight';
+          card.style.setProperty('--annotation-ink', member.color);
+          card.setAttribute('aria-description', 'Node highlight. Exact captured node version. Shift-click cycles color; Ctrl/Command+Shift-click clears.');
         } else {
           delete card.dataset.annotationLabel; card.style.removeProperty('--annotation-ink'); card.removeAttribute('aria-description');
         }
@@ -74,7 +71,9 @@
       $('annotations-toggle').setAttribute('aria-expanded', String(open));
       $('annotations-panel').hidden = !open;
       $('annotation-error').hidden = !error; $('annotation-error').textContent = error ? `List out of date: ${error}` : '';
-      $('annotation-clear').disabled = !activeShot();
+      $('annotation-clear').disabled = !highlights.size;
+      $('annotation-create').disabled = !highlights.size || creating;
+      $('annotation-create').textContent = `Create spotlight from highlights${highlights.size ? ` (${highlights.size})` : ''}…`;
       $('annotation-flush').disabled = !shots.length;
       const list = $('annotation-list'), scroll = list.scrollTop;
       const focus = list.contains(document.activeElement) ? document.activeElement.dataset.annotationFocus : undefined;
@@ -85,14 +84,18 @@
       for (const shot of shots) {
         const button = element('button', 'annotation-label'); button.type = 'button';
         button.dataset.shotId = shot.id; button.dataset.annotationFocus = shot.id;
-        button.setAttribute('role', 'menuitemradio'); button.setAttribute('aria-checked', String(active === shot.id));
+        button.setAttribute('role', 'menuitem');
         const text = element('span', 'annotation-label-text', message(shot));
         text.append(element('small', '', `${new Date(shot.created_at).toLocaleString()} · ${counts(shot)}`));
         button.append(text);
         if (fresh.has(shot.id)) button.append(element('strong', 'annotation-new', 'New'));
         button.addEventListener('click', () => {
-          active = shot.id; paint();
-          const ids = [...matches(shot).keys()];
+          highlights.clear();
+          for (const group of shot.groups) for (const member of group.nodes) {
+            if (resolution(member) === 'exact') highlights.set(member.id, { id: member.id, blob: member.blob, color: group.color });
+          }
+          paint();
+          const ids = [...highlights.keys()];
           toggle(false); // Close before framing: the whole canvas is available.
           frame(ids);
         });
@@ -112,7 +115,54 @@
         if (event.key === 'ArrowUp') menuItems().at(-1)?.focus();
       }
     });
-    $('annotation-clear').addEventListener('click', () => { active = undefined; paint(); toggle(false); });
+    $('viewport').addEventListener('click', event => {
+      if (!event.shiftKey || event.altKey || event.button !== 0) return;
+      if (event.target.closest?.('input, textarea, select, a, label, [contenteditable]:not([contenteditable="false"]), button:not(.card)')) return;
+      const card = event.target.closest?.('.card'), id = card?.dataset.nodeId;
+      if (card?.parentElement !== cards() || !id || id === '__draft__') return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      if (event.ctrlKey || event.metaKey) highlights.delete(id);
+      else {
+        const state = snapshot(), target = state?.snapshot.nodes.some(n => n.id === id);
+        const blob = (target ? state?.node_blobs : state?.base_node_blobs)?.[id]?.[0];
+        if (!blob) { $('annotation-live').textContent = 'This node has no exact version available for highlighting. Refresh and retry.'; return; }
+        const previous = highlights.get(id);
+        const index = previous && resolution(previous) === 'exact' ? inks.indexOf(previous.color.toLowerCase()) : -1;
+        if (index === inks.length - 1) highlights.delete(id);
+        else highlights.set(id, { id, blob, color: inks[index + 1] });
+      }
+      paint(); render(); save();
+    }, true);
+    $('annotation-clear').addEventListener('click', () => { highlights.clear(); paint(); toggle(false); });
+    const dialog = $('annotation-compose');
+    function closeCompose() {
+      if (dialog.close) dialog.close(); else dialog.removeAttribute('open');
+      $('annotations-toggle').focus({ preventScroll: true });
+    }
+    $('annotation-create').addEventListener('click', () => {
+      draft = [...highlights.values()].map(member => ({ ...member }));
+      toggle(false);
+      $('annotation-message').value = ''; $('annotation-compose-error').textContent = '';
+      if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
+      $('annotation-message').focus();
+    });
+    $('annotation-compose-cancel').addEventListener('click', closeCompose);
+    dialog.addEventListener('cancel', event => { event.preventDefault(); if (!creating) closeCompose(); });
+    $('annotation-compose-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const text = $('annotation-message').value.trim();
+      if (creating) return;
+      if (!text || [...text].length > 500 || !draft?.length) { $('annotation-compose-error').textContent = 'Provide a message of 1–500 characters and at least one highlight.'; return; }
+      const groups = [];
+      for (const member of draft) {
+        let group = groups.find(group => group.color === member.color);
+        if (!group) { group = { text, color: member.color, nodes: [] }; groups.push(group); }
+        group.nodes.push({ id: member.id, blob: member.blob });
+      }
+      creating = true; $('annotation-compose-save').disabled = true; $('annotation-compose-cancel').disabled = true;
+      $('annotation-compose-error').textContent = 'Creating spotlight…';
+      send({ type: 'annotation-create', groups });
+    });
     $('annotation-flush').addEventListener('click', () => { toggle(false); send({ type: 'annotation-flush' }); });
     $('annotations-panel').addEventListener('keydown', event => {
       const items = menuItems(), index = items.indexOf(document.activeElement);
@@ -132,7 +182,13 @@
     window.addEventListener('resize', position);
     render();
     return {
-      presentation: () => ({ annotationPanelOpen: open, activeAnnotation: active }),
+      presentation: () => ({ annotationPanelOpen: open, annotationHighlights: [...highlights.values()].map(member => ({ ...member })) }),
+      created(message) {
+        creating = false; $('annotation-compose-save').disabled = false; $('annotation-compose-cancel').disabled = false;
+        if (message) $('annotation-compose-error').textContent = message;
+        else { closeCompose(); $('annotation-live').textContent = 'Spotlight created. The agent can read it with specspec spotlight show.'; }
+        render();
+      },
       changed() { render(); paint(); },
       receive(value) {
         const previous = new Set(shots.map(shot => shot.id));
@@ -141,7 +197,6 @@
         const present = new Set(shots.map(shot => shot.id));
         for (const id of fresh) if (!present.has(id)) fresh.delete(id);
         arrivals.forEach(shot => fresh.add(shot.id));
-        if (!activeShot()) active = undefined;
         if (arrivals.length) $('annotation-live').textContent = `${fresh.size} new spotlight${fresh.size === 1 ? '' : 's'}. Open Spotlights to inspect the retained list.`;
         render(); paint(); save();
       },

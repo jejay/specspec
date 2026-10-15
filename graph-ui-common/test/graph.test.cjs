@@ -145,8 +145,8 @@ test('the dropdown selects whole multicolor spotlights, closes, and retains olde
   older.groups.push({ ...shot('1', ['child']).groups[0], color: '#58ba7a' });
   send({ type: 'annotations', shots: [older] }); $('annotations-toggle').click();
   assert.equal($('annotations-panel').getAttribute('role'), 'menu'); assert.equal($('spotlights-count').hidden, true);
-  assert.equal(labels().length, 1); labels()[0].click(); const active = saved().activeAnnotation;
-  assert.equal(active, older.id); assert.equal(card('root').dataset.annotationLabel, active);
+  assert.equal(labels().length, 1); labels()[0].click(); const active = JSON.stringify(saved().annotationHighlights);
+  assert.equal(saved().annotationHighlights.length, 2); assert.equal(card('root').dataset.annotationLabel, 'highlight');
   assert.equal(card('root').style.getPropertyValue('--annotation-ink'), '#aa79df');
   assert.equal(card('child').style.getPropertyValue('--annotation-ink'), '#58ba7a');
   assert.match(card('child').getAttribute('aria-description'), /Exact captured node version/);
@@ -155,7 +155,7 @@ test('the dropdown selects whole multicolor spotlights, closes, and retains olde
   assert.equal($('annotations-panel').hidden, true); assert.equal($('spotlights-count').textContent, '1');
   assert.deepEqual([...$('annotation-list').children].map(n => n.dataset.shotId), [newer.id, older.id]);
   assert.deepEqual(labels().map(b => b.querySelector('.annotation-label-text').firstChild.textContent), ['Another answer', 'Which nodes express this idea?']);
-  assert.equal(saved().activeAnnotation, active); assert.equal(labels()[1].getAttribute('aria-checked'), 'true');
+  assert.equal(JSON.stringify(saved().annotationHighlights), active); assert.equal(labels()[1].getAttribute('role'), 'menuitem');
   $('annotations-toggle').click(); labels()[0].click();
   assert.equal(card('root').dataset.annotationLabel, undefined); assert.equal(card('child').style.getPropertyValue('--annotation-ink'), '#5c9eff');
   $('annotations-toggle').click(); labels()[0].click(); assert.ok(card('child').dataset.annotationLabel, 'Selecting again keeps the spotlight on.');
@@ -197,7 +197,7 @@ test('only exact blob versions ring; changed, missing, unavailable and base ghos
   assert.equal($('save').disabled, true); assert.equal($('annotation-flush').disabled, false);
 });
 
-test('spotlight selection restores, unread counts stay in memory and flush clears rings', t => {
+test('editable highlights restore independently of shots; flush keeps them until whole-set clear', t => {
   const { $, send, saved, labels } = annotationsFixture(t); const answer = shot(), newer = shot('2');
   send({ type: 'annotations', shots: [answer] }); $('annotations-toggle').click(); labels()[0].click();
   send({ type: 'annotations', shots: [newer, answer] }); assert.equal($('spotlights-count').textContent, '1');
@@ -208,8 +208,10 @@ test('spotlight selection restores, unread counts stay in memory and flush clear
   assert.equal(next.$('spotlights-count').hidden, true); assert.equal(next.$('annotations-panel').hidden, true);
   assert.equal(next.$('cards').querySelectorAll('[data-annotation-label]').length, 2);
   for (const mode of model.COLOR_MODES) { next.$('color-mode').value=mode; next.$('color-mode').dispatchEvent(new next.dom.window.Event('change')); assert.equal(next.$('cards').querySelectorAll('[data-annotation-label]').length, 2); }
-  next.send({ type:'annotations',shots:[] }); assert.equal(next.$('cards').querySelector('[data-annotation-label]'), null);
-  assert.equal(next.saved().activeAnnotation, undefined); assert.equal(next.$('spotlights-count').hidden, true);
+  next.send({ type:'annotations',shots:[] }); assert.equal(next.$('cards').querySelectorAll('[data-annotation-label]').length, 2);
+  assert.equal(next.saved().annotationHighlights.length, 2); assert.equal(next.$('spotlights-count').hidden, true);
+  next.$('annotations-toggle').click(); next.$('annotation-clear').click();
+  assert.equal(next.$('cards').querySelector('[data-annotation-label]'), null);
 });
 
 test('selecting a spotlight frames its union while retaining an edited focused draft', t => {
@@ -269,6 +271,105 @@ test('spotlight rings are thicker equal inset paint with independent focus and a
   assert.match(css, /#cards \.card\[data-annotation-label\]:focus-visible \{ box-shadow: 0 0 0 2px var\(--vscode-focusBorder\)/);
   assert.match(css, /\.spotlights-count \{[^}]*border-radius: 999px; background: #c62828; color: #fff/);
   assert.doesNotMatch(css, /annotation-arriv|@keyframes/);
+});
+
+function shiftClick(dom, target, modifiers = {}) {
+  const event = new dom.window.MouseEvent('click', { bubbles: true, cancelable: true, button: 0, shiftKey: true, ...modifiers });
+  target.dispatchEvent(event); return event;
+}
+
+test('manual cycling uses every ink then off, consuming node clicks without navigation or draft changes', t => {
+  const { dom, $, card, saved, messages } = annotationsFixture(t);
+  card('child').click(); const body = $('body'); body.value = '# Keep draft'; body.dispatchEvent(new dom.window.Event('input'));
+  body.focus(); body.setSelectionRange(2, 5);
+  const pose = $('graph').style.transform, selected = saved().selected, count = messages.length;
+  for (const ink of ['#e65e66','#5c9eff','#58ba7a','#aa79df','#35bdbe','#dfc24d','']) {
+    assert.equal(shiftClick(dom, card('root').querySelector('strong')).defaultPrevented, true);
+    assert.equal(card('root').style.getPropertyValue('--annotation-ink'), ink);
+    assert.equal(saved().selected, selected); assert.equal(saved().view, 'focus');
+    assert.equal($('graph').style.transform, pose); assert.equal($('body'), body); assert.equal(body.value, '# Keep draft');
+    assert.deepEqual([body.selectionStart,body.selectionEnd], [2,5]);
+  }
+  assert.equal(saved().annotationHighlights.length, 0); assert.equal(messages.length, count);
+  shiftClick(dom, $('title')); assert.equal(card('child').style.getPropertyValue('--annotation-ink'), '#e65e66');
+  for (const target of [body, $('sources'), $('save'), $('parent-candidate')])
+    assert.equal(shiftClick(dom, target, {ctrlKey: true}).defaultPrevented, false, 'Native controls retain modified clicks.');
+});
+
+test('loaded and manual highlights share cycling/removal/clear and never modify retained shots', t => {
+  const answer = shot('1', ['root'], 'From agent', '#aa79df');
+  const { dom, $, card, labels, saved, send } = annotationsFixture(t, [answer]);
+  const original = JSON.stringify(answer);
+  $('annotations-toggle').click(); labels()[0].click(); shiftClick(dom, card('root'));
+  assert.equal(card('root').style.getPropertyValue('--annotation-ink'), '#35bdbe');
+  shiftClick(dom, card('child')); assert.equal(saved().annotationHighlights.length, 2);
+  shiftClick(dom, card('root'), {ctrlKey:true}); assert.equal(card('root').dataset.annotationLabel, undefined);
+  shiftClick(dom, card('child'), {metaKey:true}); assert.equal(saved().annotationHighlights.length, 0, 'Synthetic macOS Command+Shift removes too.');
+  $('annotations-toggle').click(); labels()[0].click(); shiftClick(dom, card('child'));
+  $('annotations-toggle').click(); $('annotation-clear').click();
+  assert.equal($('cards').querySelector('[data-annotation-label]'), null);
+  send({type:'annotations', shots:[answer]}); assert.equal(saved().annotationHighlights.length, 0);
+  assert.equal(JSON.stringify(answer), original);
+  $('annotations-toggle').click(); labels()[0].click(); assert.equal(card('root').style.getPropertyValue('--annotation-ink'), '#aa79df');
+});
+
+test('custom ink advances to red and version changes hide rather than retarget selected references', t => {
+  const answer = shot('1', ['child'], 'Custom', '#abcdef');
+  const {dom, $, card, send, snapshot, labels, saved} = annotationsFixture(t, [answer]);
+  $('annotations-toggle').click(); labels()[0].click(); shiftClick(dom, card('child'));
+  assert.equal(card('child').style.getPropertyValue('--annotation-ink'), '#e65e66');
+  const before = JSON.stringify(saved().annotationHighlights);
+  send({type:'snapshot',snapshot,node_blobs:{...annotationBlobs,child:['9'.repeat(40)]},diagnostics:[],readonly:false});
+  assert.equal(card('child').dataset.annotationLabel, undefined); assert.equal(JSON.stringify(saved().annotationHighlights), before);
+  send({type:'snapshot',snapshot,node_blobs:annotationBlobs,diagnostics:[],readonly:false});
+  assert.equal(card('child').style.getPropertyValue('--annotation-ink'), '#e65e66');
+  send({type:'snapshot',snapshot,node_blobs:{...annotationBlobs,child:['9'.repeat(40)]},diagnostics:[],readonly:false});
+  shiftClick(dom, card('child'));
+  assert.equal(saved().annotationHighlights[0].blob, '9'.repeat(40)); assert.equal(card('child').style.getPropertyValue('--annotation-ink'), '#e65e66');
+});
+
+test('manual highlights on historical ghosts use base bytes; anonymous drafts and unavailable versions are excluded', t => {
+  const {dom, $, card, send, snapshot, saved} = annotationsFixture(t);
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root],edges:[]},node_blobs:{root:annotationBlobs.root},base_node_blobs:annotationBlobs,diagnostics:[],readonly:true,
+    diff:{base:snapshot,changes:[{id:'child',kind:'removed'}],added_edges:[],removed_edges:snapshot.edges}});
+  shiftClick(dom,card('child')); assert.equal(saved().annotationHighlights[0].blob, annotationBlobs.child[0]);
+  assert.equal($('save').disabled,true);
+  send({type:'snapshot',snapshot,node_blobs:{},diagnostics:[],readonly:false});
+  shiftClick(dom,card('root')); assert.equal(saved().annotationHighlights.length,1); assert.match($('annotation-live').textContent,/no exact version/);
+  $('new').click(); const draft = $('cards').querySelector('[data-node-id="__draft__"]');
+  assert.equal(shiftClick(dom,draft).defaultPrevented,false); assert.equal(saved().annotationHighlights.length,1);
+});
+
+test('create dialog cancels safely, sends one frozen multicolor message, retains retry input and all draft/camera state', t => {
+  const {dom,$,card,labels,saved,messages,send} = annotationsFixture(t,[shot('1',['root'])]);
+  assert.equal($('annotation-create').disabled,true);
+  $('annotations-toggle').click(); labels()[0].click(); shiftClick(dom,card('root')); shiftClick(dom,card('child'));
+  card('child').click(); const body=$('body'); body.value='# Keep this'; body.dispatchEvent(new dom.window.Event('input'));
+  const pose=$('graph').style.transform, refs=JSON.stringify(saved().annotationHighlights);
+  $('annotations-toggle').click(); $('annotation-create').click();
+  assert.equal($('annotations-panel').hidden,true); assert.equal($('annotation-compose').hasAttribute('open'),true);
+  assert.equal(dom.window.document.activeElement,$('annotation-message'));
+  $('annotation-compose-cancel').click(); assert.equal(messages.filter(m=>m.type==='annotation-create').length,0);
+  $('annotations-toggle').click(); $('annotation-create').click();
+  const submit=()=> $('annotation-compose-form').dispatchEvent(new dom.window.Event('submit',{bubbles:true,cancelable:true}));
+  $('annotation-message').value='  '; submit(); assert.match($('annotation-compose-error').textContent,/1–500/);
+  $('annotation-message').value='x'.repeat(501); submit(); assert.equal(messages.filter(m=>m.type==='annotation-create').length,0);
+  $('annotation-message').value='Please revise <img onerror="bad()">'; submit(); submit();
+  const requests=messages.filter(m=>m.type==='annotation-create'); assert.equal(requests.length,1);
+  assert.deepEqual(JSON.parse(JSON.stringify(requests[0].groups)),[
+    {text:'Please revise <img onerror="bad()">',color:'#35bdbe',nodes:[{id:'root',blob:annotationBlobs.root[0]}]},
+    {text:'Please revise <img onerror="bad()">',color:'#e65e66',nodes:[{id:'child',blob:annotationBlobs.child[0]}]},
+  ]);
+  assert.equal($('annotation-compose-save').disabled,true);
+  send({type:'annotation-create-error',message:'Version unavailable; refresh and retry.'});
+  assert.equal($('annotation-compose').hasAttribute('open'),true); assert.equal($('annotation-compose-save').disabled,false);
+  assert.match($('annotation-message').value,/Please revise/); assert.match($('annotation-compose-error').textContent,/unavailable/);
+  submit(); assert.equal(messages.filter(m=>m.type==='annotation-create').length,2);
+  send({type:'annotations',shots:[shot('2',['child'],'Please revise <img>'),shot('1',['root'])]});
+  send({type:'annotation-created'}); assert.equal($('annotation-compose').hasAttribute('open'),false);
+  assert.equal($('annotation-list').querySelector('img'),null); assert.match($('annotation-live').textContent,/agent can read/);
+  assert.equal(JSON.stringify(saved().annotationHighlights),refs); assert.equal($('graph').style.transform,pose);
+  assert.equal($('body'),body); assert.equal(body.value,'# Keep this'); assert.equal(saved().dirty,true); assert.equal(saved().view,'focus');
 });
 
 function highlightedEdges($) {

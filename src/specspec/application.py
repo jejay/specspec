@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .annotations import blob_ids, flush, load_shots, preview
+from .annotations import blob_ids, create_from_highlights, flush, load_shots, preview
 from .editor import editor_request
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .model import API_VERSION, Diagnostic, SpecError
@@ -49,6 +49,7 @@ def request(root, value):
         "source-view": {"reference", "ref", "staged"},
         "source-capture": {"id", "path", "ranges", "mode", "staged", "ref"},
         "annotations": set(),
+        "annotation-create": {"groups", "base", "target", "documents"},
         "annotation-view": {"shot", "group", "member"},
         "annotation-flush": {"expected"},
     }
@@ -60,6 +61,15 @@ def request(root, value):
         raise SpecError([Diagnostic("API", "Unknown application operation or fields.")], 2)
     if op == "annotations":
         return {"shots": load_shots(root)}, []
+    if op == "annotation-create":
+        shot = create_from_highlights(
+            root,
+            {"groups": value.get("groups")},
+            base=value.get("base"),
+            target=value.get("target"),
+            documents=value.get("documents"),
+        )
+        return {"shots": [shot]}, []
     if op == "annotation-view":
         return preview(root, value.get("shot"), value.get("group"), value.get("member")), []
     if op == "annotation-flush":

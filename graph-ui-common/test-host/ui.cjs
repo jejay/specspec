@@ -229,7 +229,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
           const expected=getComputedStyle(probe),expectedWidth=expected.outlineWidth,expectedOffset=expected.outlineOffset;probe.remove();
           return {label:c.dataset.annotationLabel,color:style.outlineColor,width:style.outlineWidth,offset:style.outlineOffset,expectedWidth,expectedOffset,description:c.getAttribute('aria-description')};
         })()`);
-        assert.equal(result.label,answers[index].id);assert.equal(result.color,colors[index]);assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/Exact captured/);
+        assert.equal(result.label,'highlight');assert.equal(result.color,colors[index]);assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/Exact captured/);
         await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});c.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));})()`);
         assert.equal(await evaluate(`getComputedStyle([...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)})).outlineColor`),colors[index]);
         if(index===0&&image) await screenshot(image);
@@ -238,6 +238,38 @@ exports.checkUI = async function checkUI(port, options = {}) {
         assert.equal(await evaluate(`window.SpecSpecHost.getState().view`),'overview');
         assert.ok(await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)}),r=c.getBoundingClientRect(),v=document.getElementById('viewport').getBoundingClientRect();return Math.abs((r.left+r.right-v.left-v.right)/2)<1&&Math.abs((r.top+r.bottom-v.top-v.bottom)/2)<1;})()`),'Selection frames in the full canvas, without dropdown inset.');
       }
+      const highlightPose=await camera(), highlightEditing=await editing();
+      const clickHighlight=modifiers=>evaluate(`document.querySelector('[data-node-id="${id}"]').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,button:0,shiftKey:true,${modifiers}}))`);
+      await clickHighlight('ctrlKey:true');
+      assert.equal(await evaluate(`document.querySelector('[data-node-id="${id}"]').dataset.annotationLabel`),undefined);
+      for(const ink of ['#e65e66','#5c9eff','#58ba7a','#aa79df','#35bdbe','#dfc24d','']) {
+        await clickHighlight('ctrlKey:false');
+        assert.equal(await evaluate(`document.querySelector('[data-node-id="${id}"]').style.getPropertyValue('--annotation-ink')`),ink);
+      }
+      await clickHighlight('ctrlKey:false');
+      const highlights=await evaluate(`window.SpecSpecHost.getState().annotationHighlights`);
+      assert.equal(highlights.length,1); assert.equal(highlights[0].id,id); assert.equal(highlights[0].color,'#e65e66');
+      const priorCount=await evaluate(`document.querySelectorAll('.annotation-label').length`);
+      const ownerMessage=`Owner backchannel <img> ${id}`;
+      await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-create').click()`);
+      assert.ok(await evaluate(`document.getElementById('annotation-compose').open`));
+      assert.ok(await evaluate(`document.getElementById('annotations-panel').hidden`));
+      await evaluate(`document.getElementById('annotation-compose-cancel').click()`);
+      assert.equal(await evaluate(`document.querySelectorAll('.annotation-label').length`),priorCount);
+      await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-create').click();document.getElementById('annotation-message').value=${JSON.stringify(ownerMessage)}`);
+      if(image) await screenshot(image+'-backchannel');
+      await evaluate(`document.getElementById('annotation-compose-save').click()`);
+      for(let i=0;i<300&&await evaluate(`document.getElementById('annotation-compose').open`);i++) await delay(100);
+      assert.equal(await evaluate(`document.getElementById('annotation-compose').open`),false,await evaluate(`document.getElementById('annotation-compose-error').textContent`));
+      assert.equal(await evaluate(`document.querySelectorAll('.annotation-label').length`),priorCount+1);
+      assert.equal(await evaluate(`document.querySelector('#annotation-list img')`),null);
+      const created=options.readSpotlights().find(s=>s.groups[0].text===ownerMessage);
+      assert.ok(created,'The external agent reads the UI-created message through spotlight show.');
+      assert.deepEqual(created.origin,{kind:'highlights'});
+      assert.deepEqual(created.groups.map(g=>({text:g.text,color:g.color,nodes:g.nodes.map(n=>({id:n.id,blob:n.blob}))})),[{text:ownerMessage,color:'#e65e66',nodes:highlights.map(({id,blob})=>({id,blob}))}]);
+      assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().annotationHighlights`),highlights);
+      assert.deepEqual(await camera(),highlightPose); assert.equal(await editing(),highlightEditing);
+      console.log(`Real spotlight backchannel passed for ${id}: Shift/Ctrl+Shift cycle, compose/cancel, exact-version persistence and agent CLI readback.`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click()`);
       const prior=JSON.parse(saved);
       if(prior.view==='focus') {

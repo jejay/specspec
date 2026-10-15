@@ -13,7 +13,11 @@ def render_shots(result):
     lines = [f"{len(shots)} local spotlight(s) · retained until explicit flush"]
     for shot in shots:
         origin = shot["origin"]
-        context = origin.get("commit") or "saved workspace"
+        context = (
+            "owner highlights"
+            if origin["kind"] == "highlights"
+            else origin.get("commit") or "saved workspace"
+        )
         lines.append(f"\nSpotlight {shot['id']} · {shot['created_at']} · {context}")
         lines.append("  " + " · ".join(dict.fromkeys(g["text"] for g in shot["groups"])))
         for group in shot["groups"]:

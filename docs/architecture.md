@@ -230,18 +230,21 @@ not proof that every listed node is invalid.
 pinned Dagre/D3 dependencies and license notices and copies shared runtime sources.
 The VS Code and Electron build wrappers add their small adapters. **Edit common
 sources, not generated `vscode/media`, `vscode/out` or `electron/build` copies.**
-Immutable agent spotlights and exact node-byte copies live in the Git-excluded
+Immutable owner/agent spotlights and exact node-byte copies live in the Git-excluded
 project-local `.specspec-local/annotations/` store, shared by CLI and both hosts.
 [`annotations.py`](../src/specspec/annotations.py) validates/captures/publishes complete
 shots; `spotlight add/show/flush` supplies the direct-argument public interface.
 [`AnnotationWatcher`](../graph-ui-common/host/annotations.cjs) reports arrivals separately
 from graph reloads, including historical views. The hidden application API reads the
-list, previews captured text and flushes a reviewed list. Snapshot read metadata supplies
+list, creates a shot from exact editable highlights, previews captured text and
+flushes a reviewed list. Creation shares the locked publisher with CLI addition;
+trusted hosts supply native buffers and selected revisions, while Python verifies
+all member/blob matches against retained or snapshot bytes. Snapshot read metadata supplies
 derived exact blob addresses; these are neither canonical fields nor edit gates.
 See [spotlight semantics and UI](spotlights.md). Public naming is independent of
 internal storage keys, paths and transport operation names.
 
-Ordinary focus/camera/draft and spotlight dropdown/selection preferences use presentation
+Ordinary focus/camera/draft and spotlight dropdown/editable-highlight preferences use presentation
 storage; unread arrivals stay in renderer memory and reset when the list is opened
 or the renderer reloads. Spotlight contents stay in the shared local store. VS Code webview
 state is scoped per view/project; Electron's

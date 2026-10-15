@@ -211,6 +211,11 @@ The **Spotlights** button opens a newest-first dropdown with one message per
 spotlight. Selecting one activates all its colored node sets, closes the dropdown
 and frames exact-version matches in the full canvas, retaining drafts. There is no
 search or detail/preview flow. **Clear highlight** removes the 8px inset rings.
+**Shift-click node chrome** cycles red → blue → green → purple → turquoise → yellow
+→ off; **Ctrl+Shift-click** (macOS: **Command+Shift-click**) clears one node.
+Manual and spotlight-applied highlights share the same editable set. Use
+**Spotlights → Create spotlight from highlights…** to save it with a message;
+your agent can then read `specspec spotlight show --json` without copied IDs.
 The red badge counts new spotlights since opening, starting at zero on load;
 arrivals preserve editing, focus and camera. Local spotlights and node-byte copies
 persist in Git-excluded `.specspec-local/annotations/`, shared by both UIs until

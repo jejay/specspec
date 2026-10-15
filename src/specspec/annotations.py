@@ -186,9 +186,13 @@ def validate_shot(shot, shot_id):
     if (
         not isinstance(origin, dict)
         or not isinstance(origin.get("kind"), str)
-        or origin["kind"] not in {"workspace", "commit"}
+        or origin["kind"] not in {"workspace", "commit", "highlights"}
     ):
         fail("Invalid shot capture context.")
+    if origin["kind"] == "highlights":
+        object_fields(origin, ["kind"])
+        groups(shot["groups"], stored=True)
+        return shot
     key = "head" if origin["kind"] == "workspace" else "commit"
     object_fields(origin, ["kind", key])
     commit = origin[key]
@@ -326,6 +330,98 @@ def submit(root, value, *, ref=None):
         captured.append(
             {"text": group["text"], "color": checked_color(group["color"]), "nodes": members}
         )
+    origin = (
+        {"kind": "commit", "commit": snapshot.commit}
+        if ref
+        else {"kind": "workspace", "head": head}
+    )
+    return publish(root, captured, retained, origin)
+
+
+def create_from_highlights(root, value, *, base=None, target=None, documents=None):
+    """Capture exact, possibly mixed-version references; never silently retarget."""
+    object_fields(value, ["groups"])
+    supplied = groups(value["groups"])
+    seen, texts = set(), set()
+    for group in supplied:
+        texts.add(group["text"])
+        for member in group["nodes"]:
+            if not isinstance(member, dict) or member["id"] in seen:
+                fail("Highlights require exact references and one color per node.")
+            seen.add(member["id"])
+    if len(texts) != 1:
+        fail("A new spotlight needs one shared message.")
+    for ref in (base, target):
+        if ref is not None and (not isinstance(ref, str) or not ref or len(ref) > 1024):
+            fail("Invalid highlight capture revision.")
+    if documents is not None and not isinstance(documents, dict):
+        fail("documents must map canonical paths to UTF-8 text.")
+    if target and documents:
+        fail("Historical highlight capture does not consume native overlays.")
+    retained_members = {
+        (member["id"], member["blob"]): member
+        for shot in load_shots(root)
+        for group in shot["groups"]
+        for member in group["nodes"]
+    }
+    requested = [member for group in supplied for member in group["nodes"]]
+    missing = [m for m in requested if (m["id"], m["blob"]) not in retained_members]
+    candidates = []
+    if missing:
+        from .editor import document_files
+        from .workspace import snapshot_from_files
+
+        current = (
+            git_snapshot(root, target)
+            if target
+            else snapshot_from_files(root, document_files(root, documents or {}))
+        )
+        candidates.append(current)
+    available = {}
+
+    def collect(snapshot):
+        snapshot.require_valid()
+        addresses = blob_ids(snapshot)
+        for node in snapshot.nodes:
+            for oid in addresses.get(node.id, []):
+                raw = snapshot.files[node.path]
+                title = next(
+                    (line.lstrip("# ") for line in node.body.splitlines() if line.strip()), node.id
+                )
+                available[node.id, oid] = (
+                    {"id": node.id, "blob": oid, "path": node.path, "title": title[:500]},
+                    raw,
+                )
+
+    for snapshot in candidates:
+        collect(snapshot)
+    if base and any((m["id"], m["blob"]) not in available for m in missing):
+        collect(git_snapshot(root, base, allow_empty=True))
+    captured, retained = [], {}
+    for group in supplied:
+        members = []
+        for requested in group["nodes"]:
+            key = requested["id"], requested["blob"]
+            if key in retained_members:
+                member = retained_members[key]
+                raw = retained_bytes(root, member)
+            elif key in available:
+                member, raw = available[key]
+            else:
+                fail(
+                    f"Highlighted node {requested['id']} is unavailable or changed; "
+                    "nothing submitted."
+                )
+            members.append(dict(member))
+            retained[member["blob"]] = raw
+        captured.append(
+            {"text": group["text"], "color": checked_color(group["color"]), "nodes": members}
+        )
+    return publish(root, captured, retained, {"kind": "highlights"})
+
+
+def publish(root, captured, retained, origin):
+    """Publish one complete shot under the same lock/budgets for CLI and UI."""
     with workspace_lock(root):
         path = directory(root)
         existing = load_shots(root)
@@ -338,9 +434,7 @@ def submit(root, value, *, ref=None):
             "annotation_version": 1,
             "id": shot_id,
             "created_at": datetime.now(UTC).isoformat(),
-            "origin": {"kind": "commit", "commit": snapshot.commit}
-            if ref
-            else {"kind": "workspace", "head": head},
+            "origin": origin,
             "groups": captured,
         }
         raw = json.dumps(shot, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -384,6 +478,11 @@ def preview(root, shot_id, group, member):
     ):
         fail("The spotlight member no longer exists; it may have been flushed.")
     reference = shot["groups"][group]["nodes"][member]
+    raw = retained_bytes(root, reference)
+    return {"reference": reference, "origin": shot["origin"], "text": raw.decode("utf-8")}
+
+
+def retained_bytes(root, reference):
     file = directory(root) / "blobs" / reference["blob"]
     if file.is_symlink() or not file.is_file() or file.stat().st_size > MAX_FILE_BYTES:
         fail("Captured spotlight content is unavailable or unsafe.")
@@ -394,7 +493,7 @@ def preview(root, shot_id, group, member):
     data, _ = read_document(raw, reference["path"])
     if data.get("id") != reference["id"]:
         fail("Captured spotlight content has a different node identity.")
-    return {"reference": reference, "origin": shot["origin"], "text": raw.decode("utf-8")}
+    return raw
 
 
 def flush(root, *, expected=None):

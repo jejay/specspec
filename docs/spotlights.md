@@ -3,7 +3,47 @@
 Ask an external coding agent a question such as “Which nodes describe remote
 execution?” The agent reads `show` / `context`, chooses the relevant nodes, and
 submits one complete answer through the CLI. SpecSpec displays the answer in either
-UI; it does not embed an agent or evaluate a live semantic query.
+UI. Owners can also highlight nodes and save a message for the agent to read. It
+does not embed an agent or evaluate a live semantic query.
+
+## Highlight nodes and send a message back
+
+In either UI, **Shift-click node chrome** to cycle:
+**red → blue → green → purple → turquoise → yellow → off**.
+**Ctrl+Shift-click** removes that node's highlight immediately. On macOS, use
+**Command+Shift-click**; Meta/Command event handling has automated synthetic-event
+coverage, but has not been tested on a Mac. Ctrl is also accepted. Native text
+inputs, links and form controls keep their normal modified clicks.
+
+Spotlight-applied and manually created highlights are the **same editable set**.
+You can cycle or remove either, add other nodes, or use **Spotlights → Clear
+highlight** to clear the whole set. Applying another spotlight replaces the set
+and frames it; manual changes only repaint, preserving navigation and drafts.
+A custom retained color advances to red on the next Shift-click.
+
+To send the selected nodes to your agent:
+
+1. Open **Spotlights → Create spotlight from highlights…**.
+2. Enter a message (1–500 characters) and choose **Create spotlight**.
+3. Tell the agent to read `specspec spotlight show --json` in this checkout.
+
+The new record contains your message, colors, full IDs and exact node versions.
+It joins the same shared retained list as CLI-created spotlights. The original
+spotlight, if any, stays immutable. Cancel writes nothing; failures retain the
+message and highlights for retry. Saving does not move the camera or save a node
+form/document. VS Code's native overlay bytes can be captured without saving;
+managed form drafts remain separate from the saved snapshot underneath them.
+Anonymous unsaved new-node cards have no capturable ID.
+
+Highlights are version-aware per-view presentation state and survive reload and
+navigation. Only exact versions in the displayed graph have rings. Selected refs
+whose versions are not currently displayed remain in the set (and its menu count).
+Shift-clicking a changed node starts red on its current version. Creating a new
+spotlight resolves bytes from retained shots or the current target/base/native
+snapshot; unavailable versions reject the whole creation rather than retargeting.
+The assembled record uses `origin.kind: highlights`, since its members can span
+revisions. Historical views can also create these local messages; canonical graph
+editing remains read-only. Project authorization is still required.
 
 ## Add directly
 
@@ -56,16 +96,16 @@ versions can therefore correctly differ from a spotlight captured by the CLI.
   entries. Duplicate refreshes add nothing. Opening the list resets the count;
   arrivals while it stays open count until the next opening. Counts and New cues
   live only in renderer memory, so reloads start with a fresh baseline. Stored
-  spotlight contents, dropdown choice and active-spotlight selection have their own
+  spotlight contents, dropdown choice and editable highlights have their own
   lifetimes.
 - The count badge is the visible arrival notice. A polite live region announces
-  arrivals accessibly. Arrivals preserve the panel's open/closed choice, active
-  spotlight, editing focus/caret, camera and drafts. An open dropdown keeps older entries
+  arrivals accessibly. Arrivals preserve the panel's open/closed choice, editable
+  highlights, editing focus/caret, camera and drafts. An open dropdown keeps older entries
   and its reading position as new spotlights arrive.
 - A compact context-menu-style dropdown is anchored below **Spotlights**. It shows
   every spotlight newest first as one message entry, with time and compact version
   counts. Entries have no color icon, search field or expanded member/detail view.
-- Choose a spotlight to turn on **all its colored sets together**. Rings paint
+- Choose a spotlight to replace editable highlights with **all its exact colored sets together**. Rings paint
   first; the dropdown closes, then the matching nodes are framed in the **full
   canvas**, like the existing frame action. This enters the overview, retaining
   any focused draft and surrounding graph context. Choosing it again frames again.
@@ -74,7 +114,7 @@ versions can therefore correctly differ from a spotlight captured by the CLI.
   camera scale. Compact counts report different versions, absent nodes and
   unavailable metadata. Version state refers to the displayed snapshot, not an
   unsaved managed form layered over it. A spotlight with no exact matches still
-  activates and closes the menu, leaving the camera unchanged.
+  clears the editable set and closes the menu, leaving the camera unchanged.
 - **Clear highlight** removes rings explicitly. Escape, outside click or tabbing
   outside dismisses the dropdown without clearing rings or moving the camera.
   Arrow keys, Home and End navigate the menu; Enter/Space activates a button.
@@ -140,6 +180,9 @@ The UI's **Flush local spotlights…** asks for confirmation and rechecks the re
 shot-ID set under the writer lock. An intervening arrival requires another review
 rather than being silently flushed. Flush touches only spotlight files/content,
 not node files, transaction journals, unapplied forms or other local notes.
+Editable highlights remain per-view references after flush; use **Clear highlight**
+to remove them. Saving them again needs exact bytes still available from the
+current target/base/native snapshots, since flush removes retained blob copies.
 `--yes` is the CLI's explicit consent to flushing the current whole list.
 
 Publication uses the cooperating workspace writer lock, retained blobs first and
@@ -159,17 +202,22 @@ diagnostics require explicit filesystem repair.
 ## Verification boundaries
 
 Backend tests cover joint publication/validation, literal content addresses,
-workspace-only retention, native-overlay identity metadata, SHA-256, exclusion,
+workspace-only retention, UI-to-CLI message readback, mixed historical/base-ghost
+capture, native-overlay capture without saving, SHA-256, exclusion,
 flush races, corruption and storage limits. Temporal coverage uses an independent
 clone of the maintained current-schema Gantt history. Shared DOM/session/watcher
 and host-adapter tests cover arrivals, initial baselines, batch counts/reset/reload,
 the whole dropdown, whole-shot multicolor exact-only rings, full-canvas framing,
-keyboard/outside dismissal, drafts/caret/cameras, revision views and guarded
-actions. Real-host probes add spotlights through the CLI and wait for watchers,
+keyboard/outside dismissal, manual/loaded shared cycling, Ctrl/Meta+Shift removal,
+compose/cancel/retry, drafts/caret/cameras, revision views and guarded actions. Real-host probes add spotlights through the CLI and wait for watchers,
 then sample actual badge/ring paint and zoom-dependent neutral-arrow darkening.
-The Python, shared renderer and both host-adapter unit suites pass. Installed-window
-runs reach the spotlight arrival/ring/framing assertions, but complete broader smoke
-runs time out later in shared descendant-deletion checks. Full host integration,
-including the final persisted-list reload assertions, remains unconfirmed.
+They also exercise Shift/Ctrl+Shift gestures, message compose/cancel, immutable
+capture and external CLI readback. Windows Electron probes pass those backchannel
+checks for compact, circular-manifesto and expanded contexts; VS Code probes pass
+compact and circular-manifesto cases. The Python, shared renderer and both
+host-adapter unit suites pass. Complete installed-host smoke runs remain unconfirmed:
+Electron reaches later manual-invalid-file synchronization before a timeout, and
+VS Code exceeds its interaction guard. Final installed-host persisted-list reload
+coverage remains unconfirmed. Command/Meta+Shift is synthetic-event coverage only.
 Their platform and filesystem scope is bounded; they do not establish universal
 watcher delivery, perceptual suitability for every theme or large-list performance.
