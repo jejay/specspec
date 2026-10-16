@@ -31,16 +31,26 @@ function fixture(t, platform = 'Win32') {
 }
 const plain = value => JSON.parse(JSON.stringify(value));
 
-test('overview node fill and arrow ink share a clamped camera interval',()=>{
-  for(const scale of [0.12,0.2,0.56,0.8,1,2.5]) {
+test('node fill and arrow ink use separate zoom ranges with a shared 16% endpoint',()=>{
+  const scales=[0.12,0.16,0.28,0.4,0.55,0.7,1,2.5];
+  let previous=1;
+  for(const scale of scales) {
     const q=model.nodeFillStrength(scale);
-    assert.ok(Math.abs(q-(1-(model.neutralEdgeStrength(scale)-0.35)/0.35))<1e-12);
     assert.ok(q>=0&&q<=1);
+    assert.ok(q<=previous,'Fill progress decreases monotonically as magnification increases.');
+    previous=q;
   }
-  assert.equal(model.nodeFillStrength(0.12),1);assert.equal(model.nodeFillStrength(0.01),1);
-  assert.ok(Math.abs(model.nodeFillStrength(0.56)-0.5)<1e-12);
+  assert.equal(model.nodeFillStrength(0.12),1);assert.equal(model.nodeFillStrength(0.16),1);
+  assert.ok(Math.abs(model.nodeFillStrength(0.28)-0.5)<1e-12);
+  assert.equal(model.nodeFillStrength(0.4),0);
+  assert.equal(model.nodeFillStrength(0.7),0);
   for(const bad of [undefined,NaN,Infinity,-Infinity,-1,0,'0.12',null]) assert.equal(model.nodeFillStrength(bad),0);
   assert.equal(model.nodeFillStrength(1),0);assert.equal(model.nodeFillStrength(2.5),0);
+  assert.equal(model.neutralEdgeStrength(0.7),0.7);
+  assert.equal(model.neutralEdgeStrength(0.16),0.35);
+  assert.equal(model.neutralEdgeStrength(0.12),0.35);
+  assert.ok(Math.abs(model.neutralEdgeStrength(0.43)-0.525)<1e-12);
+  assert.equal(model.neutralEdgeStrength(1),0.7);
 });
 
 test('rectangle inversion normalizes all drag directions and rejects tiny or invalid extents',()=>{

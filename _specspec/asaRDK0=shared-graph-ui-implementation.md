@@ -64,10 +64,13 @@ Shift highlight gestures retain their event ownership. Rectangle framing permits
 250% magnification; graph/node framing retains its 100% cap.
 
 One inherited fill-progress property drives two-stage sRGB mixing toward the painted
-border from each exact actual-size tint. Pure tests exercise the shared camera
-interval; DOM/controller tests cover every drag direction, modifier release, capture,
-cancellation, native boundaries, world/caret preservation and synthetic Mac mapping.
-The early common installed-host canvas probe checks dark/light/contrast fills at
-three scales, actual pointer capture/outside release, contextual icons and editing.
-Complete installed suites combine these probes with source, backchannel, native
-lifecycle, watcher recovery and persisted reload/revision checks.
+border from each exact actual-size tint. Background fill transitions from 40%-to-16%
+scale; ordinary edge ink transitions from 70%-to-16%, retaining 70%-to-35% strength.
+Pure tests cover the independent scale functions and endpoints; DOM tests verify the
+distinct onsets and camera propagation. Controller tests cover every drag direction,
+modifier release, capture, cancellation, native boundaries, world/caret preservation
+and synthetic Mac mapping. The early common installed-host canvas probe checks
+dark/light/contrast fills at three scales, actual pointer capture/outside release,
+contextual icons and editing. Complete installed suites combine these probes with
+source, backchannel, native lifecycle, watcher recovery and persisted reload/revision
+checks.

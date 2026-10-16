@@ -8,6 +8,8 @@
   'use strict';
   const CARD_WIDTH = 264, CARD_HEIGHT = 112, DETAIL_WIDTH = 860;
   const RANK_GAP = 140, NODE_GAP = 44;
+  const NODE_FILL_START_SCALE = 0.4, NODE_FILL_END_SCALE = 0.16;
+  const EDGE_FADE_START_SCALE = 0.7, EDGE_FADE_END_SCALE = 0.16;
   const edgeKey = edge => JSON.stringify(edge);
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
   // Exact user-selected playground output: seven colors, L=.69, C=.12, H=320..20.
@@ -226,6 +228,7 @@
   }
 
   const EDGE_LEAD = 64, MIN_STROKE_PIXELS = 1.6, MIN_ARROW_PIXELS = 6;
+  const BASE_ANNOTATION_RING_WIDTH = 5;
   const DETAIL_CONTENT_WIDTH = DETAIL_WIDTH - 38; // Existing 18px padding + 1px side borders.
   const manifestoDiameter = (width, height) => Math.ceil(Math.hypot(width, height) + 48);
 
@@ -319,20 +322,29 @@
     });
   }
 
-  function zoomDetail(scale) {
-    const k = Number.isFinite(scale) && scale > 0 ? scale : 1;
-    return Math.max(0, Math.min(1, (k - 0.12) / 0.88));
+  function cameraScale(scale) {
+    return Number.isFinite(scale) && scale > 0 ? scale : 1;
+  }
+  function cameraScaledStrokeWidth(scale, baseWorldWidth) {
+    return Math.max(baseWorldWidth, MIN_STROKE_PIXELS / cameraScale(scale));
+  }
+  function annotationRingWidth(scale = 1) {
+    return cameraScaledStrokeWidth(scale, BASE_ANNOTATION_RING_WIDTH);
+  }
+  function scaleProgress(scale, start, end) {
+    const k = cameraScale(scale);
+    return Math.max(0, Math.min(1, (k - end) / (start - end)));
   }
   function neutralEdgeStrength(scale = 1) {
-    return 0.35 + 0.35 * zoomDetail(scale);
+    return 0.35 + 0.35 * scaleProgress(scale, EDGE_FADE_START_SCALE, EDGE_FADE_END_SCALE);
   }
   function nodeFillStrength(scale = 1) {
-    return 1 - zoomDetail(scale);
+    return 1 - scaleProgress(scale, NODE_FILL_START_SCALE, NODE_FILL_END_SCALE);
   }
 
   function edgeAppearance(route, scale = 1) {
-    const k = Number.isFinite(scale) && scale > 0 ? scale : 1;
-    const strokeWidth = Math.max(1.7, MIN_STROKE_PIXELS / k);
+    const k = cameraScale(scale);
+    const strokeWidth = cameraScaledStrokeWidth(k, 1.7);
     const length = Math.max(10, MIN_ARROW_PIXELS / k), half = length * 0.4;
     const base = { x: route.end.x - length, y: route.end.y };
     // The line stops at the filled head's base, never poking through its tip.
@@ -344,6 +356,7 @@
 
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
+    annotationRingWidth,
     INFLUENCE_COLORS, INFLUENCE_MODES, influenceColor,
     sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, neutralEdgeStrength, nodeFillStrength, edgeAppearance };
 });

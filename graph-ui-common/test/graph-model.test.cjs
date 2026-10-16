@@ -288,13 +288,28 @@ test('old relations cannot pull live ranks away from the origin; base-only branc
   assert.ok(!layout.guides.has(JSON.stringify(['c', 'shallow'])));
 });
 
-test('ordinary neutral ink is darker at rest and darkens monotonically toward the overview limit', () => {
+test('annotation ring width uses the connection-stroke compensation at a smaller world width', () => {
+  for (const scale of [0.12, 0.16, 0.32, 0.7, 1, 2.5]) {
+    const width = model.annotationRingWidth(scale);
+    assert.ok(width >= 5);
+    assert.ok(width * scale >= model.MIN_STROKE_PIXELS - 1e-9);
+  }
+  assert.equal(model.annotationRingWidth(1), 5);
+  assert.equal(model.annotationRingWidth(0.32), 5);
+  assert.equal(model.annotationRingWidth(0.16), 10);
+  assert.equal(model.annotationRingWidth(2.5), 5);
+  for (const invalid of [undefined, 0, -1, NaN, Infinity, '0.5']) assert.equal(model.annotationRingWidth(invalid), 5);
+});
+
+test('ordinary neutral ink darkens over the 70%-to-16% scale interval', () => {
   assert.equal(model.neutralEdgeStrength(1), 0.7);
+  assert.equal(model.neutralEdgeStrength(0.7), 0.7);
   assert.equal(model.neutralEdgeStrength(2.5), 0.7);
+  assert.equal(model.neutralEdgeStrength(0.16), 0.35);
   assert.equal(model.neutralEdgeStrength(0.12), 0.35);
   assert.equal(model.neutralEdgeStrength(0.01), 0.35);
   const scales = [0.12, 0.25, 0.5, 0.75, 1];
-  for (let i = 1; i < scales.length; i++) assert.ok(model.neutralEdgeStrength(scales[i]) > model.neutralEdgeStrength(scales[i - 1]));
+  for (let i = 1; i < scales.length; i++) assert.ok(model.neutralEdgeStrength(scales[i]) >= model.neutralEdgeStrength(scales[i - 1]));
   for (const invalid of [undefined, 0, -1, NaN, Infinity, '0.5']) assert.equal(model.neutralEdgeStrength(invalid), 0.7);
 });
 

@@ -387,7 +387,10 @@
   }
 
   function updateCameraAppearance(scale) {
-    $('cards').style.setProperty('--node-fill-strength', `${model.nodeFillStrength(scale) * 100}%`);
+    const cards = $('cards'), ringWidth = model.annotationRingWidth(scale);
+    cards.style.setProperty('--node-fill-strength', `${model.nodeFillStrength(scale) * 100}%`);
+    cards.style.setProperty('--annotation-ring-width', `${ringWidth}px`);
+    cards.style.setProperty('--annotation-ring-offset', `${-ringWidth}px`);
     $('edges').style.setProperty('--normal-edge-strength', `${model.neutralEdgeStrength(scale) * 100}%`);
     for (const { route, path, head } of drawnEdges) {
       const appearance = model.edgeAppearance(route, scale);

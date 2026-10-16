@@ -77,6 +77,21 @@ test('camera paint and rectangle framing preserve native editing, highlights and
   assert.equal(saved().originalNode,original);assert.equal(saved().selected,'child');assert.equal(saved().dirty,true);
   assert.ok(messages.every(m=>['ready','rendered'].includes(m.type)));
   await new Promise(resolve=>dom.window.setTimeout(resolve,1));
+  $('zoom-reset').click();
+  $('zoom-out').click();
+  assert.equal($('viewport').dataset.scale,'0.8');
+  assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'0%');
+  assert.equal(parseFloat($('edges').style.getPropertyValue('--normal-edge-strength')),70);
+  $('zoom-out').click();
+  assert.ok(Math.abs(Number($('viewport').dataset.scale)-0.64)<1e-12);
+  assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'0%');
+  assert.ok(parseFloat($('edges').style.getPropertyValue('--normal-edge-strength'))<70);
+  $('zoom-out').click();
+  assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'0%');
+  $('zoom-out').click();
+  assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'0%');
+  $('zoom-out').click();
+  assert.ok(parseFloat($('cards').style.getPropertyValue('--node-fill-strength'))>0);
   for(let i=0;i<30;i++) $('zoom-out').click();
   assert.equal($('viewport').dataset.scale,'0.12');assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'100%');
   assert.equal($('edges').style.getPropertyValue('--normal-edge-strength'),'35%');assert.equal(world(),initial);
@@ -345,12 +360,24 @@ test('selection frames after closing the dropdown at all widths, with unchanged 
   }
 });
 
-test('spotlight rings are thicker equal inset paint with independent focus and a plain red count badge', () => {
+test('spotlight rings use camera-scaled equal inset paint with independent focus and a plain red count badge', t => {
+  const { dom, $, labels, card } = annotationsFixture(t, [shot('1', ['child'])]);
   const css=readFileSync(join(__dirname,'../media/graph.css'),'utf8');
-  assert.match(css, /#cards \.card\[data-annotation-label\] \{ outline: 8px solid var\(--annotation-ink\); outline-offset: -8px; \}/);
+  assert.match(css, /#cards \.card\[data-annotation-label\] \{ outline: var\(--annotation-ring-width, 5px\) solid var\(--annotation-ink\); outline-offset: var\(--annotation-ring-offset, -5px\); \}/);
   assert.match(css, /#cards \.card\[data-annotation-label\]:focus-visible \{ box-shadow: 0 0 0 2px var\(--vscode-focusBorder\)/);
   assert.match(css, /\.spotlights-count \{[^}]*border-radius: 999px; background: #c62828; color: #fff/);
   assert.doesNotMatch(css, /annotation-arriv|@keyframes/);
+  $('annotations-toggle').click(); labels()[0].click(); $('zoom-reset').click();
+  assert.ok(card('child').dataset.annotationLabel);
+  assert.equal($('cards').style.getPropertyValue('--annotation-ring-width'), '5px');
+  assert.equal($('cards').style.getPropertyValue('--annotation-ring-offset'), '-5px');
+  for (let index = 0; index < 60; index++) $('zoom-out').click();
+  const scale = Number($('viewport').dataset.scale);
+  const width = parseFloat($('cards').style.getPropertyValue('--annotation-ring-width'));
+  assert.equal(scale, 0.12);
+  assert.ok(width > 5);
+  assert.ok(width * scale >= model.MIN_STROKE_PIXELS - 1e-9);
+  assert.equal(parseFloat($('cards').style.getPropertyValue('--annotation-ring-offset')), -width);
 });
 
 function shiftClick(dom, target, modifiers = {}) {
@@ -1576,6 +1603,8 @@ test('camera recovery controls have keyboard equivalents and clamp zoom limits',
 
 test('connections darken at low zoom while retaining screen strength and tangent joins without endpoint circles', t => {
   const { dom, $, messages } = fixture(t);
+  assert.equal(parseFloat($('edges').style.getPropertyValue('--normal-edge-strength')), 70);
+  $('zoom-out').click();
   assert.equal(parseFloat($('edges').style.getPropertyValue('--normal-edge-strength')), 70);
   $('zoom-out').click();
   assert.ok(parseFloat($('edges').style.getPropertyValue('--normal-edge-strength')) < 70);

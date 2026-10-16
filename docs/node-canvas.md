@@ -49,14 +49,15 @@ Command mapping has synthetic-event coverage.
 
 ## Overview paint
 
-Between 100% and 12% zoom, node backgrounds progressively become their painted
-border color while ordinary arrows darken. Let `q = 1 - clamp((k-.12)/.88, 0, 1)`.
-First form the exact actual-size 15% accent resting tint or 24% accent hover tint;
-then mix that base toward the currently painted border by `q`. High-contrast cards
-start from the theme canvas background. At 12%, fills match borders, including
-emphasized colored borders and the hovered neutral manifesto's white border.
-At this altitude shapes and colors carry the overview; text keeps its ordinary
-styling. Zoom changes only inherited paint variables and edge compensation.
+From 40% down to 16% zoom, node backgrounds progressively become their painted
+border color. Ordinary arrows darken on a separate 70%-to-16% interval. Let
+`q = 1 - clamp((k-.16)/(.40-.16), 0, 1)`. First form the exact actual-size 15%
+accent resting tint or 24% accent hover tint; then mix that base toward the currently
+painted border by `q`. High-contrast cards start from the theme canvas background.
+At 16% and below, fills match borders, including emphasized colored borders and
+the hovered neutral manifesto's white border. At this altitude shapes and colors
+carry the overview; text keeps its ordinary styling. Zoom changes only inherited
+paint variables and edge compensation.
 
 ## Separation of responsibilities
 
@@ -157,7 +158,7 @@ styling. Zoom changes only inherited paint variables and edge compensation.
   count zero. Opening the list clears the count, and reload starts a new in-memory
   baseline. Arrivals preserve editing, focus and camera. A newest-first dropdown
   anchored to Spotlights shows one text entry per spotlight. Selection activates
-  all its colors with eight-pixel exact-version inset rings, closes the dropdown
+  all its colors with camera-scaled exact-version inset rings, closes the dropdown
   and frames the matching union in the full canvas, retaining focused drafts.
   Compact version counts replace member/detail/preview UI. Shift-click cycles
   manual and spotlight-applied highlights through red/blue/green/purple/turquoise/
@@ -166,10 +167,10 @@ styling. Zoom changes only inherited paint variables and edge compensation.
   or managed forms. Version-aware highlight references and dropdown preferences
   are per view; immutable batches survive sessions until explicit flush. See [spotlight design and storage](spotlights.md).
 - **Ordinary arrows** use darker shared neutral ink, mixed with black at 70% at
-  actual size and above, decreasing linearly to 35% at the 12% camera limit. The
-  existing curve/head pair and minimum pixel dimensions remain intact. Diff/draft
-  colors and incident-hover emphasis keep independent paint so the overview mesh
-  stays quiet beside spotlight batches.
+  70% scale and above, decreasing linearly to 35% at 16% and below. The existing
+  curve/head pair and minimum pixel dimensions remain intact. Diff/draft colors and
+  incident-hover emphasis keep independent paint so the overview mesh stays quiet
+  beside spotlight batches.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
   layout positions, magnification, colors, or derived scores enter `_specspec`.
 

@@ -6,11 +6,12 @@ parents:
 - rvz48KY=
 - RY5LFw8=
 sources:
-- path: docs/spotlights.md
 - path: docs/own-spec.md
+- path: docs/spotlights.md
 - path: electron/main.cjs
 - path: electron/security.cjs
 - path: electron/test-host/run.cjs
+- path: electron/test/security.test.cjs
 - path: graph-ui-common/host/annotations.cjs
 - path: graph-ui-common/host/session.cjs
 - path: graph-ui-common/media/graph-annotations.js
@@ -24,7 +25,14 @@ sources:
 - path: graph-ui-common/view.cjs
 - path: vscode/src/extension.ts
 - path: vscode/test/extension.test.cjs
-- path: electron/test/security.test.cjs
+- path: graph-ui-common/media/graph-model.js
+  blob: ae602d9c21bc193bbce9f91b568c1c283014143e
+  mode: strict
+  ranges:
+  - - 325
+    - 333
+  - - 345
+    - 354
 ---
 # Render a spotlight dropdown with whole-record rings and framing
 
@@ -43,9 +51,12 @@ A round red toolbar badge counts one per new shot since dropdown opening, starti
 with a zero-count baseline. Counts/New cues stay in renderer memory. Arrivals
 preserve editing focus/caret, camera, selection, dropdown choice and older
 entries. A version-aware editable highlight map and dropdown choice remain per-
-view preferences. Exact members paint an 8px inset outline at -8px offset,
-separate from keyboard focus and fills. Flush uses host confirmation and a locked
-reviewed-list check.
+view preferences. Exact members paint an equal-inset outline with width
+`max(5, 1.6 / k)` world units at camera scale `k`; its negative offset keeps the
+ring inside the unchanged card outline. This gives a 5-unit actual-size width and
+the connection stroke's 1.6 CSS-pixel minimum when zoomed out, separate from
+keyboard focus and fills. Flush uses host confirmation and a locked reviewed-list
+check.
 
 The shared session reads spotlights independently of graph validity and historical
 selection. Ready/reload republishes retained entries for a new baseline. Directory

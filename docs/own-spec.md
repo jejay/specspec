@@ -215,7 +215,8 @@ Cards use shared 15% resting/24% hover tint at actual size and ordinary theme te
 [Overview shapes](../_specspec/sV3uzvQ=read-the-zoomed-out-graph-as-solid-colored-node-shapes.md)
 progressively fill to their painted borders as zoom decreases. The
 [two-stage mixing choice](../_specspec/eqWEPJI=interpolate-node-fill-toward-its-painted-border-over-the-overview-range.md)
-shares the arrows' 12%-to-100% interval and preserves exact actual-size tints.
+starts fill progression at 40% scale and reaches the painted border at 16%, separately
+from ordinary arrows' 70%-to-16% quieting interval. Exact actual-size tints remain.
 [Positive concise copy](../_specspec/iHpAyAE=use-concise-positive-present-tense-interface-copy.md)
 keeps legends to actual color labels, with tutorials in documentation. Its
 [realization](../_specspec/znpy2MA=present-concise-action-and-state-copy-across-visual-surfaces.md)
@@ -224,12 +225,12 @@ covers shared UI, host repair text and the palette playground.
 increases colored border/incident ink lightness and chroma. The neutral manifesto's
 hover border is white. [Immediate-context darkening](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
 is transient and preserves geometry/native forms. [Spotlight rings](../_specspec/E7O_6GU=view-local-label-cycle-with-inset-border.md)
-paint exact versions in one editable colored highlight set with an 8px inset outline.
+paint exact versions in one editable colored highlight set with camera-scaled inset outlines.
 
 [Quiet ordinary arrows](../_specspec/u8tHkaE=keep-ordinary-relationship-arrows-quiet-as-the-graph-is-zoomed-out.md)
 keep the overview mesh subordinate to spotlight batches. [Neutral-ink scaling](../_specspec/yCYr-E0=scale-neutral-arrow-ink-from-seventy-to-thirty-five-percent-with-zoom.md)
-chooses 70% theme neutral ink mixed with black at actual size, decreasing linearly
-to 35% at 12% zoom. Diff/draft colors and incident-hover emphasis remain independent;
+chooses 70% theme neutral ink mixed with black from 70% scale and above, decreasing
+linearly to 35% at 16% and below. Diff/draft colors and incident-hover emphasis remain independent;
 minimum stroke/head geometry stays intact. The [shared canvas realization](../_specspec/asaRDK0=shared-graph-ui-implementation.md)
 maps the pure, DOM and real-host paint checks.
 

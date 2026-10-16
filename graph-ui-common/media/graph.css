@@ -73,7 +73,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
 /* Editable highlights: exact versions only; paint never changes the card's box. */
-#cards .card[data-annotation-label] { outline: 8px solid var(--annotation-ink); outline-offset: -8px; }
+#cards .card[data-annotation-label] { outline: var(--annotation-ring-width, 5px) solid var(--annotation-ink); outline-offset: var(--annotation-ring-offset, -5px); }
 #cards .card[data-annotation-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 26px; }
 .card.added strong, .card.added h2, .git-corner.added { color: var(--git-added); }

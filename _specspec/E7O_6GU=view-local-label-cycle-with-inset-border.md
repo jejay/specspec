@@ -7,12 +7,14 @@ parents:
 ---
 # Paint editable highlight rings inside unchanged card outlines
 
-One editable highlight set supplies an 8px solid outline at -8px offset around
-exact matching members in the displayed graph, including base-revision removed
-cards. Each member uses its assigned color, from manual gestures or a spotlight.
-The outline follows the existing type shape, stays equal on all sides, retains its
-hue on hover and follows unrelated-card darkening. Keyboard focus has an
-independent cue.
+One editable highlight set supplies a solid equal-inset outline around exact
+matching members in the displayed graph, including base-revision removed cards.
+Use 5 world units at actual size. At camera scale k, use
+width = max(5, 1.6 / k) world units and set the outline offset to its negative,
+following graph scale while preserving at least 1.6 CSS screen pixels at low zoom.
+Each member uses its assigned color, from manual gestures or a spotlight. The
+outline follows the existing type shape, retains its hue on hover and follows
+unrelated-card darkening. Keyboard focus has an independent cue.
 
 Keep editable highlights separate from canonical data, native forms, drafts and
 semantic fills. Applying a spotlight replaces highlights and explicitly frames its

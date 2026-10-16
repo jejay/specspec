@@ -22,7 +22,7 @@ classifying the files as invalid. Each refresh has bounded attempts; disposal
 cancels follow-up work, and actual invalid reads retain their repair restrictions.
 `host/annotations.cjs` watches the checkout-local immutable spotlight store independently,
 including while a revision graph is open. `media/graph-annotations.js` owns the retained
-dropdown, round red arrival-count badge and editable multicolor 8px rings.
+dropdown, round red arrival-count badge and editable camera-scaled multicolor rings.
 Shift-click cycles colors and Ctrl/Command+Shift clears one member, identically
 for manual and spotlight-applied highlights. A local message dialog sends exact
 references to the guarded session's creation API; the VS Code adapter supplies
@@ -32,11 +32,11 @@ retaining drafts. Existing initial entries establish a zero-count baseline; open
 new arrivals, and reload starts a new in-memory count. Python owns immutable storage
 and exact blob metadata, shared by the CLI and both hosts. Dropdown/highlight preferences
 are per view; unread counts are not persisted. Internal paths/transport names remain
-independent of public Spotlights naming. Neutral curve/head ink darkens continuously
-from 70% at actual size to 35% at minimum zoom; diff and hover inks stay distinct.
-Node fills use the same camera interval in reverse, blending exact actual-size
-15%/24% tints to their painted borders at 12% zoom, including contrast themes and
-hovered borders. The rounded floating HUD keeps the full canvas available.
+independent of public Spotlights naming. Neutral curve/head ink darkens from 70% at
+70% zoom and above to 35% at 16% and below; diff and hover inks stay distinct.
+Node fills transition separately from their exact actual-size 15%/24% tints at 40%
+zoom toward painted borders at 16% and below, including contrast themes and hovered
+borders. The rounded floating HUD keeps the full canvas available.
 Its rectangle tool captures a one-shot primary-pointer drag, latched through
 Ctrl/Command release, with cancellation and native/highlight event boundaries.
 Legends pair colors with concise labels; tutorial text lives in the

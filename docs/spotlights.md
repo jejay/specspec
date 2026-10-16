@@ -109,10 +109,11 @@ versions can therefore correctly differ from a spotlight captured by the CLI.
   first; the dropdown closes, then the matching nodes are framed in the **full
   canvas**, like the existing frame action. This enters the overview, retaining
   any focused draft and surrounding graph context. Choosing it again frames again.
-- Solid **8px inset rings** mark exact versions, including removed comparison-base
-  cards. Each member uses its set's color. Width is in world units and follows the
-  camera scale. Compact counts report different versions, absent nodes and
-  unavailable metadata. Version state refers to the displayed snapshot, not an
+- Solid equal-inset rings mark exact versions, including removed comparison-base
+  cards. Each member uses its set's color. Width is 5 world units at actual size and
+  scales with the graph while retaining a 1.6 CSS-pixel minimum when zoomed out.
+  Compact counts report different versions, absent nodes and unavailable metadata.
+  Version state refers to the displayed snapshot, not an
   unsaved managed form layered over it. A spotlight with no exact matches still
   clears the editable set and closes the menu, leaving the camera unchanged.
 - **Clear highlight** removes rings explicitly. Escape, outside click or tabbing
@@ -125,8 +126,8 @@ versions can therefore correctly differ from a spotlight captured by the CLI.
   retained groups use the later group's color.
 
 Ordinary, unhovered neutral curves and arrowheads use darker shared ink: 70% theme
-neutral ink mixed with black at 100% zoom and above, decreasing continuously to
-35% at 12% zoom. Diff/draft colors and incident-hover emphasis keep their separate
+neutral ink mixed with black at 70% zoom and above, decreasing continuously to 35%
+at 16% and below. Diff/draft colors and incident-hover emphasis keep their separate
 paint. Minimum stroke/head dimensions, world layout and native forms stay intact.
 This makes the zoomed-out relationship mesh quieter beside spotlight batches.
 
