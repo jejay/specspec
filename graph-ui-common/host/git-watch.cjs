@@ -27,7 +27,7 @@ class GitWatcher {
       const output = this.execute('git', ['-C', this.root, 'rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir'],
         { encoding: 'utf8', timeout: 3000, maxBuffer: 65536, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
       const paths = output.trim().split(/\r?\n/);
-      if (paths.length !== 2) throw new Error('Cannot discover Git metadata directories.');
+      if (paths.length !== 2) throw new Error('Git metadata discovery failed.');
       [this.directory, this.common] = paths.map(p => resolve(p));
     } catch (error) {
       this.directory = this.common = undefined;

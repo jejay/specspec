@@ -138,7 +138,7 @@ function platformChecks(fixture, host) {
       assert.deepEqual(await evaluate(`[document.getElementById('body').selectionStart,document.getElementById('body').selectionEnd]`), [2,8]);
       const invalid = Buffer.from(external.toString().replace('parents:', 'broken:'));
       writeFileSync(path, invalid);
-      await waitFor(`/out of date/.test(document.getElementById('message').textContent)&&document.getElementById('save').disabled`);
+      await waitFor(`/Graph files need repair/.test(document.getElementById('message').textContent)&&!document.getElementById('sync-notice').hidden&&document.getElementById('save').disabled`);
       assert.deepEqual(readFileSync(path), invalid, 'Invalid external files must not be rewritten.');
       assert.equal(await evaluate(`document.getElementById('body').value`), '# Retained external draft');
       writeFileSync(path, external);

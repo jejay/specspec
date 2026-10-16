@@ -16,7 +16,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
         let started = false;
         child.on('spawn', () => { started = true; });
         const uncertain = error => started && ['add', 'update', 'delete'].includes(args[0])
-            ? new Error(`${error.message} The action outcome was not confirmed; inspect current project/recovery state before retrying.`) : error;
+            ? new Error(`${error.message} The action result needs verification; inspect project/recovery state before retrying.`) : error;
         const fail = (error) => {
             if (settled || failure)
                 return;
@@ -26,7 +26,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
             child.kill();
         };
         const timer = setTimeout(() => fail(new Error('SpecSpec CLI timed out.')), timeoutMs);
-        child.on('error', (error) => fail(new Error(`Cannot run ${command}: ${error.message}. Install the Python CLI or configure specspec.command/specspec.args.`)));
+        child.on('error', (error) => fail(new Error(`CLI launch failed for ${command}: ${error.message}. Install Python CLI or configure specspec.command/specspec.args.`)));
         for (const [stream, collection] of [[child.stdout, stdout], [child.stderr, stderr]]) {
             stream.on('data', (chunk) => {
                 size += chunk.length;
@@ -54,7 +54,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
                 envelope = JSON.parse(output);
             }
             catch {
-                reject(uncertain(new Error(errors || output || `CLI exited with ${code} without JSON.`)));
+                reject(uncertain(new Error(errors || output || `CLI exited with ${code}; response needs JSON.`)));
                 return;
             }
             if (envelope.api_version !== 6 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {

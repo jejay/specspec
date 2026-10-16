@@ -172,8 +172,13 @@ uses left-to-right earliest ranks and a deterministic compact backbone while dra
 every relationship. [Dagre/D3](../_specspec/tgHQyx4=dagre-layered-world-and-curved-links.md)
 are locally bundled. [Spatial navigation](../_specspec/mAZgRy8=d3-camera-and-edit-safe-gestures.md)
 uses 12–250% pointer-anchored zoom and unconstrained pan with explicit frame/100%
-controls. Native text rasterizes at the current scale; routes retain low-zoom stroke/
-head strength and tangent joins. [Canvas rationale](node-canvas.md) describes the seams.
+controls. [Floating controls](../_specspec/FZO2_-Q=keep-navigation-in-a-compact-floating-canvas-control.md)
+keep framing icons over the full canvas. [Rectangle framing](../_specspec/zs0OtME=frame-a-drawn-rectangle-with-a-one-shot-canvas-tool.md)
+uses the [captured-pointer choice](../_specspec/zwevPEc=capture-rectangle-framing-in-viewport-pixels-and-invert-the-starting-camera.md):
+Ctrl on Windows/Linux, Command on Mac, a latched drag through modifier release,
+and framing on pointer release. Cancellation clears the transient tool. Native
+text rasterizes at the current scale; routes retain low-zoom stroke/head strength
+and tangent joins. [Canvas tutorial](node-canvas.md#canvas-controls) describes the gestures.
 
 ## Exact palette, hover and node shapes
 
@@ -194,12 +199,20 @@ remain available together. Log Absolute Influence uses `log1p(c)/log1p(M)`;
 Log Relative Influence uses `(log1p(c)-log1p(lo))/(log1p(hi)-log1p(lo))`, transforming
 raw counts before subtracting the cohort minimum. The +1 defines zero without
 changing the raw descendant count. All four modes share a continuous green `#4df884` → yellow `#e8d62c` → red `#ba2208` sRGB
-ramp is separate from the seven swatches. Tied groups use green; the manifesto
+ramp, separate from the seven swatches. Tied groups use green; the manifesto
 stays gray. Full target/base revisions determine scales, never visible subsets.
 [The influence realization](../_specspec/8Slagkc=render-continuous-absolute-and-cohort-relative-influence.md)
 maps lazy metric ranges, compact/expanded paint, gradient legends and verification.
 
-Cards use shared 15% resting/24% hover tint and ordinary theme text.
+Cards use shared 15% resting/24% hover tint at actual size and ordinary theme text.
+[Overview shapes](../_specspec/sV3uzvQ=read-the-zoomed-out-graph-as-solid-colored-node-shapes.md)
+progressively fill to their painted borders as zoom decreases. The
+[two-stage mixing choice](../_specspec/eqWEPJI=interpolate-node-fill-toward-its-painted-border-over-the-overview-range.md)
+shares the arrows' 12%-to-100% interval and preserves exact actual-size tints.
+[Positive concise copy](../_specspec/iHpAyAE=use-concise-positive-present-tense-interface-copy.md)
+keeps legends to actual color labels, with tutorials in documentation. Its
+[realization](../_specspec/znpy2MA=present-concise-action-and-state-copy-across-visual-surfaces.md)
+covers shared UI, host repair text and the palette playground.
 [Hue-emphasizing hover](../_specspec/bLBNk80=hue-preserving-hover-lightness-and-chroma.md)
 increases colored border/incident ink lightness and chroma. The neutral manifesto's
 hover border is white. [Immediate-context darkening](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)

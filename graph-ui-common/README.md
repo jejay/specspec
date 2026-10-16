@@ -34,6 +34,13 @@ and exact blob metadata, shared by the CLI and both hosts. Dropdown/highlight pr
 are per view; unread counts are not persisted. Internal paths/transport names remain
 independent of public Spotlights naming. Neutral curve/head ink darkens continuously
 from 70% at actual size to 35% at minimum zoom; diff and hover inks stay distinct.
+Node fills use the same camera interval in reverse, blending exact actual-size
+15%/24% tints to their painted borders at 12% zoom, including contrast themes and
+hovered borders. The rounded floating HUD keeps the full canvas available.
+Its rectangle tool captures a one-shot primary-pointer drag, latched through
+Ctrl/Command release, with cancellation and native/highlight event boundaries.
+Legends pair colors with concise labels; tutorial text lives in the
+[canvas guide](../docs/node-canvas.md#canvas-controls).
 See [spotlight semantics](../docs/spotlights.md).
 
 The eight Color by modes include continuous Absolute influence, Relative influence,
@@ -68,4 +75,7 @@ sequence acknowledgements, version/text conflicts and UTF-16/CRLF-safe edits. Se
 individual and production deadlines remain independent. The shared CDP harness
 fails closed transports promptly and foregrounds even when optional window sizing
 is unavailable. [The Windows smoke investigation](../docs/investigations/host-smoke.md)
-records complete Electron/VS Code results, scope and diagnostic limits.
+records Electron/VS Code outcomes, completed phases and diagnostic limits.
+`test/camera.test.cjs` isolates rectangle state/inversion and synthetic Mac mapping;
+`test-host/canvas.cjs` runs early in each installed suite to inspect computed paint,
+floating chrome, real pointer capture/outside release and native editing.

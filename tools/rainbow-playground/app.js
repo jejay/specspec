@@ -41,7 +41,7 @@
     }
     const reduced = current.gamutReducedIndices;
     $('message').textContent = reduced.length ? `Chroma reduced to fit sRGB for colors ${reduced.map(i=>i+1).join(', ')}. Hue and lightness retained before hex rounding.`
-      : 'All requested base colors fit sRGB without chroma reduction.';
+      : 'All requested base colors fit sRGB.';
     exportResult();
   }
   $('parameters').addEventListener('submit', event => event.preventDefault());

@@ -18,11 +18,13 @@
     onChange: (value, finished) => {
       if (cameraScene) cameras[cameraScene] = value;
       $('zoom-level').textContent = `${Math.round(value.k * 100)}%`;
-      updateEdgeAppearance(value.k);
+      updateCameraAppearance(value.k);
       syncHover();
       if (finished && state) saveDraft();
     }, onFrame: () => frameAll(),
+    onRectangleChange: active => { $('frame-area').setAttribute('aria-pressed', String(active)); if (active) clearHover(); },
   });
+  $('frame-area').title = `Frame rectangle (${camera.rectangleModifier}-drag)`;
   const elements = ['body', 'sources', 'slug', 'node-type'];
   const title = node => node.body.split(/\r?\n/).find(line => line.startsWith('#'))?.replace(/^#+\s*/, '') || node.body.split(/\r?\n/).find(line => line.trim()) || node.type;
   const send = message => host.postMessage(message);
@@ -58,8 +60,8 @@
 
   function updateButtons() {
     $('sync-notice').hidden = !sourceInvalid;
-    $('sync-notice').textContent = state?.document ? 'Displaying the last valid graph. Repair the bound document or other invalid Markdown; native Save can persist invalid text.'
-      : 'Displayed graph is out of date. Fix the Markdown files and refresh; graph changes are disabled.';
+    $('sync-notice').textContent = state?.document ? 'Last valid graph · Repair Markdown; native Save retains document text.'
+      : 'Last valid graph · Repair Markdown and refresh to resume editing.';
     $('back').hidden = view !== 'focus';
     $('back').disabled = pending;
     $('frame-node').hidden = view !== 'focus';
@@ -69,7 +71,7 @@
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
-    $('delete').title = 'Deletes this node and every descendant, including shared children. Uncommitted nodes are warned about before deletion; HEAD ghosts remain D until committed.';
+    $('delete').title = 'Delete this node and all descendants';
     $('save').disabled = !editable() || pending || Boolean(state?.provisional && !state.document);
     $('delete').disabled = !editable() || state?.provisional || creating || dirty || Boolean(state?.document?.dirty) || pending || currentNode()?.type === 'manifesto';
     for (const id of elements) $(id).disabled = !editable() || pending;
@@ -160,7 +162,7 @@
   }
 
   function trackHover(event) {
-    if (event.pointerType === 'touch') { clearHover(); return; }
+    if (event.pointerType === 'touch' || $('viewport').classList.contains('rectangle-ready')) { clearHover(); return; }
     hoverPoint = { x: event.clientX, y: event.clientY };
     setHoveredNode(cardIdAt(event.target));
   }
@@ -190,15 +192,13 @@
 
   function drawLegend() {
     const absoluteInfluence = colorMode.endsWith('absolute-influence');
-    const relativeInfluence = colorMode.endsWith('relative-influence');
-    const influenceScale = colorMode.startsWith('log-') ? 'log(influence + 1), normalized' : 'linear';
     $('color-mode').value = colorMode;
     $('legend').replaceChildren();
     const entries = colorMode === 'git-revision'
       ? Object.entries(model.REVISION_COLORS).filter(([kind]) => state.diff ? kind !== 'uncompared' : ['uncompared', 'draft'].includes(kind))
         .map(([kind, color]) => [model.REVISION_LABELS[kind], color])
       : colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
-      : model.INFLUENCE_MODES.includes(colorMode) ? [['Manifesto · not scaled', model.TYPE_COLORS.manifesto]]
+      : model.INFLUENCE_MODES.includes(colorMode) ? [['Manifesto', model.TYPE_COLORS.manifesto]]
       : [['Manifesto · 0 hops', model.TYPE_COLORS.manifesto],
         ...[...new Set([...graph.nodes.values()].filter(node => node.type !== 'manifesto')
           .map(node => colorValueFor(node.id)).filter(Number.isInteger))]
@@ -214,20 +214,10 @@
       gradient.style.backgroundImage = `linear-gradient(to right in srgb, ${[...model.INFLUENCE_COLORS].reverse().join(', ')})`;
       gradient.setAttribute('role', 'img');
       gradient.setAttribute('aria-label', 'Continuous influence: red highest, yellow intermediate, green lowest');
-      scale.append(document.createTextNode(absoluteInfluence ? 'Highest non-manifesto' : 'Group maximum'),
+      scale.append(document.createTextNode(absoluteInfluence ? 'Maximum' : 'Group maximum'),
         gradient, document.createTextNode(absoluteInfluence ? '0 descendants' : 'Group minimum'));
       $('legend').append(scale);
     }
-    const explanation = document.createElement('span');
-    explanation.className = 'legend-help';
-    explanation.textContent = colorMode === 'git-revision'
-      ? state.diff ? 'Relative to selected comparison · D means a deleted file; source impact is not M'
-        : 'No revision comparison available · neutral fills'
-      : colorMode === 'type' ? 'Existing node types · not review stages'
-      : absoluteInfluence ? `Unique descendants at all depths · ${influenceScale} 0 to highest non-manifesto count per revision · red → yellow → green, strongest to weakest · all-zero ranges use green`
-      : relativeInfluence ? `Unique descendants at all depths · ${influenceScale} within groups of equal maximum distance to manifesto per revision · red → yellow → green, strongest to weakest · tied groups use green`
-      : `${colorMode === 'max-distance' ? 'Longest' : 'Shortest'} directed path from manifesto · violet → red, repeats every ${model.RAINBOW_COLORS.length} hops · not a confidence score`;
-    $('legend').append(explanation);
   }
 
   function gitCorner(card, kind) {
@@ -261,7 +251,7 @@
     if (related === 'child' || related === 'both') {
       const count = context?.descendantCount(id) ?? 0;
       card.dataset.downstream = count;
-      badge(`${count} downstream`, 'downstream-badge', 'All reachable descendants at every depth, excluding this child. Shared nodes counted once per child; totals may overlap. Potential impact, not guaranteed invalidation.');
+      badge(`${count} downstream`, 'downstream-badge', 'Unique descendants at all depths · Potential impact');
     }
     if (kind) badge(kind.replace(/-/g, ' '), `git-badge ${kind}`);
     card.append(heading, metadata, badges); gitCorner(card, kind);
@@ -381,12 +371,13 @@
       svg.append(path, head);
       return { route, path, head };
     });
-    updateEdgeAppearance(camera.value().k);
+    updateCameraAppearance(camera.value().k);
     // Redraw creates new cards/pairs even when hovered identity is unchanged.
     updateHoverAppearance();
   }
 
-  function updateEdgeAppearance(scale) {
+  function updateCameraAppearance(scale) {
+    $('cards').style.setProperty('--node-fill-strength', `${model.nodeFillStrength(scale) * 100}%`);
     $('edges').style.setProperty('--normal-edge-strength', `${model.neutralEdgeStrength(scale) * 100}%`);
     for (const { route, path, head } of drawnEdges) {
       const appearance = model.edgeAppearance(route, scale);
@@ -411,8 +402,8 @@
     const isRoot = nodeType === 'manifesto';
     formParents = isRoot ? [] : [...ids];
     const canEdit = editable() && !isRoot;
-    $('parents-summary').textContent = isRoot ? 'None — the manifesto is the root and cannot have parents.'
-      : formParents.length ? `${formParents.length} linked parent${formParents.length === 1 ? '' : 's'}` : 'No parents linked.';
+    $('parents-summary').textContent = isRoot ? 'Manifesto root'
+      : formParents.length ? `${formParents.length} linked parent${formParents.length === 1 ? '' : 's'}` : 'Choose a parent';
     $('parent-links').replaceChildren();
     for (const id of formParents) {
       const node = graph.nodes.get(id), text = node ? `${title(node)} · ${description(node)} · ${id}` : id;
@@ -497,8 +488,9 @@
   $('zoom-in').addEventListener('click', () => camera.scaleBy(1.25));
   $('zoom-reset').addEventListener('click', () => camera.scaleTo(1));
   $('frame-all').addEventListener('click', frameAll);
+  $('frame-area').addEventListener('click', () => camera.toggleRectangle());
   $('frame-node').addEventListener('click', () => {
-    const box = layout?.positions.get(creating ? '__draft__' : selected);
+    const box = layout?.positions.get(draftCard() ? '__draft__' : selected);
     if (box) camera.frame(box);
   });
   $('back').addEventListener('click', () => {
@@ -521,7 +513,7 @@
     rememberCamera(); delete cameras.draft;
     creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
-    $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'Unsaved new node';
+    $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'New node draft';
     $('type-label').hidden = false; $('slug-label').hidden = false;
     $('node-type').value = 'requirement'; $('slug').value = ''; $('body').value = ''; $('sources').value = '[]';
     $('sources-label').hidden = true; $('before-section').hidden = true;
@@ -581,14 +573,14 @@
       try {
         const references = JSON.parse($('sources').value); if (!Array.isArray(references)) throw new Error();
         references.push(message.reference); $('sources').value = JSON.stringify(references, null, 2);
-        sourceLinks(); formChanged(); setMessage('Reference appended to the form. Save/stage normally; source staging remains manual.');
+        sourceLinks(); formChanged(); setMessage('Source reference added · Save the form to keep it.');
       } catch { setMessage('Source JSON changed while capture was pending; complete it before capturing again.'); }
       return;
     }
     if (message.type === 'source-preview') {
       const r = message.resolution;
       $('source-preview-title').textContent = `${r.path} · ${r.target}`;
-      $('source-preview-status').textContent = `${r.mode} · ${r.outcome} · ${r.ranges.map(p => p.join('–')).join(', ')}${message.original ? ' · Original anchored content (current mapping is not trustworthy)' : ''}${r.message ? ' · ' + r.message : ''}`;
+      $('source-preview-status').textContent = `${r.mode} · ${r.outcome} · ${r.ranges.map(p => p.join('–')).join(', ')}${message.original ? ' · Original anchored content · Mapping needs review' : ''}${r.message ? ' · ' + r.message : ''}`;
       $('source-preview-code').textContent = message.chunks.map(c => c.lines.map((line, i) => `${i + c.start >= c.selected[0] && i + c.start <= c.selected[1] ? '>' : ' '} ${i + c.start}: ${line}`).join('\n')).join('\n\n…\n\n');
       if ($('source-preview').showModal) $('source-preview').showModal(); else $('source-preview').setAttribute('open', '');
       return;
@@ -606,7 +598,7 @@
     }
     if (message.type === 'notice' || message.type === 'sync-warning') { setMessage(message.message); return; }
     if (message.type === 'sync-error') { sourceInvalid = true; pending = false; setMessage(message.message); updateButtons(); return; }
-    if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Displayed graph is out of date; ${state?.document ? 'the bound document can be repaired' : 'editing is disabled'}.\n${message.message}` : message.message); updateButtons(); return; }
+    if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Last valid graph · Repair ${state?.document ? 'the bound document' : 'Markdown and refresh'}.\n${message.message}` : message.message); updateButtons(); return; }
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;
     snapshotReceivedAt = performance.now();
@@ -637,7 +629,7 @@
       originalNode = currentNode(); loadForm();
     }
     if (dirty || creating) {
-      const warning = orphaned() ? 'The edited node was deleted. Draft retained for copying or discarding; saving is disabled.'
+      const warning = orphaned() ? 'Deleted node draft · Available for copying or discard.'
         : !creating && !model.sameNode(originalNode, currentNode()) ? 'This node changed outside your draft. Draft retained; saving will ask before overwriting current contents.'
           : 'Graph refreshed. Unsaved draft retained.';
       setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`), warning].filter(Boolean).join('\n'));

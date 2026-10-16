@@ -163,8 +163,14 @@ stay separate from comparison display unions and placement backbones.
 Dagre places a deterministic deepest-parent backbone after all-parent earliest ranks;
 every relationship renders. Intrinsic world sizes determine arrangement. Clip on
 resize and navigate by a D3 camera with 12–250% pointer zoom, unconstrained pan,
-frame/100% controls and native-gesture exclusions. Current-scale native text and
-independent overview/focus cameras retain readable editing.
+a rounded floating zoom/framing HUD and native-gesture exclusions. Graph/node
+framing uses icons; a contextual third/overview second framing icon arms rectangle
+framing. Ctrl-drag (Windows/Linux) or Command-drag (Mac) captures the pointer and
+inverts the starting camera. The rubber band stays latched after modifier release;
+pointer release frames with 40px margins and up to 250% zoom. Graph/node framing
+retains its 100% cap. Escape/blur/cancellation clears the tool, and four-pixel axis
+thresholds retain the pose for tiny gestures. Native and highlight gestures keep
+precedence. Current-scale text and independent overview/focus cameras retain editing.
 
 Ordinary cards are 264×112 compact, 860 wide expanded. Implementation radius **0px**,
 Requirement **24px**. Manifesto is 264×264 compact and expanded diameter
@@ -176,7 +182,7 @@ heads with compensated dashes. Camera changes update paint, not world arrangemen
 The exact distance/type/revision spectrum is `#bc82c9`, `#7e97e6`, `#1facce`, `#37b390`, `#92a64b`,
 `#ca8d3e`, `#dc7b7c`. Requirement index 4, Implementation 0, Added 3, M/R 1, D 6,
 source-only 5. Distance `(d-1)%7`; neutral `#929baa`, distance/type root `#d3d3d3`.
-Eight modes have explanatory legends; revision colors the root by comparison too.
+Eight modes have concise color legends; revision colors the root by comparison too.
 Absolute influence counts unique descendants and linearly scales zero to the highest
 non-manifesto count. Relative influence scales cohort minimum to maximum, grouping
 by maximum manifesto distance. Their logarithmic counterparts transform raw counts with `log1p` before
@@ -187,7 +193,10 @@ target/base context, shared lazy raw ranges, green tied cohorts and a neutral gr
 manifesto. Git theme titles/corners and edge patterns
 retain independent meaning.
 
-Shared tints are 15% rest / 24% hover. Colored hovered borders/incident inks use
+Actual-size tints are 15% rest / 24% hover. As zoom decreases from 100% to 12%,
+linearly blend those base fills to the painted border, reaching solid node shapes.
+High-contrast cards start from the theme canvas background. The white hovered
+manifesto and strengthened colored borders are exact fill endpoints. Colored hovered borders/incident inks use
 OKLCH L+.10 (cap .95), C×1.30, same H; neutral distance/type/influence root hover is white.
 Darken outside immediate displayed hover context with card brightness(.45) and
 35% ink / 65% black. Keep forms/caret/geometry stable and restore on exit.
@@ -217,7 +226,10 @@ specifies arguments, version resolution, storage limits and verification.
 Ordinary curves and heads share darker neutral ink: 70% theme ink mixed with black
 at actual size and above, decreasing linearly to 35% at 12% zoom. Diff/draft and
 incident-hover inks stay distinct. Minimum screen dimensions, shape ports and world
-layout retain their existing contracts.
+layout retain their existing contracts. Tool-authored labels use concise positive
+state/action copy. The canvas carries actual legends and floating controls; tutorials
+and normalization explanations live in documentation. Project text and structured
+validation evidence retain literal content.
 
 ## Examples, documentation and verification
 

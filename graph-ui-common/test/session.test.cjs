@@ -120,7 +120,7 @@ test('authorization loss and historical selection block writes', async t => {
 });
 test('full render membership and sequence tokens replace fingerprint acknowledgements', async t => {
   const wrong = fixture(t, { wrongMembership: true }); await assert.rejects(wrong.s.open(), /incomplete/);
-  const absent = fixture(t, { noRender: true }); await assert.rejects(absent.s.open(), /did not render/);
+  const absent = fixture(t, { noRender: true }); await assert.rejects(absent.s.open(), /rendering timed out/);
   const ok = fixture(t); await ok.s.open();
   ok.s.receive({ type: 'rendered', renderToken: 0, view: 'overview', visibleIds: [], nodeCount: 0 });
   assert.equal(ok.s.renderError, undefined);
@@ -136,7 +136,7 @@ test('serialized operations pass body as stdin, never renderer commands', async 
   await f.s.handle({ type: 'add', nodeType: 'requirement', slug: 'literal', parents: [], body: '# Literal $(touch anything)', sources: '[]' });
   const write = f.calls.find(c => c.args[0] === 'add'); assert.equal(write.input, '# Literal $(touch anything)');
   assert.ok(!write.args.includes(write.input)); assert.ok(!write.args.includes('--expect'));
-  await assert.rejects(f.s.handle({ type: 'exec', command: 'anything' }), /no longer exists|Unknown graph/);
+  await assert.rejects(f.s.handle({ type: 'exec', command: 'anything' }), /Select a current node|Unknown graph/);
 });
 test('unrelated changes do not block drafts; every save re-reads actual files', async t => {
   const f = fixture(t); await f.s.open(); f.change({ ...snapshot, nodes: [node, { ...node, id: 'another', body: '# External' }] });
@@ -155,7 +155,7 @@ test('same-node external changes ask before overwrite; cancellation retains curr
 });
 test('missing original records ask confirmation and deleted edited nodes are never recreated', async t => {
   const f = fixture(t, { confirm: false }); await f.s.open(); await f.s.handle(save(undefined)); assert.equal(f.confirmations.length, 1);
-  f.change({ ...snapshot, nodes: [] }); await assert.rejects(f.s.handle(save(node)), /no longer exists/);
+  f.change({ ...snapshot, nodes: [] }); await assert.rejects(f.s.handle(save(node)), /Select a current node/);
   assert.ok(!f.calls.some(c => ['update', 'add'].includes(c.args[0])));
 });
 test('watcher bursts coalesce, identical data does not redraw, and changed contents do', async t => {
@@ -189,9 +189,21 @@ test('polling is off by default, configurable, coalesced, and cancelled on dispo
   for (const value of [-1, 0.5, NaN, '10', 2_147_483_648]) assert.throws(() => pollInterval(value), /Polling interval/);
 });
 test('polls do not pile up behind slow reads or refresh immutable historical targets', async t => {
-  const f = fixture(t, { slow: 15, revisions: ['HEAD', 'HEAD'] }); await f.s.open(); f.s.configurePolling(1);
-  await pause(70); f.s.configurePolling(0); await pause(10); await f.s.queue;
-  assert.ok(f.calls.filter(isComparison).length < 7);
+  const f = fixture(t, { revisions: ['HEAD', 'HEAD'] }); await f.s.open();
+  const cli = f.s.host.cli, before = f.calls.filter(isComparison).length;
+  let release, entered = 0;
+  const blocked = new Promise(resolve => { release = resolve; });
+  f.s.host.cli = async (args, input) => {
+    if (isComparison({ args, input })) { entered++; await blocked; }
+    return cli(args, input);
+  };
+  f.s.configurePolling(1); await waitFor(() => entered === 1);
+  for (let i = 0; i < 20; i++) f.s.requestRefresh();
+  await pause(10); f.s.configurePolling(0);
+  assert.equal(entered, 1, 'One comparison stays in flight while ticks and refresh hints coalesce.');
+  f.s.host.cli = cli; release();
+  await waitFor(() => f.calls.filter(isComparison).length >= before + 2); await f.s.queue;
+  assert.equal(f.calls.filter(isComparison).length, before + 2, 'The blocked read gets exactly one coalesced follow-up.');
   await f.s.chooseRevisions(); const count = f.calls.filter(isComparison).length; f.s.configurePolling(2); f.s.scheduleRefresh(); await pause(25);
   assert.equal(f.calls.filter(isComparison).length, count);
   assert.ok(f.calls.some(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations'));

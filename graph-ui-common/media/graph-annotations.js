@@ -60,7 +60,7 @@
       const members = new Map();
       for (const group of shot.groups) for (const member of group.nodes) members.set(member.id, member);
       members.forEach(member => totals[resolution(member)]++);
-      return Object.entries(totals).filter(([, count]) => count).map(([kind, count]) => `${count} ${kind === 'changed' ? 'different version' : kind === 'absent' ? 'not in view' : kind}`).join(' · ');
+      return Object.entries(totals).filter(([, count]) => count).map(([kind, count]) => `${count} ${{ exact: 'exact', changed: 'different version', absent: 'other context', unavailable: 'refresh needed' }[kind]}`).join(' · ');
     }
     function render() {
       const count = fresh.size;
@@ -101,7 +101,7 @@
         });
         list.append(button);
       }
-      $('annotation-list-summary').textContent = shots.length ? `${shots.length} spotlight${shots.length === 1 ? '' : 's'}` : 'No local spotlights. Use specspec spotlight add.';
+      $('annotation-list-summary').textContent = shots.length ? `${shots.length} spotlight${shots.length === 1 ? '' : 's'}` : 'Create a spotlight with specspec spotlight add.';
       list.scrollTop = scroll;
       const newAnchor = anchorId && [...list.children].find(item => item.dataset.shotId === anchorId);
       if (newAnchor && anchorTop !== undefined) list.scrollTop += newAnchor.getBoundingClientRect().top - anchorTop;
@@ -125,7 +125,7 @@
       else {
         const state = snapshot(), target = state?.snapshot.nodes.some(n => n.id === id);
         const blob = (target ? state?.node_blobs : state?.base_node_blobs)?.[id]?.[0];
-        if (!blob) { $('annotation-live').textContent = 'This node has no exact version available for highlighting. Refresh and retry.'; return; }
+        if (!blob) { $('annotation-live').textContent = 'Refresh to capture this node’s current version.'; return; }
         const previous = highlights.get(id);
         const index = previous && resolution(previous) === 'exact' ? inks.indexOf(previous.color.toLowerCase()) : -1;
         if (index === inks.length - 1) highlights.delete(id);
@@ -200,7 +200,7 @@
         if (arrivals.length) $('annotation-live').textContent = `${fresh.size} new spotlight${fresh.size === 1 ? '' : 's'}. Open Spotlights to inspect the retained list.`;
         render(); paint(); save();
       },
-      error(message) { error = message; render(); $('annotation-live').textContent = `Local spotlight list could not be refreshed. ${message}`; },
+      error(message) { error = message; render(); $('annotation-live').textContent = `Spotlight list needs refresh. ${message}`; },
     };
   }
   window.SpecSpecAnnotations = { create };

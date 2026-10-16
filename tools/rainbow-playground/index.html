@@ -55,13 +55,13 @@
   <h2>Tinted node samples</h2><p>Hover to see the existing brighter tint and stronger border. A gray manifesto stays outside the spectrum.</p>
   <div id="nodes"></div>
   <h2>Suggested type / revision choices</h2>
-  <p id="mapping-logic" class="muted">Added gets the green nearest the default added-node text cue (#81b88b, hue ≈149.5°). Requirement gets a leftover swatch nearest green after the other roles. If none is unused, colors are shared. This uses the default text hue, not live host-theme colors.</p>
+  <p id="mapping-logic" class="muted">Added uses the nearest green to the default text cue (#81b88b, hue ≈149.5°). Requirement uses the nearest remaining green. Small palettes share colors.</p>
   <div id="mappings"></div>
 </section>
-<p class="muted">Hues sweep linearly from start to end, not via the shortest rotation. Chroma is a useful saturation control, not HSL saturation. Out-of-gamut samples reduce chroma at fixed hue/lightness; reductions are reported. Hover paint may also be gamut-mapped by your browser. Perception varies by display.</p>
+<p class="muted">Hues sweep linearly from start to end. Chroma controls OKLCH saturation. Gamut mapping fits samples to sRGB while retaining hue and lightness.</p>
 <h2>Copy a result</h2>
 <div class="actions"><label>Format <select id="format"><option value="parameters">Parameters JSON</option><option value="palette">Full palette JSON</option><option value="css">CSS variables</option></select></label><button id="copy" type="button">Copy result</button></div>
 <textarea id="result" readonly spellcheck="false" aria-label="Copyable rainbow result"></textarea>
-<p class="muted">Parameters alone are enough to paste back. Full JSON includes hex colors, suggested zero-based indices and gamut reductions. CSS variables are a standalone snippet, not an automatic SpecSpec import.</p>
+<p class="muted">Copy parameters, palette JSON or CSS variables.</p>
 </body>
 </html>

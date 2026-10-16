@@ -7,7 +7,8 @@ parents:
 - 3jX0Rgk=
 - NsFLK9o=
 - fdB9ZLM=
-- yCYr-E0=
+- eqWEPJI=
+- zwevPEc=
 sources:
 - path: graph-ui-common/host/cli.cjs
 - path: graph-ui-common/host/project.cjs
@@ -28,6 +29,8 @@ sources:
 - path: docs/node-canvas.md
 - path: graph-ui-common/src/graph-vendor.js
 - path: graph-ui-common/test/host-ui.test.cjs
+- path: graph-ui-common/test/camera.test.cjs
+- path: graph-ui-common/test-host/canvas.cjs
 ---
 # Render the shared intrinsic graph world and guarded session
 
@@ -35,7 +38,7 @@ sources:
 metrics/layout/routing, camera, bounded CLI/discovery and guarded `GraphSession`.
 All-parent earliest ranks feed a deterministic placement backbone; every displayed
 link routes through clear corridors to actual shape ports. Camera updates adjust
-edge paint while forms/world relationships retain their identity.
+edge and node paint while forms/world relationships retain their identity.
 
 The shared port scopes state and messages by project/view and serializes authorized
 operations with sequence/render acknowledgements. Adapters supply native host
@@ -52,3 +55,18 @@ The real-host CDP harness keeps optional window sizing separate from foregroundi
 and rejects closed/error transports promptly, clearing pending request timers.
 Protocol/JavaScript errors and individual request timeouts remain failures; unit
 tests exercise these boundaries independently of a real browser.
+
+The separate camera owns a one-shot rectangle tool with Ctrl/Command hover arming,
+latched primary-pointer dragging, a viewport-space band, inverse start-pose bounds,
+click consumption and cancellation/disposal cleanup. A floating rounded icon HUD
+exposes graph, contextual node and rectangle framing. Existing native controls and
+Shift highlight gestures retain their event ownership. Rectangle framing permits
+250% magnification; graph/node framing retains its 100% cap.
+
+One inherited fill-progress property drives two-stage sRGB mixing toward the painted
+border from each exact actual-size tint. Pure tests exercise the shared camera
+interval; DOM/controller tests cover every drag direction, modifier release, capture,
+cancellation, native boundaries, world/caret preservation and synthetic Mac mapping.
+The early common installed-host canvas probe checks dark/light/contrast fills at
+three scales, actual pointer capture/outside release, contextual icons and editing.
+Current installed-run scope and limits are recorded in the canvas guide.

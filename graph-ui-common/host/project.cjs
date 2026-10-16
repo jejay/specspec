@@ -11,6 +11,6 @@ async function findProjectRoot(start) {
     if (parent === current) break;
     current = parent;
   }
-  throw new Error(`No _specspec directory found at or above ${start}. Select a SpecSpec project folder, or initialize it with specspec init first.`);
+  throw new Error(`Select a SpecSpec project folder or run specspec init at ${start}.`);
 }
 module.exports = { findProjectRoot };

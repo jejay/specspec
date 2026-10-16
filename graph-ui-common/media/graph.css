@@ -16,7 +16,6 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #legend > span { display: inline-flex; align-items: center; gap: 5px; }
 #legend i { width: 10px; height: 10px; border-radius: 3px; }
 #legend i.influence-gradient { width: 128px; }
-.legend-help { color: var(--vscode-descriptionForeground); }
 #message { white-space: pre-wrap; padding: 0 14px; margin: 0; font-size: 12px; color: var(--vscode-editorWarning-foreground); }
 #message:not(:empty) { padding-bottom: 10px; }
 #sync-notice { margin: 0; padding: 6px 14px; font-size: 12px; color: var(--vscode-editorWarning-foreground, #e2c08d); border-block: 1px solid currentColor; }
@@ -24,16 +23,22 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #linked-sources summary { cursor: pointer; }
 #source-files { max-height: 110px; overflow: auto; margin: 6px 0; padding-left: 22px; }
 .canvas-shell { position: relative; flex: 1; min-height: 180px; }
-#viewport { position: absolute; inset: 0 0 42px; overflow: hidden; overflow: clip; touch-action: none; cursor: grab; outline-offset: -2px; background-color: var(--vscode-editor-background); background-image: radial-gradient(circle, color-mix(in srgb, var(--vscode-descriptionForeground) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
+#viewport { position: absolute; inset: 0; overflow: hidden; overflow: clip; touch-action: none; cursor: grab; outline-offset: -2px; background-color: var(--vscode-editor-background); background-image: radial-gradient(circle, color-mix(in srgb, var(--vscode-descriptionForeground) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
 #viewport.panning, #viewport.panning .card { cursor: grabbing; }
 #graph { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 #edges, #cards { position: absolute; inset: 0 auto auto 0; }
 #edges { pointer-events: none; overflow: visible; }
-.camera-controls { position: absolute; bottom: 0; left: 0; right: 0; height: 42px; display: flex; align-items: center; gap: 3px; padding: 5px 12px; background: var(--vscode-editorWidget-background); border-top: 1px solid var(--vscode-panel-border); }
-.camera-controls button { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); min-width: 32px; padding: 6px 9px; }
-#zoom-reset { min-width: 62px; font-variant-numeric: tabular-nums; }
-.canvas-help { position: absolute; bottom: 12px; right: 14px; margin: 0; font-size: 11px; color: var(--vscode-descriptionForeground); pointer-events: none; }
-@media (max-width: 1450px) { .canvas-help { display: none; } }
+.camera-controls { position: absolute; z-index: 3; bottom: 14px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 20px); display: flex; align-items: center; gap: 6px; padding: 6px; border: 1px solid var(--vscode-panel-border, #777); border-radius: 12px; background: var(--vscode-editorWidget-background); box-shadow: 0 4px 16px #0005; }
+.zoom-controls, .framing-controls { display: flex; align-items: center; gap: 3px; }
+.camera-controls button { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--vscode-foreground); width: 32px; height: 32px; padding: 5px; border-radius: 7px; }
+.camera-controls button:hover { background: var(--vscode-toolbar-hoverBackground, #8883); }
+.camera-controls button[aria-pressed="true"] { color: var(--vscode-button-foreground); background: var(--vscode-button-background); outline: 1px solid var(--vscode-focusBorder); }
+.camera-controls #zoom-reset { width: 62px; font-variant-numeric: tabular-nums; font-size: 12px; }
+.camera-icon { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.camera-divider { height: 20px; width: 1px; background: var(--vscode-panel-border, #777); }
+#viewport.rectangle-ready, #viewport.rectangle-ready .card { cursor: crosshair; }
+#viewport.rectangle-dragging, #viewport.rectangle-dragging * { cursor: crosshair !important; }
+.frame-selection { position: absolute; z-index: 2; pointer-events: none; border: 1px solid var(--vscode-focusBorder, #5c9eff); background: color-mix(in srgb, var(--vscode-focusBorder, #5c9eff) 18%, transparent); }
 /* World-space widths/dashes are camera-compensated in graph.js. No endpoint dots. */
 .link.normal, .arrow-head.normal { --edge-ink: color-mix(in srgb, var(--edge-normal) var(--normal-edge-strength, 70%), #000); --edge-hover-ink: color-mix(in srgb, var(--edge-normal) 50%, var(--vscode-editor-foreground, #fff)); }
 .link.added, .arrow-head.added { --edge-ink: var(--edge-added); }
@@ -51,11 +56,11 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .arrow-head.hover-darkened { fill: color-mix(in srgb, var(--edge-ink) 35%, #000); }
 /* Brightness, not opacity: unrelated cards darken on light backgrounds too. */
 .card.hover-darkened { filter: brightness(.45); }
-.card { position: absolute; width: 264px; height: 112px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; border: 1px solid var(--node-accent, #8993a4); border-top: 4px solid var(--node-accent, #8993a4); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background)); }
-.card:hover, .card.node-hovered { background: color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background)); }
+.card { position: absolute; width: 264px; height: 112px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; --card-border-ink: var(--node-accent, #8993a4); border: 1px solid var(--card-border-ink); border-top: 4px solid var(--card-border-ink); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--card-border-ink) var(--node-fill-strength, 0%), color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background))); }
+.card:hover, .card.node-hovered { background: color-mix(in srgb, var(--card-border-ink) var(--node-fill-strength, 0%), color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background))); }
 /* Stronger semantic hue everywhere except the intentionally neutral manifesto. */
-#cards .card:hover, #cards .card.node-hovered { border-color: oklch(from var(--node-accent, #8993a4) min(0.95, calc(l + 0.10)) calc(c * 1.30) h); }
-#cards .card.manifesto:not(.revision-colored):hover, #cards .card.manifesto:not(.revision-colored).node-hovered { border-color: #fff; }
+#cards .card:hover, #cards .card.node-hovered { --card-border-ink: oklch(from var(--node-accent, #8993a4) min(0.95, calc(l + 0.10)) calc(c * 1.30) h); }
+#cards .card.manifesto:not(.revision-colored):hover, #cards .card.manifesto:not(.revision-colored).node-hovered { --card-border-ink: #fff; }
 .card strong { font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
 .card small { font-size: 10px; color: var(--vscode-descriptionForeground); }
 .card.manifesto { border-top-width: 6px; border-radius: 50%; height: 264px; align-items: center; justify-content: center; }
@@ -105,7 +110,6 @@ textarea { resize: vertical; }
 .parent-add button, #parent-links button { flex-shrink: 0; }
 .actions { display: flex; flex-wrap: wrap; gap: 6px; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--vscode-textCodeBlock-background); padding: 8px; }
-footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscode-descriptionForeground); border-top: 1px solid var(--vscode-panel-border); }
 /* Local spotlight chrome overlays the canvas: no world reflow or camera changes. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #annotations-toggle { display: inline-flex; align-items: center; gap: 6px; }
@@ -126,9 +130,8 @@ footer { flex-shrink: 0; font-size: 11px; padding: 10px 14px; color: var(--vscod
 #annotation-message { max-height: 50vh; }
 #annotation-compose-error { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 [hidden] { display: none !important; }
-body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { border-color: var(--vscode-contrastBorder); }
-body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { background: var(--vscode-editor-background); }
-@media (max-width: 700px) { .color-control { margin-left: 0; } footer { font-size: 10px; } .camera-controls { padding-inline: 6px; } }
+body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { --card-border-ink: var(--vscode-contrastBorder, var(--vscode-foreground, #fff)); background: color-mix(in srgb, var(--card-border-ink) var(--node-fill-strength, 0%), var(--vscode-editor-background)); }
+@media (max-width: 700px) { .color-control { margin-left: 0; } }
 /* Narrow host chrome adapts, never world cards/ports/layout. */
 @media (max-width: 500px) {
   .toolbar { padding: 8px; gap: 4px; }
@@ -136,6 +139,5 @@ body.vscode-high-contrast .card, body.vscode-high-contrast-light .card { backgro
   .color-control { width: 100%; min-width: 0; white-space: normal; }
   .color-control select { flex: 1; min-width: 0; }
   #legend { gap: 6px; padding: 5px 8px; }
-  footer { display: none; }
   .canvas-shell { min-height: 120px; }
 }

@@ -107,6 +107,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
     // Normal-motion behavior remains covered by camera tests; do not rely on
     // background-host animation timing to reach a pose before sampling ink.
     await active.send('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]}, context.session);
+    await require('./canvas.cjs').checkCanvas({ evaluate, screenshot,
+      input: params => active.send('Input.dispatchMouseEvent', params, context.session) });
     await options.before?.({ evaluate, screenshot, delay });
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
@@ -128,6 +130,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
       if(!result.startsWith('oklch(')) throw new Error('Relative OKLCH is unsupported: '+result);
       return result.match(/[\\d.e+-]+/g).slice(0,3).map(Number);
     }`;
+    const sameColor = `(left,right) => {const c=document.createElement('canvas');c.width=c.height=1;const ctx=c.getContext('2d');
+      const rgb=color=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].join(',');};return rgb(left)===rgb(right);}`;
     const assertStrongerHue = (actual, base, message) => {
       assert.ok(actual[0]>base[0]+0.09, message+' must be brighter.');
       assert.ok(actual[1]>base[1]*1.29, message+' must have stronger chroma, not wash out.');
@@ -561,18 +565,19 @@ exports.checkUI = async function checkUI(port, options = {}) {
           document.documentElement.style.setProperty('--vscode-editor-foreground',${JSON.stringify(light?'#202020':'#cccccc')});
           document.documentElement.style.setProperty('--vscode-foreground',${JSON.stringify(light?'#202020':'#cccccc')});`);
         for (const mode of ['distance', 'max-distance', 'type']) {
-          await evaluate(`document.getElementById('color-mode').value=${JSON.stringify(mode)};document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+          await evaluate(`document.getElementById('zoom-reset').click();document.getElementById('color-mode').value=${JSON.stringify(mode)};document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
           assert.ok(await evaluate(`(() => {const c=document.querySelector('.card.manifesto'),s=getComputedStyle(c);
             const swatch=[...document.getElementById('legend').children].find(c=>/manifesto/i.test(c.textContent)).querySelector('i');
             const probe=document.createElement('span');probe.style.background=${JSON.stringify(theme.includes('contrast')?'var(--vscode-editor-background)':'color-mix(in srgb, #d3d3d3 15%, var(--vscode-editor-background))')};probe.style.color='var(--vscode-foreground)';document.body.append(probe);
-            const matches=s.backgroundColor===getComputedStyle(probe).backgroundColor&&s.color===getComputedStyle(probe).color;probe.remove();
-            return matches&&c.style.getPropertyValue('--node-accent')==='#d3d3d3'&&getComputedStyle(swatch).backgroundColor==='rgb(211, 211, 211)';})()`));
+            const matches=(${sameColor})(s.backgroundColor,getComputedStyle(probe).backgroundColor)&&s.color===getComputedStyle(probe).color;probe.remove();
+            return matches&&c.style.getPropertyValue('--node-accent')==='#d3d3d3'&&getComputedStyle(swatch).backgroundColor==='rgb(211, 211, 211)';})()`),`Actual-size manifesto paint matches its theme and legend in ${theme}/${mode}.`);
         }
+        await evaluate(`document.getElementById('frame-all').click()`);
         await checkHover(hoverNode, undefined, theme==='vscode-light'?'hover-light-theme':undefined);
         await checkHoverPalette();
         const rootId=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
         await checkHover(rootId, undefined, theme==='vscode-dark'?'hover-gray-manifesto':undefined);
-        await evaluate(`document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+        await evaluate(`document.getElementById('zoom-reset').click();document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
         assert.ok(await evaluate(`(() => {
           const model=window.SpecSpecGraph,root=document.querySelector('.card.manifesto');
           const legend=document.getElementById('legend').textContent;
@@ -583,10 +588,11 @@ exports.checkUI = async function checkUI(port, options = {}) {
               const accent=model.REVISION_COLORS[kind];
               const probe=document.createElement('span');probe.style.background=${JSON.stringify(theme.includes('contrast')?'var(--vscode-editor-background)':'color-mix(in srgb, var(--accent) 15%, var(--vscode-editor-background))')};
               probe.style.setProperty('--accent',accent);document.body.append(probe);
-              const matches=c.style.getPropertyValue('--node-accent')===accent&&getComputedStyle(c).backgroundColor===getComputedStyle(probe).backgroundColor;probe.remove();return matches;
+              const matches=c.style.getPropertyValue('--node-accent')===accent&&(${sameColor})(getComputedStyle(c).backgroundColor,getComputedStyle(probe).backgroundColor);probe.remove();return matches;
             })&&legend.includes('A · Added')&&legend.includes('M · Modified')&&legend.includes('D · Deleted')
             &&legend.includes('R · Renamed')&&!legend.includes('Manifesto · 0 hops');
         })()`),'Revision fills/legend match comparison kinds, including the modified manifesto.');
+        await evaluate(`document.getElementById('frame-all').click()`);
         await checkHover(rootId,undefined,theme==='vscode-dark'?'hover-revision-manifesto':undefined);
         await checkHover(hoverNode);
       }
@@ -716,12 +722,12 @@ exports.checkUI = async function checkUI(port, options = {}) {
     const restoredCamera = await camera();
     for(const key of ['x','y','k']) assert.ok(Math.abs(restoredCamera[key]-overviewCamera[key])<0.01,JSON.stringify({key,restoredCamera,overviewCamera}));
     await evaluate(`document.getElementById('color-mode').value='type'; document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
-    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Existing node types')`));
+    assert.ok(await evaluate(`document.getElementById('legend').textContent==='manifestorequirementimplementation'`));
     const paletteWorld=await positions(),paletteCamera=await camera();
     const minimum=await evaluate(`(() => {document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'));return [...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c.style.getPropertyValue('--node-accent')]);})()`);
-    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Shortest directed path')`));
+    assert.ok(await evaluate(`document.querySelector('#legend .legend-help')===null&&document.getElementById('legend').textContent.includes('1 hop')`));
     await evaluate(`document.getElementById('color-mode').value='max-distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
-    assert.ok(await evaluate(`document.getElementById('legend').textContent.includes('Longest directed path')`));
+    assert.ok(await evaluate(`document.querySelector('#legend .legend-help')===null&&document.getElementById('legend').textContent.includes(' hops')`));
     const maximum=await evaluate(`[...document.querySelectorAll('#cards .card')].map(c=>[c.dataset.nodeId,c.style.getPropertyValue('--node-accent')])`);
     assert.ok(maximum.some(([id,color])=>minimum.find(([key])=>key===id)[1]!==color),'Unequal root paths must produce different selected fills.');
     assert.equal(await positions(),paletteWorld);assert.deepEqual(await camera(),paletteCamera);
@@ -771,7 +777,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         const gradient=document.querySelector('#legend .influence-gradient');
         return [...document.querySelectorAll('#cards .card')].every(c=>c.style.getPropertyValue('--node-accent')===expected[c.dataset.nodeId][mode])
           &&getComputedStyle(gradient).backgroundImage.includes('linear-gradient')&&gradient.offsetWidth>=100
-          &&document.getElementById('legend').textContent.includes('Unique descendants');})()`),'Influence colors use independent full-revision descendant/cohort calculations and a painted continuous legend.');
+          &&document.querySelector('#legend .legend-help')===null;})()`),'Influence colors use independent full-revision descendant/cohort calculations and a painted continuous legend.');
       assert.equal(await evaluate(`window.SpecSpecHost.getState().colorMode`),mode);
       assert.equal(await positions(),paletteWorld);assert.deepEqual(await camera(),paletteCamera);
       await screenshot(mode+'-colors');

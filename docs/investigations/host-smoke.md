@@ -152,14 +152,14 @@ with `log1p` before subtracting the transformed minimum. Tests cover positive co
 minima, zero/tied groups, generated closure oracles, independent base/target context,
 all four preferences and preservation of form/caret/camera/world state.
 
-The completed verification passes 273 Python, 193 shared UI, 42 VS Code adapter and
+That influence follow-up completed 273 Python, 193 shared UI, 42 VS Code adapter and
 9 Electron tests, Ruff lint/format, both saved source/graph checks and the full
 Gantt history/receipt/source verification. Both installed Windows hosts pass each
 of the four explicit influence probes: expected accents from independent graph and
 scaling calculations, actual gradient paint, selection persistence and unchanged
 world/camera. Their logs name each passed mode separately.
 
-Broader current installed-suite results remain bounded:
+That influence follow-up's broader installed-suite results were bounded:
 
 | Run | Result beyond the four passed influence probes |
 | --- | --- |
@@ -171,7 +171,60 @@ world/camera assertions. No unique cause of that later pose change was establish
 the all-eight-mode installed/native/reload qualification is not claimed complete.
 The Electron comparison check now polls its actual asynchronous dialog-open state
 using the adjacent reload checks' 30-second readiness allowance instead of a fixed
-200 ms pause. The current watchdog-ended run does not confirm that later check.
+200 ms pause. That watchdog-ended run did not confirm the later check.
 No aggregate guards, production deadlines or other individual test limits were
 increased. Preserved current logs, exit records and failed profile/repository paths
 are in `.specspec-local/influence/permanent/`.
+
+## Zoom-aware canvas and rectangle framing
+
+The specification plan is commit `58b6b6b`. Separate intentions cover solid overview
+node shapes, concise positive copy, floating icon controls and one-shot rectangle
+framing. The interpolation and pointer-capture choices retain native forms, world
+layout, Git/highlight roles and all four influence modes.
+
+The completed core checks pass 273 Python, 207 shared UI, 42 VS Code adapter and
+9 Electron tests (**531 total**), Ruff lint/format, both source/graph checks and
+maintained Gantt history verification. The shared camera suite covers inversion,
+every drag direction, modifier release before/during a drag, one-shot completion,
+Escape from the focused tool button, cancelled-release click consumption, native
+controls, pointer identity, capture loss, blur and disposal. Mac Command/Control
+boundaries have synthetic coverage; physical macOS qualification remains separate.
+
+Both installed Windows hosts pass the early canvas probes: actual/intermediate/
+minimum fill interpolation in dark/light/contrast themes, explicit missing-border-
+token cases, the hovered white manifesto endpoint, full-canvas floating controls,
+modifier latching and real Chromium pointer capture with outside release. Intrinsic
+world positions and native editing selection remain intact. Both also pass each
+linear/log influence probe and the compact/circular/expanded Spotlight backchannels.
+
+The rendering probes now restore actual size before checking the exact editing
+tints, reframe before clipped hover checks and compare rendered RGBA colors instead
+of browser-specific CSS serialization. A missing contrast-border token exposed an
+invalid-color edge case; the fill/border rule now falls back to host foreground.
+The invalid-file watcher probe checks the concise repair status, visible last-valid
+notice and disabled Save together. Its former text predicate waited for wording
+replaced by this UI revision. All substantive repair assertions remain.
+
+A polling unit assertion depended on how many reads fit into 70 ms and failed in
+both a whole-suite attempt and isolation. Its replacement holds an explicit read
+barrier, drives repeated hints, verifies one in-flight comparison and exactly one
+follow-up, then keeps the historical-target/annotation checks. Three isolated
+barrier repetitions and the complete shared suite pass. Production polling and
+operation/aggregate deadlines are unchanged. Logs and screenshots are preserved
+under `.specspec-local/canvas-polish/`.
+
+Final full-host attempts retain these qualification limits:
+
+| Run | Completed scope and later boundary |
+| --- | --- |
+| Electron, 445.24 s including build/fixture | Canvas paint/framing, four influence modes, all three backchannels, cascade lifecycle and watcher/invalid-file recovery pass. The existing 400,000 ms aggregate guard ends the later save/reload work. |
+| VS Code, 145.94 s including build/fixture | Canvas paint/framing and Git paint probes pass. A subsequent historical source preview remains at “Resolving source region…” when its existing wait ends. |
+
+Earlier qualified runs also passed all four influence modes and all three
+backchannels in both hosts before the stale invalid-file text predicate was found.
+The final VS Code source-preview wait has no established unique cause; complete
+installed/native/reload qualification is not claimed. The new canvas probes pass
+in each retained attempt, including the explicit contrast-token fallback matrix.
+The final `complete-*.log` files and `complete-hosts.json` retain actual exits and
+failed profile/repository paths. No production or smoke deadlines were enlarged.

@@ -19,7 +19,7 @@
   const NEUTRAL_COLOR = '#929baa';
   const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[4], implementation: RAINBOW_COLORS[0] };
   const REVISION_COLORS = { added: RAINBOW_COLORS[3], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[6], renamed: RAINBOW_COLORS[1], 'source-changed': RAINBOW_COLORS[5], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
-  const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Unchanged', uncompared: 'No comparison', draft: 'Unsaved draft' };
+  const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Same as base', uncompared: 'Workspace', draft: 'Draft' };
   const COLOR_MODES = ['distance', 'max-distance', ...INFLUENCE_MODES, 'type', 'git-revision'];
 
   function sameNode(left, right) {
@@ -319,10 +319,15 @@
     });
   }
 
-  function neutralEdgeStrength(scale = 1) {
+  function zoomDetail(scale) {
     const k = Number.isFinite(scale) && scale > 0 ? scale : 1;
-    // Quiet neutral ink at actual size, half as strong at the 12% overview limit.
-    return 0.35 + 0.35 * Math.max(0, Math.min(1, (k - 0.12) / 0.88));
+    return Math.max(0, Math.min(1, (k - 0.12) / 0.88));
+  }
+  function neutralEdgeStrength(scale = 1) {
+    return 0.35 + 0.35 * zoomDetail(scale);
+  }
+  function nodeFillStrength(scale = 1) {
+    return 1 - zoomDetail(scale);
   }
 
   function edgeAppearance(route, scale = 1) {
@@ -340,5 +345,5 @@
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
     INFLUENCE_COLORS, INFLUENCE_MODES, influenceColor,
-    sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, neutralEdgeStrength, edgeAppearance };
+    sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, neutralEdgeStrength, nodeFillStrength, edgeAppearance };
 });

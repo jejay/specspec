@@ -45,9 +45,9 @@ test('unknown APIs and non-JSON output are rejected', async t => {
 
 test('lost mutation replies expose an unknown outcome and are never automatically retried', async t => {
   const { directory, file } = fixture(t, `console.log('lost response');`);
-  await assert.rejects(invoke(process.execPath, [file], directory, ['delete', 'node']), /outcome was not confirmed.*inspect current project/);
+  await assert.rejects(invoke(process.execPath, [file], directory, ['delete', 'node']), /result needs verification.*inspect project/);
   writeFileSync(file, `setInterval(() => {}, 1000);`);
-  await assert.rejects(invoke(process.execPath, [file], directory, ['update', 'node'], undefined, 100), /outcome was not confirmed/);
+  await assert.rejects(invoke(process.execPath, [file], directory, ['update', 'node'], undefined, 100), /result needs verification/);
 });
 
 test('timeout and output budgets bound subprocesses', async t => {

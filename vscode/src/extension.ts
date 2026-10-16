@@ -83,7 +83,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
       if (!path) throw new Error('Only direct canonical _specspec node files can use the graph editor.');
       const bootstrap = await project.documents.bootstrap();
       const node: SpecNode | undefined = bootstrap.result.snapshot.nodes.find((item: SpecNode) => item.path === path);
-      if (!node) throw new Error('This node cannot be parsed. Reopen it with Text Editor to repair the Markdown.');
+      if (!node) throw new Error('Node Markdown needs repair. Reopen with Text Editor.');
       const prefix = `specspec.pendingForm:${document.uri.toString()}:`;
       const active = new Set([...this.views].map(view => view.recoveryKey));
       const key = this.context.workspaceState.keys().find(key => key.startsWith(prefix) && !active.has(key));
@@ -234,7 +234,7 @@ class GraphView implements vscode.Disposable {
         if (document.isClosed || document.getText() !== before) throw new Error('Document changed or closed; the form is retained.');
         const workspaceEdit = new vscode.WorkspaceEdit();
         workspaceEdit.replace(document.uri, new vscode.Range(document.positionAt(edit.start), document.positionAt(edit.end)), edit.text);
-        if (!await vscode.workspace.applyEdit(workspaceEdit)) throw new Error('VS Code could not apply the document edit.');
+        if (!await vscode.workspace.applyEdit(workspaceEdit)) throw new Error('Document edit failed. See SpecSpec output.');
       },
     } : undefined;
     this.session = new GraphSession({
@@ -265,7 +265,7 @@ class GraphView implements vscode.Disposable {
         state: () => ({ nodeId: adapter.id, path: adapter.get().path, version: document.version, dirty: document.isDirty,
           ...(recovery ? { recoveredForm: recovery.form } : {}) }),
         edit: (message: unknown) => project.documents.edit(adapter, message),
-        save: async () => { await project.documents.idle(); if (!await document.save()) throw new Error('VS Code could not save the node file.'); },
+        save: async () => { await project.documents.idle(); if (!await document.save()) throw new Error('Node file save needs attention. See SpecSpec output.'); },
       } } : {}),
     });
     this.disposables.push(panel.webview.onDidReceiveMessage(message => {
@@ -297,7 +297,7 @@ class GraphView implements vscode.Disposable {
     if (typeof id !== 'string') throw new Error('Invalid node identity.');
     const graph = await this.project.documents.readGraph();
     const node: SpecNode | undefined = graph.snapshot.nodes.find((n: SpecNode) => n.id === id);
-    if (!node) throw new Error('The node no longer exists.');
+    if (!node) throw new Error('Select a current node.');
     await this.flushDocument();
     await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.joinPath(this.project.root, node.path), VIEW_TYPE);
   }

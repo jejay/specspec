@@ -20,8 +20,9 @@ sources:
 The shared graph model reuses iterative, deduplicated descendant traversal and
 per-revision maximum distances. Lazy raw normalization ranges feed linear or
 log1p normalization and the continuous three-anchor sRGB ramp. The shared template
-exposes all four influence modes; the renderer uses target/base context, scaling-
-specific continuous legends and persistent per-view mode selection. Compact and
+exposes all four influence modes; the renderer uses target/base context, concise
+continuous legends and persistent per-view mode selection. Scaling formulas live
+in the tutorial. Compact and
 expanded cards share normalization. Neutral drafts, manifesto treatment and existing
 Git/highlight/form/camera roles stay independent.
 

@@ -54,8 +54,8 @@ history remain untouched. See [the history procedure](../example/gantt/history/W
 
 ## Verification scope
 
-The current graphs contain 157 nodes/278 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The Python suite passes 273 tests, shared UI 193,
+The current graphs contain 164 nodes/290 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. The Python suite passes 273 tests, shared UI 207,
 VS Code adapter 42 and Electron 9. Coverage includes an independent closure oracle,
 deep graphs, atomic rejection of remote redundancies, native repair, a real
 owner-configured hook in a disposable repository and exact-index/revision checks.
@@ -81,7 +81,7 @@ records those phase boundaries separately from permanent linear/log verification
 
 All four permanent linear/log influence modes pass the current pure/DOM regressions
 and their explicit installed probes in both Windows hosts, including unchanged
-world/camera during mode switches. Broader installed reruns stop later: Electron's
+world/camera during mode switches. That follow-up's broader installed reruns stopped later: Electron's
 400-second aggregate guard ends the run before final reload/revision qualification;
 VS Code reports a changed camera in the subsequent expanded-root Spotlight
 backchannel probe. The Electron comparison probe uses bounded asynchronous readiness
@@ -89,3 +89,11 @@ polling, but that later step remains unconfirmed in the current guarded run.
 See [permanent-mode verification](investigations/host-smoke.md#permanent-linear-and-logarithmic-influence)
 for completed phases and limits. Unit, graph, source and maintained-history checks
 pass independently of those incomplete full-host runs.
+
+The zoom-aware canvas revision adds six intention/choice nodes and a copy realization
+while retaining the current schema. The shared canvas implementation inherits the
+new fill and gesture choices through shortcut-free direct justifications. Its
+paint/rectangle/native-boundary checks pass early in both installed Windows hosts.
+Final broader runs retain later limits: Electron's aggregate guard and a VS Code
+historical source-preview wait. The [canvas follow-up](investigations/host-smoke.md#zoom-aware-canvas-and-rectangle-framing)
+records actual phase outcomes, preserved evidence and synthetic-only Mac coverage.

@@ -48,13 +48,13 @@
           "type": "string",
           "default": "specspec",
           "scope": "machine-overridable",
-          "description": "Python CLI executable; executed without a shell."
+          "description": "Python CLI executable invoked directly."
         },
         "specspec.traceLoading": {
           "type": "boolean",
           "default": false,
           "scope": "resource",
-          "description": "Log loading phase durations/counts, without project text, in the SpecSpec output channel."
+          "description": "Log loading phase durations and counts in the SpecSpec output channel."
         },
         "specspec.pollIntervalMs": {
           "type": "integer",

@@ -19,9 +19,9 @@ class PresentationStore {
     const json = JSON.stringify(value);
     if (Buffer.byteLength(json, 'utf8') > 3 * 1024 * 1024) throw new Error('Project presentation exceeds 3 MiB.');
     const candidate = { ...this.projects, [scope]: JSON.parse(json) };
-    if (Buffer.byteLength(JSON.stringify(candidate), 'utf8') > 32 * 1024 * 1024) throw new Error('Presentation storage is full; no retained drafts were removed.');
+    if (Buffer.byteLength(JSON.stringify(candidate), 'utf8') > 32 * 1024 * 1024) throw new Error('Presentation storage is full; retained drafts are preserved.');
     this.projects = Object.assign(Object.create(null), candidate); clearTimeout(this.timer);
-    this.timer = setTimeout(() => { try { this.flush(); } catch (error) { this.error = `Cannot save presentation: ${error.message}`; this.onError?.(this.error); } }, 200);
+    this.timer = setTimeout(() => { try { this.flush(); } catch (error) { this.error = `Presentation save failed: ${error.message}`; this.onError?.(this.error); } }, 200);
   }
   flush() {
     clearTimeout(this.timer); if (this.error) return;

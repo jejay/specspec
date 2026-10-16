@@ -71,7 +71,7 @@ class GraphSession {
     let timer;
     try {
       await Promise.race([this.ready, new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error('Graph webview did not initialize. Restart the host and check the SpecSpec output log.')), this.host.timeout || 10_000);
+        timer = setTimeout(() => reject(new Error('Graph startup timed out. Restart the host; see SpecSpec output.')), this.host.timeout || 10_000);
       })]);
       if (this.disposed) throw new Error('Graph panel was closed before loading.');
     } finally { clearTimeout(timer); }
@@ -86,7 +86,7 @@ class GraphSession {
         else if (this.renderError) done(this.renderError);
         else if (this.lastRendered === token) done();
       };
-      const timer = setTimeout(() => done(new Error('Graph data loaded but the webview did not render. See the SpecSpec output log or Developer Tools.')), this.host.timeout || 10_000);
+      const timer = setTimeout(() => done(new Error('Graph rendering timed out. See SpecSpec output or Developer Tools.')), this.host.timeout || 10_000);
       this.listeners.add(check); check();
     });
   }
@@ -120,8 +120,8 @@ class GraphSession {
   }
   async invalid(error) {
     this.sourceInvalid = true;
-    const policy = this.host.document ? 'The bound document remains editable for repair.' : 'Editing is disabled until the files are valid.';
-    await this.post({ type: 'sync-error', message: `Files could not be loaded. The displayed graph is out of date. ${policy}\n${error.message}` });
+    const policy = this.host.document ? 'The bound document remains editable for repair.' : 'Repair Markdown and refresh to resume graph actions.';
+    await this.post({ type: 'sync-error', message: `Graph files need repair. Showing the last valid graph. ${policy}\n${error.message}` });
   }
   async refresh(force = false, selectedId, automatic = false) {
     if (!automatic) await this.post({ type: 'notice', message: this.target ? 'Loading revision comparison…' : 'Refreshing specification graph…' });
@@ -156,7 +156,7 @@ class GraphSession {
     try {
       const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotations' }));
       const shots = response.result?.shots;
-      if (!Array.isArray(shots)) throw new Error('The backend did not return a local spotlight list.');
+      if (!Array.isArray(shots)) throw new Error('Spotlight response needs a valid list.');
       if (this.annotationInitial || !isDeepStrictEqual(shots, this.annotationShots) || this.annotationError) {
         this.annotationInitial = false;
         this.annotationShots = shots; this.annotationError = undefined;
@@ -309,7 +309,7 @@ class GraphSession {
     const common = ['--json'];
     if (current.format_version !== 6) throw new Error('Unsupported specification format.');
     const nodes = new Map(current.nodes.map(n => [n.id, n])), id = message.id;
-    if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('The node no longer exists. Unsaved text has been retained.');
+    if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('Select a current node. Draft retained.');
     let args, input;
     if (message.type === 'save' || message.type === 'add') {
       if (typeof message.body !== 'string' || Buffer.byteLength(message.body, 'utf8') > 1024 * 1024) throw new Error('Invalid or oversized body.');
@@ -327,10 +327,10 @@ class GraphSession {
       if ((message.type === 'add' ? message.nodeType : nodes.get(id).type) === 'implementation') args.push('--sources', message.sources);
       input = message.body;
     } else if (message.type === 'delete') {
-      if (nodes.get(id).type === 'manifesto') throw new Error('The manifesto cannot be deleted.');
+      if (nodes.get(id).type === 'manifesto') throw new Error('Keep the manifesto as the graph root.');
       const preview = await this.cli(['delete', id, '--dry-run', '--json']);
       const plan = preview.result;
-      if (!Array.isArray(plan?.deleted_ids) || !plan.deleted_ids.includes(id)) throw new Error('Backend did not return a valid descendant deletion plan.');
+      if (!Array.isArray(plan?.deleted_ids) || !plan.deleted_ids.includes(id)) throw new Error('Deletion plan needs a complete descendant list.');
       const warnings = (preview.diagnostics || []).filter(d => d.severity === 'warning').map(d => d.message);
       const text = `Delete this node and ALL its descendants (${plan.deleted_ids.length} Markdown files)? Children shared with surviving parents are also deleted. Outside parents/unrelated branches remain. The HEAD-relative workspace shows committed nodes as D until you commit; explain why in that commit.${warnings.length ? '\n\nWARNING — uncommitted nodes / unavailable Git assessment:\n' + warnings.join('\n') : ''}`;
       if (!await this.host.confirm(text)) { await this.post({ type: 'cancelled' }); return; }

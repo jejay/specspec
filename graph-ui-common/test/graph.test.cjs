@@ -37,6 +37,67 @@ function fixture(t, options = {}) {
   } };
 }
 
+test('canvas chrome floats with contextual framing icons and color-only legends', t => {
+  const {dom,$}=fixture(t);
+  assert.equal(dom.window.document.querySelector('footer,#canvas-help,.legend-help'),null);
+  assert.equal($('viewport').hasAttribute('aria-describedby'),false);
+  const visible=()=>[...dom.window.document.querySelectorAll('.framing-controls button')].filter(b=>!b.hidden).map(b=>b.getAttribute('aria-label'));
+  assert.deepEqual(visible(),['Frame graph','Frame rectangle']);
+  for(const button of dom.window.document.querySelectorAll('.framing-controls button')) {
+    assert.ok(button.querySelector('svg[aria-hidden="true"]'));assert.ok(button.title);assert.equal(button.textContent,'');
+  }
+  $('frame-area').click();assert.equal($('frame-area').getAttribute('aria-pressed'),'true');
+  dom.window.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'}));assert.equal($('frame-area').getAttribute('aria-pressed'),'false');
+  dom.window.document.querySelector('[data-node-id="child"]').click();assert.deepEqual(visible(),['Frame graph','Frame node','Frame rectangle']);
+  $('new').click();assert.deepEqual(visible(),['Frame graph','Frame node','Frame rectangle']);
+  for(const mode of model.COLOR_MODES) {
+    $('color-mode').value=mode;$('color-mode').dispatchEvent(new dom.window.Event('change'));
+    assert.ok($('legend').querySelector('i'));assert.equal($('legend').querySelector('.legend-help'),null);
+    assert.doesNotMatch($('legend').textContent,/\b(?:not|never|no)\b/i);
+  }
+  const css=readFileSync(join(__dirname,'../media/graph.css'),'utf8');
+  assert.match(css,/#viewport \{ position: absolute; inset: 0;/);
+  assert.match(css,/\.camera-controls \{[^}]*bottom: 14px;[^}]*border-radius: 12px/);
+});
+
+test('camera paint and rectangle framing preserve native editing, highlights and intrinsic world geometry',async t=>{
+  const {dom,$,saved,messages,snapshot,send}=fixture(t);dom.window.document.querySelector('[data-node-id="child"]').click();
+  const body=$('body');body.value='# Keep the draft';body.dispatchEvent(new dom.window.Event('input'));body.focus();body.setSelectionRange(2,7);
+  const world=()=>JSON.stringify([...$('cards').children].map(c=>[c.dataset.nodeId,c.style.left,c.style.top,c.style.width,c.style.height]));
+  const initial=world(),original=saved().originalNode;
+  const pointer=(type,x,y,flags={},target=$('viewport'))=>{
+    const e=new dom.window.MouseEvent(type,{bubbles:true,cancelable:true,view:dom.window,clientX:x,clientY:y,button:0,...flags});
+    Object.defineProperty(e,'pointerId',{value:1});target.dispatchEvent(e);return e;
+  };
+  $('frame-area').click();pointer('pointerdown',150,160);pointer('pointermove',450,360,{},dom.window);
+  assert.equal($('frame-selection').hidden,false);pointer('pointerup',450,360,{},dom.window);
+  assert.equal($('frame-selection').hidden,true);assert.equal($('frame-area').getAttribute('aria-pressed'),'false');
+  assert.equal(world(),initial);assert.equal($('body'),body);assert.equal(body.value,'# Keep the draft');
+  assert.deepEqual([body.selectionStart,body.selectionEnd],[2,7]);assert.equal(dom.window.document.activeElement,body);
+  assert.equal(saved().originalNode,original);assert.equal(saved().selected,'child');assert.equal(saved().dirty,true);
+  assert.ok(messages.every(m=>['ready','rendered'].includes(m.type)));
+  await new Promise(resolve=>dom.window.setTimeout(resolve,1));
+  for(let i=0;i<30;i++) $('zoom-out').click();
+  assert.equal($('viewport').dataset.scale,'0.12');assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'100%');
+  assert.equal($('edges').style.getPropertyValue('--normal-edge-strength'),'35%');assert.equal(world(),initial);
+  $('zoom-reset').click();assert.equal($('cards').style.getPropertyValue('--node-fill-strength'),'0%');
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root],edges:[]},diagnostics:[],readonly:false});
+  assert.equal($('frame-node').hidden,false);assert.equal(dom.window.document.querySelector('.expanded').dataset.nodeId,'__draft__');
+  const before=$('graph').style.transform;$('frame-node').click();assert.notEqual($('graph').style.transform,before);
+  assert.equal(body.value,'# Keep the draft');assert.equal(body.readOnly,true);
+});
+
+test('tool copy stays concise and positive while project text and validation evidence remain literal',t=>{
+  const {dom,$,snapshot,send}=fixture(t);
+  const doc=new JSDOM(graphHtml(name=>name,'local','test')).window.document;
+  const own=[doc.body.textContent,...[...doc.querySelectorAll('[title],[aria-label]')].map(e=>(e.title||'')+' '+(e.getAttribute('aria-label')||''))].join(' ');
+  assert.doesNotMatch(own,/\b(?:not|never|cannot)\b/i);assert.equal(doc.querySelector('footer'),null);doc.defaultView.close();
+  const literal='# This is not a tool label';
+  send({type:'snapshot',snapshot:{...snapshot,nodes:[root,{...child,body:literal}]},diagnostics:[{code:'EXAMPLE',message:'Parent is not present.'}],readonly:false});
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  assert.equal($('body').value,literal);assert.match($('message').textContent,/Parent is not present/);
+});
+
 test('canonical compact IDs retain equals signs in cards, parent pickers and save messages', t => {
   const { dom, snapshot, send, $, messages } = fixture(t);
   const shortRoot = { ...root, id: '-_____8=', path: '_specspec/-_____8=root.md' };
@@ -191,7 +252,7 @@ test('only exact blob versions ring; changed, missing, unavailable and base ghos
   send({ type: 'annotations', shots: [shot('1', ['root','child','grand','sibling','absent'])] }); $('annotations-toggle').click(); labels()[0].click();
   assert.ok(card('root').dataset.annotationLabel); assert.ok(card('grand').dataset.annotationLabel);
   assert.equal(card('child').dataset.annotationLabel, undefined); assert.equal(card('sibling').dataset.annotationLabel, undefined);
-  assert.match($('annotation-list').textContent, /1 different version/); assert.match($('annotation-list').textContent, /1 not in view/); assert.match($('annotation-list').textContent, /1 unavailable/);
+  assert.match($('annotation-list').textContent, /1 different version/); assert.match($('annotation-list').textContent, /1 other context/); assert.match($('annotation-list').textContent, /1 refresh needed/);
   assert.match($('annotation-list').textContent, /2 exact/);
   assert.equal($('annotation-list').querySelector('.annotation-members'), null);
   assert.equal($('save').disabled, true); assert.equal($('annotation-flush').disabled, false);
@@ -335,7 +396,7 @@ test('manual highlights on historical ghosts use base bytes; anonymous drafts an
   shiftClick(dom,card('child')); assert.equal(saved().annotationHighlights[0].blob, annotationBlobs.child[0]);
   assert.equal($('save').disabled,true);
   send({type:'snapshot',snapshot,node_blobs:{},diagnostics:[],readonly:false});
-  shiftClick(dom,card('root')); assert.equal(saved().annotationHighlights.length,1); assert.match($('annotation-live').textContent,/no exact version/);
+  shiftClick(dom,card('root')); assert.equal(saved().annotationHighlights.length,1); assert.match($('annotation-live').textContent,/Refresh to capture/);
   $('new').click(); const draft = $('cards').querySelector('[data-node-id="__draft__"]');
   assert.equal(shiftClick(dom,draft).defaultPrevented,false); assert.equal(saved().annotationHighlights.length,1);
 });
@@ -445,8 +506,8 @@ test('type radii survive expansion and circle sizing preserves native content, c
 test('shared CSS keeps gray cards tinted and increases corner letters without ordinary compact-card growth', () => {
   const css = readFileSync(join(__dirname, '../media/graph.css'), 'utf8');
   assert.match(css, /\.card:hover, \.card\.node-hovered \{ background: color-mix/);
-  assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ border-color: oklch\(from var\(--node-accent, #8993a4\) min\(0\.95, calc\(l \+ 0\.10\)\) calc\(c \* 1\.30\) h\)/);
-  assert.match(css, /#cards \.card\.manifesto:not\(\.revision-colored\):hover, #cards \.card\.manifesto:not\(\.revision-colored\)\.node-hovered \{ border-color: #fff/);
+  assert.match(css, /#cards \.card:hover, #cards \.card\.node-hovered \{ --card-border-ink: oklch\(from var\(--node-accent, #8993a4\) min\(0\.95, calc\(l \+ 0\.10\)\) calc\(c \* 1\.30\) h\)/);
+  assert.match(css, /#cards \.card\.manifesto:not\(\.revision-colored\):hover, #cards \.card\.manifesto:not\(\.revision-colored\)\.node-hovered \{ --card-border-ink: #fff/);
   assert.doesNotMatch(css, /#cards \.card:hover[^}]*border-color: #fff/);
   assert.doesNotMatch(css, /\.card\.manifesto[^}]*background:/);
   assert.doesNotMatch(css, /\.card\.manifesto[^}]*(?:\{ |; )color:/);
@@ -787,7 +848,7 @@ test('manifesto shows no parents or candidate choices while its body remains edi
   const { dom, messages, $ } = fixture(t);
   dom.window.document.querySelector('.card.manifesto').click();
   assert.equal($('parent-links').children.length, 0);
-  assert.match($('parents-summary').textContent, /None.*manifesto is the root/);
+  assert.equal($('parents-summary').textContent, 'Manifesto root');
   assert.equal($('parent-add-controls').hidden, true);
   assert.equal($('parent-candidate').options.length, 0);
   assert.equal($('parent-candidate').disabled, true);
@@ -921,7 +982,7 @@ test('deleted edited nodes retain a visible copyable draft without inventing a c
   send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
   assert.equal($('body'), body); assert.equal(body.value, '# Deleted draft');
   assert.equal($('save').disabled, true); assert.equal(body.disabled, false);
-  assert.ok($('cards').contains(body)); assert.match($('message').textContent, /deleted/);
+  assert.ok($('cards').contains(body)); assert.match($('message').textContent, /Deleted node draft/);
   assert.equal(saved().originalNode, child); assert.ok(model.renderMatches({ snapshot: target }, messages.at(-1)));
   $('back').click(); $('resume').click(); assert.equal(body.value, '# Deleted draft');
   $('discard').click(); assert.equal(saved().dirty, false); assert.equal(saved().view, 'overview');
@@ -977,7 +1038,7 @@ test('click opens only the neighborhood and places the editor inside the expande
   const childCard = dom.window.document.querySelector('[data-node-id="grand"]');
   assert.equal(childCard.dataset.downstream, '2');
   assert.match(childCard.textContent, /2 downstream/);
-  assert.match(childCard.querySelector('.downstream-badge').title, /every depth/);
+  assert.match(childCard.querySelector('.downstream-badge').title, /Unique descendants at all depths/);
   assert.ok(model.renderMatches({ snapshot: target }, messages.at(-1)));
   childCard.click();
   assert.equal(dom.window.document.querySelector('.expanded').dataset.nodeId, 'grand');
@@ -1041,7 +1102,7 @@ test('color modes have legends, persist without canonical changes and do not era
   assert.equal(card.dataset.minDistance, '1');
   assert.equal(card.dataset.maxDistance, '1');
   assert.match(card.querySelector('.git-badge').textContent, /changed/);
-  assert.match($('legend').textContent, /Existing node types/);
+  assert.equal($('legend').textContent, 'manifestorequirementimplementation');
   assert.equal(saved().colorMode, 'type');
   assert.equal('retired' in target.nodes[1], false);
   assert.equal('retired' in card.dataset, false);
@@ -1065,12 +1126,13 @@ test('minimum/maximum distance modes have exact labels, different fills/legends,
   const world = [...$('cards').children].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.height]);
   const camera = $('graph').style.transform, before = JSON.stringify(snapshot);
   assert.equal(card('child').style.getPropertyValue('--node-accent'), model.color('distance', child, 1));
-  assert.match($('legend').textContent, /Shortest directed path/);
+  assert.match($('legend').textContent, /Manifesto · 0 hops1 hop2 hops/);
   $('color-mode').value = 'max-distance'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
   assert.equal(card('child').style.getPropertyValue('--node-accent'), model.color('max-distance', child, 3));
   assert.equal(card('child').dataset.minDistance, '1');
   assert.equal(card('child').dataset.maxDistance, '3');
-  assert.match($('legend').textContent, /3 hops.*Longest directed path/);
+  assert.match($('legend').textContent, /3 hops/);
+  assert.equal($('legend').querySelector('.legend-help'),null);
   assert.equal(saved().colorMode, 'max-distance');
   assert.deepEqual([...$('cards').children].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.height]), world);
   assert.equal($('graph').style.transform, camera);
@@ -1103,7 +1165,7 @@ test('revision fills include changed manifesto, added/removed/renamed/source-onl
     assert.ok(card(id).classList.contains('revision-colored'));
   }
   assert.deepEqual(world(),positions);assert.equal($('graph').style.transform,camera);
-  assert.match($('legend').textContent,/A · Added.*M · Modified.*D · Deleted.*R · Renamed.*Linked source changed.*Unchanged/);
+  assert.match($('legend').textContent,/A · Added.*M · Modified.*D · Deleted.*R · Renamed.*Linked source changed.*Same as base/);
   assert.doesNotMatch($('legend').textContent,/Manifesto|hops|No comparison/);
   assert.equal(saved().colorMode,'git-revision');
   assert.equal(card('source').querySelector('.git-corner'),null);
@@ -1128,7 +1190,7 @@ test('revision mode switches and restores without disturbing a native draft, car
     cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Draft',sources:'[]',slug:'',nodeType:'requirement',parents:['root']}};
   const { dom, $, saved, snapshot, send }=fixture(t,{restored});
   assert.equal($('color-mode').value,'git-revision');
-  assert.match($('legend').textContent,/No comparison/);
+  assert.match($('legend').textContent,/Workspace/);
   const body=$('body');body.focus();body.setSelectionRange(2,5,'backward');
   const camera=$('graph').style.transform;
   const diff={base:snapshot,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'}],added_edges:[],removed_edges:[]};
@@ -1140,7 +1202,7 @@ test('revision mode switches and restores without disturbing a native draft, car
     assert.equal($('graph').style.transform,camera);assert.equal(saved().originalNode,child);
   }
   send({type:'snapshot',snapshot,diagnostics:[],readonly:false});
-  assert.match($('legend').textContent,/No revision comparison available/);
+  assert.equal($('legend').textContent,'WorkspaceDraft');
   assert.equal(dom.window.document.querySelector('.card.expanded').style.getPropertyValue('--node-accent'),model.NEUTRAL_COLOR);
   assert.equal(saved().colorMode,'git-revision');
 });
@@ -1273,7 +1335,7 @@ test('logarithmic influence modes paint and persist alongside linear modes witho
     assert.equal(card('b').style.getPropertyValue('--node-accent'),influenceMiddleColor(kind));
     assert.notEqual(card('b').style.getPropertyValue('--node-accent'),'#e8d62c','Logarithmic and linear fills visibly differ for intermediate counts.');
     assert.equal(card('root').style.getPropertyValue('--node-accent'),'#d3d3d3');
-    assert.match($('legend').textContent,/log\(influence \+ 1\)/);
+    assert.equal($('legend').querySelector('.legend-help'),null);
     assert.ok($('legend').querySelector('.influence-gradient'));
     assert.equal(saved().colorMode,kind);assert.equal($('body'),body);assert.equal(body.value,'# Compare scales');
     assert.deepEqual([body.selectionStart,body.selectionEnd],[2,7]);assert.equal($('graph').style.transform,camera);
@@ -1294,7 +1356,8 @@ test('continuous influence colors and gradient legends retain full-revision doma
     assert.match(card('b').title,/Influence: 2 unique descendants/);
     assert.match($('legend').querySelector('.influence-gradient').style.backgroundImage,/linear-gradient\(to right in srgb,.*#ba2208.*#e8d62c.*#4df884/);
     assert.match($('legend').querySelector('.influence-gradient').getAttribute('aria-label'),/red highest.*green lowest/);
-    assert.match($('legend').textContent,kind.endsWith('relative-influence')?/equal maximum distance.*tied groups use green/:/0 to highest non-manifesto/);
+    assert.match($('legend').textContent,kind.endsWith('relative-influence')?/Group maximum.*Group minimum/:/Maximum.*0 descendants/);
+    assert.equal($('legend').querySelector('.legend-help'),null);
     assert.equal(saved().colorMode,kind);
   }
   card('b').click();const body=$('body');body.value='# Retain draft';body.dispatchEvent(new dom.window.Event('input'));

@@ -55,15 +55,13 @@ multicolor whole-shot selection, full-width framing, keyboard/outside dismissal,
 baselines/counts, retained drafts, errors and flush. Real-host probes add records
 through spotlight add and inspect arrival/ring paint, framing and native menus.
 
-Verification is bounded: Python, shared renderer and both host-adapter unit suites
-pass. Complete installed Windows Electron and VS Code suites exercise compact,
-circular-manifesto and expanded backchannels, message capture and external agent
-CLI readback. Both pass cascade ghosts, manual/invalid-file synchronization and
-retained draft/caret checks. Electron verifies complete retained spotlight-list
-reload with a zero-arrival baseline, draft reload and revision switching. VS Code
-verifies native dirty/Save/undo/redo, splits, repair and CRLF/Unicode files.
-Measured scope and diagnostic limits are in docs/investigations/host-smoke.md.
-Command/Meta+Shift has synthetic-event coverage; actual macOS behavior is untested.
+Verification covers exact-version rings, backchannel messages, immutable retained
+records, drafts, caret and camera through shared unit tests and installed probes.
+The common installed harness includes compact/circular/expanded backchannels,
+cascade ghosts, file recovery and native document lifecycle checks. Completed
+phases and broader run limits are recorded in docs/investigations/host-smoke.md.
+Command/Meta+Shift has synthetic-event coverage; physical macOS qualification
+retains its own evidence boundary.
 
 The shared renderer handles Shift-click cycling and Ctrl/Command+Shift removal
 on node chrome, whole-set clear and a message dialog for immutable spotlight
