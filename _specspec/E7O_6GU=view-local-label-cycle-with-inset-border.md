@@ -10,8 +10,8 @@ parents:
 One editable highlight set supplies a solid equal-inset outline around exact
 matching members in the displayed graph, including base-revision removed cards.
 Use 5 world units at actual size. At camera scale k, use
-width = max(5, 2 / k) world units and set the outline offset to its negative,
-following graph scale while preserving at least 2 CSS screen pixels at low zoom.
+width = max(5, 3 / k) world units and set the outline offset to its negative,
+following graph scale while preserving at least 3 CSS screen pixels at low zoom.
 Each member uses its assigned color, from manual gestures or a spotlight. The
 outline follows the existing type shape, retains its hue on hover and follows
 unrelated-card darkening. Keyboard focus has an independent cue.

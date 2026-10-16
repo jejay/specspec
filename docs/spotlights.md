@@ -111,7 +111,7 @@ versions can therefore correctly differ from a spotlight captured by the CLI.
   any focused draft and surrounding graph context. Choosing it again frames again.
 - Solid equal-inset rings mark exact versions, including removed comparison-base
   cards. Each member uses its set's color. Width is 5 world units at actual size and
-  scales with the graph while retaining a 2 CSS-pixel minimum when zoomed out.
+  scales with the graph while retaining a 3 CSS-pixel minimum when zoomed out.
   Compact counts report different versions, absent nodes and unavailable metadata.
   Version state refers to the displayed snapshot, not an
   unsaved managed form layered over it. A spotlight with no exact matches still

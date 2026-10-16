@@ -228,7 +228,7 @@
   }
 
   const EDGE_LEAD = 64, MIN_STROKE_PIXELS = 1.6, MIN_ARROW_PIXELS = 6;
-  const BASE_ANNOTATION_RING_WIDTH = 5, MIN_ANNOTATION_RING_PIXELS = 2;
+  const BASE_ANNOTATION_RING_WIDTH = 5, MIN_ANNOTATION_RING_PIXELS = 3;
   const DETAIL_CONTENT_WIDTH = DETAIL_WIDTH - 38; // Existing 18px padding + 1px side borders.
   const manifestoDiameter = (width, height) => Math.ceil(Math.hypot(width, height) + 48);
 

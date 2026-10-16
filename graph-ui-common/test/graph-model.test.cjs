@@ -289,15 +289,15 @@ test('old relations cannot pull live ranks away from the origin; base-only branc
 });
 
 test('annotation ring width uses the connection-stroke compensation at a smaller world width', () => {
-  for (const scale of [0.12, 0.16, 0.32, 0.7, 1, 2.5]) {
+  for (const scale of [0.12, 0.16, 0.32, 0.6, 0.7, 1, 2.5]) {
     const width = model.annotationRingWidth(scale);
     assert.ok(width >= 5);
     assert.ok(width * scale >= model.MIN_ANNOTATION_RING_PIXELS - 1e-9);
   }
   assert.equal(model.annotationRingWidth(1), 5);
-  assert.equal(model.annotationRingWidth(0.4), 5);
-  assert.equal(model.annotationRingWidth(0.32), 6.25);
-  assert.equal(model.annotationRingWidth(0.16), 12.5);
+  assert.equal(model.annotationRingWidth(0.6), 5);
+  assert.equal(model.annotationRingWidth(0.32), 9.375);
+  assert.equal(model.annotationRingWidth(0.16), 18.75);
   assert.equal(model.annotationRingWidth(2.5), 5);
   for (const invalid of [undefined, 0, -1, NaN, Infinity, '0.5']) assert.equal(model.annotationRingWidth(invalid), 5);
 });

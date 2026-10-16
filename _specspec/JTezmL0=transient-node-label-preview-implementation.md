@@ -7,9 +7,11 @@ parents:
 - RY5LFw8=
 sources:
 - path: graph-ui-common/media/graph-model.js
-  blob: 20cb229299a4b4fe1a99878679b59da4cb9890bd
+  blob: 7e9e35d891231a16e72a356cb83b32dc5f456cf0
   mode: strict
   ranges:
+  - - 231
+    - 231
   - - 325
     - 333
   - - 345
@@ -52,9 +54,9 @@ with a zero-count baseline. Counts/New cues stay in renderer memory. Arrivals
 preserve editing focus/caret, camera, selection, dropdown choice and older
 entries. A version-aware editable highlight map and dropdown choice remain per-
 view preferences. Exact members paint an equal-inset outline with width
-`max(5, 2 / k)` world units at camera scale `k`; its negative offset keeps the
+`max(5, 3 / k)` world units at camera scale `k`; its negative offset keeps the
 ring inside the unchanged card outline. This gives a 5-unit actual-size width and
-a 2 CSS-pixel minimum when zoomed out, using the same compensation logic as the
+a 3 CSS-pixel minimum when zoomed out, using the same compensation logic as the
 connection stroke with a ring-specific pixel floor. It remains separate from
 keyboard focus and fills. Flush uses host confirmation and a locked reviewed-list
 check.
