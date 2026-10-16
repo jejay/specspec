@@ -68,7 +68,7 @@ and explicit-value Code launch arguments protect diagnostic meaning and workspac
 selection. Disposable profiles alone enable loading traces and background-throttling
 controls. Complete installed Windows suites exercise all backchannel,
 cascade/recovery and host-native checks. docs/investigations/host-smoke.md records
-measurements, diagnostic uncertainty and platform scope. Individual operation
+complete-suite coverage, measurements and causal read/transport regressions. Individual operation
 deadlines and production settings remain unchanged. Binding-text regression guards
 recognize retired-design sections while permitting current runtime read-supersession
 contracts. Static-help subprocess tests cover legacy Windows pipe encodings.

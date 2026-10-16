@@ -37,7 +37,15 @@ class ProjectReads {
     if (!allowInvalid && !result.snapshot.valid) throw new Error(result.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n') || 'Invalid open specification documents.');
     return structuredClone(result);
   }
-  async bootstrap() { const stamp = this.stamp(), generation = this.generation; return { result: await this.readGraph(undefined,true), stamp,generation }; }
+  async bootstrap() {
+    for (let attempt = 0; ; attempt++) {
+      const stamp = this.stamp(), generation = this.generation;
+      try { return { result: await this.readGraph(undefined,true), stamp, generation }; }
+      catch (error) {
+        if (!(error instanceof SupersededReadError) || attempt >= 2 || this.disposed) throw error;
+      }
+    }
+  }
   async initial(lease) {
     if (lease && !this.disposed && lease.generation === this.generation && isDeepStrictEqual(lease.stamp,this.stamp()) && lease.result.snapshot.valid) return structuredClone(lease.result);
     return this.readGraph();

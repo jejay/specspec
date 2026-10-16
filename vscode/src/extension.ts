@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { randomBytes } from 'node:crypto';
 import { relative, sep } from 'node:path';
-import { Envelope, Snapshot, SpecNode, invoke } from './bridge';
+import { Envelope, Snapshot, SpecNode, createClient } from './bridge';
 import { findProjectRoot, resolveInvocation } from './project';
 import { graphHtml } from './view';
 const { GraphSession } = require('./common/host/session.cjs');
@@ -11,8 +11,6 @@ const { AnnotationWatcher } = require('./common/host/annotations.cjs');
 const presentation = require('../media/graph-model.js');
 
 const VIEW_TYPE = 'specspec.graphEditor';
-interface GitRepository { state: { onDidChange: vscode.Event<void> }; }
-interface GitAPI { repositories: GitRepository[]; onDidOpenRepository: vscode.Event<GitRepository>; }
 interface DocumentState { path: string; text: string; version: number; dirty: boolean; closed: boolean; eol: string; }
 interface FormEdit { id: string; body: string; parents: string[]; sources: string; editSequence: number; documentVersion?: number; }
 interface FormRecovery { key: string; form: FormEdit; }
@@ -97,7 +95,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
     } catch (error) {
       const text = (error instanceof Error ? error.message : String(error)).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
       panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'"></head><body><h1>SpecSpec graph unavailable</h1><pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
-      await this.report(error, document.uri);
+      void this.report(error, document.uri).catch(failure => this.output.appendLine(String(failure)));
     }
   }
   async open(resource?: vscode.Uri, compare = false, selectFolder = false): Promise<Snapshot | undefined> {
@@ -142,7 +140,7 @@ class GraphProject implements vscode.Disposable {
   references = 0;
   private readonly annotationListeners = new Set<(error?: Error) => void>();
   private readonly disposables: vscode.Disposable[] = [];
-  private disposed = false;
+  private readonly cliClient = createClient();
   constructor(readonly root: vscode.Uri, private context: vscode.ExtensionContext, private output: vscode.OutputChannel) {
     this.documents = new ProjectDocuments({
       documents: () => vscode.workspace.textDocuments.filter(d => this.documentPath(d)).map(d => this.documentState(d)),
@@ -162,7 +160,6 @@ class GraphProject implements vscode.Disposable {
       (error: Error) => { this.output.appendLine(error.message); this.annotationListeners.forEach(listener => listener(error)); });
     this.disposables.push({ dispose: () => annotationWatcher.close() });
     this.output.appendLine(`Execution: workspace host (${vscode.env?.remoteName || 'local'}); install Python/Git and configure SpecSpec on this host.`);
-    void this.connectGit();
   }
   subscribeAnnotations(listener: (error?: Error) => void): vscode.Disposable {
     this.annotationListeners.add(listener);
@@ -196,20 +193,10 @@ class GraphProject implements vscode.Disposable {
       explicit('command') || explicit('args'));
     this.output.appendLine(`CLI: ${invocation.command} ${[...invocation.args, ...args].join(' ')}`);
     const start = Date.now();
-    try { return await invoke<T>(invocation.command, invocation.args, this.root.fsPath, args, input); }
+    try { return await this.cliClient.invoke<T>(invocation.command, invocation.args, this.root.fsPath, args, input); }
     finally { this.trace(`cli-${args[0]}`, Date.now() - start); }
   }
-  private async connectGit(): Promise<void> {
-    try {
-      const extension = vscode.extensions.getExtension<{ getAPI(version: number): GitAPI }>('vscode.git');
-      if (!extension) return;
-      const api = (extension.isActive ? extension.exports : await extension.activate()).getAPI(1);
-      if (this.disposed) return;
-      const subscribe = (repository: GitRepository) => this.disposables.push(repository.state.onDidChange(() => this.documents.changed()));
-      api.repositories.forEach(subscribe); this.disposables.push(api.onDidOpenRepository(subscribe));
-    } catch { /* Git notifications are optional; canonical-file watching still works. */ }
-  }
-  dispose(): void { this.disposed = true; this.documents.dispose(); this.disposables.forEach(d => d.dispose()); }
+  dispose(): void { this.documents.dispose(); this.cliClient.dispose(); this.disposables.forEach(d => d.dispose()); }
 }
 
 class GraphView implements vscode.Disposable {

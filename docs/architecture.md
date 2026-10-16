@@ -27,8 +27,9 @@ that same CLI contract, or imports the library into its own Python process.
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
-  No host reimplements those rules. Each CLI invocation rebuilds snapshots;
-  there is no daemon or persistent graph index.
+  No host reimplements those rules. Each request rebuilds current snapshots.
+  Project-scoped API channels reuse interpreter lifetime; CLI commands and library
+  callers use the same domain functions.
 - **One shared UI has two persistence lifecycles.** Electron and VS Code project
   panels use Python-managed writes. VS Code node-file editors apply non-writing
   Python plans to native text documents. These saves are deliberately *not*
@@ -78,7 +79,7 @@ coordinates with open documents; Python still enforces domain and managed-writer
 | Layer | Start reading here | Responsibility |
 | --- | --- | --- |
 | Browser canvas | [`graph.js`](../graph-ui-common/media/graph.js), [`graph-annotations.js`](../graph-ui-common/media/graph-annotations.js), [`graph-model.js`](../graph-ui-common/media/graph-model.js), [`graph-camera.js`](../graph-ui-common/media/graph-camera.js), [`view.cjs`](../graph-ui-common/view.cjs) | Literal DOM text/native forms, SVG curves, revision overlays, metrics, Dagre layout and D3 navigation. Calls `window.SpecSpecHost`; cannot access project files or spawn tools. |
-| Shared host coordination | [`session.cjs`](../graph-ui-common/host/session.cjs), [`documents.cjs`](../graph-ui-common/host/documents.cjs), [`cli.cjs`](../graph-ui-common/host/cli.cjs) | Per-view `GraphSession`, project-level `ProjectDocuments`, serialized work, conflict guards, render handshakes and bounded subprocess invocation. No VS Code/Electron SDK imports. |
+| Shared host coordination | [`session.cjs`](../graph-ui-common/host/session.cjs), [`documents.cjs`](../graph-ui-common/host/documents.cjs), [`cli.cjs`](../graph-ui-common/host/cli.cjs), [`client.cjs`](../graph-ui-common/host/client.cjs) | Per-view `GraphSession`, project-level `ProjectDocuments`, serialized mutations, independent read-only previews, conflict guards, render handshakes and bounded project-scoped API channels. No VS Code/Electron SDK imports. |
 | Host adapters | [`vscode/src/extension.ts`](../vscode/src/extension.ts), [`electron/main.cjs`](../electron/main.cjs), [`electron/preload.cjs`](../electron/preload.cjs) | Trust, project discovery, dialogs, file/Git notifications, assets, messaging and presentation storage; VS Code also supplies native documents. |
 | Python backend | [`cli.py`](../src/specspec/cli.py), [`workspace.py`](../src/specspec/workspace.py), [`format.py`](../src/specspec/format.py), [`model.py`](../src/specspec/model.py), [`graph.py`](../src/specspec/graph.py) | Click dispatch, byte snapshots, version bootstrap, strict schema/round-trip YAML, normalized records, adjacency maps, deterministic ordering and iterative traversals. |
 | Operation-specific I/O | [`editor.py`](../src/specspec/editor.py), [`git.py`](../src/specspec/git.py), [`workspace.py`](../src/specspec/workspace.py) | Unsaved overlays/edit plans, Git snapshots/diffs/source impact, and lock/stage/journal/recovery respectively. All reuse the snapshot/schema/graph engine. |
@@ -86,10 +87,15 @@ coordinates with open documents; Python still enforces domain and managed-writer
 The bridge spawns the trusted executable with argument arrays, `--root`, and
 `shell: false`. Bodies or editor requests go through UTF-8 stdin. JSON stdout has
 `{api_version: 6, ok, result, diagnostics}`; process time and output are bounded.
-CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
+Ordinary CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
 or I/O failures. Invocation failures can lack JSON; the host also handles stderr,
 malformed stdout, timeouts and output limits. Bridge defaults are 120 seconds and
 16 MiB combined stdout/stderr, not limits imposed on an agent's own subprocess tool.
+`api --stream` serves bounded newline-delimited requests with one ordinary envelope
+per frame. Each project has a main API channel and an independent warmed source
+channel. Requests retain fresh validation; channel failure rejects pending work and
+a later request can start a new process. Mutations are never automatically replayed.
+Closing/switching projects or changing executable configuration disposes channels.
 An editor plan can succeed while reporting `snapshot.valid: false`: it preserves
 repairable intermediate text, not a valid graph claim.
 
@@ -98,7 +104,8 @@ calls module functions, converts results to dictionaries and emits the envelope.
 Library clients instead receive Python types such as `Snapshot`/`Graph` or ordinary
 result dictionaries and handle `SpecError` directly. For example, `load_snapshot()`
 returns diagnostics and a `.valid` flag; `.require_valid()` raises for an unusable
-graph. There is no library RPC hop, UI-to-Python import or shared Python daemon.
+graph. Library calls stay in-process; the host's API channels are project-scoped
+child processes with bounded pipes.
 
 `show`, `context`, `show ID --dependents` and `diff` are the compact read-side entry
 points for engineers/agents. Text/Markdown is default; explicit `--json` selects compact
@@ -115,7 +122,9 @@ IPC API. VS Code requires workspace trust before invoking the tool.
 ## B. A read/refresh round trip
 
 1. Host notifications call `scheduleRefresh()`. VS Code's reference-counted
-   `GraphProject` watches canonical files and listens for document/Git changes.
+   `GraphProject` watches canonical files and document changes. Both hosts share
+   asynchronous HEAD/ref watching; index stat-cache/status churn leaves the
+   HEAD-to-working presentation unchanged.
    Electron's [`GraphWatcher`](../graph-ui-common/host/watch.cjs) watches the project
    parent and node directory, reattaching after directory replacement. Events are
    hints, not a change log. The session coalesces bursts and retries transient reads;

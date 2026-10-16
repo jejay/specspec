@@ -99,9 +99,90 @@ test('source capture invokes only a validated preview and never a writer or Git 
 
 test('source previews in historical views use selected code revisions but never permit capture', async t => {
   const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]},revisions:['older','newer']});await f.s.open();await f.s.chooseRevisions();
-  await f.s.handle({type:'source-view',id:'node',reference:JSON.stringify({path:'code.js'})});
+  await f.s.handle({type:'source-view',id:'node',requestId:1,renderToken:f.s.renderSequence,reference:JSON.stringify({path:'code.js'})});
   assert.deepEqual(f.calls.at(-1).args,['api']);assert.deepEqual(JSON.parse(f.calls.at(-1).input),{api_version:6,op:'source-view',reference:{path:'code.js'},ref:'newer'});
   await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['1:2'],mode:'strict'}),/editable/);
+});
+
+const sourceRequest = (f,requestId) => ({type:'source-view',id:'node',requestId,renderToken:f.s.renderSequence,reference:JSON.stringify({path:`code-${requestId}.js`})});
+const implementation = {...node,type:'implementation'};
+function gate(t) { let release; const waiting=new Promise(resolve=>{release=resolve;});t.after(()=>release());return {waiting,release}; }
+
+test('interactive source reads complete while automatic graph synchronization is blocked', async t => {
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[implementation]}});await f.s.open();
+  const blocked=gate(t);let entered=false;
+  f.s.host.readGraph=async()=>{entered=true;await blocked.waiting;return {snapshot:f.s.snapshot};};
+  f.s.requestRefresh();await waitFor(()=>entered);
+  f.s.receive(sourceRequest(f,1));await waitFor(()=>f.messages.some(m=>m.type==='source-preview'));
+  assert.equal(f.messages.find(m=>m.type==='source-preview').requestId,1);
+  assert.equal(f.s.autoQueued,true,'Preview delivery does not wait for the blocked synchronization.');
+  blocked.release();await f.s.queue;
+});
+
+test('source lane freezes displayed commit IDs and coalesces clicks to the latest pending preview', async t => {
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[implementation]}});await f.s.open();
+  f.s.target='moving-tag';f.s.lastPayload.readonly=true;f.s.lastPayload.diff={target_commit:'a'.repeat(40),base:{nodes:[]}};
+  const blocked=gate(t),requests=[],cli=f.s.host.cli;
+  f.s.host.cli=async(args,input)=>{const v=JSON.parse(input);if(v.op==='source-view'){requests.push(v);if(requests.length===1)await blocked.waiting;}return cli(args,input);};
+  const first=f.s.sourcePreview(sourceRequest(f,1));await waitFor(()=>requests.length===1);
+  const middle=f.s.sourcePreview(sourceRequest(f,2)),last=f.s.sourcePreview(sourceRequest(f,3));
+  assert.equal(requests.length,1);blocked.release();await Promise.all([first,middle,last]);
+  assert.deepEqual(requests.map(r=>[r.reference.path,r.ref]),[['code-1.js','a'.repeat(40)],['code-3.js','a'.repeat(40)]]);
+  assert.deepEqual(f.messages.filter(m=>m.type==='source-preview').map(m=>m.requestId),[3]);
+});
+
+test('deleted source previews use the displayed base commit and discard changed-context results',async t=>{
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[implementation]}});await f.s.open();
+  f.s.snapshot={...snapshot,nodes:[]};f.s.lastPayload.snapshot=f.s.snapshot;f.s.lastPayload.diff={base:{nodes:[implementation]},base_commit:'b'.repeat(40)};
+  const blocked=gate(t),cli=f.s.host.cli;let request;
+  f.s.host.cli=async(args,input)=>{request=JSON.parse(input);await blocked.waiting;return cli(args,input);};
+  const pending=f.s.sourcePreview(sourceRequest(f,1));await waitFor(()=>Boolean(request));
+  assert.equal(request.ref,'b'.repeat(40));
+  f.s.lastPayload.diff.base_commit='c'.repeat(40);blocked.release();await pending;
+  assert.equal(f.messages.some(m=>m.type==='source-preview'),false);
+});
+
+test('source disposal drops active/pending delivery and current failures have correlated errors',async t=>{
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[implementation]}});await f.s.open();
+  f.s.host.cli=async()=>{throw new Error('Source unavailable');};
+  f.s.receive(sourceRequest(f,1));await waitFor(()=>f.messages.some(m=>m.type==='source-error'));
+  assert.deepEqual(f.messages.at(-1),{type:'source-error',requestId:1,message:'Source unavailable'});
+  for(const requestId of [0,-1,NaN,'1'])await assert.rejects(f.s.sourcePreview({...sourceRequest(f,1),requestId}),/Invalid/);
+  const blocked=gate(t);let entered=0;
+  f.s.host.cli=async()=>{entered++;await blocked.waiting;return {result:{}};};
+  const a=f.s.sourcePreview(sourceRequest(f,2)),b=f.s.sourcePreview(sourceRequest(f,3));
+  await waitFor(()=>entered===1);f.s.dispose();blocked.release();await Promise.all([a,b]);
+  assert.equal(entered,1);assert.equal(f.messages.some(m=>m.type==='source-preview'),false);
+});
+
+test('source previews bind the published render, not a pending comparison or mutation preflight',async t=>{
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[implementation]}});await f.s.open();
+  await assert.rejects(f.s.sourcePreview({...sourceRequest(f,1),renderToken:0}),/view changed/);
+  f.s.target='pending-comparison';await f.s.sourcePreview(sourceRequest(f,2));
+  assert.equal(JSON.parse(f.calls.at(-1).input).ref,undefined,'Displayed working view stays working while a comparison loads.');
+  f.s.lastPayload.readonly=true;f.s.lastPayload.diff={target_commit:'d'.repeat(40),base:{nodes:[]}};
+  f.s.target=undefined;f.s.snapshot={...snapshot,nodes:[]};await f.s.sourcePreview(sourceRequest(f,3));
+  assert.equal(JSON.parse(f.calls.at(-1).input).ref,'d'.repeat(40),'Historical display stays pinned during workspace/preflight changes.');
+});
+
+test('graph-only automatic refresh skips Spotlight IO while independent list arrivals bypass its queue',async t=>{
+  const f=fixture(t);await f.s.open();
+  const before=()=>f.calls.filter(c=>JSON.parse(c.input||'{}').op==='annotations').length;
+  const initial=before();await f.s.refresh(false,undefined,true);assert.equal(before(),initial);
+  await f.s.refresh();assert.equal(before(),initial+1,'Explicit Refresh keeps the missed-event fallback.');
+  const blocked=gate(t);let entered=false;
+  f.s.host.readGraph=async()=>{entered=true;await blocked.waiting;return {snapshot};};
+  f.s.requestRefresh();await waitFor(()=>entered);f.s.requestAnnotationsRefresh();
+  await waitFor(()=>before()===initial+2);assert.equal(f.s.autoQueued,true);
+  blocked.release();await f.s.queue;
+});
+
+test('concurrent explicit/event Spotlight reads share one flight and one coalesced follow-up',async t=>{
+  const f=fixture(t);await f.s.open();const blocked=gate(t),cli=f.s.host.cli;let entered=0;
+  f.s.host.cli=async(args,input)=>{if(JSON.parse(input).op==='annotations'){entered++;if(entered===1)await blocked.waiting;}return cli(args,input);};
+  const first=f.s.refreshAnnotations(),second=f.s.refreshAnnotations();f.s.requestAnnotationsRefresh();
+  await waitFor(()=>entered===1);await pause(10);assert.equal(entered,1);
+  blocked.release();await Promise.all([first,second]);await waitFor(()=>entered===2);await pause(20);assert.equal(entered,2);
 });
 
 const save = originalNode => ({ type: 'save', id: 'node', originalNode, parents: [], sources: '[]', body: '# Draft' });

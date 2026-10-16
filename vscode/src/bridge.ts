@@ -44,6 +44,11 @@ export interface Envelope<T> {
 }
 
 const shared: { invoke: typeof invoke } = require('./common/host/cli.cjs');
+export interface CliClient { invoke: typeof invoke; dispose(): void; }
+export function createClient(): CliClient {
+  const { CliClient } = require('./common/host/client.cjs');
+  return new CliClient();
+}
 
 export function invoke<T>(command: string, prefix: string[], root: string, args: string[], input?: string,
   timeoutMs = 120_000, maxOutputBytes = 16 * 1024 * 1024): Promise<Envelope<T>> {

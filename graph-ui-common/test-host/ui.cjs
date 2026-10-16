@@ -68,6 +68,7 @@ exports.CDP = CDP;
 exports.foreground = foreground;
 exports.checkUI = async function checkUI(port, options = {}) {
   const started = Date.now();
+  const phase = name => console.log(`Host UI phase: ${name} (${Date.now() - started}ms elapsed)`);
   const clients = new Map(); let active, context;
   async function screenshot(name) {
     const directory = process.env.SPECSPEC_SCREENSHOT_DIR;
@@ -107,8 +108,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
     // Normal-motion behavior remains covered by camera tests; do not rely on
     // background-host animation timing to reach a pose before sampling ink.
     await active.send('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]}, context.session);
+    phase('canvas');
     await require('./canvas.cjs').checkCanvas({ evaluate, screenshot,
       input: params => active.send('Input.dispatchMouseEvent', params, context.session) });
+    phase('Git/theme setup');
     await options.before?.({ evaluate, screenshot, delay });
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
@@ -449,6 +452,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await checkShapes();await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     await screenshot('node-shapes-expanded-implementation');
     assert.ok(await evaluate(`document.querySelector('#source-links button')`),'Implementation source hints are navigable.');
+    phase('historical source preview');
     await evaluate(`document.querySelector('#source-links button').click()`);
     for(let i=0;i<100;i++){if(await evaluate(`document.getElementById('source-preview').open`))break;await delay(100);}
     assert.ok(await evaluate(`document.getElementById('source-preview').open&&document.getElementById('source-preview-code').textContent.length>0`),'Actual source blob/working region preview loads: '+JSON.stringify(await evaluate(`({message:document.getElementById('message').textContent,open:document.getElementById('source-preview').open,identity:document.getElementById('identity').textContent,source:document.getElementById('source-links').textContent})`)));
@@ -546,6 +550,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
       return [...document.querySelectorAll('#cards .card.requirement')].find(c=>{const r=c.getBoundingClientRect();return r.right>v.left&&r.left<v.right&&r.bottom>v.top&&r.top<v.bottom&&paths.some(p=>p.dataset.parent===c.dataset.nodeId)&&paths.some(p=>p.dataset.child===c.dataset.nodeId);})?.dataset.nodeId;
     })()`);
     assert.ok(hoverNode);
+    phase('compact/manifesto Spotlights');
     await checkSpotlight(hoverNode,undefined,'spotlights-compact');
     const labelRoot=await evaluate(`document.querySelector('#cards .card.manifesto').dataset.nodeId`);
     await checkSpotlight(labelRoot,undefined,'spotlights-manifesto');
@@ -792,6 +797,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),await evaluate(`window.SpecSpecGraph.REVISION_COLORS.changed`));
     await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     const expandedRoot=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
+    phase('expanded Spotlight');
     await checkSpotlight(expandedRoot,'#title','spotlights-expanded');
     await checkHover(expandedRoot,'#body','hover-revision-expanded-root');
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
@@ -802,6 +808,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await evaluate(`document.getElementById('frame-all').click()`);
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
+    phase('Git lifecycle and watcher recovery');
     await options.after?.({ evaluate, screenshot, delay });
     console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and eight fill modes with linear/log absolute/cohort-relative influence probes and revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
   } catch (error) {

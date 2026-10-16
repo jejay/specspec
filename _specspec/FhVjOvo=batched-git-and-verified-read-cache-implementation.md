@@ -30,3 +30,8 @@ Focused and maintained-history tests exercise cached/uncached equivalence, objec
 loss and malformed framing, current HEAD/index, native planning, node grammar,
 comments/EOL/Unicode, source retention and mutation/recovery. Git read data is
 derived; canonical node format 6 / API 6 and the one-shot CLI remain authoritative.
+
+Resolve ordinary HEAD directly. Only a failed resolution checks for a genuinely
+unborn symbolic branch; missing objects, detached corruption and invalid named
+revisions retain their errors. Fresh HEAD movement and staged-byte checks remain
+authoritative while successful reads avoid the two extra unborn-branch processes.

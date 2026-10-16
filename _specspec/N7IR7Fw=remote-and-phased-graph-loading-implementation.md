@@ -53,3 +53,8 @@ supersession. Explicit working reads retain an actionable retry error and a foll
 Actual invalid graphs retain the established marked repair state and fresh managed
 mutation preflights. Tests cover repeated generation/text races, repair, explicit
 reads and cancellation/disposal without introducing polling or longer deadlines.
+
+Per-project API channels reuse interpreter lifetime while every frame retains fresh
+validation and source previews use an independent channel. Native bootstrap retries
+superseded reads before attachment; fallback reporting keeps editor wiring free
+of notification interaction. Host projects dispose their owned API channels.

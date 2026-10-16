@@ -7,7 +7,7 @@
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
   let colorMode = model.COLOR_MODES.includes(restored.colorMode) ? restored.colorMode : 'distance';
   let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
-  let editSequence = 0, documentVersion;
+  let editSequence = 0, documentVersion, sourceSequence = 0, sourceRequest;
   let layoutFrame, layout, layoutKey, cameraScene, snapshotReceivedAt;
   let drawnEdges = [], hoveredNode, hoverPoint;
   const cameraAPI = window.SpecSpecCamera;
@@ -88,6 +88,12 @@
     for (const id of ['source-path', 'source-ranges', 'source-mode', 'source-staged']) $(id).disabled = $('capture-source').disabled;
   }
 
+  const sourceContext = () => JSON.stringify([selected, view, state?.readonly,
+    state?.diff?.base_commit, state?.diff?.target_commit, graph.nodes.get(selected), $('sources').value]);
+  function cancelSourcePreview() {
+    sourceRequest = undefined;
+    if ($('source-preview').close) $('source-preview').close(); else $('source-preview').removeAttribute('open');
+  }
   function sourceLinks() {
     $('source-links').replaceChildren();
     let references;
@@ -98,7 +104,11 @@
       const item = document.createElement('li'), button = document.createElement('button'); button.type = 'button';
       button.textContent = reference.blob ? `${reference.path} · anchor ${reference.ranges?.map(r => r.join('–')).join(', ')} · ${reference.mode}` : `${reference.path} · whole file`;
       button.title = 'Resolve in the selected revision or working files and open literal source preview';
-      button.addEventListener('click', () => { setMessage('Resolving source region…'); send({ type: 'source-view', id: selected, reference: JSON.stringify(reference) }); });
+      button.addEventListener('click', () => {
+        sourceRequest = { id: ++sourceSequence, context: sourceContext() };
+        setMessage('Resolving source region…');
+        send({ type: 'source-view', requestId: sourceRequest.id, renderToken: state.renderToken, id: selected, reference: JSON.stringify(reference) });
+      });
       item.append(button); $('source-links').append(item);
     }
   }
@@ -108,7 +118,7 @@
     catch { setMessage('Complete the source JSON before appending a captured reference.'); return; }
     send({ type: 'source-capture', id: selected, path: $('source-path').value, ranges: $('source-ranges').value.split(/[,\s]+/).filter(Boolean), mode: $('source-mode').value, staged: $('source-staged').checked });
   });
-  $('close-source-preview').addEventListener('click', () => { if ($('source-preview').close) $('source-preview').close(); else $('source-preview').removeAttribute('open'); });
+  $('close-source-preview').addEventListener('click', cancelSourcePreview);
 
   function changes() {
     const kinds = new Map((state?.diff?.changes || []).map(change => [change.id, change.kind]));
@@ -462,7 +472,7 @@
       return;
     }
     if (dirty && !force && !confirm('Discard unsaved form changes before opening another node?')) return;
-    rememberCamera();
+    cancelSourcePreview(); rememberCamera();
     creating = false; dirty = false; selected = id; originalNode = currentNodeById(id);
     view = graph.nodes.has(id) ? 'focus' : 'overview'; loadForm(); draw(); saveDraft();
   }
@@ -474,7 +484,7 @@
   function frameAll() { if (layout) camera.frame({ x: 0, y: 0, width: layout.width, height: layout.height }); }
   function frameAnnotations(ids) {
     if (!state || pending || !ids.length) return;
-    rememberCamera(); view = 'overview'; draw();
+    cancelSourcePreview(); rememberCamera(); view = 'overview'; draw();
     const boxes = ids.map(id => layout?.positions.get(id)).filter(Boolean);
     if (boxes.length) {
       const x = Math.min(...boxes.map(box => box.x)), y = Math.min(...boxes.map(box => box.y));
@@ -495,7 +505,7 @@
   });
   $('back').addEventListener('click', () => {
     if (pending) return;
-    rememberCamera(); view = 'overview'; draw();
+    cancelSourcePreview(); rememberCamera(); view = 'overview'; draw();
     if (dirty || creating) setMessage('Draft retained. Use Resume draft to continue editing.');
     saveDraft();
   });
@@ -510,7 +520,7 @@
     if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 6) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
-    rememberCamera(); delete cameras.draft;
+    cancelSourcePreview(); rememberCamera(); delete cameras.draft;
     creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
     $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'New node draft';
@@ -577,7 +587,11 @@
       } catch { setMessage('Source JSON changed while capture was pending; complete it before capturing again.'); }
       return;
     }
-    if (message.type === 'source-preview') {
+    if (message.type === 'source-error' || message.type === 'source-preview') {
+      if (!sourceRequest || message.requestId !== sourceRequest.id || sourceRequest.context !== sourceContext()) return;
+      sourceRequest = undefined;
+      if (message.type === 'source-error') { setMessage(message.message); return; }
+      setMessage('');
       const r = message.resolution;
       $('source-preview-title').textContent = `${r.path} · ${r.target}`;
       $('source-preview-status').textContent = `${r.mode} · ${r.outcome} · ${r.ranges.map(p => p.join('–')).join(', ')}${message.original ? ' · Original anchored content · Mapping needs review' : ''}${r.message ? ' · ' + r.message : ''}`;

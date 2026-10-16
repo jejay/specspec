@@ -69,4 +69,5 @@ interval; DOM/controller tests cover every drag direction, modifier release, cap
 cancellation, native boundaries, world/caret preservation and synthetic Mac mapping.
 The early common installed-host canvas probe checks dark/light/contrast fills at
 three scales, actual pointer capture/outside release, contextual icons and editing.
-Current installed-run scope and limits are recorded in the canvas guide.
+Complete installed suites combine these probes with source, backchannel, native
+lifecycle, watcher recovery and persisted reload/revision checks.

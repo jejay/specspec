@@ -142,6 +142,13 @@ map the code, diagnostic controls and verification seams.
 [Superseded-read handling](../_specspec/KGvVHh0=retry-superseded-reads-without-diagnosing-invalid-files.md)
 keeps generation/text races distinct from invalid files, coalescing bounded fresh
 attempts while preserving the displayed presentation and mutation preflights.
+[Project-scoped API channels](../_specspec/sxxzsrk=reuse-bounded-per-project-application-channels.md)
+reuse interpreter lifetime with a separate read-only preview channel. Each request
+still validates fresh files and Git state. [Interactive source reads](../_specspec/TpFMeZc=serve-interactive-source-previews-independently-of-background-reads.md)
+bind to the published view and displayed commit, while [metadata events](../_specspec/0aNDHfQ=refresh-spotlight-metadata-from-its-own-events.md)
+and [HEAD/ref watching](../_specspec/yEoFkOE=discover-git-watch-paths-asynchronously-and-coalesce-notifications.md)
+coalesce their own work. The [implementation](../_specspec/HZHjxQ8=implement-responsive-source-and-metadata-read-scheduling.md)
+links channels, scheduling and causal/installed regressions.
 
 ## Compact command and shared-read contract
 

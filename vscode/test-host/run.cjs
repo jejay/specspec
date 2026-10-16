@@ -76,6 +76,7 @@ async function run() {
     console.error('Real webview UI test failed:', error);
     const result = JSON.stringify({ ok: false, error: error.message });
     writeFileSync(uiResult, result); writeFileSync(native.result, result);
+    child.kill(); // A known failed phase terminates promptly; preserve the profile.
   });
   // Sum the shared/native phase allowances and startup/shutdown, while retaining
   // every individual assertion and operation deadline.

@@ -131,7 +131,8 @@ test('blob source links capture into the native form and preview literal resolve
   send({type:'source-captured',id:'impl',reference:{...reference,mode:'expanding'}});
   assert.equal(JSON.parse($('sources').value).length,2);assert.equal(body.value,value);assert.equal($('body'),body);
   assert.equal(messages.some(m=>m.type==='save'||m.type==='add'),false);
-  send({type:'source-preview',resolution:{path:'moved.js',target:'HEAD',mode:'strict',outcome:'conflict',ranges:[[20,21]]},original:true,chunks:[{start:2,selected:[2,3],lines:['<img onerror="bad()">','literal']} ]});
+  $('source-links').querySelector('button').click();
+  send({type:'source-preview',requestId:messages.at(-1).requestId,resolution:{path:'moved.js',target:'HEAD',mode:'strict',outcome:'conflict',ranges:[[20,21]]},original:true,chunks:[{start:2,selected:[2,3],lines:['<img onerror="bad()">','literal']} ]});
   assert.match($('source-preview-title').textContent,/moved.js.*HEAD/);assert.match($('source-preview-status').textContent,/Original anchored/);
   assert.match($('source-preview-code').textContent,/> 2: <img/);assert.equal($('source-preview-code').querySelector('img'),null);
   $('close-source-preview').click();assert.equal($('source-preview').hasAttribute('open'),false);
@@ -142,6 +143,24 @@ test('historical source hints remain navigable while capture is disabled', t => 
   send({type:'snapshot',snapshot:{...snapshot,nodes:[root,impl]},diagnostics:[],readonly:true});
   dom.window.document.querySelector('[data-node-id="child"]').click();assert.equal($('capture-source').disabled,true);
   assert.equal($('source-links').querySelector('button').disabled,false);
+});
+
+test('source preview replies/errors follow the newest click and ignore navigation, edited refs and revision adoption', t => {
+  const {dom,$,messages,snapshot,send}=fixture(t);
+  const impl={...child,type:'implementation',sources:[{path:'a.js'},{path:'b.js'}]};
+  const next={type:'snapshot',snapshot:{...snapshot,nodes:[root,impl]},diagnostics:[],readonly:false};
+  send(next);dom.window.document.querySelector('[data-node-id="child"]').click();
+  const click=index=>{$('source-links').children[index].querySelector('button').click();return messages.at(-1).requestId;};
+  const result=requestId=>({type:'source-preview',requestId,resolution:{path:'a.js',target:'workspace',mode:'whole',outcome:'resolved',ranges:[]},chunks:[],original:false});
+  const a=click(0),b=click(1);send(result(a));assert.equal($('source-preview').open,false);
+  send({type:'source-error',requestId:a,message:'Obsolete failure'});assert.equal($('message').textContent,'Resolving source region…');
+  send(result(b));assert.equal($('source-preview').open,true);$('close-source-preview').click();
+  const c=click(0);$('back').click();send(result(c));assert.equal($('source-preview').open,false);
+  dom.window.document.querySelector('[data-node-id="child"]').click();const d=click(0);
+  $('sources').value='[{"path":"edited.js"}]';$('sources').dispatchEvent(new dom.window.Event('input'));send(result(d));assert.equal($('source-preview').open,false);
+  const e=click(0);send({...next,readonly:true});send(result(e));assert.equal($('source-preview').open,false);
+  const current=click(0);send({type:'source-error',requestId:current,message:'Current failure'});assert.equal($('message').textContent,'Current failure');
+  assert.equal(messages.some(m=>m.type==='save'||m.type==='add'),false);
 });
 
 function hoverFixture(t) {

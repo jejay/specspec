@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2320" viewBox="0 0 2000 2320" role="img" aria-labelledby="interface-title interface-description">
   <title id="interface-title">SpecSpec interface detail: renderer messages, CLI processes, Python calls and agent use</title>
-  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the SpecSpecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, shared project reads and optional native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A single short-lived Python process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an API 6 JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through API-6 native plan overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar shows shared Electron/VS Code reads with optional overlays, commit targets, managed mutations and source previews. There is no Python daemon, HTTP service or implemented agent connector.</desc>
+  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the SpecSpecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, shared project reads and optional native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A project-scoped API channel or ordinary CLI process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an API 6 JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through API-6 native plan overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar shows shared Electron/VS Code reads with optional overlays, commit targets, managed mutations and source previews. Host API channels are bounded child processes, with an independent warmed source-preview lane and fresh validation per frame.</desc>
   <metadata>Descriptive documentation of current shortcut-free node format 6 and API 6. Self-contained offline SVG with system font fallbacks and local markers only. Companion overview: docs/architecture.svg. Guide and source links: docs/architecture.md. Payload snippets are illustrative; an empty result in the response example stands in for command-specific data.</metadata>
   <defs>
     <style>
@@ -76,12 +76,12 @@
       <text x="568" y="403" class="small">VS Code extension / Electron main</text>
       <path d="M568 427H930" class="hairline"/>
       <text x="568" y="464" class="heading">GraphSession</text>
-      <text x="568" y="495" class="small">Per view: guarded / serialized actions</text>
+      <text x="568" y="495" class="small">Guarded writes / independent previews</text>
       <text x="568" y="525" class="small">Checks trust, IDs and form conflicts</text>
       <text x="568" y="557" class="code" style="font-size:16px">graph-ui-common/host/session.cjs</text>
       <text x="568" y="594" class="body" style="font-weight:650;fill:#203a40">ProjectReads + native documents</text>
       <text x="568" y="625" class="small">Per project: overlays, plan / apply queue</text>
-      <text x="568" y="671" class="body" style="font-weight:650;fill:#203a40">invoke() / bounded CLI bridge</text>
+      <text x="568" y="671" class="body" style="font-weight:650;fill:#203a40">Bounded CLI / API channels</text>
       <text x="568" y="702" class="small">Trusted executable + configured prefix</text>
       <text x="568" y="731" class="code" style="font-size:16px">graph-ui-common/host/cli.cjs</text>
     </g>
@@ -97,9 +97,9 @@
       <text x="484" y="674" text-anchor="middle" class="caption" style="font-size:14px">webview / IPC</text>
     </g>
 
-    <g id="python-process" aria-label="One short-lived Python process per CLI invocation; facade and library are not separate services">
+    <g id="python-process" aria-label="Project-scoped Python API channels or ordinary CLI processes; facade and library share each process">
       <rect x="1104" y="324" width="832" height="446" rx="18" fill="#e9eeea" stroke="#aabdb0" stroke-width="1.5" stroke-dasharray="7 6"/>
-      <text x="1128" y="354" class="eyebrow" style="font-size:12px;letter-spacing:1px">ONE SHORT-LIVED PYTHON PROCESS / EACH CLI INVOCATION</text>
+      <text x="1128" y="354" class="eyebrow" style="font-size:12px;letter-spacing:1px">BOUNDED PYTHON API CHANNEL / ORDINARY CLI PROCESS</text>
       <g id="cli-facade" aria-label="Click parses inputs, dispatches ordinary Python calls and emits results or guarded diagnostics">
         <rect x="1128" y="377" width="204" height="367" rx="6" fill="#fff"/>
         <text x="1152" y="414" class="heading">CLI façade</text>
@@ -167,7 +167,7 @@
       <text x="1464" y="934" class="caption">Same code in your process; objects / SpecError, not JSON.</text>
     </g>
     <text x="64" y="973" class="caption">Direct agent calls skip UI confirmation queues and VS Code dirty-buffer guards. The agent/harness owns its process controls.</text>
-    <text x="64" y="1004" class="caption">CLI reads disk. VS Code sees unsaved text by sending explicit document overlays. No shared daemon, HTTP server or Python process cache.</text>
+    <text x="64" y="1004" class="caption">CLI reads disk. VS Code supplies native document overlays. Project-scoped API channels reuse interpreter lifetime with fresh reads.</text>
   </g>
 
   <g id="wire-examples" aria-label="Illustrative renderer Save message, translated process call and returned API envelope">

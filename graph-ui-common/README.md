@@ -74,8 +74,12 @@ sequence acknowledgements, version/text conflicts and UTF-16/CRLF-safe edits. Se
 `test-host/budgets.cjs` supplies the installed suites' aggregate phase allowances;
 individual and production deadlines remain independent. The shared CDP harness
 fails closed transports promptly and foregrounds even when optional window sizing
-is unavailable. [The Windows smoke investigation](../docs/investigations/host-smoke.md)
-records Electron/VS Code outcomes, completed phases and diagnostic limits.
+is unavailable. [Installed-host verification](../docs/investigations/host-smoke.md)
+describes complete Electron/VS Code coverage and controlled causal regressions.
+`host/client.cjs` reuses bounded per-project API processes, with an independent
+preview channel and fresh backend reads for every frame. `host/git-watch.cjs`
+coalesces asynchronous HEAD/ref discovery; canonical and Spotlight notifications
+retain independent paths. Ordinary CLI commands keep the one-shot bridge.
 `test/camera.test.cjs` isolates rectangle state/inversion and synthetic Mac mapping;
 `test-host/canvas.cjs` runs early in each installed suite to inspect computed paint,
 floating chrome, real pointer capture/outside release and native editing.

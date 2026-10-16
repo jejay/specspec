@@ -26,6 +26,23 @@ test('bootstrap is one-shot reusable context with actual stamp checks, not a per
  p.changed();await p.initial(lease);assert.equal(calls,3);
 });
 
+test('native bootstrap retries document/generation races before attaching the custom editor',async()=>{
+ const doc={path:'_specspec/node.md',text:'A',version:1};let calls=0;
+ const p=new ProjectDocuments({documents:()=>[doc],cli:async()=>{
+  if(++calls<3){doc.text+='x';doc.version++;p.changed();}
+  return {result:{snapshot,diagnostics:[]}};
+ }});
+ const lease=await p.bootstrap();assert.equal(calls,3);assert.equal(lease.generation,p.generation);
+ assert.equal(lease.stamp[0][1],'Axx');await p.initial(lease);assert.equal(calls,3);p.dispose();
+});
+
+test('native bootstrap preserves bounded supersession and disposal distinctions',async()=>{
+ let calls=0;const p=new ProjectDocuments({documents:()=>[],cli:async()=>{calls++;p.changed();return {result:{snapshot}};}});
+ await assert.rejects(p.bootstrap(),SupersededReadError);assert.equal(calls,3);p.dispose();
+ const gate=deferred();let reads=0;const q=new ProjectDocuments({cli:async()=>{reads++;await gate.promise;return {result:{snapshot}};}});
+ const boot=q.bootstrap();q.dispose();gate.resolve();await assert.rejects(boot,/closed/);assert.equal(reads,1);
+});
+
 test('changed document text without a notification rejects shared late results; disposal drops hints',async()=>{
  const gate=deferred();const doc={path:'_specspec/node.md',text:'A',version:1};
  const p=new ProjectDocuments({documents:()=>[doc],cli:async()=>{await gate.promise;return {result:{snapshot,base_cache:{commit:'a'.repeat(40),files:{}},diagnostics:[]}};}});

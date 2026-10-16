@@ -144,7 +144,7 @@
       <text x="1132" y="715" class="body white" style="font-weight:650">Plans or managed writes</text>
       <text x="1132" y="745" class="code light" style="font-size:16px">editor.py · workspace.py</text>
       <text x="1132" y="804" class="body white" style="font-weight:650">Snapshots + diagnostics</text>
-      <text x="1132" y="839" class="small light">Rebuilt per call · no daemon</text>
+      <text x="1132" y="839" class="small light">Fresh reads · per-project API channels</text>
     </g>
 
     <g id="project-data" aria-label="Canonical saved Markdown DAG, Git snapshots and linked product sources">

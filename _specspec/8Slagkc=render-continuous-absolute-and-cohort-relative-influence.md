@@ -34,5 +34,6 @@ drafts, caret, geometry and camera. The common real-host probe checks all four
 influence modes against independent full-revision graph traversals and transformed
 count/cohort calculations, alongside actual gradient paint and persisted selection.
 
-The graph-structure guide records installed-host phase boundaries and verification
-limits alongside the model/DOM and adapter evidence.
+Complete installed-host suites combine every mode with source previews, native
+editing, Spotlight backchannels, recovery and reload/revision checks. The
+graph-structure guide links their verification procedure.

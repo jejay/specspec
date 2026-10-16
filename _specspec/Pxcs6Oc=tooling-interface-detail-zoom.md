@@ -9,8 +9,8 @@ parents:
 Keep the actor-first overview and provide a separate accessible offline SVG that
 opens the renderer-to-host message port, the host/agent-to-CLI subprocess contract
 and the CLI-to-library in-process calls. Group the CLI facade and domain modules
-within one per-invocation Python process and distinguish alternative Python
-embedding in a caller's own process. Name the current functions, payloads, return
+within the same Python process, distinguishing bounded host API channels, ordinary
+CLI invocations and alternative library embedding in a caller's own process. Name the current functions, payloads, return
 records, diagnostics and process controls at their actual boundaries.
 
 Trace a native form edit through document overlays, editor input, a non-writing

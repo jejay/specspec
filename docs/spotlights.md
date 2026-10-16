@@ -217,7 +217,7 @@ pass the compact, circular-manifesto and expanded backchannels, cascade ghost
 lifecycles, manual/invalid-file synchronization and retained drafts. Electron verifies
 complete persisted spotlight-list reload with a zero-count baseline; VS Code verifies
 native dirty/Save/undo/redo, splits, repair and CRLF/Unicode files. The Python,
-shared renderer and both host-adapter unit suites pass. [The smoke investigation](investigations/host-smoke.md)
-records measurements and bounded evidence. Command/Meta+Shift remains synthetic-event coverage only.
+shared renderer and both host-adapter unit suites pass. [Installed-host verification](investigations/host-smoke.md)
+describes the complete suites and regression coverage. Command/Meta+Shift remains synthetic-event coverage only.
 Their platform and filesystem scope is bounded; they do not establish universal
 watcher delivery, perceptual suitability for every theme or large-list performance.

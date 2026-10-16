@@ -52,48 +52,29 @@ CLI receipts and commit ledger use this same current rule. Use a fresh external
 checkout for comparisons; existing manual clones and unrelated SpecSpec development
 history remain untouched. See [the history procedure](../example/gantt/history/WALKTHROUGH.md).
 
-## Verification scope
+## Verification
 
-The current graphs contain 164 nodes/290 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The Python suite passes 273 tests, shared UI 207,
-VS Code adapter 42 and Electron 9. Coverage includes an independent closure oracle,
-deep graphs, atomic rejection of remote redundancies, native repair, a real
-owner-configured hook in a disposable repository and exact-index/revision checks.
+The current graphs contain 169 nodes/301 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. The 565 tests comprise 281 Python, 231 shared UI,
+44 VS Code adapter and 9 Electron cases. Backend, renderer and host-adapter suites cover an
+independent closure oracle, deep graphs, remote-redundancy atomicity, native repair,
+an owner-configured hook in a disposable repository and exact-index/revision checks.
 Gantt verification checks all eight retained commits, 123 actual CLI receipt states,
 source retention and all three runnable model stages.
 
-The `c2a93b4` baseline's complete installed Windows suites passed: Electron in
-264 seconds and VS Code in 409 seconds. Both include source previews, all three backchannel contexts, cascade
-HEAD/stage/commit ghosts and invalid-file recovery. Electron verifies persisted
-spotlight/draft reload and revision switching; VS Code verifies native document,
-split, repair and CRLF/Unicode lifecycles. [The smoke investigation](investigations/host-smoke.md)
-records aggregate guard causes, retry/transport fixes and bounded evidence.
-Individual operation deadlines remain unchanged. Tests install no repository hooks
-and preserve manual example workspaces; other platforms retain separate scope.
+The [complete installed-host suites](investigations/host-smoke.md) exercise real
+historical source previews, all eight color modes, three Spotlight backchannel
+contexts, cascade HEAD/stage/commit ghosts and watcher-only invalid-file recovery.
+Both complete Windows suites pass twice in succession.
+Electron checks actual save, persisted draft/complete-list reload and revision
+switching. VS Code checks native documents, split views, repair and CRLF/Unicode.
+Canvas probes include six-theme overview fills, floating controls, rectangle capture
+and unchanged native editing/world geometry. Mac gesture mapping has synthetic tests.
 
-The linear influence follow-up passed its count/cohort, interpolation, DOM,
-persistence and editing-state regressions. Both installed Windows hosts passed
-its two color/gradient probes; the complete VS Code suite passed in 458 seconds.
-That Electron run passed its shared UI phase and persisted draft/spotlight reload,
-then stopped at a comparison-dialog assertion following a fixed 200 ms wait.
-[The follow-up evidence](investigations/host-smoke.md#influence-mode-follow-up)
-records those phase boundaries separately from permanent linear/log verification.
-
-All four permanent linear/log influence modes pass the current pure/DOM regressions
-and their explicit installed probes in both Windows hosts, including unchanged
-world/camera during mode switches. That follow-up's broader installed reruns stopped later: Electron's
-400-second aggregate guard ends the run before final reload/revision qualification;
-VS Code reports a changed camera in the subsequent expanded-root Spotlight
-backchannel probe. The Electron comparison probe uses bounded asynchronous readiness
-polling, but that later step remains unconfirmed in the current guarded run.
-See [permanent-mode verification](investigations/host-smoke.md#permanent-linear-and-logarithmic-influence)
-for completed phases and limits. Unit, graph, source and maintained-history checks
-pass independently of those incomplete full-host runs.
-
-The zoom-aware canvas revision adds six intention/choice nodes and a copy realization
-while retaining the current schema. The shared canvas implementation inherits the
-new fill and gesture choices through shortcut-free direct justifications. Its
-paint/rectangle/native-boundary checks pass early in both installed Windows hosts.
-Final broader runs retain later limits: Electron's aggregate guard and a VS Code
-historical source-preview wait. The [canvas follow-up](investigations/host-smoke.md#zoom-aware-canvas-and-rectangle-framing)
-records actual phase outcomes, preserved evidence and synthetic-only Mac coverage.
+Controlled regressions hold background reads open while resolving sources, bind
+previews to the published render/commit, replace pending requests and close projects
+mid-read. Per-project bounded API channels reuse interpreter lifetime while each
+request validates current files and Git state. HEAD/ref notifications, canonical
+text changes and Spotlight arrivals use their respective coalesced paths. The
+individual operation deadlines and complete-suite aggregate guards stay in force.
+Tests preserve manual workspaces and install no repository hooks.

@@ -19,3 +19,8 @@ state. Preserve existing mutation preflights, trust, version checks, writer guar
 per-operation deadlines and default-off polling. Dispose pending retry work when
 the session closes. Spotlight publication and other notification bursts retain
 these same rules; notification generation is evidence to reread, not a diagnosis.
+
+Native bootstrap uses the same bounded three-attempt supersession policy before
+custom-editor attachment. A fresh lease carries the successful generation and
+actual document stamp. Real failure fallback attaches independently of owner
+interaction with its error notification; the repairable editor stays available.

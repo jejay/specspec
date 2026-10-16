@@ -29,7 +29,7 @@ Round-trip YAML frontmatter is memoized by exact header text within the current
 Python process, with isolated mutable copies, at most 256 entries and an 8 MiB
 header-text budget. Body text, node schema, graph, source paths and runtime recovery/
 lock checks remain current. This avoids repeated parsing of unchanged headers
-within overlays, worktree/base reads and library use; it is not a persistent server.
+within overlays, worktree/base reads and library use.
 
 The shared project read coordinator serves Electron and VS Code. Electron supplies
 saved files; VS Code adds native overlays. It shares identical **in-flight** reads using
@@ -65,6 +65,27 @@ renderer; normal refreshes no longer run export followed by diff. Historical rea
 bypass workspace buffers. Native plans and managed writes retain separate owners.
 See [command/protocol details](cli.md).
 
+## Project-scoped API channels
+
+The hosts reuse two bounded Python processes per project/executable configuration:
+one for application requests and one for read-only source previews. Both warm on
+the first authorized API call. `api --stream` accepts newline-delimited API-6 JSON
+and returns one ordinary envelope per frame. The one-shot CLI remains available.
+Each frame still validates current files, locks/journals, native text and Git state.
+Only interpreter lifetime and bounded derived caches persist between requests.
+
+Channels serialize their frames and bound input/output, pending requests and elapsed
+time. Close/switch/configuration changes dispose them. Transport failure rejects
+pending work; a later request can open a fresh channel, while mutations are never
+automatically replayed. A dispatched mutation with no confirmed response reports
+its uncertain outcome for inspection. The preview lane checks published render and
+displayed commit identity, so queued background work cannot retarget a clicked source.
+
+HEAD/ref watching is asynchronous and shared by both hosts. Canonical text and
+Spotlight metadata have independent watchers. Index stat-cache writes and Git
+extension status churn leave HEAD-to-working presentation unchanged. Explicit
+staged source actions read the current index when invoked.
+
 ## Loading diagnostics
 
 Enable this resource-scoped setting when measuring a project:
@@ -91,7 +112,6 @@ measurements, failed probes and narrow batching experiment. Its baseline numbers
 historical evidence, not current release benchmarks. Remote setup and qualification
 are described in [remote workspaces](remote-workspaces.md).
 
-[The Windows host-smoke investigation](investigations/host-smoke.md) records complete
-installed Electron/VS Code runs, measured aggregate phase guards, foreground/transport
-regressions and remaining qualification limits. Test guards are separate from the
+[Installed-host verification](investigations/host-smoke.md) describes the complete
+Electron/VS Code suites, aggregate phase guards and causal transport/read regressions. Test guards are separate from the
 unchanged individual and production operation deadlines.

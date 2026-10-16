@@ -507,18 +507,18 @@ def recover_command(root, force_lock, as_json):
 
 
 @main.command(hidden=True)
+@click.option("--stream", is_flag=True, help="Serve bounded newline-delimited API requests.")
 @click.pass_obj
 @guarded
-def api(root):
-    """Internal API 6 request on bounded JSON stdin; one JSON response."""
-    raw = sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1)
-    try:
-        if len(raw) > MAX_REQUEST_BYTES:
-            raise ValueError("Request exceeds the 16 MiB limit.")
-        value = json.loads(raw)
-    except (ValueError, UnicodeError) as error:
-        raise SpecError([Diagnostic("API", f"Invalid application JSON: {error}")], 2) from error
-    result, diagnostics = application_request(root_path(root), value)
+def api(root, stream):
+    """Internal API 6 transport with bounded JSON input and ordinary envelopes."""
+    from .api_transport import decode_request, serve
+
+    project = root_path(root)
+    if stream:
+        raise click.exceptions.Exit(serve(project, sys.stdin.buffer, sys.stdout.buffer))
+    value = decode_request(sys.stdin.buffer.read(MAX_REQUEST_BYTES + 1))
+    result, diagnostics = application_request(project, value)
     emit(result, diagnostics, as_json=True)
 
 

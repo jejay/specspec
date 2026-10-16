@@ -15,7 +15,7 @@ function fixture(t, options = {}) {
   mkdirSync(join(root, '_specspec'));
   mkdirSync(join(root, 'vscode'));
   const uri = path => ({ scheme: 'file', fsPath: resolve(path), toString() { return this.fsPath; } });
-  const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
+  const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], gitLookups: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
   const backups = new Map();
   const context = { extensionUri: uri(join(root, 'vscode')), extensionMode: 2, subscriptions: [],
     workspaceState: { get: key => backups.get(key), keys: () => [...backups.keys()], update: async (key, value) => { value === undefined ? backups.delete(key) : backups.set(key, value); } } };
@@ -60,12 +60,12 @@ function fixture(t, options = {}) {
     },
     commands: { registerCommand: (name, handler) => { calls.commands.set(name, handler); return noopDisposable; },
       executeCommand: async (name, ...args) => { calls.executed.push({ name, args }); } },
-    extensions: { getExtension: () => undefined },
+    extensions: { getExtension: id => { calls.gitLookups.push(id); return undefined; } },
     window: {
       createOutputChannel: () => output,
       showOpenDialog: async () => { calls.dialogs++; return options.cancel ? undefined : [uri(root)]; },
       showWorkspaceFolderPick: async () => { calls.picks++; return undefined; },
-      showErrorMessage: async message => { calls.errors.push(message); },
+      showErrorMessage: async message => { calls.errors.push(message); if(options.holdError)return new Promise(()=>{}); },
       showInputBox: async () => options.revisions?.shift(),
       showWarningMessage: async message => { calls.warnings.push(message); return options.confirm ? 'Confirm' : undefined; },
       registerCustomEditorProvider: (id, provider, options) => {
@@ -137,14 +137,14 @@ function fixture(t, options = {}) {
   try {
     Module._load = function(request, parent, ...rest) {
       if (request === 'vscode') return vscode;
-      if (request === './bridge' && parent?.filename === extensionPath) return { invoke };
+      if (request === './bridge' && parent?.filename === extensionPath) return { createClient: () => ({ invoke, dispose() {} }) };
       return originalLoad.call(this, request, parent, ...rest);
     };
     require(extensionPath).activate(context);
   } finally { Module._load = originalLoad; }
   t.after(() => {
     calls.panels.forEach(panel => panel.dispose()); calls.provider.dispose();
-    rmSync(root, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 });
     delete require.cache[extensionPath];
   });
   const openDocument = async node => {
@@ -167,6 +167,20 @@ async function waitFor(check) {
   }
   assert.ok(check(), 'The serialized graph action did not complete.');
 }
+
+test('graph refresh watches real HEAD/refs without subscribing to Git-extension status churn',async t=>{
+  const {calls}=fixture(t);await calls.commands.get('specspec.openGraph')();
+  assert.deepEqual(calls.gitLookups,[]);
+  const before=calls.cli.length;
+  calls.watchers[0].change();await waitFor(()=>calls.cli.length>before);
+  assert.deepEqual(calls.gitLookups,[],'Canonical notifications retain their independent fresh-read path.');
+});
+
+test('native fallback attachment completes while its error notification awaits owner action',async t=>{
+  const {calls,openDocument}=fixture(t,{snapshot:{...snapshot,valid:false},holdError:true});
+  let attached=false;const opening=openDocument({id:'node',path:'_specspec/node.md',body:'# Repair'}).then(()=>{attached=true;});
+  await waitFor(()=>attached);await opening;assert.ok(calls.fallbackHtml);assert.equal(calls.errors.length,1);
+});
 
 test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
   const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 999 }, confirm: true });

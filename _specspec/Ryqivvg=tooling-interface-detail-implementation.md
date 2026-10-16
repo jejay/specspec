@@ -24,3 +24,7 @@ labelled contracts and parseable response example are checked against API_VERSIO
 Offline resvg full-page and detail renders support visual checks of hierarchy,
 text, ports and sequence arrows. This documentation retains the overview and the
 existing runtime behavior while exposing the interface and persistence seams.
+
+The process frame distinguishes project-scoped API channels from ordinary CLI
+invocations. Each holds the facade and library together, with current per-request
+snapshots. The guide names independent previews and bounded channel disposal.

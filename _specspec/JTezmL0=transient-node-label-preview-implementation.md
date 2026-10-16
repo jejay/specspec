@@ -58,8 +58,8 @@ through spotlight add and inspect arrival/ring paint, framing and native menus.
 Verification covers exact-version rings, backchannel messages, immutable retained
 records, drafts, caret and camera through shared unit tests and installed probes.
 The common installed harness includes compact/circular/expanded backchannels,
-cascade ghosts, file recovery and native document lifecycle checks. Completed
-phases and broader run limits are recorded in docs/investigations/host-smoke.md.
+cascade ghosts, file recovery and native document lifecycle checks.
+docs/investigations/host-smoke.md describes complete installed verification.
 Command/Meta+Shift has synthetic-event coverage; physical macOS qualification
 retains its own evidence boundary.
 

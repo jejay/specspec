@@ -46,6 +46,12 @@ class GraphSession {
       if (!this.documentEdits) this.documentEdits = this.drainDocumentEdits().finally(() => { this.documentEdits = undefined; });
       return;
     }
+    if (value.type === 'source-view') {
+      void this.sourcePreview(value).catch(async error => {
+        this.log(error); await this.post({ type: 'source-error', requestId: value.requestId, message: error.message });
+      });
+      return;
+    }
     this.enqueue(() => this.handle(value));
   }
   async open() {
@@ -146,13 +152,24 @@ class GraphSession {
         else { this.scheduleRefresh(); throw error; }
         return;
       }
-      await this.invalid(error); await this.refreshAnnotations(); if (!automatic) throw error; this.log(error); return;
+      await this.invalid(error);
+      if (!automatic || this.annotationInitial || this.annotationError) await this.refreshAnnotations();
+      if (!automatic) throw error; this.log(error); return;
     }
     if (this.disposed) return;
     await this.display(loaded, force, selectedId, automatic);
-    if (!this.disposed) await this.refreshAnnotations();
+    if (!this.disposed && (!automatic || this.annotationInitial || this.annotationError)) await this.refreshAnnotations();
   }
-  async refreshAnnotations() {
+  refreshAnnotations() {
+    if (this.disposed) return Promise.resolve();
+    if (this.annotationsWork) { this.annotationsAgain = true; return this.annotationsWork; }
+    this.annotationsWork = this.readAnnotations().finally(() => {
+      this.annotationsWork = undefined;
+      if (this.annotationsAgain && !this.disposed) { this.annotationsAgain = false; this.scheduleAnnotationsRefresh(); }
+    });
+    return this.annotationsWork;
+  }
+  async readAnnotations() {
     try {
       const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotations' }));
       const shots = response.result?.shots;
@@ -175,15 +192,46 @@ class GraphSession {
   }
   requestAnnotationsRefresh() {
     if (this.disposed) return;
-    if (this.annotationsQueued) { this.annotationsAgain = true; return; }
-    this.annotationsQueued = true;
-    this.enqueue(async () => {
-      try { await this.waitReady(); await this.refreshAnnotations(); }
-      finally {
-        this.annotationsQueued = false;
-        if (this.annotationsAgain) { this.annotationsAgain = false; this.scheduleAnnotationsRefresh(); }
-      }
+    void this.waitReady().then(() => this.refreshAnnotations()).catch(error => { if (!this.disposed) this.annotationWarning(error); });
+  }
+  sourceContext(id) {
+    const displayed = this.lastPayload?.snapshot || this.snapshot, diff = this.lastPayload?.diff;
+    const live = displayed?.nodes.find(n => n.id === id);
+    const node = live || diff?.base.nodes.find(n => n.id === id);
+    const ref = live ? (this.lastPayload?.readonly ? diff?.target_commit || diff?.target_ref : undefined)
+      : diff?.base_commit || diff?.base_ref || this.base;
+    return { node, ref };
+  }
+  async sourcePreview(message) {
+    if (this.disposed || !this.host.authorized()) throw new Error('Project authorization is required to read sources.');
+    if (message.renderToken !== this.renderSequence) throw new Error('Source view changed. Open the source again in the current graph.');
+    const context = this.sourceContext(message.id);
+    if (context.node?.type !== 'implementation') throw new Error('Select an implementation source.');
+    if (!Number.isSafeInteger(message.requestId) || message.requestId < 1 || typeof message.reference !== 'string' ||
+        Buffer.byteLength(message.reference, 'utf8') > 65536) throw new Error('Invalid source request.');
+    const reference = JSON.parse(message.reference), sequence = this.sourceSequence = (this.sourceSequence || 0) + 1;
+    this.sourcePending?.resolve();
+    return new Promise((resolve, reject) => {
+      this.sourcePending = { id: message.id, requestId: message.requestId, context: structuredClone(context), reference, sequence, resolve, reject };
+      if (!this.sourceRunning) void this.drainSources();
     });
+  }
+  async drainSources() {
+    this.sourceRunning = true;
+    while (this.sourcePending && !this.disposed) {
+      const request = this.sourcePending; this.sourcePending = undefined;
+      const current = () => !this.disposed && request.sequence === this.sourceSequence &&
+        isDeepStrictEqual(request.context, this.sourceContext(request.id));
+      try {
+        if (current()) {
+          const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'source-view', reference: request.reference,
+            ...(request.context.ref ? { ref: request.context.ref } : {}) }));
+          if (current()) await this.post({ type: 'source-preview', requestId: request.requestId, ...response.result });
+        }
+        request.resolve();
+      } catch (error) { if (current()) request.reject(error); else request.resolve(); }
+    }
+    this.sourceRunning = false;
   }
   async display(loaded, force, selectedId, automatic = false, provisional = false) {
     if (this.disposed) return;
@@ -209,7 +257,7 @@ class GraphSession {
   }
   configurePolling(interval = 0) {
     interval = pollInterval(interval); clearInterval(this.pollTimer); this.pollTimer = undefined;
-    if (interval && !this.disposed) this.pollTimer = setInterval(() => this.target ? this.requestAnnotationsRefresh() : this.requestRefresh(), interval);
+    if (interval && !this.disposed) this.pollTimer = setInterval(() => { this.requestRefresh(); this.requestAnnotationsRefresh(); }, interval);
   }
   scheduleRefresh() {
     if (this.disposed || this.target) return;
@@ -259,17 +307,12 @@ class GraphSession {
       } finally { await this.refreshAnnotations(); }
       return;
     }
-    if (['source-view', 'source-capture'].includes(message.type)) {
+    if (message.type === 'source-view') return this.sourcePreview(message);
+    if (message.type === 'source-capture') {
       if (!this.host.authorized()) throw new Error('Project authorization is required to read sources.');
       const nodes = new Map([...(this.lastPayload?.diff?.base.nodes || []), ...(this.snapshot?.nodes || [])].map(n => [n.id, n]));
       const node = nodes.get(message.id);
       if (!node || node.type !== 'implementation') throw new Error('Select an implementation source.');
-      if (message.type === 'source-view') {
-        if (typeof message.reference !== 'string' || Buffer.byteLength(message.reference, 'utf8') > 65536) throw new Error('Invalid source reference.');
-        const ref = this.snapshot.nodes.some(n => n.id === message.id) ? this.target : this.base;
-        const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'source-view', reference: JSON.parse(message.reference), ...(ref ? { ref } : {}) }));
-        await this.post({ type: 'source-preview', ...response.result }); return;
-      }
       if (this.target || !this.snapshot.nodes.some(n => n.id === message.id) || this.sourceInvalid) throw new Error('Capture requires a live editable implementation.');
       if (this.host.document && message.id !== this.host.document.state().nodeId) throw new Error('Capture belongs to the bound node.');
       if (typeof message.path !== 'string' || message.path.length > 4096 || !Array.isArray(message.ranges) || message.ranges.length > 64 || message.ranges.some(r => typeof r !== 'string' || !/^\d+:\d+$/.test(r)) || !['strict', 'expanding'].includes(message.mode)) throw new Error('Invalid source capture parameters.');
@@ -343,6 +386,7 @@ class GraphSession {
   }
   dispose() {
     this.disposed = true; clearTimeout(this.refreshTimer); clearTimeout(this.annotationTimer); clearInterval(this.pollTimer); clearTimeout(this.retryTimer);
+    this.sourcePending?.resolve(); this.sourcePending = undefined;
     this.reads?.dispose(); this.retryResolve?.(); this.resolveReady(); this.listeners.forEach(f => f());
   }
 }

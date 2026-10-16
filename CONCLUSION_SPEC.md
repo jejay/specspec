@@ -146,6 +146,15 @@ reloads retain a marked last valid graph with diagnostics. Same-node overwrites
 require confirmation. Explicit Refresh and configurable
 polling (default 0/off) remain. Watcher delivery depends on the filesystem.
 
+Project-scoped bounded API channels reuse interpreter lifetime, with a separately
+warmed read-only source channel. Each API-6 frame performs current validation and
+file/ref/index reads. Ordinary CLI commands retain one-shot execution. Closing or
+reconfiguring a project disposes its channels; failed mutations receive no automatic
+replay. Preview replies match the published render and displayed commit. Native
+bootstrap retries supersession before editor attachment. Both hosts share
+asynchronous HEAD/ref watching; graph, Spotlight and canonical text notifications
+coalesce independently of index stat-cache and Git-extension status churn.
+
 ## Shared visual graph
 
 Use one local nonce-protected DOM/SVG renderer/template and shared guarded session.
@@ -252,7 +261,8 @@ ownership; the graph remains binding. Preserve supplied art exactly and narrowly
 scope generated local settings. Validate current graph/context/sources, exact staged
 root/Gantt indexes, all maintained example refs, actual receipts and runnable models.
 Run Python, shared UI and host-adapter suites plus scoped real-browser/host checks.
-Shared real-host geometry uses reduced motion/unthrottled isolated Electron; VS Code
-has 160s/160s phase guards and a tested 360s outer budget. Individual operation
+Shared real-host geometry uses reduced motion and unthrottled isolated hosts. The
+shared UI allowance is 300s and native lifecycle 160s, with 400s Electron and 500s
+VS Code aggregate guards. Individual operation
 assertions/deadlines and production camera behavior retain their own contracts.
 Evidence informs review within its dispatched platform/theme/fixture scope.

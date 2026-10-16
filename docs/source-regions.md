@@ -132,6 +132,11 @@ remain normal explicit actions. VS Code applies native document edits rather tha
 bypassing its dirty buffer; Electron retains managed saves. Source code is inserted
 as text, never executable project HTML.
 
+Preview requests use an independent read-only API channel, bound to the published
+view and displayed comparison commit. Background synchronization keeps its own work;
+a newer click, navigation or revision adoption invalidates obsolete preview replies.
+The host coalesces source work to one active request and the newest pending request.
+
 ## Limits
 
 - Text is UTF-8/ASCII (UTF-8 BOM accepted); CRLF/LF compare by logical lines. Binary,

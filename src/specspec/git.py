@@ -79,9 +79,12 @@ def git_snapshot(
         ).split(b"\0")
     else:
         # Resolve refs first; never pass user input as an option to ls-tree.
-        if allow_empty and ref == "HEAD" and unborn_head(repository):
-            return snapshot_from_files(root, {}, allow_empty=True)
-        commit = resolve_commit(repository, str(ref))
+        try:
+            commit = resolve_commit(repository, str(ref))
+        except SpecError:
+            if allow_empty and ref == "HEAD" and unborn_head(repository):
+                return snapshot_from_files(root, {}, allow_empty=True)
+            raise
         records = run_git(
             repository, "--literal-pathspecs", "ls-tree", "-r", "-z", commit, "--", prefix
         ).split(b"\0")

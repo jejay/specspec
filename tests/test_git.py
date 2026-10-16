@@ -90,6 +90,43 @@ def test_empty_baseline(workspace):
     assert semantic_diff(base, load_snapshot(root))["changes"][0]["kind"] == "added"
 
 
+def test_resolved_head_skips_unborn_probes_and_reads_fresh_commits(workspace, monkeypatch):
+    from specspec import git as backend
+
+    root, manifesto = workspace
+    setup_repository(root)
+    calls, original = [], backend.run_git
+
+    def traced(root, *args):
+        calls.append(args)
+        return original(root, *args)
+
+    monkeypatch.setattr(backend, "run_git", traced)
+    first = git_snapshot(root, "HEAD", allow_empty=True)
+    assert first.valid and first.nodes
+    assert not any(args[0] in {"symbolic-ref", "show-ref"} for args in calls)
+    update_node(root, manifesto, body="# Changed HEAD\n")
+    git(root, "add", "_specspec")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Move HEAD")
+    second = git_snapshot(root, "HEAD", allow_empty=True)
+    assert second.commit != first.commit and second.nodes[0].body == "# Changed HEAD\n"
+
+
+def test_unresolved_head_is_empty_only_for_a_genuinely_unborn_branch(workspace):
+    import pytest
+
+    from specspec.model import SpecError
+
+    root, _ = workspace
+    git(root, "init")
+    assert git_snapshot(root, "HEAD", allow_empty=True).nodes == []
+    (root / ".git/HEAD").write_text("a" * 40 + "\n", encoding="ascii")
+    with pytest.raises(SpecError):
+        git_snapshot(root, "HEAD", allow_empty=True)
+    with pytest.raises(SpecError):
+        git_snapshot(root, "missing-revision", allow_empty=True)
+
+
 def test_owner_configured_hook_calls_current_exact_index_check(workspace):
     root, _ = workspace
     setup_repository(root)
