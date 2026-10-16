@@ -8,8 +8,9 @@ parents:
 ---
 # Use shared tints, an 80-column form and bold Git corners
 
-Share normal theme text and card tint rules across types: 15% accent at rest and
-24% on hover. Share high-contrast resting rules. The distance/type manifesto accent
+Share normal theme text and actual-size card tint rules across types: 15% accent
+at rest and 24% on hover. Zoomed-out views follow the overview-fill conclusion.
+Share high-contrast resting rules. The distance/type manifesto accent
 is `#d3d3d3`; its hovered border is white. Other colored borders and revision-colored
 manifestos use the hue-emphasis conclusion.
 

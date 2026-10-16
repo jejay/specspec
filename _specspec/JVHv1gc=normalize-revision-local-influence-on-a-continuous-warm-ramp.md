@@ -32,4 +32,5 @@ unions. Build raw count ranges lazily once per revision metrics instance and sha
 them across all four influence modes. Ordinary distance/type/revision views retain
 their existing metric cost. Persist each mode separately as view state. Mode switches
 preserve canonical records, native forms/caret/drafts, camera, positions, routing
-and independent Git and spotlight cues. Legends explain domains, scaling and ties.
+and independent Git and spotlight cues. Legends show the manifesto swatch and
+gradient endpoints. The tutorial explains domains, normalization and ties.

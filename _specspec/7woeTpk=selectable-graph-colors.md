@@ -16,5 +16,6 @@ linear and logarithmic views of unique descendant counts.
 
 Keep semantic fills, Git titles/letters, relationship patterns and source context
 independently understandable. Derive distances and influence per revision and retain
-color preferences as presentation state. The legend supplies path/scaling meaning
-while cards retain downstream and Git cues.
+color preferences as presentation state. The legend pairs actual colors with
+concise labels and endpoints; the tutorial explains paths and scaling. Cards retain
+downstream and Git cues.

@@ -8,7 +8,7 @@ parents:
 ---
 # Separate semantic fills, Git accents and boundary routing
 
-Use theme-compatible tinted cards with explanatory color legends and independent
+Use theme-compatible camera-aware card fills with concise color legends and independent
 Git headline/corner labels, relationship patterns and source-impact text. Persist
 presentation choices per view. Full records retain canonical identity and binding
 text; graph geometry and color metrics are derived state.

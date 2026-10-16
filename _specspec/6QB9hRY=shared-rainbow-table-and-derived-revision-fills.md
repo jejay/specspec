@@ -19,5 +19,6 @@ Missing comparison is explicitly labeled and neutral; new/orphaned drafts have
 neutral draft presentation. Compact/expanded historical and manifesto cards use
 the selected kind too. The neutral-manifesto white-border rule applies in distance/
 type modes; revision cards use hue-emphasizing hover. Title/corner theme tokens and
-edge colors/patterns retain independent meaning. Legends explain every mode/cycle.
+edge colors/patterns retain independent meaning. Legends label actual colors; the
+tutorial explains modes and cycles.
 Mode switches keep form/draft/caret, native DOM, geometry and camera unchanged.
