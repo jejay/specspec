@@ -228,7 +228,7 @@
   }
 
   const EDGE_LEAD = 64, MIN_STROKE_PIXELS = 1.6, MIN_ARROW_PIXELS = 6;
-  const BASE_ANNOTATION_RING_WIDTH = 5;
+  const BASE_ANNOTATION_RING_WIDTH = 5, MIN_ANNOTATION_RING_PIXELS = 2;
   const DETAIL_CONTENT_WIDTH = DETAIL_WIDTH - 38; // Existing 18px padding + 1px side borders.
   const manifestoDiameter = (width, height) => Math.ceil(Math.hypot(width, height) + 48);
 
@@ -325,11 +325,11 @@
   function cameraScale(scale) {
     return Number.isFinite(scale) && scale > 0 ? scale : 1;
   }
-  function cameraScaledStrokeWidth(scale, baseWorldWidth) {
-    return Math.max(baseWorldWidth, MIN_STROKE_PIXELS / cameraScale(scale));
+  function cameraScaledStrokeWidth(scale, baseWorldWidth, minimumScreenWidth = MIN_STROKE_PIXELS) {
+    return Math.max(baseWorldWidth, minimumScreenWidth / cameraScale(scale));
   }
   function annotationRingWidth(scale = 1) {
-    return cameraScaledStrokeWidth(scale, BASE_ANNOTATION_RING_WIDTH);
+    return cameraScaledStrokeWidth(scale, BASE_ANNOTATION_RING_WIDTH, MIN_ANNOTATION_RING_PIXELS);
   }
   function scaleProgress(scale, start, end) {
     const k = cameraScale(scale);
@@ -355,7 +355,7 @@
   }
 
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
-    EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
+    EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, MIN_ANNOTATION_RING_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
     annotationRingWidth,
     INFLUENCE_COLORS, INFLUENCE_MODES, influenceColor,
     sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, neutralEdgeStrength, nodeFillStrength, edgeAppearance };

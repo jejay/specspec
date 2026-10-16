@@ -6,6 +6,14 @@ parents:
 - rvz48KY=
 - RY5LFw8=
 sources:
+- path: graph-ui-common/media/graph-model.js
+  blob: 20cb229299a4b4fe1a99878679b59da4cb9890bd
+  mode: strict
+  ranges:
+  - - 325
+    - 333
+  - - 345
+    - 354
 - path: docs/own-spec.md
 - path: docs/spotlights.md
 - path: electron/main.cjs
@@ -25,14 +33,6 @@ sources:
 - path: graph-ui-common/view.cjs
 - path: vscode/src/extension.ts
 - path: vscode/test/extension.test.cjs
-- path: graph-ui-common/media/graph-model.js
-  blob: ae602d9c21bc193bbce9f91b568c1c283014143e
-  mode: strict
-  ranges:
-  - - 325
-    - 333
-  - - 345
-    - 354
 ---
 # Render a spotlight dropdown with whole-record rings and framing
 
@@ -52,9 +52,10 @@ with a zero-count baseline. Counts/New cues stay in renderer memory. Arrivals
 preserve editing focus/caret, camera, selection, dropdown choice and older
 entries. A version-aware editable highlight map and dropdown choice remain per-
 view preferences. Exact members paint an equal-inset outline with width
-`max(5, 1.6 / k)` world units at camera scale `k`; its negative offset keeps the
+`max(5, 2 / k)` world units at camera scale `k`; its negative offset keeps the
 ring inside the unchanged card outline. This gives a 5-unit actual-size width and
-the connection stroke's 1.6 CSS-pixel minimum when zoomed out, separate from
+a 2 CSS-pixel minimum when zoomed out, using the same compensation logic as the
+connection stroke with a ring-specific pixel floor. It remains separate from
 keyboard focus and fills. Flush uses host confirmation and a locked reviewed-list
 check.
 

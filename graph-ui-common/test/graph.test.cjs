@@ -376,7 +376,7 @@ test('spotlight rings use camera-scaled equal inset paint with independent focus
   const width = parseFloat($('cards').style.getPropertyValue('--annotation-ring-width'));
   assert.equal(scale, 0.12);
   assert.ok(width > 5);
-  assert.ok(width * scale >= model.MIN_STROKE_PIXELS - 1e-9);
+  assert.ok(width * scale >= model.MIN_ANNOTATION_RING_PIXELS - 1e-9);
   assert.equal(parseFloat($('cards').style.getPropertyValue('--annotation-ring-offset')), -width);
 });
 
