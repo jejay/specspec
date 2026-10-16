@@ -15,6 +15,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #legend { display: flex; flex-wrap: wrap; gap: 12px; padding: 8px 14px; font-size: 12px; }
 #legend > span { display: inline-flex; align-items: center; gap: 5px; }
 #legend i { width: 10px; height: 10px; border-radius: 3px; }
+#legend i.influence-gradient { width: 128px; }
 .legend-help { color: var(--vscode-descriptionForeground); }
 #message { white-space: pre-wrap; padding: 0 14px; margin: 0; font-size: 12px; color: var(--vscode-editorWarning-foreground); }
 #message:not(:empty) { padding-bottom: 10px; }

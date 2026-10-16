@@ -185,6 +185,20 @@ map zero-based Requirement 4, Implementation 0, Added 3, M/R 1, D 6 and source-o
 One hop starts the table; distance repeats every seven. Revision mode colors the
 manifesto too; distance/type keep its gray accent.
 
+[Influence colors](../_specspec/zOX2L9c=color-absolute-and-relative-influence-continuously.md)
+count unique descendants at all depths. The [normalization choice](../_specspec/JVHv1gc=normalize-revision-local-influence-on-a-continuous-warm-ramp.md)
+uses zero to the highest non-manifesto count for Absolute influence, and cohort
+minimum to maximum for Relative influence, grouping by **maximum** manifesto
+distance. [Linear and logarithmic choices](../_specspec/HlpFtiA=keep-linear-and-logarithmic-influence-choices-together.md)
+remain available together. Log Absolute Influence uses `log1p(c)/log1p(M)`;
+Log Relative Influence uses `(log1p(c)-log1p(lo))/(log1p(hi)-log1p(lo))`, transforming
+raw counts before subtracting the cohort minimum. The +1 defines zero without
+changing the raw descendant count. All four modes share a continuous green `#4df884` → yellow `#e8d62c` → red `#ba2208` sRGB
+ramp is separate from the seven swatches. Tied groups use green; the manifesto
+stays gray. Full target/base revisions determine scales, never visible subsets.
+[The influence realization](../_specspec/8Slagkc=render-continuous-absolute-and-cohort-relative-influence.md)
+maps lazy metric ranges, compact/expanded paint, gradient legends and verification.
+
 Cards use shared 15% resting/24% hover tint and ordinary theme text.
 [Hue-emphasizing hover](../_specspec/bLBNk80=hue-preserving-hover-lightness-and-chroma.md)
 increases colored border/incident ink lightness and chroma. The neutral manifesto's

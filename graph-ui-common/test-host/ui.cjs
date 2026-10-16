@@ -111,8 +111,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
     assert.equal(await evaluate(`document.getElementById('accept')`), null);
-    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'type', 'git-revision']);
-    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type', 'Git/Revision Status']);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'absolute-influence', 'relative-influence', 'log-absolute-influence', 'log-relative-influence', 'type', 'git-revision']);
+    assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Absolute influence', 'Relative influence', 'Log Absolute Influence', 'Log Relative Influence', 'Node type', 'Git/Revision Status']);
     assert.equal(await evaluate(`document.querySelector('.distance-badge')`), null);
     assert.ok(await evaluate(`[...document.querySelectorAll('#cards .card')].every(c=>c.offsetWidth===264&&c.offsetHeight===(c.classList.contains('manifesto')?264:112)&&c.scrollHeight<=c.clientHeight+1)`), 'Ordinary compact cards stay short; the manifesto is square and all content fits.');
     assert.equal(await evaluate(`getComputedStyle(document.getElementById('graph')).willChange`), 'auto');
@@ -741,6 +741,42 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await screenshot('distance-maximum');
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     await screenshot('distance-minimum');
+    const influenceExpected=await evaluate(`(() => {
+      const all=[...document.querySelectorAll('#cards .card')],model=window.SpecSpecGraph;
+      function reference(base){
+        const cards=all.filter(c=>!c.classList.contains(base?'added':'removed')),ids=new Set(cards.map(c=>c.dataset.nodeId));
+        const links=[...document.querySelectorAll(base?'#edges .link:not(.added)':'#edges .link:not(.removed)')]
+          .map(p=>[p.dataset.parent,p.dataset.child]).filter(([a,b])=>ids.has(a)&&ids.has(b));
+        const counts=new Map(cards.map(c=>{const id=c.dataset.nodeId,seen=new Set([id]),stack=[id];
+          while(stack.length){const current=stack.pop();for(const [a,b] of links)if(a===current&&!seen.has(b)){seen.add(b);stack.push(b);}}
+          return [id,seen.size-1];}));
+        const root=cards.find(c=>c.classList.contains('manifesto')).dataset.nodeId,depths=new Map([[root,0]]);
+        for(let round=0;round<cards.length;round++)for(const id of ids){if(depths.has(id))continue;const parents=links.filter(([,b])=>b===id).map(([a])=>a);
+          if(parents.length&&parents.every(p=>depths.has(p)))depths.set(id,1+Math.max(...parents.map(p=>depths.get(p))));}
+        const maximum=Math.max(0,...[...ids].filter(id=>id!==root).map(id=>counts.get(id)));
+        return new Map([...ids].map(id=>{const peers=[...ids].filter(p=>depths.get(p)===depths.get(id)).map(p=>counts.get(p));
+          const lo=Math.min(...peers),hi=Math.max(...peers),logCount=Math.log(counts.get(id)+1);
+          const logMaximum=Math.log(maximum+1),logLo=Math.log(lo+1),logHi=Math.log(hi+1);
+          return [id,{'absolute-influence':id===root?'#d3d3d3':model.influenceColor(maximum?counts.get(id)/maximum:0),
+            'relative-influence':id===root?'#d3d3d3':model.influenceColor(hi>lo?(counts.get(id)-lo)/(hi-lo):0),
+            'log-absolute-influence':id===root?'#d3d3d3':model.influenceColor(logMaximum?logCount/logMaximum:0),
+            'log-relative-influence':id===root?'#d3d3d3':model.influenceColor(logHi>logLo?(logCount-logLo)/(logHi-logLo):0)}];}));
+      }
+      const target=reference(false),base=reference(true);
+      return Object.fromEntries(all.map(c=>[c.dataset.nodeId,(c.classList.contains('removed')?base:target).get(c.dataset.nodeId)]));
+    })()`);
+    for(const mode of ['absolute-influence','relative-influence','log-absolute-influence','log-relative-influence']) {
+      await evaluate(`document.getElementById('color-mode').value=${JSON.stringify(mode)};document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
+      assert.ok(await evaluate(`(() => {const expected=${JSON.stringify(influenceExpected)},mode=${JSON.stringify(mode)};
+        const gradient=document.querySelector('#legend .influence-gradient');
+        return [...document.querySelectorAll('#cards .card')].every(c=>c.style.getPropertyValue('--node-accent')===expected[c.dataset.nodeId][mode])
+          &&getComputedStyle(gradient).backgroundImage.includes('linear-gradient')&&gradient.offsetWidth>=100
+          &&document.getElementById('legend').textContent.includes('Unique descendants');})()`),'Influence colors use independent full-revision descendant/cohort calculations and a painted continuous legend.');
+      assert.equal(await evaluate(`window.SpecSpecHost.getState().colorMode`),mode);
+      assert.equal(await positions(),paletteWorld);assert.deepEqual(await camera(),paletteCamera);
+      await screenshot(mode+'-colors');
+      console.log(`${mode}: independent revision-local counts/scaling, continuous gradient, preference and unchanged world/camera passed.`);
+    }
     const statusWorld=await positions(),statusCamera=await camera();
     await evaluate(`document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.equal(await positions(),statusWorld);assert.deepEqual(await camera(),statusCamera);
@@ -761,7 +797,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and eight fill modes with linear/log absolute/cohort-relative influence probes and revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

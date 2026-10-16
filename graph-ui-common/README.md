@@ -36,6 +36,15 @@ independent of public Spotlights naming. Neutral curve/head ink darkens continuo
 from 70% at actual size to 35% at minimum zoom; diff and hover inks stay distinct.
 See [spotlight semantics](../docs/spotlights.md).
 
+The eight Color by modes include continuous Absolute influence, Relative influence,
+Log Absolute Influence and Log Relative Influence. All count unique all-depth
+descendants; absolute uses zero to the non-root maximum, relative uses cohort
+minimum/maximum at equal longest distance. Log modes transform raw counts with
+`log1p` before normalization, and linear modes remain available. The shared model
+lazily caches each revision's raw domains for all four choices. A warm green/yellow/red sRGB ramp and gradient
+legend stay separate from the exact seven-color distance/type/status table. Full
+target/base context survives focus, and ties use green while the manifesto stays gray.
+
 State must be project-scoped and per-view when a host supports multiple tabs. A host must not expose arbitrary CLI or filesystem
 operations to project content. Future agent integration is a seam, not an implemented
 Claude Code/Codex connector.

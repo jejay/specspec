@@ -1,7 +1,8 @@
 # Windows installed-host smoke investigation
 
-The complete installed Electron and VS Code suites pass on the unattended Windows
-laptop. These are local, disposable-profile runs, not Linux/macOS or remote-client
+The `c2a93b4` baseline's complete installed Electron and VS Code suites passed on
+the unattended Windows laptop. The influence-mode follow-ups below separate
+successful feature probes from later full-suite failures and verification limits. These are local, disposable-profile runs, not Linux/macOS or remote-client
 qualification. The local environment uses Python 3.14.5 and Node 24.21.0.
 Production operation deadlines, renderer geometry and default-off
 polling remain unchanged.
@@ -80,7 +81,7 @@ Outer guards cover the sum of their phases. These are aggregate test ceilings,
 not per-operation or product performance guarantees. CDP, source, pose, watcher,
 form, native request and production CLI deadlines retain their prior values.
 
-## Complete-run evidence
+## Complete-run evidence for the c2a93b4 baseline
 
 Run the installed suites sequentially on a shared laptop so competing windows and
 process startup do not confound diagnosis:
@@ -115,3 +116,62 @@ opts into loading diagnostics only inside its disposable profile. Tests do not
 change real user settings, install repository hooks, reset manual clones or require
 UAC elevation. Actual macOS Command+Shift, Linux desktop and remote transport runs
 remain separately scoped evidence.
+
+## Influence-mode follow-up
+
+Both installed hosts pass the Absolute influence and Relative influence probes:
+independent full-revision descendant traversals and longest-path cohorts agree
+with every compact card's accent, the continuous gradient is actually painted,
+preferences persist, and the world positions/camera remain unchanged. The current
+full VS Code suite exits zero in 458.39 seconds, including its native lifecycle.
+Its shared UI phase reports 312,159 ms. Electron's full shared UI phase succeeds
+in 362,237 ms, including both new modes, all backchannels, cascade ghosts and
+invalid-file recovery. Persisted draft/21-shot reload and the zero-arrival baseline
+also pass before the subsequent comparison-dialog assertion.
+
+The full Electron rerun exits one at the existing `Compare revisions` dialog-open
+assertion following a fixed 200 ms wait. Its current full-suite success is therefore
+unconfirmed. These observations do not establish the unique cause of that later
+failure. No aggregate or individual deadlines were changed for the new modes.
+Logs, retained diagnostic profile/repository paths and serial-run exit/timing data
+are in `.specspec-local/influence/`.
+
+The linear-only follow-up completed 273 Python, 191 shared UI, 42 VS Code adapter
+and 9 Electron tests; the full Gantt history/receipts/source verification also passed.
+Two earlier foreground command attempts were interrupted by their tool-level
+allowances at different Python-test positions; a closed-stdin diagnostic run then
+completed all 273 tests in 163.29 seconds. No unique cause of those interruptions
+was established, and they are not counted as completed runs.
+
+## Permanent linear and logarithmic influence
+
+All four influence choices are part of the specification. Linear and logarithmic
+modes share raw unique-descendant ranges, revision-local longest-path cohorts and
+the same continuous warm palette. Logarithmic normalization transforms raw counts
+with `log1p` before subtracting the transformed minimum. Tests cover positive cohort
+minima, zero/tied groups, generated closure oracles, independent base/target context,
+all four preferences and preservation of form/caret/camera/world state.
+
+The completed verification passes 273 Python, 193 shared UI, 42 VS Code adapter and
+9 Electron tests, Ruff lint/format, both saved source/graph checks and the full
+Gantt history/receipt/source verification. Both installed Windows hosts pass each
+of the four explicit influence probes: expected accents from independent graph and
+scaling calculations, actual gradient paint, selection persistence and unchanged
+world/camera. Their logs name each passed mode separately.
+
+Broader current installed-suite results remain bounded:
+
+| Run | Result beyond the four passed influence probes |
+| --- | --- |
+| Electron, 420.66 s including build/fixture | The existing 400,000 ms aggregate watchdog ends the run after watcher/invalid-file recovery, before final reload/revision qualification. |
+| VS Code, 231.33 s including build/fixture | A later expanded-manifesto Spotlight backchannel check finds a changed camera pose, after all four influence probes passed. |
+
+The VS Code camera assertion is at `checkSpotlight`, not the influence-mode
+world/camera assertions. No unique cause of that later pose change was established;
+the all-eight-mode installed/native/reload qualification is not claimed complete.
+The Electron comparison check now polls its actual asynchronous dialog-open state
+using the adjacent reload checks' 30-second readiness allowance instead of a fixed
+200 ms pause. The current watchdog-ended run does not confirm that later check.
+No aggregate guards, production deadlines or other individual test limits were
+increased. Preserved current logs, exit records and failed profile/repository paths
+are in `.specspec-local/influence/permanent/`.

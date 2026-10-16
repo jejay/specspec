@@ -44,8 +44,10 @@ async function run() {
       for(let i=0;i<300;i++){if(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length===${retained}`))break;await delay(100);}
       assert.equal(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length`),retained,'Reload republishes the complete retained spotlight list.');
       assert.ok(await evaluate(`document.getElementById('spotlights-count').hidden`),'Existing spotlights form the new renderer baseline, not unread arrivals.');
-      await evaluate(`document.getElementById('discard').click();document.getElementById('compare').click()`);await delay(200);
-      assert.ok(await evaluate(`document.querySelector('dialog[aria-label="Compare revisions"]').open`));
+      await evaluate(`document.getElementById('discard').click();document.getElementById('compare').click()`);
+      const compareOpen = `Boolean(document.querySelector('dialog[aria-label="Compare revisions"]')?.open)`;
+      for(let i=0;i<300;i++){if(await evaluate(compareOpen))break;await delay(100);}
+      assert.ok(await evaluate(compareOpen),'The asynchronously requested comparison dialog opens within reload readiness.');
       // Exercise a real redirect in the independent history, not HEAD against itself.
       await evaluate(`const inputs=document.querySelectorAll('dialog input');inputs[0].value='stage/02-code';inputs[1].value='stage/03-spec';document.querySelector('dialog button[value="apply"]').click()`);
       for(let i=0;i<500;i++){if(await evaluate(`document.getElementById('revision').textContent.includes('read-only')`))break;await delay(100);}

@@ -38,7 +38,9 @@
   const parentsEditable = () => editable() && !pending && formNodeType() !== 'manifesto';
   const contextFor = id => currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
   const snapshotName = id => currentNodeById(id) ? 'target' : 'base';
-  const distanceFor = id => (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
+  const colorValueFor = id => model.INFLUENCE_MODES.includes(colorMode)
+    ? contextFor(id)?.influenceRatio(id, colorMode)
+    : (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
 
   function saveDraft() {
     host.setState({ selected, view, colorMode, cameras: { ...cameras }, ...annotations.presentation(), dirty, creating, originalNode, draft: dirty || creating ? {
@@ -187,20 +189,34 @@
   const revisionKind = kind => kind || (state?.diff ? 'unchanged' : 'uncompared');
 
   function drawLegend() {
+    const absoluteInfluence = colorMode.endsWith('absolute-influence');
+    const relativeInfluence = colorMode.endsWith('relative-influence');
+    const influenceScale = colorMode.startsWith('log-') ? 'log(influence + 1), normalized' : 'linear';
     $('color-mode').value = colorMode;
     $('legend').replaceChildren();
     const entries = colorMode === 'git-revision'
       ? Object.entries(model.REVISION_COLORS).filter(([kind]) => state.diff ? kind !== 'uncompared' : ['uncompared', 'draft'].includes(kind))
         .map(([kind, color]) => [model.REVISION_LABELS[kind], color])
       : colorMode === 'type' ? Object.entries(model.TYPE_COLORS)
+      : model.INFLUENCE_MODES.includes(colorMode) ? [['Manifesto · not scaled', model.TYPE_COLORS.manifesto]]
       : [['Manifesto · 0 hops', model.TYPE_COLORS.manifesto],
         ...[...new Set([...graph.nodes.values()].filter(node => node.type !== 'manifesto')
-          .map(node => distanceFor(node.id)).filter(Number.isInteger))]
+          .map(node => colorValueFor(node.id)).filter(Number.isInteger))]
           .sort((a, b) => a - b).map(depth => [`${depth} hop${depth === 1 ? '' : 's'}`, model.color('distance', {}, depth)])];
     for (const [label, color] of entries) {
       const item = document.createElement('span'), swatch = document.createElement('i');
       swatch.style.backgroundColor = color; item.append(swatch, document.createTextNode(label));
       $('legend').append(item);
+    }
+    if (model.INFLUENCE_MODES.includes(colorMode)) {
+      const scale = document.createElement('span'), gradient = document.createElement('i');
+      gradient.className = 'influence-gradient';
+      gradient.style.backgroundImage = `linear-gradient(to right in srgb, ${[...model.INFLUENCE_COLORS].reverse().join(', ')})`;
+      gradient.setAttribute('role', 'img');
+      gradient.setAttribute('aria-label', 'Continuous influence: red highest, yellow intermediate, green lowest');
+      scale.append(document.createTextNode(absoluteInfluence ? 'Highest non-manifesto' : 'Group maximum'),
+        gradient, document.createTextNode(absoluteInfluence ? '0 descendants' : 'Group minimum'));
+      $('legend').append(scale);
     }
     const explanation = document.createElement('span');
     explanation.className = 'legend-help';
@@ -208,6 +224,8 @@
       ? state.diff ? 'Relative to selected comparison · D means a deleted file; source impact is not M'
         : 'No revision comparison available · neutral fills'
       : colorMode === 'type' ? 'Existing node types · not review stages'
+      : absoluteInfluence ? `Unique descendants at all depths · ${influenceScale} 0 to highest non-manifesto count per revision · red → yellow → green, strongest to weakest · all-zero ranges use green`
+      : relativeInfluence ? `Unique descendants at all depths · ${influenceScale} within groups of equal maximum distance to manifesto per revision · red → yellow → green, strongest to weakest · tied groups use green`
       : `${colorMode === 'max-distance' ? 'Longest' : 'Shortest'} directed path from manifesto · violet → red, repeats every ${model.RAINBOW_COLORS.length} hops · not a confidence score`;
     $('legend').append(explanation);
   }
@@ -229,8 +247,9 @@
     card.dataset.minDistance = context?.minDistances.get(id) ?? 'unknown';
     card.dataset.maxDistance = context?.maxDistances.get(id) ?? 'unknown';
     card.classList.toggle('revision-colored', colorMode === 'git-revision');
-    card.style.setProperty('--node-accent', model.color(colorMode, node, distanceFor(id), revisionKind(kind)));
+    card.style.setProperty('--node-accent', model.color(colorMode, node, colorValueFor(id), revisionKind(kind)));
     card.title = `${id}\n${node.path}\n${snapshotName(id)} revision context`;
+    if (model.INFLUENCE_MODES.includes(colorMode)) card.title += `\nInfluence: ${context?.descendantCount(id) ?? 'unknown'} unique descendants`;
     const heading = document.createElement('strong'); heading.textContent = title(node);
     const metadata = document.createElement('small'); metadata.textContent = `${description(node)} · ${id}`;
     const badges = document.createElement('span'); badges.className = 'badges';
@@ -273,7 +292,8 @@
       card.className = `card expanded ${creating ? $('node-type').value : node?.type || 'requirement'} ${kinds.get(selected) || ''}`;
       card.dataset.nodeId = focalId;
       card.classList.toggle('revision-colored', colorMode === 'git-revision');
-      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value }, distanceFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
+      card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value },
+        draftCard() && model.INFLUENCE_MODES.includes(colorMode) ? undefined : colorValueFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
     }
     annotations.changed();

@@ -59,3 +59,7 @@ The real-host cascade fixture selects live manifesto siblings present in its HEA
 excluding uncommitted setup additions. Its Git wrapper validates the exact staged
 graph before every fixture commit. Deterministic helper coverage places an
 uncommitted root child first and checks that a retained outside parent is chosen.
+
+The Electron reload/revision probe polls for the asynchronously requested comparison
+dialog's actual open state within its existing reload readiness allowance before
+applying stage refs. Its substantive revision and workspace assertions remain intact.

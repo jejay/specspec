@@ -12,11 +12,15 @@
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
   // Exact user-selected playground output: seven colors, L=.69, C=.12, H=320..20.
   const RAINBOW_COLORS = ['#bc82c9', '#7e97e6', '#1facce', '#37b390', '#92a64b', '#ca8d3e', '#dc7b7c'];
+  // Continuous warm, Turbo-like segment: low influence green, midpoint yellow, high red.
+  const INFLUENCE_COLORS = ['#4df884', '#e8d62c', '#ba2208'];
+  const INFLUENCE_MODES = ['absolute-influence', 'relative-influence', 'log-absolute-influence', 'log-relative-influence'];
+  const INFLUENCE_RGB = INFLUENCE_COLORS.map(hex => [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16)));
   const NEUTRAL_COLOR = '#929baa';
   const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[4], implementation: RAINBOW_COLORS[0] };
   const REVISION_COLORS = { added: RAINBOW_COLORS[3], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[6], renamed: RAINBOW_COLORS[1], 'source-changed': RAINBOW_COLORS[5], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
   const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Unchanged', uncompared: 'No comparison', draft: 'Unsaved draft' };
-  const COLOR_MODES = ['distance', 'max-distance', 'type', 'git-revision'];
+  const COLOR_MODES = ['distance', 'max-distance', ...INFLUENCE_MODES, 'type', 'git-revision'];
 
   function sameNode(left, right) {
     if ([left, right].some(node => !node || typeof node.body !== 'string'
@@ -120,15 +124,47 @@
       }
       return descendantCounts.get(id);
     }
-    return { minDistances, maxDistances, children, descendantCount };
+    // Influence needs all non-root counts, but ordinary modes need not pay for
+    // that traversal. Cache both normalization domains only on first use.
+    let influenceRanges;
+    function influenceRatio(id, mode = 'absolute-influence') {
+      if (!INFLUENCE_MODES.includes(mode) || !nodes.has(id)
+        || nodes.get(id).type === 'manifesto' || !maxDistances.has(id)) return undefined;
+      if (!influenceRanges) {
+        const cohorts = new Map(); let maximum = 0;
+        for (const [key, node] of nodes) {
+          if (node.type === 'manifesto' || !maxDistances.has(key)) continue;
+          const count = descendantCount(key), depth = maxDistances.get(key);
+          maximum = Math.max(maximum, count);
+          const range = cohorts.get(depth) || { min: count, max: count };
+          range.min = Math.min(range.min, count); range.max = Math.max(range.max, count);
+          cohorts.set(depth, range);
+        }
+        influenceRanges = { maximum, cohorts };
+      }
+      const { min, max } = mode.endsWith('relative-influence')
+        ? influenceRanges.cohorts.get(maxDistances.get(id)) : { min: 0, max: influenceRanges.maximum };
+      const scale = mode.startsWith('log-') ? Math.log1p : value => value;
+      return max > min ? (scale(descendantCount(id)) - scale(min)) / (scale(max) - scale(min)) : 0;
+    }
+    return { minDistances, maxDistances, children, descendantCount, influenceRatio };
   }
 
-  function color(mode, node, distance, revisionKind = 'uncompared') {
+  function influenceColor(value) {
+    if (!Number.isFinite(value)) return NEUTRAL_COLOR;
+    const position = Math.max(0, Math.min(1, value)) * 2;
+    const index = Math.min(1, Math.floor(position)), fraction = position - index;
+    return '#' + INFLUENCE_RGB[index].map((channel, i) => Math.round(channel
+      + (INFLUENCE_RGB[index + 1][i] - channel) * fraction).toString(16).padStart(2, '0')).join('');
+  }
+
+  function color(mode, node, value, revisionKind = 'uncompared') {
     if (mode === 'git-revision') return REVISION_COLORS[revisionKind] || NEUTRAL_COLOR;
     if (node.type === 'manifesto') return TYPE_COLORS.manifesto;
     if (mode === 'type') return TYPE_COLORS[node.type] || NEUTRAL_COLOR;
-    return Number.isInteger(distance) && distance > 0
-      ? RAINBOW_COLORS[(distance - 1) % RAINBOW_COLORS.length] : NEUTRAL_COLOR;
+    if (INFLUENCE_MODES.includes(mode)) return influenceColor(value);
+    return Number.isInteger(value) && value > 0
+      ? RAINBOW_COLORS[(value - 1) % RAINBOW_COLORS.length] : NEUTRAL_COLOR;
   }
 
   function layoutBackbone(nodes, edges) {
@@ -303,5 +339,6 @@
 
   return { CARD_WIDTH, CARD_HEIGHT, DETAIL_WIDTH, RANK_GAP, NODE_GAP, TYPE_COLORS, RAINBOW_COLORS, NEUTRAL_COLOR, REVISION_COLORS, REVISION_LABELS, COLOR_MODES,
     EDGE_LEAD, MIN_STROKE_PIXELS, MIN_ARROW_PIXELS, DETAIL_CONTENT_WIDTH, manifestoDiameter, sideBoundary,
+    INFLUENCE_COLORS, INFLUENCE_MODES, influenceColor,
     sameNode, displayGraph, focusIds, renderMatches, metrics, color, layoutBackbone, layoutGraph, routeEdges, neutralEdgeStrength, edgeAppearance };
 });

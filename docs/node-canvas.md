@@ -55,7 +55,20 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   snapshot. Cycles/blocked descendants have no finite maximum. Surviving/removed
   nodes use target/base metrics respectively, not the revision union or placement
   backbone. Legends explain the selected metric; on-node hop labels are removed.
-  Downstream, Git, and withdrawn badges remain independent.
+  Downstream, Git, and source-impact cues remain independent.
+- **Influence fills** count unique descendants at every depth. Absolute influence
+  uses `count / highestNonManifestoCount`; Relative influence uses
+  `(count - cohortMin) / (cohortMax - cohortMin)`, grouping by maximum manifesto
+  distance. Log Absolute Influence uses `log1p(count) / log1p(maximum)`, while
+  Log Relative Influence uses `(log1p(count) - log1p(cohortMin)) /
+  (log1p(cohortMax) - log1p(cohortMin))`. Transform raw counts before normalization,
+  with the +1 defining zero. All four choices remain available. Zero denominators
+  use green, including equal positive counts and singletons. The manifesto remains neutral gray. Full target/base revisions supply
+  the ranges independently of focus and comparison unions. Raw ranges/counts are
+  lazy per metrics instance and shared by linear/log modes. Continuous sRGB interpolation through green `#4df884`,
+  yellow `#e8d62c` and red `#ba2208` gives a warm Turbo-like ramp with no blue;
+  a matching continuous gradient legend explains its domain. Native drafts,
+  geometry/camera, Git cues and spotlight rings retain their independent roles.
 - **Compact spacing** uses ordinary 112-unit-high cards instead of 128, with rank gap 140
   instead of 128 and sibling gap 44 instead of 36. This opens the gaps modestly
   while reducing vertical pitch 164 → 156. Widths/routing margins stay unchanged.
@@ -89,12 +102,12 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
   out the requested colors. Neutral normal links retain theme contrast mixing.
   Pair ordering and full opacity improve visibility without enlarging strokes/heads
   or changing routes, dashes, or layout. Hovered node borders likewise strengthen
-  their semantic hue; only the neutral gray manifesto in distance/type modes gets
+  their semantic hue; only the neutral gray manifesto in distance/type/influence modes gets
   a white hover border. The new revision mode colors the manifesto by comparison
   kind, retaining that hue on hover. Delegated pointer transitions include expanded form controls; hit tests
   reconcile redraw/camera changes, and exit/blur/touch clears emphasis. No host
   messages, canonical data, or persisted hover preferences are involved.
-- **Node colors** share the user's exact seven-color playground table, with
+- **Distance/type/revision colors** share the user's exact seven-color playground table, with
   confirmed parameters L=.69, C=.12, hue 320 → 20. Distance one starts at the first
   swatch, seven ends at the last, then repeats. Type mode uses yellow-green/purple; Added uses the teal-green closer to its text cue;
   gray manifesto zero remains outside both distance/type palettes. Git/Revision

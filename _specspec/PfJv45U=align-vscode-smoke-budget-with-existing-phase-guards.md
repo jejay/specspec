@@ -31,3 +31,9 @@ Test-created HEAD snapshots contain every referenced parent. When staging only a
 cascade branch, choose shared outside parents already present in HEAD, and validate
 the complete exact index before each fixture commit. This is fixture construction
 discipline; owners retain ordinary coherent multi-file staging and commit control.
+
+Observe asynchronous host dialog readiness before asserting visibility. Electron's
+post-reload comparison check uses the same bounded 30-second readiness polling as
+its adjacent draft/list restoration checks, within the existing outer allowance.
+Retain the actual dialog-open, revision-target and read-only/workspace assertions;
+production operation and other individual test deadlines keep their own contracts.

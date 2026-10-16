@@ -13,7 +13,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
     <button id="annotations-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="annotations-panel" aria-label="Spotlights"><span>Spotlights</span><span id="spotlights-count" class="spotlights-count" aria-hidden="true" hidden></span></button>
     <label class="color-control" for="color-mode">Color by <select id="color-mode">
-    <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="type">Node type</option><option value="git-revision">Git/Revision Status</option></select></label>
+    <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="absolute-influence">Absolute influence</option><option value="relative-influence">Relative influence</option><option value="log-absolute-influence">Log Absolute Influence</option><option value="log-relative-influence">Log Relative Influence</option><option value="type">Node type</option><option value="git-revision">Git/Revision Status</option></select></label>
     <span id="revision"></span></header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>

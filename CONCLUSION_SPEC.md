@@ -173,14 +173,22 @@ have 3-unit clearance, middle-40% circle attachments, bounding-box-clearing lead
 smooth tangent heads. Minimum paint floors are 1.6 screen-pixel strokes and 6-pixel
 heads with compensated dashes. Camera changes update paint, not world arrangement.
 
-The exact spectrum is `#bc82c9`, `#7e97e6`, `#1facce`, `#37b390`, `#92a64b`,
+The exact distance/type/revision spectrum is `#bc82c9`, `#7e97e6`, `#1facce`, `#37b390`, `#92a64b`,
 `#ca8d3e`, `#dc7b7c`. Requirement index 4, Implementation 0, Added 3, M/R 1, D 6,
 source-only 5. Distance `(d-1)%7`; neutral `#929baa`, distance/type root `#d3d3d3`.
-Four modes have explanatory legends; revision colors the root by comparison too.
-Git theme titles/corners and edge patterns retain independent meaning.
+Eight modes have explanatory legends; revision colors the root by comparison too.
+Absolute influence counts unique descendants and linearly scales zero to the highest
+non-manifesto count. Relative influence scales cohort minimum to maximum, grouping
+by maximum manifesto distance. Their logarithmic counterparts transform raw counts with `log1p` before
+normalization: `log1p(c)/log1p(M)` for absolute, and
+`(log1p(c)-log1p(lo))/(log1p(hi)-log1p(lo))` for relative. All four modes use
+continuous sRGB green `#4df884` → yellow `#e8d62c` → red `#ba2208`, with full
+target/base context, shared lazy raw ranges, green tied cohorts and a neutral gray
+manifesto. Git theme titles/corners and edge patterns
+retain independent meaning.
 
 Shared tints are 15% rest / 24% hover. Colored hovered borders/incident inks use
-OKLCH L+.10 (cap .95), C×1.30, same H; neutral distance/type root hover is white.
+OKLCH L+.10 (cap .95), C×1.30, same H; neutral distance/type/influence root hover is white.
 Darken outside immediate displayed hover context with card brightness(.45) and
 35% ink / 65% black. Keep forms/caret/geometry stable and restore on exit.
 

@@ -700,7 +700,7 @@ test('nodes are editable without approval states or an acceptance action', t => 
   const { dom, $, saved } = fixture(t);
   assert.equal($('accept'), null);
   assert.equal($('save').textContent, 'Save node');
-  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'max-distance', 'type', 'git-revision']);
+  assert.deepEqual([...$('color-mode').options].map(option => option.value), ['distance', 'max-distance', 'absolute-influence', 'relative-influence', 'log-absolute-influence', 'log-relative-influence', 'type', 'git-revision']);
   assert.equal(saved().colorMode, 'distance');
   for (const card of $('cards').children) {
     assert.equal('status' in card.dataset, false);
@@ -1061,7 +1061,7 @@ function distanceFixture(t) {
 
 test('minimum/maximum distance modes have exact labels, different fills/legends, and no on-node hop text', t => {
   const { dom, $, card, snapshot, messages, saved } = distanceFixture(t);
-  assert.deepEqual([...$('color-mode').options].map(o => o.textContent), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Node type', 'Git/Revision Status']);
+  assert.deepEqual([...$('color-mode').options].map(o => o.textContent), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Absolute influence', 'Relative influence', 'Log Absolute Influence', 'Log Relative Influence', 'Node type', 'Git/Revision Status']);
   const world = [...$('cards').children].map(c => [c.dataset.nodeId, c.style.left, c.style.top, c.style.height]);
   const camera = $('graph').style.transform, before = JSON.stringify(snapshot);
   assert.equal(card('child').style.getPropertyValue('--node-accent'), model.color('distance', child, 1));
@@ -1133,7 +1133,7 @@ test('revision mode switches and restores without disturbing a native draft, car
   const camera=$('graph').style.transform;
   const diff={base:snapshot,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'}],added_edges:[],removed_edges:[]};
   send({type:'snapshot',snapshot,diagnostics:[],readonly:false,diff});
-  for(const mode of ['distance','max-distance','type','git-revision']) {
+  for(const mode of model.COLOR_MODES) {
     $('color-mode').value=mode;$('color-mode').dispatchEvent(new dom.window.Event('change'));
     assert.equal($('body'),body);assert.equal(body.value,'# Draft');assert.equal(dom.window.document.activeElement,body);
     assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[2,5,'backward']);
@@ -1246,6 +1246,138 @@ test('removed-node metrics come from the base snapshot rather than a revision un
   removed.click();
   assert.match($('focus-context').textContent, /1 downstream nodes.*base revision/);
   assert.equal($('save').disabled, true);
+});
+
+function influenceFixture(t) {
+  const f = fixture(t);
+  const edges = [['root','a'],['root','b'],['root','c'],['a','left'],['a','right'],
+    ['left','shared'],['right','shared'],['b','shared'],['shared','tail']];
+  const nodes = [...new Set(edges.flat())].map(id => id === 'root' ? root : { ...child,id,
+    type: id === 'tail' ? 'implementation' : 'requirement',body:`# ${id}\n`,path:`_specspec/${id}.md`,
+    parents:edges.filter(([,b])=>b===id).map(([a])=>a) });
+  f.snapshot = {...f.snapshot,nodes,edges};
+  f.send({type:'snapshot',snapshot:f.snapshot,diagnostics:[],readonly:false});
+  f.card = id => f.dom.window.document.querySelector(`[data-node-id="${id}"]`);
+  f.mode = mode => { f.$('color-mode').value=mode;f.$('color-mode').dispatchEvent(new f.dom.window.Event('change')); };
+  return f;
+}
+
+const influenceMiddleColor = mode => model.influenceColor(mode.startsWith('log-') ? Math.log(3)/Math.log(5) : 0.5);
+
+test('logarithmic influence modes paint and persist alongside linear modes without disturbing the current draft', t => {
+  const {dom,$,card,mode,saved}=influenceFixture(t);
+  card('b').click();const body=$('body');body.value='# Compare scales';body.dispatchEvent(new dom.window.Event('input'));
+  body.focus();body.setSelectionRange(2,7);const camera=$('graph').style.transform;
+  for(const kind of ['log-absolute-influence','log-relative-influence']) {
+    mode(kind);
+    assert.equal(card('b').style.getPropertyValue('--node-accent'),influenceMiddleColor(kind));
+    assert.notEqual(card('b').style.getPropertyValue('--node-accent'),'#e8d62c','Logarithmic and linear fills visibly differ for intermediate counts.');
+    assert.equal(card('root').style.getPropertyValue('--node-accent'),'#d3d3d3');
+    assert.match($('legend').textContent,/log\(influence \+ 1\)/);
+    assert.ok($('legend').querySelector('.influence-gradient'));
+    assert.equal(saved().colorMode,kind);assert.equal($('body'),body);assert.equal(body.value,'# Compare scales');
+    assert.deepEqual([body.selectionStart,body.selectionEnd],[2,7]);assert.equal($('graph').style.transform,camera);
+  }
+  mode('absolute-influence');assert.equal(card('b').style.getPropertyValue('--node-accent'),'#e8d62c');
+});
+
+test('continuous influence colors and gradient legends retain full-revision domains in focused dirty forms', t => {
+  const { dom,$,snapshot,send,card,mode,saved,messages } = influenceFixture(t);
+  send({type:'snapshot',snapshot,diagnostics:[],readonly:false,diff:{base:snapshot,changes:[{id:'b',kind:'changed'}],added_edges:[],removed_edges:[]}});
+  const before=JSON.stringify(snapshot);
+  for (const kind of model.INFLUENCE_MODES) {
+    mode(kind);
+    assert.equal(card('a').style.getPropertyValue('--node-accent'),'#ba2208');
+    assert.equal(card('b').style.getPropertyValue('--node-accent'),influenceMiddleColor(kind));
+    assert.equal(card('tail').style.getPropertyValue('--node-accent'),'#4df884');
+    assert.equal(card('root').style.getPropertyValue('--node-accent'),'#d3d3d3');
+    assert.match(card('b').title,/Influence: 2 unique descendants/);
+    assert.match($('legend').querySelector('.influence-gradient').style.backgroundImage,/linear-gradient\(to right in srgb,.*#ba2208.*#e8d62c.*#4df884/);
+    assert.match($('legend').querySelector('.influence-gradient').getAttribute('aria-label'),/red highest.*green lowest/);
+    assert.match($('legend').textContent,kind.endsWith('relative-influence')?/equal maximum distance.*tied groups use green/:/0 to highest non-manifesto/);
+    assert.equal(saved().colorMode,kind);
+  }
+  card('b').click();const body=$('body');body.value='# Retain draft';body.dispatchEvent(new dom.window.Event('input'));
+  body.focus();body.setSelectionRange(2,6,'backward');
+  const camera=$('graph').style.transform,baseline=saved().originalNode;
+  const positions=()=>[...$('cards').children].map(c=>[c.dataset.nodeId,c.style.left,c.style.top,c.style.width,c.style.height]);
+  const world=positions(),routes=[...$('edges').children].map(p=>p.getAttribute('d'));
+  for (const kind of model.INFLUENCE_MODES) {
+    mode(kind);
+    assert.equal(card('b').style.getPropertyValue('--node-accent'),influenceMiddleColor(kind),'Hidden a/c remain part of both normalization domains.');
+    assert.equal(card('b').querySelector('.git-corner').textContent,'M');
+    assert.equal($('body'),body);assert.equal(dom.window.document.activeElement,body);
+    assert.equal(body.value,'# Retain draft');assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[2,6,'backward']);
+    assert.equal($('graph').style.transform,camera);assert.deepEqual(positions(),world);
+    assert.deepEqual([...$('edges').children].map(p=>p.getAttribute('d')),routes);assert.equal(saved().originalNode,baseline);
+  }
+  assert.equal(JSON.stringify(snapshot),before);
+  assert.ok(messages.every(m=>['ready','rendered'].includes(m.type)));
+});
+
+test('influence normalization refreshes when an unseen higher-influence branch disappears without rebasing a draft', t => {
+  for (const kind of model.INFLUENCE_MODES) {
+    const {dom,$,snapshot,send,card,mode,saved}=influenceFixture(t);
+    mode(kind);card('b').click();const body=$('body');body.value='# Keep';body.dispatchEvent(new dom.window.Event('input'));
+    body.focus();body.setSelectionRange(1,4);const camera=$('graph').style.transform,baseline=saved().originalNode;
+    assert.equal(card('b').style.getPropertyValue('--node-accent'),influenceMiddleColor(kind));
+    const nodes=snapshot.nodes.filter(n=>!['a','left','right'].includes(n.id)).map(n=>n.id==='shared'?{...n,parents:['b']}:n);
+    const edges=snapshot.edges.filter(([a,b])=>nodes.some(n=>n.id===a)&&nodes.some(n=>n.id===b));
+    send({type:'snapshot',snapshot:{...snapshot,nodes,edges},diagnostics:[],readonly:false});
+    assert.equal(card('b').style.getPropertyValue('--node-accent'),'#ba2208');
+    assert.equal($('body'),body);assert.equal(body.value,'# Keep');assert.deepEqual([body.selectionStart,body.selectionEnd],[1,4]);
+    assert.equal(saved().originalNode,baseline);assert.equal(saved().colorMode,kind);assert.equal($('graph').style.transform,camera);
+  }
+});
+
+test('influence uses independent base/target revisions even when the display union contains a cycle', t => {
+  const {dom,$,snapshot,send}=fixture(t);
+  const make=edges=>({...snapshot,edges,nodes:[...new Set(edges.flat())].map(id=>id==='root'?root:{...child,id,
+    parents:edges.filter(([,b])=>b===id).map(([a])=>a),body:`# ${id}\n`})});
+  const base=make([['root','a'],['a','old'],['old','b'],['b','leaf'],['root','peer'],['peer','peerLeaf']]);
+  const target=make([['root','b'],['b','a'],['a','leaf'],['root','peer'],['peer','peerLeaf']]);
+  const added_edges=target.edges.filter(e=>!base.edges.some(b=>JSON.stringify(b)===JSON.stringify(e)));
+  const removed_edges=base.edges.filter(e=>!target.edges.some(b=>JSON.stringify(b)===JSON.stringify(e)));
+  send({type:'snapshot',snapshot:target,diagnostics:[],readonly:true,diff:{base,target,added_edges,removed_edges,changes:[{id:'old',kind:'removed'}]}});
+  const card=id=>dom.window.document.querySelector(`[data-node-id="${id}"]`);
+  const mode=kind=>{$('color-mode').value=kind;$('color-mode').dispatchEvent(new dom.window.Event('change'));};
+  for (const kind of model.INFLUENCE_MODES) {
+    mode(kind);
+    const absolute=kind.endsWith('absolute-influence'),logarithmic=kind.startsWith('log-');
+    const oldRatio=absolute?(logarithmic?Math.log(3)/Math.log(4):2/3):1;
+    const liveRatio=absolute?(logarithmic?Math.log(2)/Math.log(3):0.5):1;
+    assert.equal(card('old').style.getPropertyValue('--node-accent'),model.influenceColor(oldRatio),'Removed nodes use base counts, maximum and cohorts.');
+    assert.equal(card('a').style.getPropertyValue('--node-accent'),model.influenceColor(liveRatio),'Surviving nodes use target counts, maximum and cohorts.');
+    card('old').click();
+    assert.equal(card('old').style.getPropertyValue('--node-accent'),model.influenceColor(oldRatio));
+    assert.equal(card('b').style.getPropertyValue('--node-accent'),'#ba2208','A live neighbor still uses target metrics in a removed node focus.');
+    assert.equal($('save').disabled,true);
+    $('back').click();
+  }
+});
+
+test('all four influence preferences restore with recovered drafts and existing per-view cameras', t => {
+  for (const colorMode of model.INFLUENCE_MODES) {
+    const {$,saved}=fixture(t,{restored:{colorMode,selected:'child',view:'focus',dirty:true,originalNode:child,
+      cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Restored',sources:'[]',slug:'',nodeType:'requirement',parents:['root']}}});
+    assert.equal($('color-mode').value,colorMode);assert.equal(saved().colorMode,colorMode);
+    assert.equal($('body').value,'# Restored');assert.equal(saved().originalNode,child);
+    assert.deepEqual({...saved().cameras['focus:child']},{x:40,y:-70,k:1.6});
+  }
+});
+
+test('new and orphaned influence drafts are neutral rather than pretending to be zero-influence saved nodes', t => {
+  for (const kind of model.INFLUENCE_MODES) {
+    const {dom,$,snapshot,send,card,mode}=influenceFixture(t);
+    mode(kind);$('new').click();
+    assert.equal(dom.window.document.querySelector('.expanded').style.getPropertyValue('--node-accent'),model.NEUTRAL_COLOR);
+    $('discard').click();card('b').click();$('body').value='# Copy this';$('body').dispatchEvent(new dom.window.Event('input'));
+    const nodes=snapshot.nodes.filter(n=>n.id!=='b').map(n=>n.id==='shared'?{...n,parents:['left','right']}:n);
+    send({type:'snapshot',snapshot:{...snapshot,nodes,edges:snapshot.edges.filter(e=>!e.includes('b'))},diagnostics:[],readonly:false,
+      diff:{base:snapshot,changes:[{id:'b',kind:'removed'}],added_edges:[],removed_edges:snapshot.edges.filter(e=>e.includes('b'))}});
+    assert.equal(dom.window.document.querySelector('.expanded').style.getPropertyValue('--node-accent'),model.NEUTRAL_COLOR);
+    assert.equal($('body').value,'# Copy this');assert.equal($('save').disabled,true);
+  }
 });
 
 test('viewport resize changes neither world positions nor camera, including the expanded form', t => {
