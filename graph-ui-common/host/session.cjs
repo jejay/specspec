@@ -1,6 +1,6 @@
 /* No editor/Electron imports: every host uses the same graph operations. */
 const { isDeepStrictEqual } = require('node:util');
-const { ProjectReads } = require('./reads.cjs');
+const { ProjectReads, SupersededReadError } = require('./reads.cjs');
 
 function pollInterval(value) {
   if (!Number.isSafeInteger(value) || value < 0 || value > 2_147_483_647) throw new Error('Polling interval must be an integer from 0 to 2147483647 ms (0 disables polling).');
@@ -137,9 +137,20 @@ class GraphSession {
           if (this.disposed) return;
         }
       }
-    } catch (error) { await this.invalid(error); await this.refreshAnnotations(); if (!automatic) throw error; this.log(error); return; }
+    } catch (error) {
+      if (this.disposed) return;
+      if (error instanceof SupersededReadError) {
+        // A notification raced the read, not proof of invalid Markdown. Keep the
+        // existing view usable and let one coalesced follow-up catch up.
+        if (automatic) this.autoAgain = true;
+        else { this.scheduleRefresh(); throw error; }
+        return;
+      }
+      await this.invalid(error); await this.refreshAnnotations(); if (!automatic) throw error; this.log(error); return;
+    }
+    if (this.disposed) return;
     await this.display(loaded, force, selectedId, automatic);
-    await this.refreshAnnotations();
+    if (!this.disposed) await this.refreshAnnotations();
   }
   async refreshAnnotations() {
     try {

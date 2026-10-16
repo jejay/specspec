@@ -139,8 +139,11 @@ Git tree edges retain blobs. Explicit capture/reanchor follows normal native/man
 save ownership. Source impact remains conservative at file level.
 
 Watchers coalesce hints and retry transient reads, directly compare records and retain
-native form/caret/cameras. Same-node overwrites require confirmation. Invalid reloads
-retain a marked last valid graph with diagnostics. Explicit Refresh and configurable
+native form/caret/cameras. Superseded generation/text reads have a distinct error;
+bounded attempts coalesce a fresh automatic refresh without misdiagnosing invalid
+files. Explicit working reads report retry and request a follow-up. Actual invalid
+reloads retain a marked last valid graph with diagnostics. Same-node overwrites
+require confirmation. Explicit Refresh and configurable
 polling (default 0/off) remain. Watcher delivery depends on the filesystem.
 
 ## Shared visual graph

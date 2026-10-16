@@ -7,6 +7,7 @@ const { createServer } = require('node:net');
 const { checkUI, CDP } = require('../../graph-ui-common/test-host/ui.cjs');
 const { fixture } = require('../../graph-ui-common/test-host/fixture.cjs');
 const { platformChecks } = require('../../graph-ui-common/test-host/platform.cjs');
+const { ELECTRON_HOST_GUARD_MS } = require('../../graph-ui-common/test-host/budgets.cjs');
 const assert = require('node:assert/strict');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function run() {
@@ -24,7 +25,7 @@ async function run() {
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'], { cwd: launchDirectory, env, stdio: ['ignore', 'pipe', 'pipe'] });
   child.stdout.on('data', d => process.stdout.write(d)); child.stderr.on('data', d => process.stderr.write(d));
   const exit = new Promise((resolve, reject) => { child.on('error', reject); child.on('close', resolve); });
-  const timer = setTimeout(() => child.kill(), 180_000);
+  const timer = setTimeout(() => { console.error(`Electron host smoke exceeded its ${ELECTRON_HOST_GUARD_MS}ms aggregate guard.`); child.kill(); }, ELECTRON_HOST_GUARD_MS);
   let ok = false;
   try {
     await checkUI(port, platformChecks(project, 'electron'));

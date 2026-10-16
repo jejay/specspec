@@ -56,12 +56,13 @@ baselines/counts, retained drafts, errors and flush. Real-host probes add record
 through spotlight add and inspect arrival/ring paint, framing and native menus.
 
 Verification is bounded: Python, shared renderer and both host-adapter unit suites
-pass. Installed Windows Electron exercises the backchannel in compact, circular
-manifesto and expanded contexts; installed VS Code exercises compact and circular
-manifesto cases. Both verify message capture and external agent CLI readback.
-Complete broader smoke runs remain inconclusive: Electron reaches later manual
-invalid-file synchronization before a timeout, while VS Code exceeds its
-interaction guard. Final installed-host persisted-list reload remains unconfirmed.
+pass. Complete installed Windows Electron and VS Code suites exercise compact,
+circular-manifesto and expanded backchannels, message capture and external agent
+CLI readback. Both pass cascade ghosts, manual/invalid-file synchronization and
+retained draft/caret checks. Electron verifies complete retained spotlight-list
+reload with a zero-arrival baseline, draft reload and revision switching. VS Code
+verifies native dirty/Save/undo/redo, splits, repair and CRLF/Unicode files.
+Measured scope and diagnostic limits are in docs/investigations/host-smoke.md.
 Command/Meta+Shift has synthetic-event coverage; actual macOS behavior is untested.
 
 The shared renderer handles Shift-click cycling and Ctrl/Command+Shift removal

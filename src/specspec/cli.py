@@ -161,7 +161,7 @@ def summary_slug(body):
 @click.version_option(__version__)
 @click.pass_context
 def main(context, root):
-    """Manage an intention–conclusion specification graph."""
+    """Manage an intention-conclusion specification graph."""
     context.obj = root
 
 
@@ -479,7 +479,7 @@ def check(root, node_id, staged, check_sources, ref, graph_ref, warnings_as_erro
 @click.pass_obj
 @guarded
 def diff(root, base, target, summary, as_json):
-    """Show a full node-aware diff; default HEAD → working files."""
+    """Show a full node-aware diff; default HEAD to working files."""
     result, diagnostics = compare(root_path(root), base, target, patches=not summary)
     emit(
         wire.comparison(result) if as_json else result,

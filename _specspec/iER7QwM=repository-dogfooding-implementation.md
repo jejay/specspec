@@ -2,7 +2,7 @@
 id: iER7QwM=
 type: implementation
 parents:
-- evfMtUM=
+- PfJv45U=
 - 1aSOZOs=
 - yJnnDfM=
 - FU5NaYc=
@@ -42,6 +42,11 @@ sources:
 - path: docs/architecture.svg
 - path: .gitattributes
 - path: .gitignore
+- path: graph-ui-common/test-host/budgets.cjs
+- path: vscode/test/budgets.test.cjs
+- path: graph-ui-common/test/host-ui.test.cjs
+- path: docs/investigations/host-smoke.md
+- path: graph-ui-common/test-host/platform.cjs
 ---
 # Validate and document the working graph and planning process
 
@@ -56,3 +61,14 @@ local links and accessible scoped resources. Artifact tests check exact brand
 imports/non-text attributes and narrowly ignored machine-local settings with shared
 launch files tracked. Independent example histories supply temporal integration;
 local experiments and diagnostic/recovery state remain preserved.
+
+The shared smoke budget module covers complete shared, native and desktop-reload
+phases with separate bounded aggregate guards. CDP failure/foregrounding regressions
+and explicit-value Code launch arguments protect diagnostic meaning and workspace
+selection. Disposable profiles alone enable loading traces and background-throttling
+controls. Complete installed Windows suites exercise all backchannel,
+cascade/recovery and host-native checks. docs/investigations/host-smoke.md records
+measurements, diagnostic uncertainty and platform scope. Individual operation
+deadlines and production settings remain unchanged. Binding-text regression guards
+recognize retired-design sections while permitting current runtime read-supersession
+contracts. Static-help subprocess tests cover legacy Windows pipe encodings.

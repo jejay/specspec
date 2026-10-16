@@ -5,11 +5,17 @@ const { join } = require('node:path');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 class CDP {
-  constructor(url) {
-    this.socket = new WebSocket(url); this.next = 0; this.pending = new Map(); this.contexts = new Map();
+  constructor(url, Socket = WebSocket) {
+    this.socket = new Socket(url); this.next = 0; this.pending = new Map(); this.contexts = new Map();
     this.ready = new Promise((resolve, reject) => {
       this.socket.addEventListener('open', resolve, { once: true });
-      this.socket.addEventListener('error', reject, { once: true });
+      this.fail = error => {
+        this.closed = true; reject(error);
+        for (const callback of this.pending.values()) { clearTimeout(callback.timer); callback.reject(error); }
+        this.pending.clear(); this.contexts.clear();
+      };
+      this.socket.addEventListener('error', () => this.fail(new Error('CDP transport failed.')), { once: true });
+      this.socket.addEventListener('close', () => this.fail(new Error('CDP connection closed; the host or target exited.')), { once: true });
     });
     this.socket.addEventListener('message', event => {
       const message = JSON.parse(event.data);
@@ -31,12 +37,14 @@ class CDP {
   }
   async send(method, params = {}, sessionId, timeoutMs = 10_000) {
     await this.ready;
+    if (this.closed) throw new Error('CDP connection is closed.');
     const id = ++this.next;
     const result = new Promise((resolve, reject) => {
       const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(`CDP timeout: ${method} ${String(params.expression || '').slice(0, 400)}`)); }, timeoutMs);
       this.pending.set(id, { resolve, reject, timer });
     });
-    this.socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
+    try { this.socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) })); }
+    catch (error) { this.fail(error); }
     return result;
   }
   async evaluate(context, expression, timeoutMs) {
@@ -44,11 +52,22 @@ class CDP {
     if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description || response.exceptionDetails.text);
     return response.result.value;
   }
-  close() { this.socket.close(); }
+  close() { this.fail(new Error('CDP client closed.')); this.socket.close(); }
+}
+
+async function foreground(client) {
+  try {
+    const { windowId } = await client.send('Browser.getWindowForTarget');
+    await client.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
+  } catch { /* Electron versions may not implement optional Browser window commands. */ }
+  // Foregrounding must still run when window sizing is unsupported.
+  await client.send('Page.bringToFront').catch(() => {});
 }
 
 exports.CDP = CDP;
+exports.foreground = foreground;
 exports.checkUI = async function checkUI(port, options = {}) {
+  const started = Date.now();
   const clients = new Map(); let active, context;
   async function screenshot(name) {
     const directory = process.env.SPECSPEC_SCREENSHOT_DIR;
@@ -83,12 +102,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     }
     assert.ok(active, 'Could not find the real graph webview context.');
     const evaluate = expression => active.evaluate(context, expression);
-    try {
-      const { windowId } = await active.send('Browser.getWindowForTarget');
-      await active.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'maximized' } });
-      await active.send('Page.bringToFront');
-      await delay(400);
-    } catch { /* Some installed hosts do not expose window bounds. */ }
+    await foreground(active); await delay(400);
     // Geometry/gesture checks use a deterministic supported accessibility profile.
     // Normal-motion behavior remains covered by camera tests; do not rely on
     // background-host animation timing to reach a pose before sampling ink.
@@ -747,7 +761,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves.`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and four fill modes including revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

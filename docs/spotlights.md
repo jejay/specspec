@@ -212,12 +212,12 @@ keyboard/outside dismissal, manual/loaded shared cycling, Ctrl/Meta+Shift remova
 compose/cancel/retry, drafts/caret/cameras, revision views and guarded actions. Real-host probes add spotlights through the CLI and wait for watchers,
 then sample actual badge/ring paint and zoom-dependent neutral-arrow darkening.
 They also exercise Shift/Ctrl+Shift gestures, message compose/cancel, immutable
-capture and external CLI readback. Windows Electron probes pass those backchannel
-checks for compact, circular-manifesto and expanded contexts; VS Code probes pass
-compact and circular-manifesto cases. The Python, shared renderer and both
-host-adapter unit suites pass. Complete installed-host smoke runs remain unconfirmed:
-Electron reaches later manual-invalid-file synchronization before a timeout, and
-VS Code exceeds its interaction guard. Final installed-host persisted-list reload
-coverage remains unconfirmed. Command/Meta+Shift is synthetic-event coverage only.
+capture and external CLI readback. Complete Windows Electron and VS Code suites
+pass the compact, circular-manifesto and expanded backchannels, cascade ghost
+lifecycles, manual/invalid-file synchronization and retained drafts. Electron verifies
+complete persisted spotlight-list reload with a zero-count baseline; VS Code verifies
+native dirty/Save/undo/redo, splits, repair and CRLF/Unicode files. The Python,
+shared renderer and both host-adapter unit suites pass. [The smoke investigation](investigations/host-smoke.md)
+records measurements and bounded evidence. Command/Meta+Shift remains synthetic-event coverage only.
 Their platform and filesystem scope is bounded; they do not establish universal
 watcher delivery, perceptual suitability for every theme or large-list performance.

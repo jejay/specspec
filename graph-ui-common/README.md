@@ -17,6 +17,9 @@ retries and render waits. `host/watch.cjs` supplies non-recursive Electron direc
 watching with parent-directory reattachment; VS Code uses its filesystem API.
 Events are reload hints, not an exact change log. Invalid reloads retain the last
 valid view marked out of date; valid data is compared directly, without hashes.
+Superseded generation/text reads retry through the coalesced event queue without
+classifying the files as invalid. Each refresh has bounded attempts; disposal
+cancels follow-up work, and actual invalid reads retain their repair restrictions.
 `host/annotations.cjs` watches the checkout-local immutable spotlight store independently,
 including while a revision graph is open. `media/graph-annotations.js` owns the retained
 dropdown, round red arrival-count badge and editable multicolor 8px rings.
@@ -51,3 +54,9 @@ VS Code node-file edits use Python's non-writing `api` planning operation and na
 Electron retains managed saves. Shared document tests cover planning, coalescing,
 sequence acknowledgements, version/text conflicts and UTF-16/CRLF-safe edits. See
 [document/persistence semantics](../docs/native-editors.md).
+
+`test-host/budgets.cjs` supplies the installed suites' aggregate phase allowances;
+individual and production deadlines remain independent. The shared CDP harness
+fails closed transports promptly and foregrounds even when optional window sizing
+is unavailable. [The Windows smoke investigation](../docs/investigations/host-smoke.md)
+records complete Electron/VS Code results, scope and diagnostic limits.

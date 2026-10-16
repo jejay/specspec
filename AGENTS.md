@@ -10,7 +10,7 @@ technical conclusions. The graph also records the user's later corrections.
 Use the installed CLI, or `python -m specspec` in the development environment:
 
 ```sh
-python -m specspec list --json
+python -m specspec show --json
 python -m specspec context <node-id> --json
 python -m specspec impact <node-id> --json
 ```
@@ -56,7 +56,7 @@ material uncertainty and conflicts rather than manufacturing agreement.
 ## Checks
 
 ```sh
-python -m specspec validate --warnings-as-errors
+python -m specspec check --warnings-as-errors
 python -m ruff check .
 python -m ruff format --check .
 python -m pytest
@@ -65,9 +65,10 @@ npm --prefix vscode test
 npm --prefix electron test
 ```
 
-Use `python -m specspec diff --base <current-scheme-ref> --json` for a review report
+Use `python -m specspec diff <current-scheme-ref> --json` for a review report
 when the baseline uses the current schema. Before an explicitly authorized commit,
-stage the complete intended graph change and use `hook check` to validate that exact
+stage the complete intended graph change and run
+`python -m specspec check --staged --sources --warnings-as-errors` against that exact
 index; working-tree validation cannot substitute for staged validation.
 
 Maintain only the current schema: node format 6 requires a shortcut-free rooted DAG.

@@ -36,6 +36,12 @@ saved files; VS Code adds native overlays. It shares identical **in-flight** rea
 actual open-document contents, versions, dirty/EOL state, generation and base/target. Each view
 receives an isolated payload. Later/explicit refreshes do fresh reads, even if no
 watch notification arrived. Failed/changed/closed reads are not adopted as current.
+`SupersededReadError` distinguishes generation/text races from invalid files and
+closed projects. Each refresh makes bounded attempts; exhausted automatic attempts
+coalesce a fresh event-driven refresh while retaining presentation/action state.
+Explicit working reads report retry and schedule a follow-up. Actual invalid reads
+still enter the marked last-valid repair state. Disposal cancels pending work;
+this retry path introduces neither recurring polling nor longer operation deadlines.
 
 An optional API-6 application `read` with `cache: true` returns bounded `base_cache` byte hints, held
 only in project memory and removed before sending display data to the renderer.
@@ -84,3 +90,8 @@ The [loading investigation](investigations/vscode-loading.md) preserves the orig
 measurements, failed probes and narrow batching experiment. Its baseline numbers are
 historical evidence, not current release benchmarks. Remote setup and qualification
 are described in [remote workspaces](remote-workspaces.md).
+
+[The Windows host-smoke investigation](investigations/host-smoke.md) records complete
+installed Electron/VS Code runs, measured aggregate phase guards, foreground/transport
+regressions and remaining qualification limits. Test guards are separate from the
+unchanged individual and production operation deadlines.

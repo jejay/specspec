@@ -8,7 +8,7 @@ const { checkUI } = require('./ui.cjs');
 const { fixture } = require('../../graph-ui-common/test-host/fixture.cjs');
 const { platformChecks } = require('../../graph-ui-common/test-host/platform.cjs');
 const { documentChecks } = require('./documents.cjs');
-const { HOST_GUARD_MS } = require('./budgets.cjs');
+const { VSCODE_HOST_GUARD_MS } = require('../../graph-ui-common/test-host/budgets.cjs');
 
 async function run() {
   const root = resolve(__dirname, '../..');
@@ -41,6 +41,10 @@ async function run() {
   const profile = mkdtempSync(join(tmpdir(), 'specspec-vscode-host-'));
   const extensions = join(profile, 'extensions'), uiResult = join(profile, 'ui-result.json');
   mkdirSync(extensions);
+  // Opt in only within this disposable profile; retain phase/CLI diagnostics on failure.
+  const userData = join(profile, 'user-data');
+  mkdirSync(join(userData, 'User'), { recursive: true });
+  writeFileSync(join(userData, 'User', 'settings.json'), JSON.stringify({ 'specspec.traceLoading': true }));
   const native = { request: join(profile, 'native-request.json'), response: join(profile, 'native-response.json'), result: join(profile, 'native-result.json') };
   const env = { ...process.env, SPECSPEC_PYTHON: python, SPECSPEC_TEST_PROJECT_ROOT: project.root, SPECSPEC_UI_RESULT: uiResult,
     SPECSPEC_NATIVE_REQUEST: native.request, SPECSPEC_NATIVE_RESPONSE: native.response, SPECSPEC_NATIVE_RESULT: native.result, SPECSPEC_NATIVE_NODE: nativeNode,
@@ -49,9 +53,12 @@ async function run() {
   delete env.ELECTRON_RUN_AS_NODE;
   const child = spawn(executable, [
     '--new-window', '--skip-welcome', '--skip-release-notes', '--disable-workspace-trust',
-    `--user-data-dir=${join(profile, 'user-data')}`, `--extensions-dir=${extensions}`,
+    `--user-data-dir=${userData}`, `--extensions-dir=${extensions}`,
     `--extensionDevelopmentPath=${join(root, 'vscode')}`, `--extensionTestsPath=${join(__dirname, 'smoke.cjs')}`,
     `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1',
+    // Unknown Code switches need explicit values; a bare final switch consumes
+    // the following project path as its value and launches an empty window.
+    '--disable-background-timer-throttling=true', '--disable-renderer-backgrounding=true', '--disable-backgrounding-occluded-windows=true',
     project.root,
   ], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let smokePassed = false, uiPassed = false, markerBuffer = '';
@@ -70,9 +77,9 @@ async function run() {
     const result = JSON.stringify({ ok: false, error: error.message });
     writeFileSync(uiResult, result); writeFileSync(native.result, result);
   });
-  // Cover both existing 160s phase guards plus startup/shutdown, not just 240s
-  // total. Individual assertion/operation deadlines are unchanged.
-  const timer = setTimeout(() => { console.error('VS Code host smoke test timed out.'); child.kill(); }, HOST_GUARD_MS);
+  // Sum the shared/native phase allowances and startup/shutdown, while retaining
+  // every individual assertion and operation deadline.
+  const timer = setTimeout(() => { console.error(`VS Code host smoke exceeded its ${VSCODE_HOST_GUARD_MS}ms aggregate guard.`); child.kill(); }, VSCODE_HOST_GUARD_MS);
   child.on('error', error => { console.error(error); process.exitCode = 1; });
   child.on('close', async code => {
     clearTimeout(timer); await ui;

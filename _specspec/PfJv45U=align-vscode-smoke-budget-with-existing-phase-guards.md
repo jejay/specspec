@@ -5,16 +5,29 @@ parents:
 - 3fWBW_g=
 - evfMtUM=
 ---
-# Use reproducible host poses and consistent aggregate test budgets
+# Use reproducible host poses and measured aggregate test budgets
 
 Shared real-host geometry/gesture probes use the supported reduced-motion preference;
-normal-motion camera behavior has independent unit coverage. Isolated Electron test
-launches disable background/renderer/occlusion timer throttling so intrinsic resize
-work runs in the test window. Preserve production camera/renderer behavior and all
-individual pose/source/form/ink/watcher/request deadlines and assertions.
+normal-motion camera behavior has independent unit coverage. Isolated Electron and
+VS Code test launches disable background/renderer/occlusion timer throttling. Attempt
+foregrounding independently of optional browser-window sizing. Preserve production
+camera/renderer behavior and individual pose/source/form/ink/watcher/request deadlines
+and assertions.
 
-A shared VS Code test-harness budget module provides 160-second aggregate guards
-for shared UI and native lifecycle phases. The outer process guard is their sum
-plus 40 seconds startup/shutdown, 360 seconds. Test this relationship. Record actual
-results and failed attempts in Git/diagnostics. These are reproducibility choices
-for bounded checks; responsiveness is assessed separately under runtime conditions.
+A shared test-harness budget module allows 300 seconds for the expanded shared UI
+phase and 160 seconds for native lifecycle. Reserve 40 seconds for host startup and
+shutdown, and 60 seconds for Electron's persisted-reload/revision phase. Electron's
+aggregate guard is 400 seconds; VS Code's is 500 seconds. Test their relationships
+and both runners' use of them. These bounded aggregate allowances account for all
+backchannel contexts, actual CLI/Git cascades, recovery, reload and revision checks.
+They do not redefine production responsiveness or individual operation deadlines.
+
+Report aggregate guard expiry explicitly. Closed CDP transports fail pending calls
+promptly instead of manufacturing an unrelated evaluation timeout. Record full-run
+elapsed measurements and actual passed/failed phases with platform scope; individual
+operations continue to fail under their existing deadlines.
+
+Test-created HEAD snapshots contain every referenced parent. When staging only a
+cascade branch, choose shared outside parents already present in HEAD, and validate
+the complete exact index before each fixture commit. This is fixture construction
+discipline; owners retain ordinary coherent multi-file staging and commit control.

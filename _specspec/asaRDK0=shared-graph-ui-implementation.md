@@ -27,6 +27,7 @@ sources:
 - path: vscode/src/host.js
 - path: docs/node-canvas.md
 - path: graph-ui-common/src/graph-vendor.js
+- path: graph-ui-common/test/host-ui.test.cjs
 ---
 # Render the shared intrinsic graph world and guarded session
 
@@ -46,3 +47,8 @@ Neutral curve/head ink uses the camera's bounded 70% to 35% strength while retai
 stroke/head dimensions and distinct diff/hover paint. Pure tests check its scale
 function, DOM tests check camera propagation, and real-host probes inspect computed
 curve/head colors across actual-size, intermediate and minimum magnification.
+
+The real-host CDP harness keeps optional window sizing separate from foregrounding
+and rejects closed/error transports promptly, clearing pending request timers.
+Protocol/JavaScript errors and individual request timeouts remain failures; unit
+tests exercise these boundaries independently of a real browser.

@@ -2,6 +2,10 @@ const assert = require('node:assert/strict');
 const { readFileSync, writeFileSync, existsSync } = require('node:fs');
 const { execFileSync } = require('node:child_process');
 const { join } = require('node:path');
+function committedRootSibling(current, base, manifestoId, excludedId) {
+  const committed = new Set(base.nodes.map(n=>n.id));
+  return current.nodes.find(n=>n.type==='requirement'&&n.id!==excludedId&&n.parents.includes(manifestoId)&&committed.has(n.id));
+}
 function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
   return {
@@ -64,7 +68,10 @@ function platformChecks(fixture, host) {
       const base = fixture.cli(['diff','HEAD','--json']).base;
       const deletedPath = base.nodes.find(n=>n.id===removed).path;
       assert.equal(existsSync(join(fixture.root,deletedPath)),false);
-      const git = (...args) => execFileSync('git',['-C',fixture.root,...args],{stdio:'pipe'});
+      const git = (...args) => {
+        if(args.includes('commit')) fixture.cli(['check','--staged','--warnings-as-errors','--json']);
+        return execFileSync('git',['-C',fixture.root,...args],{stdio:'pipe'});
+      };
       git('add','-u','--',deletedPath); await delay(500);
       assert.ok(await evaluate(`document.querySelector('[data-node-id="${removed}"].removed')!==null`),'Staging must not remove a HEAD ghost.');
       await evaluate(`document.querySelector('[data-node-id="${removed}"]').click()`);
@@ -80,7 +87,8 @@ function platformChecks(fixture, host) {
       const manifesto = current.nodes.find(n=>n.type==='manifesto');
       const outside = current.nodes.find(n=>n.id===fixture.modified);
       const outsideBytes = readFileSync(join(fixture.root,outside.path));
-      const deeperOutside = current.nodes.find(n=>n.type==='requirement'&&n.id!==outside.id&&n.parents.includes(manifesto.id));
+      const deeperOutside = committedRootSibling(current,base,manifesto.id,outside.id);
+      assert.ok(deeperOutside,'The maintained HEAD needs a second committed manifesto-child requirement.');
       const deeperOutsideBytes = readFileSync(join(fixture.root,deeperOutside.path));
       const add = (parents,slug) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--slug',slug,'--body','-','--json'],`# ${slug}\n\nDisposable cascade regression.\n`).changed_ids[0];
       const branch = add([manifesto.id],'cascade-root');
@@ -168,4 +176,4 @@ function platformChecks(fixture, host) {
     },
   };
 }
-module.exports = { platformChecks };
+module.exports = { platformChecks, committedRootSibling };

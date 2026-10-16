@@ -1,6 +1,9 @@
 """Compact public commands, complete review patches and reconstructible protocol data."""
 
 import json
+import os
+import subprocess
+import sys
 
 import pytest
 from click.testing import CliRunner
@@ -22,6 +25,19 @@ def api(root, **value):
     result = call(root, "api", input=json_text({"api_version": API_VERSION, "op": "read", **value}))
     assert result.exit_code == 0, result.output
     return json.loads(result.stdout)
+
+
+@pytest.mark.parametrize("encoding", ["ascii", "cp1252"])
+@pytest.mark.parametrize("args", [[], ["diff"]])
+def test_help_is_safe_through_legacy_windows_pipe_encodings(workspace, encoding, args):
+    root, _ = workspace
+    result = subprocess.run(
+        [sys.executable, "-m", "specspec", "--root", str(root), *args, "--help"],
+        env={**os.environ, "PYTHONIOENCODING": encoding, "PYTHONUTF8": "0"},
+        capture_output=True,
+    )
+    assert result.returncode == 0, result.stderr.decode(errors="replace")
+    assert result.stdout.decode("ascii").startswith("Usage:")
 
 
 def test_eight_commands_advanced_help_and_no_parallel_legacy_surface(workspace):

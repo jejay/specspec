@@ -2,8 +2,10 @@
 
 import json
 import re
+from dataclasses import replace
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from specspec.cli import main
@@ -58,9 +60,26 @@ def test_current_bindings_keep_revision_and_run_diaries_in_git(gantt_verifier):
         nodes = load_snapshot(root).nodes
         gantt_verifier.assert_current_bindings(nodes)
         for node in nodes:
-            assert not re.search(r"\b(?:supersed\w*|formerly|previously)\b", node.body), node.id
+            # Runtime read supersession is current error handling, not withdrawn
+            # design history. The shared guard above catches retired-design sections.
+            assert not re.search(r"\b(?:formerly|previously)\b", node.body), node.id
             assert not re.search(r"\b\d+ (?:Python|shared UI|VS Code) tests passed", node.body)
             assert not re.search(r"\b(?:format/API|API-)\s*[1-4]\b", node.body), node.id
+
+
+def test_binding_guard_allows_runtime_supersession_but_rejects_retired_design_sections(
+    workspace, gantt_verifier
+):
+    node = load_snapshot(workspace[0]).nodes[0]
+    current = replace(
+        node,
+        body="# Retry superseded reads\n\n"
+        "Discard generation-changed results and read current input.\n",
+    )
+    gantt_verifier.assert_current_bindings([current])
+    for section in ["## Superseded design", "## Resolved follow-up", "## Later correction"]:
+        with pytest.raises(AssertionError):
+            gantt_verifier.assert_current_bindings([replace(current, body=current.body + section)])
 
 
 def test_implementation_links_use_current_descriptions_and_preserve_blob_anchors():

@@ -54,18 +54,19 @@ history remain untouched. See [the history procedure](../example/gantt/history/W
 
 ## Verification scope
 
-The current graphs contain 152 nodes/271 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The Python suite passes 268 tests, shared UI 167,
+The current graphs contain 153 nodes/272 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. The Python suite passes 273 tests, shared UI 179,
 VS Code adapter 42 and Electron 9. Coverage includes an independent closure oracle,
 deep graphs, atomic rejection of remote redundancies, native repair, a real
 owner-configured hook in a disposable repository and exact-index/revision checks.
 Gantt verification checks all eight retained commits, 123 actual CLI receipt states,
 source retention and all three runnable model stages.
 
-Installed Windows hosts load the format-6 example and pass initial graph/Git paint
-checks. Electron also passes all three spotlight backchannel contexts and the first
-HEAD-deletion lifecycle. Complete window smoke runs remain unconfirmed: Electron
-times out waiting for later cascade ghosts, and VS Code stops at a source-preview
-assertion while the UI still reports resolving. These runs do not establish full
-installed-host regression success. Neither the upgrade nor tests install local
-hooks in this repository or reset manual example workspaces.
+Complete installed Windows suites pass: Electron in 264 seconds and VS Code in
+409 seconds. Both include source previews, all three backchannel contexts, cascade
+HEAD/stage/commit ghosts and invalid-file recovery. Electron verifies persisted
+spotlight/draft reload and revision switching; VS Code verifies native document,
+split, repair and CRLF/Unicode lifecycles. [The smoke investigation](investigations/host-smoke.md)
+records aggregate guard causes, retry/transport fixes and bounded evidence.
+Individual operation deadlines remain unchanged. Tests install no repository hooks
+and preserve manual example workspaces; other platforms retain separate scope.

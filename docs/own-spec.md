@@ -139,6 +139,9 @@ and [measurement scope](../_specspec/FJj-9xY=loading-stage-and-remote-qualificat
 [Backend realization](../_specspec/FhVjOvo=batched-git-and-verified-read-cache-implementation.md)
 and [workspace/phased-host realization](../_specspec/N7IR7Fw=remote-and-phased-graph-loading-implementation.md)
 map the code, diagnostic controls and verification seams.
+[Superseded-read handling](../_specspec/KGvVHh0=retry-superseded-reads-without-diagnosing-invalid-files.md)
+keeps generation/text races distinct from invalid files, coalescing bounded fresh
+attempts while preserving the displayed presentation and mutation preflights.
 
 ## Compact command and shared-read contract
 
@@ -308,5 +311,7 @@ Read [AGENTS.md](../AGENTS.md) for all checks and phase guidance. Before each au
 commit, validate both exact intended indexes. Run/diff evidence and failure rationale
 belong in Git and preserved diagnostics. [Working validation](../_specspec/evfMtUM=continuous-self-validation.md)
 and [real-host fixture/budget choices](../_specspec/PfJv45U=align-vscode-smoke-budget-with-existing-phase-guards.md)
-state their bounded verification scope. Semantic correctness, every-platform behavior,
+state their bounded verification scope. [Complete Windows smoke evidence](investigations/host-smoke.md)
+records measured shared/native/reload allowances and successful installed-host runs.
+Semantic correctness, every-platform behavior,
 filesystem races, watcher delivery and runtime performance require their own assessment.

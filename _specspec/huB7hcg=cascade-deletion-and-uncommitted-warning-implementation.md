@@ -12,7 +12,7 @@ sources:
 - path: graph-ui-common/host/documents.cjs
 - path: graph-ui-common/media/graph.js
 - path: graph-ui-common/view.cjs
-- path: vscode/test-host/budgets.cjs
+- path: graph-ui-common/test-host/budgets.cjs
 - path: tests/test_cascade_deletion.py
 - path: tests/test_deletion.py
 - path: tests/test_core.py
@@ -34,6 +34,7 @@ sources:
 - path: docs/architecture.md
 - path: docs/architecture.svg
 - path: docs/own-spec.md
+- path: graph-ui-common/test/host-ui.test.cjs
 ---
 # Execute a reviewed descendant cascade with pre-write warnings
 
@@ -53,3 +54,8 @@ Regression cases cover sole/shared/deeper/overlapping roots, staged/new/ignored/
 comment/renamed/unmerged nodes, cancellation/noninteractive consent, changed plans,
 byte races and recovery. Maintained-history real-host checks cover all cascade D
 records through staging until commit and empty base membership for uncommitted nodes.
+
+The real-host cascade fixture selects live manifesto siblings present in its HEAD,
+excluding uncommitted setup additions. Its Git wrapper validates the exact staged
+graph before every fixture commit. Deterministic helper coverage places an
+uncommitted root child first and checks that a retained outside parent is chosen.

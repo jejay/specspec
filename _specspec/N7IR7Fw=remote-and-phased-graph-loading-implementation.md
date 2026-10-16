@@ -3,7 +3,7 @@ id: N7IR7Fw=
 type: implementation
 parents:
 - uY3KPsM=
-- 3V6SdSA=
+- KGvVHh0=
 - VDss3KM=
 - FJj-9xY=
 sources:
@@ -45,3 +45,11 @@ resource boundaries, bound native documents and lost replies. The opt-in remote
 module checks actual workspace-host placement, native overlays, rendered membership
 and source objects on a disposable history clone. Transport qualification is reported
 from dispatched runs individually; setup and investigation guides expose its limits.
+
+Project reads tag superseded generations/document stamps distinctly from closed
+projects and validation failures. The session keeps current presentation during
+bounded attempts and coalesces a fresh event-driven automatic refresh after repeated
+supersession. Explicit working reads retain an actionable retry error and a follow-up.
+Actual invalid graphs retain the established marked repair state and fresh managed
+mutation preflights. Tests cover repeated generation/text races, repair, explicit
+reads and cancellation/disposal without introducing polling or longer deadlines.

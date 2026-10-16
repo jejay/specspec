@@ -27,10 +27,8 @@ Verification covers valid unequal-depth multiparent DAGs, long chains, deep shor
 cycles/missing references, remote redundancy introduced by an edit, unchanged bytes
 on failed writes, native repair and exact-index/history distinctions.
 
-Current verification passes 268 Python, 167 shared UI, 42 VS Code adapter and nine
-Electron unit tests. The closure oracle checks generated arbitrary DAGs and reduced
-reachability equivalence. Both current graphs and every retained Gantt revision
-are shortcut-free; all 123 actual receipt states and three model stages verify.
-Installed format-six graph/paint checks run in both Windows hosts, while complete
-window regression remains unconfirmed at later cascade/source-preview assertions;
-docs/graph-structure.md records the bounded evidence.
+An independent closure oracle checks generated arbitrary DAGs and reduced
+reachability equivalence. Maintained Gantt verification checks every retained
+revision, actual CLI receipt state, source anchor and runnable model stage.
+docs/graph-structure.md and docs/investigations/host-smoke.md record current
+verification evidence and its platform/diagnostic scope.

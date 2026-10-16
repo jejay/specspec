@@ -44,4 +44,9 @@ raw-only patches, compact/expanded equivalence, deleted membership through stagi
 commit, source retention and exact-index distinction. The Gantt corpus uses actual
 current CLI receipts across all retained refs, preserving identities, redirects,
 application bytes and positive spec-before-code checkpoints. Guides and diagrams name
-the current operations and separate protocol 6 from node schema 5.
+the current operations and separate protocol 6 from node schema 6.
+
+Static command help uses ASCII punctuation so Click can render help through legacy
+Windows pipe encodings. Readable result/diagnostic and structured envelope emission
+retain their explicit UTF-8 byte paths. Subprocess regressions force ASCII/cp1252
+stdout encodings for root and diff help without changing canonical project text.

@@ -1,5 +1,8 @@
 /* Portable project read coordination: saved files plus optional native overlays. */
 const { isDeepStrictEqual } = require('node:util');
+class SupersededReadError extends Error {
+  constructor() { super('Documents changed during graph loading; retry with current text.'); this.name = 'SupersededReadError'; }
+}
 class ProjectReads {
   constructor(host) { this.host = host; this.queue = Promise.resolve(); this.listeners = new Set(); this.generation = 0; this.reads = new Map(); }
   run(operation) { const result = this.queue.then(operation); this.queue = result.catch(() => {}); return result; }
@@ -29,7 +32,8 @@ class ProjectReads {
       pending.then(clear,clear);
     }
     const result = await pending;
-    if (this.disposed || generation !== this.generation || (!target && !isDeepStrictEqual(before,this.stamp()))) throw new Error('Documents changed during graph loading; retry with current text.');
+    if (this.disposed) throw new Error('Project documents are closed.');
+    if (generation !== this.generation || (!target && !isDeepStrictEqual(before,this.stamp()))) throw new SupersededReadError();
     if (!allowInvalid && !result.snapshot.valid) throw new Error(result.diagnostics.map(d => `${d.code}: ${d.message}`).join('\n') || 'Invalid open specification documents.');
     return structuredClone(result);
   }
@@ -40,4 +44,4 @@ class ProjectReads {
   }
   dispose() { this.disposed = true; this.generation++; this.reads.clear(); this.baseCache = undefined; this.listeners.clear(); }
 }
-module.exports = { ProjectReads };
+module.exports = { ProjectReads, SupersededReadError };
