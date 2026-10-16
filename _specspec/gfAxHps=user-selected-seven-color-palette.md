@@ -2,7 +2,6 @@
 id: gfAxHps=
 type: requirement
 parents:
-- Rg30CXs=
 - XLyy460=
 ---
 # Use the exact selected seven-color spectrum

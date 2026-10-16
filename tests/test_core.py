@@ -29,7 +29,7 @@ def test_flat_init(workspace):
     assert snapshot.graph.order == [manifesto]
     assert all(path.is_file() and path.suffix == ".md" for path in (root / "_specspec").iterdir())
     assert not (root / "_specspec" / "specspec.yaml").exists()
-    assert snapshot.nodes[0].format_version == 5
+    assert snapshot.nodes[0].format_version == 6
     assert "fingerprint" not in snapshot.to_dict()
     assert all("managed_hash" not in node.to_dict() for node in snapshot.nodes)
     assert all(b"managed_hash:" not in raw for raw in snapshot.files.values())
@@ -146,8 +146,8 @@ def test_nearest_workspace_does_not_fall_back(workspace):
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\ntype: manifesto"),
         lambda raw: raw.replace(b"parents: []", b"parents: &alias []"),
         lambda raw: raw.replace(b"parents: []", b"parents: !!seq []"),
-        lambda raw: raw.replace(b"format_version: 5", b"format_version: true"),
-        lambda raw: raw.replace(b"format_version: 5", b"format_version: 999"),
+        lambda raw: raw.replace(b"format_version: 6", b"format_version: true"),
+        lambda raw: raw.replace(b"format_version: 6", b"format_version: 999"),
         lambda raw: raw.replace(b"parents: []", b"parents: []\nmanaged_hash: obsolete"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nretired: 42"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nstatus: accepted"),
@@ -249,6 +249,13 @@ def test_generated_dags_and_injected_cycle():
             parents = randomizer.sample(
                 [n.id for n in nodes], k=min(index, randomizer.randint(1, 4))
             )
+            existing, errors = build_graph(nodes)
+            assert not errors
+            parents = [
+                p
+                for p in parents
+                if not any(p in existing.closure(q, ancestors=True) for q in parents if p != q)
+            ]
             nodes.append(new_node("requirement", parents, "Body\n", f"node-{index}"))
         graph, errors = build_graph(nodes)
         assert not errors

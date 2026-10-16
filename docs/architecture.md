@@ -23,7 +23,7 @@ that same CLI contract, or imports the library into its own Python process.
 - **Canonical data is a Markdown DAG, not a database.** Each direct
   `_specspec/<id><slug>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only node format 5, API 6
+  potentially multiple parents, and terminal implementations. Only shortcut-free node format 6, API 6
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.

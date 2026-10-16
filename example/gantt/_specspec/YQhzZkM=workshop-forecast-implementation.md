@@ -2,10 +2,7 @@
 id: YQhzZkM=
 type: implementation
 parents:
-- XZk4rMA=
-- rrN-aHA=
 - BumOqek=
-- J3ggsWw=
 sources:
 - path: model.js
   blob: d44e2484dad4c61a8bd3d2c75c3a11ec211578a0

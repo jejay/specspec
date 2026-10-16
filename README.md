@@ -2,6 +2,8 @@
 
 Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
 [Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
+[Graph structure](docs/graph-structure.md): immediate justifications form a shortcut-free DAG;
+node format 6 and API 6 are the current contracts.
 
 New engineers: [architecture guide](docs/architecture.md) and
 [owner/agent workflow SVG](docs/architecture.svg).
@@ -38,7 +40,7 @@ explains the recurring obligation. Plausible graph emergence/revision is enough;
 
 ## Implementation source regions
 
-[Source-region guide](docs/source-regions.md): canonical node format 5 supports
+[Source-region guide](docs/source-regions.md): canonical node format 6 supports
 whole-file hints and full Git blob anchors with multiple inclusive ranges.
 **Strict** (specific) reports internal changes; **expanding** (broad) includes them.
 Positions resolve without renumbering the spec; ambiguity/deletion/unavailable
@@ -113,7 +115,7 @@ The flat `_specspec` directory contains nodes only. Global `format_version` meta
 
 ## Schema, deletion and the default HEAD comparison
 
-Canonical node format **5** has no `managed_hash`, `status` or `retired` field. Withdraw a node
+Canonical node format **6** has no `managed_hash`, `status` or `retired` field. Withdraw a node
 by deleting its Markdown file (`specspec delete <id>...` or a valid manual deletion).
 Explain why in your normal Git commit. Earlier content stays in Git history, not
 flagged files. Managed deletion cascades through every full/partial child at every
@@ -129,7 +131,7 @@ nodes. Unborn Git has an empty baseline; non-Git/invalid baselines show a clear
 comparison-unavailable note. No default polling, staging, commits or status-restore
 workflow is introduced. Native-document Delete requires saved project documents.
 
-Only the current compact-ID node format **5** schema and structured API **6** are supported. Obsolete
+Only the current compact-ID node format **6** schema and structured API **6** are supported. Obsolete
 node formats, UUID IDs and unknown fields are rejected, not silently normalized.
 There is no permanent migration command or editor conversion control. Both working
 graphs were converted once through a temporary journaled tool. Old root-history

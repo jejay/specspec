@@ -2,9 +2,7 @@
 id: 3jX0Rgk=
 type: requirement
 parents:
-- U7wDQk0=
 - aiuyGEs=
-- tgHQyx4=
 ---
 # Place a compact rank-preserving backbone and draw every link
 

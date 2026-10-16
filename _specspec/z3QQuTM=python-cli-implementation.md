@@ -2,10 +2,7 @@
 id: z3QQuTM=
 type: implementation
 parents:
-- LvYBN_4=
 - -9Up2uc=
-- apEb_pM=
-- WpYvGUo=
 sources:
 - path: pyproject.toml
 - path: src/specspec/__main__.py
@@ -29,7 +26,7 @@ requests. UTF-8 files/stdin carry binding bodies; full IDs remain canonical.
 output.py renders readable summaries, complete node/context bodies and full canonical
 file review patches with relationship and separate linked-source impact. Compact API 6
 emits one UTF-8 envelope, small mutation receipts and reconstructible comparisons.
-Node format remains 5. Byte budgets cover the actual chosen representation and required
+Node format remains 6. Byte budgets cover the actual chosen representation and required
 ancestors are never silently truncated. Terminal controls are rendered visibly.
 CLI/host regressions exercise protocol/exit boundaries, full hunk/EOL/comment changes,
 source operations, guarded deletion, parent replacement and hyphen-leading identities.

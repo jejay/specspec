@@ -12,7 +12,7 @@ from typing import Any
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
-FORMAT_VERSION = 5
+FORMAT_VERSION = 6
 API_VERSION = 6
 MAX_FILE_BYTES = 1024 * 1024
 

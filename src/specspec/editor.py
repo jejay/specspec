@@ -121,7 +121,8 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 versions.append(header.get("format_version"))
         if len(versions) != 1 or type(versions[0]) is not int or versions[0] != FORMAT_VERSION:
             fail(
-                "Editing requires a current format-5 manifesto. Repair its Markdown.",
+                f"Editing requires a current format-{FORMAT_VERSION} manifesto. "
+                "Repair its Markdown.",
                 path,
             )
         if "body" in edit:

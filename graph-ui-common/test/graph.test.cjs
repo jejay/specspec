@@ -28,7 +28,7 @@ function fixture(t, options = {}) {
     dom.window.close();
     assert.deepEqual(messages.filter(message => message.type === 'client-error'), [], 'Renderer errors must not be mistaken for successful DOM tests.');
   });
-  const snapshot = { format_version: 5, valid: true, nodes: [root, child], edges: [['root', 'child']] };
+  const snapshot = { format_version: 6, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });

@@ -3,7 +3,6 @@ id: E7O_6GU=
 type: requirement
 parents:
 - DG-JpDc=
-- LtROyww=
 - bLBNk80=
 ---
 # Paint editable highlight rings inside unchanged card outlines

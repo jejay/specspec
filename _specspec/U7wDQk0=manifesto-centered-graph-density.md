@@ -3,7 +3,6 @@ id: U7wDQk0=
 type: requirement
 parents:
 - W8_8BXA=
-- eLTZ3sg=
 - 6EmKDz8=
 ---
 # Develop a compact graph outward from the manifesto

@@ -15,3 +15,7 @@ each implementation explains a realization of its parent requirements.
 Direct links point from intention to conclusion. Split elements when independently
 reviewable or reusable reasoning warrants a separate identity. Headings and lists
 structure a coherent binding text.
+
+Immediate links preserve a shortcut-free graph. Ancestor bindings supply inherited
+justification, with downstream realization and review scoped by the separately
+reasoned shortcut-freedom contract.

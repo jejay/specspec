@@ -2,7 +2,7 @@
 id: XV5_rPQ=
 type: manifesto
 parents: []
-format_version: 5
+format_version: 6
 ---
 # Support intention-conclusion specification-spectrum development
 

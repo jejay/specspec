@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {ProjectDocuments}=require('../host/documents.cjs');
 const {GraphSession}=require('../host/session.cjs');
-const snapshot={valid:true,format_version:5,nodes:[],edges:[]};
+const snapshot={valid:true,format_version:6,nodes:[],edges:[]};
 const annotationCli=async()=>({result:{shots:[]}});
 const lastSnapshot=messages=>messages.filter(m=>m.type==='snapshot').at(-1);
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};

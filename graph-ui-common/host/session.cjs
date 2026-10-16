@@ -296,7 +296,7 @@ class GraphSession {
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
     const common = ['--json'];
-    if (current.format_version !== 5) throw new Error('Unsupported specification format.');
+    if (current.format_version !== 6) throw new Error('Unsupported specification format.');
     const nodes = new Map(current.nodes.map(n => [n.id, n])), id = message.id;
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('The node no longer exists. Unsaved text has been retained.');
     let args, input;

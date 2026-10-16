@@ -3,9 +3,8 @@ id: qowy5AI=
 type: requirement
 parents:
 - F5JaC_4=
-- DiIJxaQ=
-- _wJJQko=
 - ME4UXTA=
+- pA2ls_g=
 ---
 # Define canonical five-byte IDs and the current typed node schema
 
@@ -17,8 +16,8 @@ current node, independently of its summary. Validate casefold aliases for portab
 filename safety. Random IDs are project references; branch-merge collision checking
 remains part of graph validation.
 
-Current node format 5 fields are: required `id`, `type`, unique `parents`; manifesto
-integer `format_version: 5`; optional implementation `sources`; optional namespaced
+Current node format 6 fields are: required `id`, `type`, unique `parents`; manifesto
+integer `format_version: 6`; optional implementation `sources`; optional namespaced
 JSON-compatible `extensions`. Types are manifesto, requirement and implementation.
 Requirement parents are manifesto/requirement; implementation parents are requirements.
 Read the unique manifesto/version before full parsing. Unsupported versions,

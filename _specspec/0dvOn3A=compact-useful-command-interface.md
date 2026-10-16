@@ -2,8 +2,6 @@
 id: 0dvOn3A=
 type: requirement
 parents:
-- WpYvGUo=
-- ME4UXTA=
 - LvYBN_4=
 ---
 # Offer a compact useful command interface

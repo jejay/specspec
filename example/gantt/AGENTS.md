@@ -38,9 +38,12 @@ manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
 Use `show`, `context` and `show ID --dependents` before code changes.
-Canonical node format 5 and application API 6 use
+Canonical node format 6 and application API 6 use
 canonical padded Base64url IDs over five bytes, including `=`, and `<id><slug>.md`
-files. Valid manual Markdown is usable; graph-aware CLI/UI edits are recommended.
+files. Each direct parent adds ancestry: a direct parent cannot already be an
+indirect parent. Review ripple effects using both old and new graphs, including
+ancestry lost by reparenting. Implementation leaves contribute bounded realization.
+Valid manual Markdown is usable; graph-aware CLI/UI edits are recommended.
 Delete removes the full descendant closure, including shared children, with warnings
 for affected uncommitted files. Explain reasons in Git. Default workspace compares
 to HEAD, keeping committed D ghosts through staging until commit.

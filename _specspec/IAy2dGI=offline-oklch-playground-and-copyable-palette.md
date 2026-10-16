@@ -2,7 +2,6 @@
 id: IAy2dGI=
 type: requirement
 parents:
-- XLyy460=
 - 6QB9hRY=
 ---
 # Generate copyable OKLCH palettes in an offline playground

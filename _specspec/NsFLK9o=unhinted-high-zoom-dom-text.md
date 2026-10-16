@@ -2,9 +2,7 @@
 id: NsFLK9o=
 type: requirement
 parents:
-- XzlIEcQ=
 - mAZgRy8=
-- bOXyw00=
 ---
 # Rasterize native text at the current camera scale
 

@@ -2,7 +2,7 @@
 id: SvnK0jM=
 type: manifesto
 parents: []
-format_version: 5
+format_version: 6
 ---
 # Help people understand and revise a plan
 

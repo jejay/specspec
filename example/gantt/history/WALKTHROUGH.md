@@ -118,10 +118,17 @@ history. CI runs the final model/browser app in an independent clone. Focused un
 fixtures may be smaller independently generated current-schema projects. No test
 requires obsolete SpecSpec development revisions or a full root-history fetch.
 
-The current receipts use application API 6 and node format 5 throughout the maintained
-history. Command/protocol cutovers refresh actual receipts, teaching text, ledgers,
-refs, source retention, bundle and snapshot together; runnable application code and
-historical node identities remain stable. Old manual clones remain preserved.
+The current receipts use application API 6 and shortcut-free node format 6 throughout
+the maintained history. Command/protocol cutovers refresh actual receipts, teaching
+text, ledgers, refs, source retention, bundle and snapshot together; runnable
+application code and historical node identities remain stable. Old manual clones
+remain preserved.
+
+All retained graphs are transitively reduced: every direct parent adds ancestry.
+Actual reconstructed CLI commands name the minimal parent sets at creation,
+including earlier/deleted nodes. The shared validator checks every recorded state
+and every saved/staged revision. Changing a chain can change downstream bindings;
+review both old and new impact rather than treating direct links as extra promises.
 
 ## Every schema change requires a full example-history rewrite
 

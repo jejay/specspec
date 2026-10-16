@@ -2,16 +2,13 @@
 id: 5d5oDCM=
 type: requirement
 parents:
-- Bnr6yZY=
-- DiIJxaQ=
 - TAvql3w=
 - Yfy0414=
-- xu6W0c4=
 - fuyy0Lk=
 ---
 # Derive physical-deletion ghosts from freshly resolved HEAD
 
-Represent the saved graph with physically present format 5 node files. Managed
+Represent the saved graph with physically present format 6 node files. Managed
 deletion follows AuhoBoU='s descendant plan and writer guards. The user records
 reasons in ordinary Git commits; predecessor trees retain removed node reasoning.
 

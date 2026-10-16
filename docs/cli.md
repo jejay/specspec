@@ -2,7 +2,7 @@
 
 One CLI serves people and coding agents. Default output is readable text/Markdown;
 `--json` explicitly selects compact UTF-8 API **6**. Redirection does not change the
-format. Canonical node format remains **5**; upgrade the CLI and both host builds
+format. Canonical node format is **6**; upgrade the CLI and both host builds
 together. The CLI does not supply old command aliases or old protocol readers.
 
 ## Eight everyday commands
@@ -28,7 +28,12 @@ case-sensitive. Hyphen-leading IDs remain accepted as full node arguments.
 `add --type implementation` selects an implementation leaf. Repeated `--parent`
 values specify the complete replacement set on update. The manifesto keeps its
 empty parents; ordinary nodes require parents. Bodies are files or `-` stdin,
-not shell-interpolated inline program text. Add derives a filename summary from
+not shell-interpolated inline program text. The complete candidate must be shortcut-free:
+no direct parent may already be an indirect parent. REDUNDANT_PARENT reports the
+affected edge and alternative path, including redundancies on other nodes after an
+update. Related multi-file Markdown changes must be made coherently and checked;
+managed writes never normalize them. See [graph structure](graph-structure.md).
+Add derives a filename summary from
 the heading (falling back to `node`); advanced `--slug` explicitly overrides it.
 
 `context` prints every required ancestor and the selected node in deterministic

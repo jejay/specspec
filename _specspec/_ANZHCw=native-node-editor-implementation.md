@@ -3,8 +3,6 @@ id: _ANZHCw=
 type: implementation
 parents:
 - GQdmCrA=
-- YOPhqYc=
-- LvYBN_4=
 sources:
 - path: src/specspec/editor.py
 - path: src/specspec/cli.py

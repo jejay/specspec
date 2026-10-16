@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import heapq
+from collections import deque
 from dataclasses import dataclass
 
 from .model import Diagnostic, SpecNode
@@ -114,4 +115,39 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
         for node in nodes:
             if node.id not in reachable:
                 error(node, "UNREACHABLE", "Node is not reachable from the manifesto.")
+    if not diagnostics:
+        # Each direct parent must add ancestry beyond the other direct parents.
+        # Search their ancestors together, once per multiparent node. Keep one
+        # deterministic forward witness per ancestor, without recursive paths or
+        # a quadratic, graph-wide transitive-closure cache. Single-parent chains
+        # require no additional traversal.
+        for child_id in sorted(by_id):
+            direct = parents[child_id]
+            if len(direct) < 2:
+                continue
+            toward: dict[str, str] = {}
+            pending: deque[str] = deque()
+            for parent_id in sorted(direct):
+                for ancestor in sorted(parents[parent_id]):
+                    if ancestor not in toward:
+                        toward[ancestor] = parent_id
+                        pending.append(ancestor)
+            while pending:
+                current = pending.popleft()
+                for ancestor in sorted(parents[current]):
+                    if ancestor not in toward:
+                        toward[ancestor] = current
+                        pending.append(ancestor)
+            for parent_id in sorted(direct & toward.keys()):
+                witness = [parent_id]
+                while witness[-1] in toward:
+                    witness.append(toward[witness[-1]])
+                witness.append(child_id)
+                error(
+                    by_id[child_id],
+                    "REDUNDANT_PARENT",
+                    f"Direct edge {parent_id} -> {child_id} is redundant; "
+                    f"alternative path: {' -> '.join(witness)}. "
+                    "Review the relationships and remove the shortcut explicitly.",
+                )
     return graph, diagnostics

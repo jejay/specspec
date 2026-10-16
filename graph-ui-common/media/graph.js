@@ -29,7 +29,7 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 5 && !state.readonly &&
+  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 6 && !state.readonly &&
     (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
   const draftCard = () => creating || orphaned();
@@ -63,7 +63,7 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 5 || state.readonly || state.provisional || pending || Boolean(state.document);
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 6 || state.readonly || state.provisional || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
@@ -495,7 +495,7 @@
   });
 
   $('new').addEventListener('click', () => {
-    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 5) return;
+    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 6) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
     rememberCamera(); delete cameras.draft;

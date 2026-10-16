@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { GraphSession, pollInterval } = require('../host/session.cjs');
 const { renderMatches, sameNode } = require('../media/graph-model.js');
 const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
-const snapshot = { valid: true, format_version: 5, nodes: [node], edges: [] };
+const snapshot = { valid: true, format_version: 6, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(check) { for (let i = 0; i < 100; i++) { if (check()) return; await pause(5); } assert.ok(check()); }
 const isComparison = c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read' && Boolean(JSON.parse(c.input).base);

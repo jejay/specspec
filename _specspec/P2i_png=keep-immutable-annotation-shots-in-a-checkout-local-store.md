@@ -3,7 +3,6 @@ id: P2i_png=
 type: requirement
 parents:
 - DG-JpDc=
-- _wJJQko=
 - 0dvOn3A=
 ---
 # Keep immutable spotlight shots in a checkout-local store

@@ -1,7 +1,7 @@
 # Implementation source regions
 
 Implementation `sources` supports whole-file hints and Git-addressed text regions.
-Canonical **node format 5** and **application API 6** retain the source-region
+Canonical **node format 6** and **application API 6** retain the source-region
 contract, with a compact current command surface.
 Node IDs still use five random bytes and padded Base64url, including `=`.
 

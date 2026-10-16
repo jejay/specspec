@@ -55,12 +55,12 @@ text/Markdown defaults and explicit compact JSON. Full review diffs show all can
 file hunks, semantic node/relationship changes and separate linked-source impact.
 Comparison transport shares unchanged records; both hosts use the same read coordinator
 with optional native overlays and working-first loading. Native persistence stays
-separate from managed writes. Node format remains **5** while protocol is **6**.
+separate from managed writes. Node format is **6** and protocol is **6**.
 
 ## Canonical files and grammar
 
 Use a flat project-root `_specspec` with direct regular node Markdown files.
-The unique manifesto contains integer `format_version: 5`. Requirements depend on
+The unique manifesto contains integer `format_version: 6`. Requirements depend on
 manifesto/requirement parents; implementation leaves depend on requirements. All
 nodes form one rooted connected DAG. Frontmatter fields are `id`, `type`, `parents`,
 manifesto `format_version`, optional implementation `sources` and optional namespaced
@@ -79,8 +79,14 @@ unaffected frontmatter comments during targeted writes. Lists/headings structure
 coherent element; independently reusable/reviewable reasoning warrants another node.
 
 The graph engine builds node/parent/child maps, deterministic heap-based Kahn order
-and iterative closures/cycle witnesses. Rebuild from current files per invocation;
-base graph checks are linear with O(V log V) deterministic heap cost.
+and iterative closures/cycle witnesses. Node format 6 requires a transitively reduced
+DAG: each direct parent adds ancestry. After basic graph checks pass, shared ancestor
+traversals diagnose redundant edges with deterministic alternative paths. Validation
+never normalizes edges. Managed candidates, native overlays, revisions and exact
+staged blobs use this one authority. Rebuild per invocation; base checks are linear
+with O(V log V) ordering cost, plus shortcut traversal/witness work. See
+[graph structure](docs/graph-structure.md). Changes require reconsidering indirect
+effects against both old and new graphs; implementation realization remains bounded.
 
 ## Transactions, deletion and native persistence
 

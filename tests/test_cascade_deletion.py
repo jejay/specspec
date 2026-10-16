@@ -30,9 +30,9 @@ def branch(root, manifesto):
     _, right = add_node(root, "requirement", [manifesto], "# Right\n", "right")
     _, full = add_node(root, "requirement", [left], "# Full child\n", "full")
     _, shared = add_node(root, "requirement", [left, right], "# Shared child\n", "shared")
-    _, deep = add_node(root, "requirement", [shared, right], "# Deeper partial\n", "deep")
-    _, code = add_node(root, "implementation", [full, deep], "# Shared realization\n", "code")
-    before, other = add_node(root, "requirement", [right], "# Unrelated\n", "other")
+    _, other = add_node(root, "requirement", [right], "# Outside parent\n", "other")
+    _, deep = add_node(root, "requirement", [shared, other], "# Deeper partial\n", "deep")
+    before, code = add_node(root, "implementation", [full, deep], "# Shared realization\n", "code")
     return before, left, right, full, shared, deep, code, other
 
 
@@ -114,7 +114,7 @@ def test_only_uncommitted_descendant_warns_even_when_staged_or_semantically_unch
     commit(root)
     target = shared
     if kind in {"untracked", "staged-added", "ignored"}:
-        _, target = add_node(root, "requirement", [shared, right], "# Uncommitted child\n", "new")
+        _, target = add_node(root, "requirement", [shared, other], "# Uncommitted child\n", "new")
         if kind == "ignored":
             (root / ".gitignore").write_text("_specspec/\n", encoding="utf-8")
     path = load_snapshot(root).graph.nodes[target].path
@@ -246,7 +246,7 @@ def test_reviewed_scope_is_recomputed_and_refused_before_writes_if_it_changes(wo
     commit(root)
     plan = deletion_plan(before, [left])
     if change == "descendant":
-        add_node(root, "requirement", [shared, right], "# New child\n", "new")
+        add_node(root, "requirement", [shared, other], "# New child\n", "new")
     elif change == "warning":
         update_node(root, deep, body="# Now uncommitted\n")
     else:

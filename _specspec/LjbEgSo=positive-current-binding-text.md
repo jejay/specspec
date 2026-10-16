@@ -3,7 +3,6 @@ id: LjbEgSo=
 type: requirement
 parents:
 - r1wddEQ=
-- VZvwDBY=
 ---
 # State current goals, contracts and realization positively
 

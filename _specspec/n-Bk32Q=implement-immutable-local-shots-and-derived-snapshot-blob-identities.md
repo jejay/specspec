@@ -2,8 +2,6 @@
 id: n-Bk32Q=
 type: implementation
 parents:
-- P2i_png=
-- 63jO49Q=
 - rQTg56g=
 - RY5LFw8=
 sources:
@@ -26,7 +24,7 @@ publishes one atomic shot file under the cooperating workspace writer lock. Name
 six-color inks and explicit hex colors remain independent of semantic graph fills.
 The local store has explicit count/byte budgets, protected malformed-data errors,
 Git-local exclusion and tracked-state refusal. Flush checks a host-reviewed shot-ID
-set and removes only spotlight shot/content files. Canonical node format stays 5;
+set and removes only spotlight shot/content files. Canonical node format stays 6;
 the spotlight store has its own local format.
 
 Public spotlight add/show/flush commands expose direct color/ID/message capture

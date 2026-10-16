@@ -6,7 +6,6 @@ parents:
 - 1aSOZOs=
 - yJnnDfM=
 - FU5NaYc=
-- LjbEgSo=
 sources:
 - path: .github/workflows/ci.yml
 - path: .vscode/launch.json

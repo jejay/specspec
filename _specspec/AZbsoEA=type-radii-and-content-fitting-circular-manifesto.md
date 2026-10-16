@@ -2,8 +2,6 @@
 id: AZbsoEA=
 type: requirement
 parents:
-- Dn6Ult8=
-- qf5-4sc=
 - xCOHepQ=
 - ejSVfuc=
 ---

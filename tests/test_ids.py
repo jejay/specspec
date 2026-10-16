@@ -133,13 +133,13 @@ def test_removed_withdrawal_field_is_rejected_even_when_false(workspace, retired
         parse_node({**node.frontmatter(), "retired": retired}, node.body, node.path)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 4, True])
+@pytest.mark.parametrize("version", [1, 2, 3, 4, 5, True])
 def test_only_current_schema_is_readable_and_never_converted(workspace, version):
     root, _ = workspace
     before = load_snapshot(root)
     node = before.nodes[0]
     raw = before.files[node.path].replace(
-        b"format_version: 5", f"format_version: {str(version).lower()}".encode()
+        b"format_version: 6", f"format_version: {str(version).lower()}".encode()
     )
     (root / node.path).write_bytes(raw)
     assert not load_snapshot(root).valid

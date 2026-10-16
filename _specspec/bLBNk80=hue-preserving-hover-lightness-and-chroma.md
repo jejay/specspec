@@ -3,7 +3,6 @@ id: bLBNk80=
 type: requirement
 parents:
 - pqNhV6s=
-- -0ljwrM=
 - xCOHepQ=
 ---
 # Strengthen colored hover lightness and chroma in its hue

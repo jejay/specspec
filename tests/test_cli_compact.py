@@ -63,7 +63,7 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     result = call(root, "init", "-", "--json", input="# Manifesto 🐕\n")
     assert result.exit_code == 0, result.output
     first = json.loads(result.stdout)
-    assert API_VERSION == 6 and FORMAT_VERSION == 5
+    assert API_VERSION == 6 and FORMAT_VERSION == 6
     assert first["api_version"] == 6 and "snapshot" not in first["result"]
     parent = first["result"]["changed_ids"][0]
     result = call(
@@ -109,12 +109,11 @@ def test_human_controls_are_literal_but_machine_body_is_unchanged(workspace):
 
 def test_full_diff_contains_raw_only_changes_edges_and_linked_source_summary(workspace):
     root, parent = workspace
+    _, left = add_node(root, "requirement", [parent], "# Left\n", "left")
     _, other = add_node(root, "requirement", [parent], "# Other\n", "other")
-    snapshot, child = add_node(
-        root, "requirement", [parent, other], "# Child\n\nold line\n", "child"
-    )
+    snapshot, child = add_node(root, "requirement", [left, other], "# Child\n\nold line\n", "child")
     setup_repository(root)
-    update_node(root, child, body="# Child\n\nnew line\n", parents=[parent])
+    update_node(root, child, body="# Child\n\nnew line\n", parents=[left])
     parent_node = snapshot.graph.nodes[parent]
     file = root / parent_node.path
     file.write_bytes(

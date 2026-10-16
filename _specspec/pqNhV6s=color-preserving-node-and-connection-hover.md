@@ -4,7 +4,6 @@ type: requirement
 parents:
 - iktVTRU=
 - qf5-4sc=
-- 7woeTpk=
 ---
 # Emphasize semantic hover hues and colored connections
 

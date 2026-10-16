@@ -46,9 +46,17 @@ files; frontmatter holds identity/type/parents and the body holds binding text.
 choose padded RFC 4648 Base64url over five random bytes: **40 bits**, seven payload
 symbols and the full trailing `=`. Filename form: `<id><slug>.md`. Lock-scoped
 creation retries exact/casefold collisions; validation checks portable aliases.
-Current **node format 5** defines the sole supported node scheme; **API 6** defines the compact application protocol. Schema errors and
+Current **node format 6** defines the sole supported node scheme; **API 6** defines the compact application protocol. Schema errors and
 unsupported historical formats receive diagnostics. Source blob IDs address code
 contents; transaction protection compares original bytes.
+
+[Shortcut-free justifications](../_specspec/uAjln2M=shortcut-free-immediate-justifications.md)
+require each direct parent to contribute ancestry. The
+[shared validation choice](../_specspec/pA2ls_g=central-shortcut-validation-and-current-format-contract.md)
+checks all candidates, native overlays, historical graphs and exact indexes under
+one current contract, reporting alternative paths without repairing edges. Ancestor
+bindings carry justification; implementations contribute bounded realizations.
+Review ripple effects using both old and new graphs. See [graph structure](graph-structure.md).
 
 [Managed transactions](../_specspec/6SyZ-BU=recoverable-workspace-mutations.md)
 validate saved/candidate graphs and journal bytes/null deletions under a lock in
@@ -139,7 +147,7 @@ leads the [eight-command vocabulary](../_specspec/7tMgRa8=eight-everyday-command
 [readable defaults](../_specspec/sJ5dyh4=readable-default-results-and-complete-context.md),
 [full review diffs](../_specspec/7kYVG_E=complete-node-aware-text-and-relationship-diffs.md)
 and [compact API 6](../_specspec/cpFRqIM=compact-versioned-json-with-reconstructible-comparisons.md).
-Canonical node format remains **5**. The [shared read path](../_specspec/-UedVEw=shared-electron-and-vscode-graph-read-path.md)
+Canonical node format is **6**. The [shared read path](../_specspec/-UedVEw=shared-electron-and-vscode-graph-read-path.md)
 serves both hosts with optional native overlays; [safeguards](../_specspec/nIj9fmE=compact-interface-preserves-deletion-and-source-guards.md)
 and [coordinated examples/cutover](../_specspec/4ZvnSGw=current-cli-receipts-and-coordinated-protocol-cutover.md)
 retain their domain and verification boundaries. The [command guide](cli.md) gives
@@ -197,7 +205,7 @@ keeps shot files and exact retained node bytes in `.specspec-local/annotations`,
 Git-excluded and shared by both hosts for the same checkout until explicit flush.
 [Version resolution](../_specspec/63jO49Q=resolve-annotation-references-against-exact-snapshot-bytes.md)
 uses full node IDs and exact SHA-1/SHA-256 Git blob addresses against actual saved,
-native-overlay or selected revision bytes. Canonical node format remains 5.
+native-overlay or selected revision bytes. Canonical node format is 6.
 
 [Attention and list integration](../_specspec/rvz48KY=integrate-arrivals-into-an-inspectable-annotation-list-without-interruption.md)
 use a round red toolbar badge counting only new batches since this view last opened

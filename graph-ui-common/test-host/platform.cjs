@@ -74,22 +74,24 @@ function platformChecks(fixture, host) {
       await waitFor(`document.querySelector('[data-node-id="${removed}"]')===null&&document.getElementById('revision').textContent.startsWith('HEAD → ')`);
       assert.equal(existsSync(join(fixture.root,deletedPath)),false);
       console.log(`${host}: physical deletion D survives staging and vanishes after commit through Git watching without Refresh/polling.`);
-      // A whole descendant cascade, including two levels shared with an outside
-      // parent, over the maintained history (not an invented one-commit baseline).
+      // A whole descendant cascade with two levels shared with independent outside
+      // parents, over maintained history (not an invented one-commit baseline).
       const current = fixture.cli(['show','--json']);
       const manifesto = current.nodes.find(n=>n.type==='manifesto');
       const outside = current.nodes.find(n=>n.id===fixture.modified);
       const outsideBytes = readFileSync(join(fixture.root,outside.path));
+      const deeperOutside = current.nodes.find(n=>n.type==='requirement'&&n.id!==outside.id&&n.parents.includes(manifesto.id));
+      const deeperOutsideBytes = readFileSync(join(fixture.root,deeperOutside.path));
       const add = (parents,slug) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--slug',slug,'--body','-','--json'],`# ${slug}\n\nDisposable cascade regression.\n`).changed_ids[0];
       const branch = add([manifesto.id],'cascade-root');
       const full = add([branch],'cascade-full-child');
       const partial = add([branch,outside.id],'cascade-partial-child');
-      const deep = add([partial,outside.id],'cascade-deeper-partial-child');
+      const deep = add([partial,deeperOutside.id],'cascade-deeper-partial-child');
       const committed = [branch,full,partial,deep];
       const files = fixture.cli(['show','--json']).nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
       git('add','--',...files);
       git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable full and shared descendant branch');
-      const fresh = add([deep,outside.id],'cascade-never-committed-child');
+      const fresh = add([deep],'cascade-never-committed-child');
       const deepPath = fixture.cli(['show','--json']).nodes.find(n=>n.id===deep).path;
       fixture.cli(['update',deep,'--body','-','--json'],'# Staged but uncommitted descendant\n');
       git('add','--',deepPath);
@@ -102,12 +104,14 @@ function platformChecks(fixture, host) {
       await waitFor(ghostCheck);
       assert.ok(await evaluate(`document.querySelector('[data-node-id="${fresh}"]')===null`),'Never-committed descendant has no fabricated HEAD ghost.');
       assert.deepEqual(readFileSync(join(fixture.root,outside.path)),outsideBytes,'Shared outside parent survives without reparenting/editing.');
+      assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes,'Independent deeper outside parent also survives.');
       assert.ok(plan.nodes.every(n=>!existsSync(join(fixture.root,n.path))),'All full/partial descendant files are physically gone.');
       git('add','-u','--',...files);await delay(500);
       assert.ok(await evaluate(ghostCheck),'All committed cascade ghosts survive staging.');
       git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Delete all full and shared descendants because the disposable regression branch is no longer needed');
       await waitFor(committed.map(id=>`document.querySelector('[data-node-id="${id}"]')===null`).join('&&'));
       assert.deepEqual(readFileSync(join(fixture.root,outside.path)),outsideBytes);
+      assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes);
       console.log(`${host}: real full/partial descendant cascade, staged/new-child warnings, outside-parent preservation and all HEAD/stage/commit ghosts passed without Refresh/polling.`);
       // Real manual Markdown writes, with no Refresh click, CLI mutation or polling.
       await evaluate(`document.getElementById('discard').click();document.getElementById('back').click();document.querySelector('[data-node-id="${modified}"]').click()`);

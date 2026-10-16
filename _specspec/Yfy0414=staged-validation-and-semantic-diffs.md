@@ -2,9 +2,7 @@
 id: Yfy0414=
 type: requirement
 parents:
-- SRsw2W0=
 - tvic3PQ=
-- LvYBN_4=
 ---
 # Validate exact index blobs and compare revision graphs by ID
 

@@ -110,7 +110,7 @@ count and uncommitted affected-node warnings (staged is not committed), then
 rechecks the reviewed scope under the writer lock. Dirty descendant documents
 remain protected by the project-wide save/revert guard. Reads skip overlays for already deleted files, so retained open
 buffers do not resurrect nodes. The planner never writes files or recreates a
-deleted node. The current application protocol is API 6 with unchanged node format 5;
+deleted node. The current application protocol is API 6 with shortcut-free node format 6;
 upgrade the CLI and both host builds together. See [compact commands](cli.md).
 
 ## Verification

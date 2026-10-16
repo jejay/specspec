@@ -2,7 +2,6 @@
 id: XzlIEcQ=
 type: requirement
 parents:
-- eLTZ3sg=
 - t8RQMdE=
 ---
 # Navigate a smooth spatial node canvas

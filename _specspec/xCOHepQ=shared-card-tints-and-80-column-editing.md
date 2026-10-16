@@ -4,7 +4,6 @@ type: requirement
 parents:
 - iktVTRU=
 - 6MUwTIw=
-- LtROyww=
 - fdB9ZLM=
 ---
 # Use shared tints, an 80-column form and bold Git corners

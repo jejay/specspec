@@ -2,11 +2,8 @@
 id: 6QB9hRY=
 type: requirement
 parents:
-- Rg30CXs=
-- gfAxHps=
 - B87C_kI=
 - bLBNk80=
-- qnGsij4=
 ---
 # Use one exact shared palette for distance, type and revision fills
 

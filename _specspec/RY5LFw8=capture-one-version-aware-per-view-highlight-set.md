@@ -33,4 +33,4 @@ An assembled shot uses highlights provenance instead of claiming all members cam
 from one commit. Existing shots retain their bytes and meaning. Creation preserves
 the highlight set, drafts and camera, and refreshes the shared retained list.
 Workspace trust and host allowlists guard this local write in both live and
-historical views. Canonical node schema remains unchanged.
+historical views. Canonical node schema retains its fields.

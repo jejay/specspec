@@ -6,7 +6,7 @@ const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
 const extensionPath = require.resolve('../out/extension.js');
-const snapshot = { format_version: 5, nodes: [], edges: [], valid: true };
+const snapshot = { format_version: 6, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
 const lastSnapshot = panel => panel.messages.filter(m => m.type === 'snapshot').at(-1);
 
@@ -211,7 +211,7 @@ test('empty development windows use a filesystem folder picker and load the grap
   const result = await calls.commands.get('specspec.openGraph')();
   assert.equal(calls.dialogs, 1);
   assert.equal(calls.picks, 0);
-  assert.equal(result.format_version, 5);
+  assert.equal(result.format_version, 6);
   assert.equal('fingerprint' in result, false);
   assert.equal(calls.cli[0].root, root);
   assert.equal(lastSnapshot(calls.panels[0]).type, 'snapshot');

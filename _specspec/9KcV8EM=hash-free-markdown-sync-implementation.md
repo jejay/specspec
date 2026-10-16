@@ -2,9 +2,7 @@
 id: 9KcV8EM=
 type: implementation
 parents:
-- tvic3PQ=
 - 6SyZ-BU=
-- LvYBN_4=
 sources:
 - path: src/specspec/model.py
 - path: src/specspec/format.py

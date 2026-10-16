@@ -150,7 +150,7 @@ Existing immutable submissions use the same store and keep their original bytes.
 This store is shared by the CLI, VS Code and Electron **for the same project
 checkout**, across sessions and branch changes. Separate clones and worktrees have
 separate stores. It is not UI-private application data or specification metadata.
-The node schema remains format 5; spotlight files have their own local format.
+The current node schema is shortcut-free format 6; spotlight files have their own local format.
 The CLI uses Git's local `info/exclude` when existing ignore rules do not protect
 `.specspec-local`, without modifying tracked `.gitignore`. Writes refuse Git-tracked
 local-state files. It never stages, commits, creates refs, writes Git objects or

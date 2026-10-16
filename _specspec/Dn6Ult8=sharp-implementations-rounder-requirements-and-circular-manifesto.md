@@ -2,7 +2,6 @@
 id: Dn6Ult8=
 type: requirement
 parents:
-- eLTZ3sg=
 - iktVTRU=
 ---
 # Distinguish node types with square, rounder and circular outlines

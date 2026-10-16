@@ -4,8 +4,6 @@ type: requirement
 parents:
 - 7woeTpk=
 - 6IzHBjQ=
-- DiIJxaQ=
-- SRsw2W0=
 ---
 # Derive path bounds independently for each revision
 

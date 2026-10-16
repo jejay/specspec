@@ -3,14 +3,12 @@ id: cpFRqIM=
 type: requirement
 parents:
 - 0dvOn3A=
-- LvYBN_4=
-- Yfy0414=
 - 5d5oDCM=
 ---
-# Use compact reconstructible API 6 data with node format 5
+# Use compact reconstructible API 6 data with node format 6
 
 The sole application/structured protocol is API 6; canonical Markdown remains node
-format 5 with the same IDs, fields and source grammar. Negotiate/reject protocol
+format 6 with the same IDs, fields and source grammar. Negotiate/reject protocol
 versions explicitly and update host adapters together. Emit one compact UTF-8 JSON
 envelope with api_version, ok, result and diagnostics. Keep descriptive field names,
 structured diagnostics and explicit successful-plan versus valid-graph meaning.

@@ -2,9 +2,6 @@
 id: 9oE6Ia4=
 type: implementation
 parents:
-- SRsw2W0=
-- tvic3PQ=
-- apEb_pM=
 - Yfy0414=
 sources:
 - path: src/specspec/git.py
