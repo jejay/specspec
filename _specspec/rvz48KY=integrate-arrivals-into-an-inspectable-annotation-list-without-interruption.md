@@ -6,36 +6,23 @@ parents:
 - YOPhqYc=
 - XzlIEcQ=
 ---
-# Select and frame whole spotlights from a toolbar dropdown
+# Select and frame comparison spotlights from a toolbar dropdown
 
-The toolbar Spotlights button opens an anchored, context-menu-style dropdown with
-one text entry per spotlight, newest first. Each entry shows the spotlight message
-and compact time/version-count context. A spotlight can contain multiple colors;
-its entry is text-only. The dropdown directly offers whole-spotlight selection,
-Create spotlight from highlights, Clear highlight and confirmed Flush local
-spotlights. Keep every retained entry reachable by scrolling in small windows.
+The toolbar Spotlights button opens an anchored newest-first text dropdown with
+one message entry per immutable spotlight, time, comparison and member count.
+Select an entry to switch its comparison, replace editable highlights with all
+member IDs, close the menu and frame available target/deleted-base nodes using the
+full canvas. Enter overview while retaining any focused draft. Repeated selection
+frames again. Missing members remain selected; a no-match selection keeps camera.
 
-Selecting an entry replaces the editable highlights with all exact colored node
-sets in that spotlight together.
-Apply the border style first, close the dropdown and frame the exact matching
-nodes using the full unobscured canvas, like the existing framing action. Enter
-the overview while retaining any focused draft and surrounding graph context.
-Selecting the same spotlight again highlights and frames it again. Clear highlight
-removes rings explicitly. Opening or dismissing the dropdown preserves the camera
-and editable highlights. Escape and outside clicks dismiss it; keyboard navigation
-makes each entry reachable. Selection is the action itself, with no expanded
-member/details view, search field or captured-text preview flow.
+The dropdown offers Create spotlight from highlights, Clear highlight and confirmed
+Flush local spotlights. Keyboard navigation, Escape/outside dismissal, window
+clamping and scrolling keep entries reachable. Arrivals preserve focus, caret,
+drafts, camera, highlights, dropdown choice and older entries. A round red badge
+counts new records since opening; first load and reload establish zero baselines.
+Polite live text announces arrivals. Counts and New cues live in renderer memory.
 
-The round red toolbar badge counts new spotlight records since this view last
-opened the dropdown. Each addition counts once regardless of colors or members;
-zero hides the badge. The first successful load establishes a zero-count baseline;
-repeated reads add nothing. Opening clears the count. Arrivals while open count
-until the next opening. New cues and counts stay in renderer memory; reload starts
-a fresh baseline. Polite live text announces arrivals. Arrivals preserve focus,
-caret, drafts, camera, editable highlights, dropdown choice and older entries.
-
-The editable version-aware highlight set is a per-view presentation preference.
-Exact, changed, absent and unavailable counts explain version matching compactly.
-Flush confirms and rechecks the reviewed list, preserving specification files and
-unrelated local data. Both hosts watch independently in working and historical
-views, with Refresh and configured polling as fallbacks.
+Workspace drift appears visibly outside the closed menu while highlighting the
+best available nodes. Local record errors preserve the last list independently of
+graph validity. Both hosts watch store events in working and historical views;
+Refresh and optional polling remain fallbacks. Flush rechecks the reviewed list.

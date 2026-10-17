@@ -24,7 +24,6 @@ function fixture(t, options = {}) {
         return { api_version: 6, ok: true, result: { shots: [] } };
       }
       if (value?.op === 'annotation-flush') { shots = []; return { api_version: 6, ok: true, result: { flushed: 1 } }; }
-      if (value?.op === 'annotation-view') return { api_version: 6, ok: true, result: { text: 'Captured bytes', reference: shots[0].groups[0].nodes[0], origin: shots[0].origin } };
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
@@ -53,15 +52,15 @@ test('highlight creation uses the guarded local API with trusted overlays, not c
   let drained = false;
   f.s.documentEdits = Promise.resolve().then(() => { drained = true; });
   f.s.host.annotationDocuments = async () => { assert.ok(drained); return { '_specspec/node.md': 'Native dirty text' }; };
-  const groups = [{ text: 'Please reconsider', color: '#e65e66', nodes: [{ id: 'Zm9vYmE=', blob: 'a'.repeat(40) }] }];
+  const message = 'Please reconsider', nodes = ['Zm9vYmE='];
   const count = f.calls.length;
-  await f.s.handle({ type: 'annotation-create', groups, documents: { 'forged.md': 'ignored' }, target: 'forged' });
+  await f.s.handle({ type: 'annotation-create', message, nodes, documents: { 'forged.md': 'ignored' }, target: 'forged' });
   const request = JSON.parse(f.calls.slice(count).find(c => JSON.parse(c.input).op === 'annotation-create').input);
-  assert.deepEqual(request, { api_version: 6, op: 'annotation-create', groups, base: 'HEAD', documents: { '_specspec/node.md': 'Native dirty text' } });
+  assert.deepEqual(request, { api_version: 6, op: 'annotation-create', message, nodes, documents: { '_specspec/node.md': 'Native dirty text' } });
   assert.equal(f.messages.at(-1).type, 'annotation-created');
   assert.ok(!f.calls.slice(count).some(c => ['add','update','delete'].includes(c.args[0])));
   f.revoke(); const before = f.calls.length;
-  await f.s.handle({type:'annotation-create',groups});
+  await f.s.handle({type:'annotation-create',message,nodes});
   assert.equal(f.calls.length,before); assert.equal(f.messages.at(-1).type,'annotation-create-error');
   assert.match(f.messages.at(-1).message,/authorization/);
 });
@@ -70,21 +69,22 @@ test('historical highlight creation pins selected commits and excludes live docu
   const f=fixture(t,{revisions:['older','newer']}); await f.s.open(); await f.s.chooseRevisions();
   f.s.lastPayload.diff.base_commit='b'.repeat(40); f.s.lastPayload.diff.target_commit='c'.repeat(40);
   f.s.host.annotationDocuments=()=>{throw new Error('Historical capture must not read live documents.');};
-  const groups=[{text:'Old intent',color:'blue',nodes:[{id:'Zm9vYmE=',blob:'a'.repeat(40)}]}];
-  await f.s.handle({type:'annotation-create',groups});
+  const message='Old intent', nodes=['Zm9vYmE='];
+  await f.s.handle({type:'annotation-create',message,nodes});
   const call=f.calls.find(c=>c.args[0]==='api'&&JSON.parse(c.input).op==='annotation-create');
-  assert.deepEqual(JSON.parse(call.input),{api_version:6,op:'annotation-create',groups,base:'b'.repeat(40),target:'c'.repeat(40)});
+  assert.deepEqual(JSON.parse(call.input),{api_version:6,op:'annotation-create',message,nodes,base:'b'.repeat(40),target:'c'.repeat(40)});
   assert.equal(f.messages.at(-1).type,'annotation-created');
 });
 
 test('creation errors return a retryable compose response and never publish a false success', async t => {
   const f=fixture(t,{creationFailure:true}); await f.s.open();
-  const groups=[{text:'Retry me',color:'red',nodes:[{id:'Zm9vYmE=',blob:'a'.repeat(40)}]}];
-  await f.s.handle({type:'annotation-create',groups});
+  const message='Retry me', nodes=['Zm9vYmE='];
+  await f.s.handle({type:'annotation-create',message,nodes});
   assert.equal(f.messages.at(-1).type,'annotation-create-error'); assert.match(f.messages.at(-1).message,/version changed/);
   assert.equal(f.messages.some(m=>m.type==='annotation-created'),false);
   const count=f.calls.length;
-  for(const invalid of [[],null,[{text:'x'.repeat(512*1024)}]]) await f.s.handle({type:'annotation-create',groups:invalid});
+  for(const invalid of [[],null,[{id:'Zm9vYmE='}]]) await f.s.handle({type:'annotation-create',message,nodes:invalid});
+  for(const invalid of ['', 'x'.repeat(501), null]) await f.s.handle({type:'annotation-create',message:invalid,nodes});
   assert.equal(f.calls.length,count); assert.equal(f.messages.at(-1).type,'annotation-create-error');
 });
 
@@ -323,7 +323,62 @@ test('native document sessions coalesce rapid typing, flush received edits, and 
   assert.ok(!f.calls.some(c => c.args[0] === 'update'));
 });
 
-const annotationShot = { id: '1'.repeat(32), origin: { kind: 'workspace', head: null }, groups: [{ text: 'Answer', color: '#aa79df', nodes: [{ id: 'node', blob: 'a'.repeat(40), title: 'Original', path: node.path }] }] };
+const annotationShot = { id: '1'.repeat(32), message: 'Answer', comparison: {base:'HEAD',target:'workspace'}, nodes:['node'], workspace:{head:null,changes:{}} };
+test('spotlight selection loads its pinned comparison before applying and preserves workspace access', async t => {
+  const shot = {...annotationShot, comparison:{base:'b'.repeat(40),target:'c'.repeat(40)}};
+  const f=fixture(t,{shots:[shot]}); await f.s.open();
+  await f.s.handle({type:'annotation-select',shot:shot.id,base:'forged',target:'forged'});
+  assert.equal(f.s.base,shot.comparison.base);assert.equal(f.s.target,shot.comparison.target);
+  const applied=f.messages.findLastIndex(m=>m.type==='annotation-applied');
+  const rendered=f.messages.findLastIndex(m=>m.type==='snapshot');
+  assert.ok(applied>rendered);assert.equal(f.messages[rendered].readonly,true);
+  assert.deepEqual(f.messages[rendered].annotationShot,shot);
+  await f.s.handle({type:'workspace'});assert.equal(f.s.target,undefined);assert.equal(f.s.base,'HEAD');
+  assert.equal(f.s.activeSpotlight,undefined);
+  assert.ok(f.messages.some(m=>m.type==='annotation-context'));
+  f.revoke();await assert.rejects(f.s.handle({type:'annotation-select',shot:shot.id}),/authorization/);
+});
+
+test('unavailable comparison keeps the usable graph and applies IDs with an explicit fallback warning', async t => {
+  const shot={...annotationShot,comparison:{base:'older',target:'missing'}};
+  const f=fixture(t,{shots:[shot]});await f.s.open();const before=f.s.snapshot;
+  const cli=f.s.host.cli;f.s.host.cli=async(args,input)=>{if(JSON.parse(input).target==='missing')throw new Error('Commit unavailable');return cli(args,input);};
+  await f.s.handle({type:'annotation-select',shot:shot.id});
+  assert.equal(f.s.snapshot,before);assert.equal(f.s.sourceInvalid,false);assert.equal(f.s.base,'HEAD');assert.equal(f.s.target,undefined);
+  assert.equal(f.messages.at(-1).type,'annotation-applied');assert.match(f.messages.at(-1).warning,/using the displayed graph.*Commit unavailable/);
+});
+
+test('workspace spotlight fallback keeps actual invalid-file restrictions while applying available IDs', async t => {
+  const f=fixture(t,{shots:[annotationShot]});await f.s.open();f.fail(true);
+  await f.s.handle({type:'annotation-select',shot:annotationShot.id});
+  assert.equal(f.s.sourceInvalid,true);assert.equal(f.messages.at(-1).type,'annotation-applied');
+  assert.equal(f.messages.at(-1).invalid,true);
+});
+
+test('native document saves and edits remain guarded after a spotlight switches to historical comparison', async t => {
+  const f=fixture(t);await f.s.open();let writes=0;
+  f.s.host.document={state:()=>({nodeId:'node'}),edit:()=>{writes++;},save:()=>{writes++;}};
+  f.s.target='older';
+  await assert.rejects(f.s.handle({type:'save',id:'node'}),/read-only/);
+  await assert.rejects(f.s.editDocument({type:'edit',id:'node'}),/read-only/);
+  assert.equal(writes,0);
+});
+
+test('unavailable restored comparisons fall back to workspace with a visible advisory', async t => {
+  const shot={...annotationShot,comparison:{base:'older',target:'missing'}};
+  const f=fixture(t,{shots:[shot]}),cli=f.s.host.cli;
+  f.s.host.cli=async(args,input)=>{if(JSON.parse(input).target==='missing')throw new Error('Missing commit');return cli(args,input);};
+  f.s.receive({type:'ready',spotlight:shot.id});await f.s.open();
+  assert.equal(f.s.target,undefined);assert.equal(f.s.base,'HEAD');assert.equal(f.s.sourceInvalid,false);
+  assert.equal(f.messages.at(-1).type,'annotation-applied');assert.match(f.messages.at(-1).warning,/workspace \/ HEAD/);
+});
+
+test('restored spotlight identity selects its stored comparison before startup rendering', async t => {
+  const shot={...annotationShot,comparison:{base:'b'.repeat(40),target:'c'.repeat(40)}};
+  const f=fixture(t,{shots:[shot]});f.s.receive({type:'ready',spotlight:shot.id});await f.s.open();
+  assert.equal(f.s.target,shot.comparison.target);assert.equal(f.messages.find(m=>m.type==='snapshot').readonly,true);
+});
+
 test('a reloaded renderer receives the unchanged retained spotlight list as its new baseline', async t => {
   const f = fixture(t, { shots: [annotationShot] }); await f.s.open();
   const reads = f.calls.filter(isComparison).length;
@@ -348,12 +403,12 @@ test('annotation arrivals coalesce independently, including historical views, wi
   f.failAnnotations(false); f.s.scheduleAnnotationsRefresh(); await waitFor(() => f.messages.at(-1).type === 'annotations');
   f.s.dispose(); const calls = f.calls.length; f.s.scheduleAnnotationsRefresh(); await pause(20); assert.equal(f.calls.length, calls);
 });
-test('captured previews validate known membership and flush confirms a reviewed list even in read-only views', async t => {
+test('spotlight selection validates known identity and flush confirms a reviewed list even in read-only views', async t => {
   const f = fixture(t, { shots: [annotationShot], revisions: ['HEAD', 'HEAD'] }); await f.s.open(); await f.s.chooseRevisions();
-  await f.s.handle({ type: 'annotation-view', shot: annotationShot.id, group: 0, member: 0 });
-  assert.equal(f.messages.at(-1).type, 'annotation-preview');
-  await assert.rejects(f.s.handle({ type: 'annotation-view', shot: '../owner', group: 0, member: 0 }), /existing/);
-  await assert.rejects(f.s.handle({ type: 'annotation-view', shot: annotationShot.id, group: -1, member: 0 }), /existing/);
+  await f.s.handle({ type: 'annotation-select', shot: annotationShot.id, base:'forged',target:'forged' });
+  assert.equal(f.messages.at(-1).type, 'annotation-applied');
+  assert.equal(f.s.base,'HEAD'); assert.equal(f.s.target,undefined);
+  await assert.rejects(f.s.handle({ type: 'annotation-select', shot: '../owner' }), /existing/);
   await f.s.handle({ type: 'annotation-flush' });
   assert.match(f.confirmations[0], /both UIs.*Specification files, Git and recovery/s);
   const flush = f.calls.find(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotation-flush');

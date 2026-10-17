@@ -5,20 +5,17 @@ parents:
 - DG-JpDc=
 - bLBNk80=
 ---
-# Paint editable highlight rings inside unchanged card outlines
+# Paint one adjustable highlight ink inside unchanged card outlines
 
-One editable highlight set supplies a solid equal-inset outline around exact
-matching members in the displayed graph, including base-revision removed cards.
-Use 5 world units at actual size. At camera scale k, use
-width = max(5, 3 / k) world units and set the outline offset to its negative,
-following graph scale while preserving at least 3 CSS screen pixels at low zoom.
-Each member uses its assigned color, from manual gestures or a spotlight. The
-outline follows the existing type shape, retains its hue on hover and follows
-unrelated-card darkening. Keyboard focus has an independent cue.
+One editable highlight set paints a solid equal-inset outline on selected node
+IDs available in the displayed target or deleted comparison base. The shared CSS
+variable --spotlight-color supplies one easily editable ink, initially white.
+Keep it independent of semantic fills and Git accents. Use width max(5, 3 / k)
+world units at camera scale k and its negative as outline offset, preserving at
+least 3 CSS screen pixels. Follow type shape and unrelated-card darkening, with an
+independent keyboard-focus cue and unchanged geometry.
 
-Keep editable highlights separate from canonical data, native forms, drafts and
-semantic fills. Applying a spotlight replaces highlights and explicitly frames its
-matching set; manual cycling and clearing only repaint. Arrivals and dropdown
-opening/dismissal preserve camera, native input and caret. Node chrome and native
-controls retain normal context menus. Compact counts explain changed-version,
-absent and unavailable members without ringing them.
+Applying a spotlight closes its dropdown, switches comparison and frames available
+members. Manual toggles and clear only repaint. Arrivals and dropdown dismissal
+preserve camera, drafts, native inputs and caret. Visible advisory drift warnings
+and compact missing/context information accompany best-effort rings.

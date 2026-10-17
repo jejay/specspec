@@ -19,6 +19,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <span id="revision"></span></header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>
+    <p id="annotation-warning" role="status" hidden></p>
     <p id="sync-notice" role="status" hidden>Last valid graph · Repair Markdown and refresh to resume editing.</p>
     <details id="linked-sources" hidden><summary id="source-summary"></summary><ul id="source-files"></ul></details>
     <p id="annotation-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>

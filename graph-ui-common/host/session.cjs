@@ -25,7 +25,7 @@ class GraphSession {
   }
   receive(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return;
-    if (value.type === 'ready') { this.annotationInitial = true; this.resolveReady(); return; }
+    if (value.type === 'ready') { this.annotationInitial = true; this.restoredSpotlight = typeof value.spotlight === 'string' ? value.spotlight : undefined; this.resolveReady(); return; }
     if (value.type === 'client-error' && typeof value.message === 'string') {
       this.renderError = new Error(`Graph renderer failed: ${value.message}`); this.log(this.renderError);
       this.listeners.forEach(f => f()); return;
@@ -59,6 +59,12 @@ class GraphSession {
       const start = Date.now();
       await this.waitReady(); this.host.trace?.('ready', Date.now() - start);
       await this.run(async () => {
+        if (this.restoredSpotlight) {
+          await this.refreshAnnotations();
+          const shot = this.annotationShots?.find(s => s.id === this.restoredSpotlight);
+          if (shot) this.spotlightContext(shot);
+          this.restoredSpotlight = undefined;
+        }
         if (!this.hasOpened && !this.target && (this.host.initialGraph || this.reads)) {
           let initial;
           try { initial = await (this.host.initialGraph ? this.host.initialGraph() : this.reads.initial()); } catch (error) { this.log(error); }
@@ -67,7 +73,14 @@ class GraphSession {
             this.host.trace?.('first-working-render', Date.now() - start, initial.snapshot.nodes.length);
           }
         }
-        await this.refresh();
+        const restoredShot = this.activeSpotlight;
+        try { await this.refresh(); }
+        catch (error) {
+          if (!restoredShot) throw error;
+          this.base = 'HEAD'; this.target = undefined; this.activeSpotlight = undefined;
+          await this.refresh();
+          await this.post({ type: 'annotation-applied', shot: restoredShot, warning: `Spotlight comparison unavailable; using workspace / HEAD. ${error.message}` });
+        }
       });
       this.host.trace?.('complete-comparison-render', Date.now() - start, this.snapshot?.nodes.length);
       return this.snapshot;
@@ -110,6 +123,7 @@ class GraphSession {
   }
   async editDocument(message) {
     if (this.disposed || !this.host.authorized()) throw new Error('Workspace trust / project authorization is required to edit documents.');
+    if (this.target) throw new Error('Historical comparisons are read-only.');
     const applied = await this.host.document.edit(message);
     if (!applied) { await this.post({ type: 'cancelled' }); return; }
     const document = this.host.document.state();
@@ -236,7 +250,7 @@ class GraphSession {
   async display(loaded, force, selectedId, automatic = false, provisional = false) {
     if (this.disposed) return;
     const document = this.host.document?.state();
-    const payload = { ...loaded, ...(document ? { document } : {}), ...(provisional ? { provisional: true } : {}), note: [this.warning, loaded.note, provisional ? 'Working graph — HEAD comparison loading…' : ''].filter(Boolean).join('\n'), readonly: Boolean(this.target) };
+    const payload = { ...loaded, ...(this.activeSpotlight ? { annotationShot: this.activeSpotlight } : {}), ...(document ? { document } : {}), ...(provisional ? { provisional: true } : {}), note: [this.warning, loaded.note, provisional ? 'Working graph — HEAD comparison loading…' : ''].filter(Boolean).join('\n'), readonly: Boolean(this.target) };
     // Direct record comparison, not a saved or calculated graph digest.
     if (automatic && !this.sourceInvalid && isDeepStrictEqual(payload, this.lastPayload)) return;
     this.sourceInvalid = false; this.lastPayload = payload; this.snapshot = loaded.snapshot;
@@ -248,12 +262,37 @@ class GraphSession {
     await this.post({ type: 'snapshot', ...payload, force, selectedId: selectedId || initialId, renderToken });
     await this.waitRender(renderToken);
   }
+  spotlightContext(shot) {
+    this.activeSpotlight = shot;
+    this.base = shot.comparison.base;
+    this.target = shot.comparison.target === 'workspace' ? undefined : shot.comparison.target;
+  }
+  async selectSpotlight(id) {
+    if (!this.host.authorized()) throw new Error('Project authorization is required for local spotlights.');
+    await this.refreshAnnotations();
+    const shot = this.annotationShots?.find(s => s.id === id);
+    if (!shot) throw new Error('Select an existing spotlight; it may have been flushed.');
+    const previous = { base: this.base, target: this.target, invalid: this.sourceInvalid };
+    await this.flushDocument();
+    this.spotlightContext(shot);
+    try {
+      await this.refresh();
+      await this.post({ type: 'annotation-applied', shot });
+    } catch (error) {
+      this.base = previous.base; this.target = previous.target; this.activeSpotlight = undefined;
+      // Keep the last usable view and still mark available IDs. Never silently
+      // claim that a missing historical comparison was successfully loaded.
+      this.sourceInvalid = Boolean(previous.invalid || shot.comparison.target === 'workspace');
+      await this.post({ type: 'annotation-applied', shot, invalid: this.sourceInvalid, warning: `Spotlight comparison unavailable; using the displayed graph. ${error.message}` });
+    }
+  }
   async chooseRevisions() {
     const result = await this.host.revisions(this.base, this.target || '');
     if (!result) return;
     const [base, target] = result;
     if (typeof base !== 'string' || !base || base.length > 1024 || typeof target !== 'string' || target.length > 1024) throw new Error('Invalid revision input.');
-    this.base = base; this.target = target || undefined; await this.refresh();
+    this.base = base; this.target = target || undefined; this.activeSpotlight = undefined;
+    await this.post({ type: 'annotation-context' }); await this.refresh();
   }
   configurePolling(interval = 0) {
     interval = pollInterval(interval); clearInterval(this.pollTimer); this.pollTimer = undefined;
@@ -277,31 +316,26 @@ class GraphSession {
     });
   }
   async handle(message) {
+    if (message.type === 'annotation-select') return this.selectSpotlight(message.shot);
     if (message.type === 'annotation-create') {
       try {
         if (!this.host.authorized()) throw new Error('Project authorization is required for local spotlights.');
-        if (!Array.isArray(message.groups) || !message.groups.length || message.groups.length > 64 || Buffer.byteLength(JSON.stringify(message.groups), 'utf8') > 512 * 1024) throw new Error('Invalid or oversized highlight set.');
+        if (!Array.isArray(message.nodes) || !message.nodes.length || message.nodes.length > 512 || message.nodes.some(id => typeof id !== 'string') || typeof message.message !== 'string' || !message.message.trim() || [...message.message].length > 500 || Buffer.byteLength(JSON.stringify(message.nodes), 'utf8') > 512 * 1024) throw new Error('Invalid or oversized highlight set/message.');
         await this.flushDocument();
         const documents = this.target ? {} : await this.host.annotationDocuments?.() || {};
-        await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-create', groups: message.groups,
-          ...(this.lastPayload?.diff ? { base: this.lastPayload.diff.base_commit || this.base } : {}),
+        await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-create', message: message.message, nodes: message.nodes,
+          ...(this.base !== 'HEAD' || this.target ? { base: this.lastPayload?.diff?.base_commit || this.base } : {}),
           ...(this.target ? { target: this.lastPayload?.diff?.target_commit || this.target } : { documents }) }));
         await this.refreshAnnotations();
         await this.post({ type: 'annotation-created' });
       } catch (error) { this.log(error); await this.post({ type: 'annotation-create-error', message: error.message }); }
       return;
     }
-    if (message.type === 'annotation-view' || message.type === 'annotation-flush') {
+    if (message.type === 'annotation-flush') {
       if (!this.host.authorized()) throw new Error('Project authorization is required for local spotlights.');
-      if (message.type === 'annotation-view') {
-        const shot = this.annotationShots?.find(s => s.id === message.shot);
-        if (!shot || !Number.isInteger(message.group) || !Number.isInteger(message.member) || message.group < 0 || message.member < 0 || !shot.groups[message.group]?.nodes[message.member]) throw new Error('Select an existing spotlight member.');
-        const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-view', shot: message.shot, group: message.group, member: message.member }));
-        await this.post({ type: 'annotation-preview', ...response.result }); return;
-      }
       const expected = (this.annotationShots || []).map(s => s.id);
       if (!expected.length) return;
-      if (!await this.host.confirm(`Flush all ${expected.length} local spotlights and their captured node contents? This affects both UIs for this checkout. Specification files, Git and recovery data are kept.`)) return;
+      if (!await this.host.confirm(`Flush all ${expected.length} local spotlights? This affects both UIs for this checkout. Specification files, Git and recovery data are kept.`)) return;
       try {
         await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-flush', expected }));
       } finally { await this.refreshAnnotations(); }
@@ -324,6 +358,7 @@ class GraphSession {
       await this.flushDocument();
     }
     if (this.host.document && message.type === 'save') {
+      if (this.target) throw new Error('Historical comparisons are read-only.');
       if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to edit documents.');
       if (message.id !== this.host.document.state().nodeId) throw new Error('A node-file editor can only edit its bound node.');
       await this.flushDocument();
@@ -338,7 +373,7 @@ class GraphSession {
     switch (message.type) {
       case 'refresh': await this.refresh(); return;
       case 'compare': await this.chooseRevisions(); return;
-      case 'workspace': this.base = 'HEAD'; this.target = undefined; await this.refresh(); return;
+      case 'workspace': this.base = 'HEAD'; this.target = undefined; this.activeSpotlight = undefined; await this.post({ type: 'annotation-context' }); await this.refresh(); return;
     }
     if (this.target) throw new Error('Historical comparisons are read-only.');
     if (!this.snapshot?.valid) throw new Error('Load a valid graph before editing.');

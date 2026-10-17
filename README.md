@@ -211,20 +211,21 @@ Click a node to open its **neighborhood view**: compact parents to the left, com
 To experiment with the distance/type/revision palette yourself, open [`tools/rainbow-playground/index.html`](tools/rainbow-playground/index.html) directly in a browser. Adjust color count, lightness, chroma and hue endpoints; preview dark/light tinted nodes and copy parameters JSON, full palette JSON or CSS variables to paste back to the assistant. This separate offline tool does not apply or save anything in SpecSpec. See its [guide](tools/rainbow-playground/README.md).
 
 **Spotlights:** ask an external agent which nodes express an idea, then add its answer
-without an input file: `specspec spotlight add purple DG-JpDc= blue rvz48KY= "Spotlight design"`.
-Each color applies to following IDs; omitted initial color defaults to purple.
-The **Spotlights** button opens a newest-first dropdown with one message per
-spotlight. Selecting one activates all its colored node sets, closes the dropdown
-and frames exact-version matches in the full canvas, retaining drafts. There is no
-search or detail/preview flow. **Clear highlight** removes the 8px inset rings.
-**Shift-click node chrome** cycles red → blue → green → purple → turquoise → yellow
-→ off; **Ctrl+Shift-click** (macOS: **Command+Shift-click**) clears one node.
+without an input file: `specspec spotlight add DG-JpDc= rvz48KY= "Spotlight design"`.
+Use `--base REV --target REV|workspace` to associate a comparison; the default is
+live HEAD → workspace. Explicit Git refs pin commits. The **Spotlights** dropdown
+switches to a selected record's comparison, highlights available IDs (including
+deleted base nodes) and frames them, retaining drafts. One white ink is controlled
+by `--spotlight-color` in `graph-ui-common/media/graph.css`.
+**Shift-click node chrome** toggles highlighting; **Ctrl+Shift-click** (macOS:
+**Command+Shift-click**) clears one node. **Clear highlight** clears the set.
 Manual and spotlight-applied highlights share the same editable set. Use
 **Spotlights → Create spotlight from highlights…** to save it with a message;
 your agent can then read `specspec spotlight show --json` without copied IDs.
 The red badge counts new spotlights since opening, starting at zero on load;
-arrivals preserve editing, focus and camera. Local spotlights and node-byte copies
-persist in Git-excluded `.specspec-local/annotations/`, shared by both UIs until
+arrivals preserve editing, focus and camera. Metadata-only spotlights persist in
+Git-excluded `.specspec-local/annotations/`. Dirty-only workspace checksums warn
+about drift while highlighting the best available nodes. Both UIs share the store until
 **Flush local spotlights…** or `specspec spotlight flush --yes`.
 See [commands, storage and UI semantics](docs/spotlights.md).
 
@@ -238,7 +239,7 @@ Native VS Code documents, including unsaved raw Markdown, overlay saved project 
 
 Layout and navigation reuse locally bundled Dagre and D3 libraries, not a Blender engine port or a remote renderer. `npm run compile` builds the offline browser bundle and its license notices. See [the library rationale](docs/node-canvas.md).
 
-Run `npm --prefix graph-ui-common test` for the shared renderer/session/camera/layout and `npm --prefix vscode test` for bridge, project-selection, and activation regression tests. `npm --prefix vscode run test:host` additionally opens the installed VS Code in a disposable test profile and checks workspace loading, a real DOM-render acknowledgement, minimum/maximum path colors and label removal, shorter-card fit, high-zoom headline rendering, earliest manifesto-anchored ranks, minimum-zoom stroke/head visibility, circle-free arrow joins, left-to-right flow, viewport-size invariance, cursor-anchored wheel zoom, drag panning, focus/back cameras, native form gestures, color modes, root controls, immutable CLI spotlight arrivals/list integration, session-only count badges, exact-version inset-ring paint, zoom-dependent ordinary-arrow darkening, painted-stroke/content clearance, and resized side-boundary endpoints. The installed-host test also opens canonical files through the default custom editor and checks native dirty/save/undo/redo, raw edits, invalid-buffer repair, shared split documents and independent cameras on a compact nested graph. This is not large-graph typing-performance evidence. The host-test runner requires Node 22+ and opens a loopback-only debugger on a disposable profile. Set `VSCODE_EXECUTABLE` or `SPECSPEC_PYTHON` if installation paths differ. Only that isolated automated test disables workspace trust; normal development launches retain it. To save screenshots, set `SPECSPEC_SCREENSHOT_DIR` to an output directory when running the host test. Full manual mutation/review and revision-picker interaction checks remain follow-up work.
+Run `npm --prefix graph-ui-common test` for the shared renderer/session/camera/layout and `npm --prefix vscode test` for bridge, project-selection, and activation regression tests. `npm --prefix vscode run test:host` additionally opens the installed VS Code in a disposable test profile and checks workspace loading, a real DOM-render acknowledgement, minimum/maximum path colors and label removal, shorter-card fit, high-zoom headline rendering, earliest manifesto-anchored ranks, minimum-zoom stroke/head visibility, circle-free arrow joins, left-to-right flow, viewport-size invariance, cursor-anchored wheel zoom, drag panning, focus/back cameras, native form gestures, color modes, root controls, immutable CLI spotlight arrivals/list integration, session-only count badges, white identity-based inset-ring paint, zoom-dependent ordinary-arrow darkening, painted-stroke/content clearance, and resized side-boundary endpoints. The installed-host test also opens canonical files through the default custom editor and checks native dirty/save/undo/redo, raw edits, invalid-buffer repair, shared split documents and independent cameras on a compact nested graph. This is not large-graph typing-performance evidence. The host-test runner requires Node 22+ and opens a loopback-only debugger on a disposable profile. Set `VSCODE_EXECUTABLE` or `SPECSPEC_PYTHON` if installation paths differ. Only that isolated automated test disables workspace trust; normal development launches retain it. To save screenshots, set `SPECSPEC_SCREENSHOT_DIR` to an output directory when running the host test. Full manual mutation/review and revision-picker interaction checks remain follow-up work.
 
 ## Standalone desktop and shared UI
 

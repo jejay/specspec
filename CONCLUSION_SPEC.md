@@ -34,7 +34,7 @@ src/specspec/
   source_schema.py         # Shared whole-file/region validation
   sources.py               # Bounded blob/range resolution and retention
   source_commands.py       # Inspect/capture/reanchor; deliberate source writes
-  annotations.py           # Immutable local spotlights, retained bytes and resolution
+  annotations.py           # Comparison spotlights and sparse workspace drift summaries
   annotation_commands.py   # Public spotlight add/show/flush
   application.py / wire.py # Shared reads/plans and compact comparison projection
   output.py / cli.py       # Readable review presentation and API-6 envelopes
@@ -210,30 +210,33 @@ OKLCH L+.10 (cap .95), C×1.30, same H; neutral distance/type/influence root hov
 Darken outside immediate displayed hover context with card brightness(.45) and
 35% ink / 65% black. Keep forms/caret/geometry stable and restore on exit.
 
-Agent answers arrive through `spotlight add` with color names, full node IDs and
-one message as direct arguments. Each color applies to following IDs; initial IDs
-use purple. One immutable spotlight holds every colored set and its shared message.
-Store it and retained node bytes in Git-excluded `.specspec-local/annotations/`
-until explicit flush. The toolbar's Spotlights dropdown has one text entry per shot.
-Selection paints all its exact-version colored 8px inset rings, closes the dropdown
-and frames their union in the full canvas, retaining focused drafts. Compact version
-counts replace detail/preview UI. Clear highlight removes rings explicitly.
-A round red badge counts new shots since opening; initial entries count zero and
-reload starts a fresh in-memory baseline. Arrivals preserve editing and camera.
-The dropdown and version-aware editable highlights are per view; contents are shared
-per checkout. Shift-click cycles red/blue/green/purple/turquoise/yellow/off and
-Ctrl/Command+Shift clears one node. Manual and spotlight-applied rings share this
-set; whole-set clear applies to both. The dropdown saves highlights with a message
-as a new immutable spotlight, readable by an agent through spotlight show. Exact
-retained/target/base/native-overlay bytes are captured without saving forms or
-claiming a common commit; assembled records use highlights provenance. Flush
-removes the store, leaving editable references independently clearable.
-Watching is independent of graph refresh, including historical views. Internal
-store/transport names remain independent of public naming. [The spotlight guide](docs/spotlights.md)
-specifies arguments, version resolution, storage limits and verification.
+Spotlight add takes full node IDs and one message, with optional --base/--target.
+Explicit refs pin commits; the implicit default follows fresh HEAD versus workspace.
+One immutable local-format-2 record stores the comparison, IDs and message in
+Git-excluded `.specspec-local/annotations/`. Workspace targets also store capture
+HEAD and a sparse map: SHA-256 checksums only for uncommitted added/modified nodes,
+null for deletions. Clean Git nodes and committed comparisons carry no saved node
+hashes. Git owns historical text; no raw-node archive or captured-text preview exists.
+
+Selection switches comparison before applying identity-based highlights and framing
+available target/deleted-base nodes in the full canvas. Workspace drift warns visibly
+without suppressing useful rings. One --spotlight-color CSS variable starts white;
+ring width max(5, 3 / k) follows graph scale with a 3px screen minimum and equal inset.
+Shift-click toggles, Ctrl/Command+Shift removes, and Clear highlight clears the shared
+manual/spotlight ID set. A message modal captures the current comparison and trusted
+native overlays without saving documents or managed drafts. CLI show reports each
+record's A/M/D/R/= statuses, missing/unavailable members and advisory warnings.
+
+The dropdown, active identity and highlight IDs are per view. A round red badge
+counts new records since opening, with zero initial/reload baselines; arrivals
+preserve editing, camera and old entries. Independent watching includes historical
+views. Explicit reviewed flush clears metadata and obsolete copies while keeping
+editable IDs, specification and recovery data. Old local formats stay protected
+until deliberate flush. [The spotlight guide](docs/spotlights.md) explains the data
+structures, commands, warning limits and verification.
 
 Ordinary curves and heads share darker neutral ink: 70% theme ink mixed with black
-at actual size and above, decreasing linearly to 35% at 12% zoom. Diff/draft and
+at 70% scale and above, decreasing linearly to 35% at 16% zoom. Diff/draft and
 incident-hover inks stay distinct. Minimum screen dimensions, shape ports and world
 layout retain their existing contracts. Tool-authored labels use concise positive
 state/action copy. The canvas carries actual legends and floating controls; tutorials

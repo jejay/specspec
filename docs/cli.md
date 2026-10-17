@@ -91,14 +91,14 @@ There is no automatic human/JSON choice based on TTY, and no LLM/UI JSON dialect
 index graph/code. `recover` restores recognized interrupted transaction states;
 `--force-lock` is only for a confirmed absent writer. See [deletion/recovery](deletion.md).
 
-`spotlight add [[COLOR] NODE_ID...]+ MESSAGE` adds one spotlight directly from
-arguments: each named color applies to following full IDs, with purple as the
-initial default. Finish with one message, normally quoted. All sets activate
-together. Capture reads saved files or `--ref REV`. `spotlight show` resolves saved
-workspace/HEAD and repeated `--ref REV`; `spotlight flush --yes` explicitly clears
-only local spotlights and retained contents. See [local spotlights](spotlights.md)
-for parsing, Git exclusion,
-exact blob semantics, native-buffer boundaries and the shared UI's new-count badge.
+`spotlight add NODE_ID... MESSAGE [--base REV] [--target REV|workspace]` adds a
+color-free comparison spotlight. IDs may include deleted or unchanged members.
+Explicit Git refs pin commits; the implicit default follows live HEAD → workspace.
+`spotlight show [SHOT_ID]` reports each record's own A/M/D/R/= statuses and advisory
+workspace drift. Only uncommitted workspace nodes have saved checksums; Git owns
+committed text and no node copies are retained. `spotlight flush --yes` explicitly
+clears local metadata and obsolete copies. See [local spotlights](spotlights.md)
+for complete structures, warning behavior, native-buffer boundaries and UI selection.
 
 Advanced source-array `--sources`, summary `--slug`, source `--symbol`/`--replace`,
 mixed metadata `--graph-ref` and `delete --reviewed-plan FILE|-` remain available
@@ -107,16 +107,15 @@ plan transport does not waive warnings, native dirty guards or original-byte che
 
 The hidden `api` operation consumes bounded JSON stdin and returns one API-6 envelope.
 Requests require integer `api_version: 6` and `op` from `read`, `plan`, `source-view`,
-`source-capture`, `annotations`, `annotation-view`, `annotation-flush`. Both hosts use `read` with optional `base`/historical `target`;
+`source-capture`, `annotations`, `annotation-create`, `annotation-flush`. Both hosts use `read` with optional `base`/historical `target`;
 VS Code additionally supplies `documents`. `plan` requires an `edit` and never writes
 files. Source operations inspect/capture into forms without persisting them.
 Internal operation names are independent of public `spotlight` naming.
 `annotations` reads the shared local spotlight list independently of graph validity;
-`annotation-view` selects captured contents by shot/group/member, never a renderer
-path. `annotation-flush` requires the reviewed shot-ID list in `expected`; hosts
-confirm first. Graph reads supply `node_blobs` and optional `base_node_blobs` maps
-of full IDs to exact SHA-1/SHA-256 addresses for version matching, outside canonical
-node records. Unknown fields/operations fail. Bounded cache hints are verified against current Git objects;
+`annotation-create` takes `message`, `nodes` and trusted comparison/native inputs.
+`annotation-flush` requires the reviewed shot-ID list in `expected`; hosts confirm
+first. Working comparison reads supply sparse `workspace_state` for advisory drift
+warnings, outside canonical node records. Unknown fields/operations fail. Bounded cache hints are verified against current Git objects;
 they are stripped from renderer data and never authorize a write. Inputs are bounded
 at 16 MiB, node files at 1 MiB; the UI bridge retains its existing process/output limits.
 

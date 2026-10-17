@@ -1,7 +1,7 @@
-"""Single-shot local persistence, exact blob references and host read boundaries."""
+"""Metadata-only comparison spotlights, sparse workspace drift and local lifetime."""
 
+import hashlib
 import json
-import subprocess
 
 import pytest
 from click.testing import CliRunner
@@ -11,180 +11,296 @@ from specspec import annotations
 from specspec.application import request
 from specspec.cli import main
 from specspec.git import git_snapshot
-from specspec.git_objects import blob_id
 from specspec.model import SpecError
 from specspec.workspace import add_node, load_snapshot, update_node
 
 
-def payload(*ids, text="Nodes expressing this idea", color="purple"):
-    return {"groups": [{"text": text, "color": color, "nodes": list(ids)}]}
+def payload(*ids, text="Nodes expressing this idea"):
+    return {"message": text, "nodes": list(ids)}
 
 
-def call(root, *args, input=None):
-    return CliRunner().invoke(main, ["--root", str(root), "spotlight", *args], input=input)
+def call(root, *args):
+    return CliRunner().invoke(main, ["--root", str(root), "spotlight", *args])
 
 
-def test_cli_add_multiple_colors_default_message_and_atomic_rejection(workspace):
+def test_color_free_cli_add_show_statuses_and_atomic_rejection(workspace):
     root, parent = workspace
+    setup_repository(root)
     _, child = add_node(root, "requirement", [parent], "# Child\n", "child")
-    result = call(root, "add", parent, "blue", child, "One", "shared", "message", "--json")
+    result = call(root, "add", parent, child, "One", "shared", "message", "--json")
     assert result.exit_code == 0, result.output
-    groups = json.loads(result.stdout)["result"]["shots"][0]["groups"]
-    assert [g["text"] for g in groups] == ["One shared message"] * 2
-    assert [g["color"] for g in groups] == [annotations.INKS["purple"], annotations.INKS["blue"]]
-    assert [[n["id"] for n in g["nodes"]] for g in groups] == [[parent], [child]]
+    shot = json.loads(result.stdout)["result"]["shots"][0]
+    assert shot["message"] == "One shared message"
+    assert shot["nodes"] == [parent, child]
+    assert shot["comparison"] == {"base": "HEAD", "target": "workspace"}
+    assert [m["kind"] for m in shot["members"]] == ["unchanged", "added"]
+    text = call(root, "show", shot["id"]).stdout
+    assert f"= {parent}" in text and f"A {child}" in text
+    assert "HEAD → workspace" in text
     before = annotations.load_shots(root)
     for args in [
-        ("red", "blue", parent, "Message"),
-        ("red", parent, "blue", "Message"),
-        ("red", parent),
-        ("red", parent, " "),
-        ("red", parent, "x" * 501),
-        (parent, "blue", parent, "Message"),
-        ("orange", parent, "Message"),
-        ("red", "bad-id", "Message"),
-        ("red", parent, "blue", "Zm9vYmE=", "Message"),
+        (parent,),
+        (parent, " "),
+        (parent, "x" * 501),
+        (parent, parent, "Message"),
+        ("red", parent, "Message"),
+        ("bad-id", "Message"),
+        (parent, "Zm9vYmE=", "Message"),
     ]:
         rejected = call(root, "add", *args, "--json")
         assert rejected.exit_code == 1, rejected.output
         assert annotations.load_shots(root) == before
-
-
-def test_cli_add_dash_leading_ids_all_named_colors_and_committed_capture(workspace):
-    root, parent = workspace
-    # A canonical ID may look like a short option. Exercise Click, not just parsing.
-    path = next((root / "_specspec").glob("*.md"))
-    path.write_text(path.read_text().replace(parent, "-_____8="))
-    path.rename(path.with_name(path.name.replace(parent, "-_____8=")))
-    setup_repository(root)
-    for color in annotations.INKS:
-        result = call(root, "add", color, "-_____8=", "Literal <img> 🐕", "--ref", "HEAD", "--json")
-        assert result.exit_code == 0, result.output
-        shot = json.loads(result.stdout)["result"]["shots"][0]
-        assert shot["origin"]["kind"] == "commit"
-        assert shot["groups"][0]["color"] == annotations.INKS[color]
-        assert shot["groups"][0]["nodes"][0]["id"] == "-_____8="
-
-
-def test_joint_shots_capture_exact_bytes_without_changing_nodes_and_remain_immutable(workspace):
-    root, parent = workspace
-    snapshot, child = add_node(root, "requirement", [parent], "# Child\n", "child")
-    value = payload(parent, child)
-    value["groups"].append({"text": "Shared member", "color": "#abcdef", "nodes": [child]})
-    first = annotations.submit(root, value)
-    file = root / ".specspec-local/annotations" / f"{first['id']}.json"
-    original = file.read_bytes()
-    assert load_snapshot(root).files == snapshot.files
-    assert first["groups"][0]["color"] == annotations.INKS["purple"]
-    assert first["groups"][1]["nodes"][0]["id"] == child
-    for index, group in enumerate(first["groups"]):
-        for number, member in enumerate(group["nodes"]):
-            raw = snapshot.files[member["path"]]
-            assert blob_id(raw, member["blob"]) == member["blob"]
-            assert annotations.preview(root, first["id"], index, number)["text"].encode() == raw
-    update_node(root, child, body="# Changed\n")
-    second = annotations.submit(root, payload(child, text="Another answer"))
-    assert file.read_bytes() == original
-    assert [s["id"] for s in annotations.load_shots(root)] == [second["id"], first["id"]]
-    assert first["groups"][0]["nodes"][1]["blob"] != second["groups"][0]["nodes"][0]["blob"]
+    assert call(root, "show", "0" * 32, "--json").exit_code == 1
+    assert call(root, "add", parent, "Message", "--ref", "HEAD").exit_code != 0
     assert set(main.commands["spotlight"].commands) == {"add", "show", "flush"}
-    assert "annotations" not in main.commands
 
 
-def test_spotlights_public_name_reads_existing_immutable_local_data_unchanged(workspace):
+@pytest.mark.parametrize("node_id", ["-_____8=", "--AAAQA="])
+def test_dash_leading_ids_and_color_names_in_message(workspace, node_id):
+    root, parent = workspace
+    path = next((root / "_specspec").glob("*.md"))
+    path.write_text(path.read_text().replace(parent, node_id))
+    path.rename(path.with_name(path.name.replace(parent, node_id)))
+    setup_repository(root)
+    result = call(
+        root,
+        "add",
+        node_id,
+        "blue",
+        "is",
+        "ordinary",
+        "text",
+        "--base",
+        "HEAD",
+        "--target",
+        "HEAD",
+        "--json",
+    )
+    assert result.exit_code == 0, result.output
+    shot = json.loads(result.stdout)["result"]["shots"][0]
+    assert shot["message"] == "blue is ordinary text"
+    assert shot["nodes"] == [node_id]
+    assert "workspace" not in shot
+    assert shot["comparison"] == {
+        "base": git_snapshot(root, "HEAD").commit,
+        "target": git_snapshot(root, "HEAD").commit,
+    }
+
+
+def test_only_dirty_nodes_get_checksums_no_node_copies_or_git_writes(workspace):
+    root, parent = workspace
+    _, changed = add_node(root, "requirement", [parent], "# Changed\n", "changed")
+    _, removed = add_node(root, "requirement", [parent], "# Removed\n", "removed")
+    setup_repository(root)
+    index, refs = git(root, "ls-files", "--stage"), git(root, "show-ref")
+    update_node(root, changed, body="# Workspace only\n")
+    _, added = add_node(root, "requirement", [parent], "# Added\n", "added")
+    snapshot = load_snapshot(root)
+    (root / snapshot.graph.nodes[removed].path).unlink()
+    snapshot = load_snapshot(root)
+    status = git(root, "status", "--porcelain", "--untracked-files=all")
+    shot = annotations.submit(root, payload(parent, changed, removed, added))
+    hashes = shot["workspace"]["changes"]
+    assert parent not in hashes
+    assert hashes == {
+        changed: hashlib.sha256(snapshot.files[snapshot.graph.nodes[changed].path]).hexdigest(),
+        added: hashlib.sha256(snapshot.files[snapshot.graph.nodes[added].path]).hexdigest(),
+        removed: None,
+    }
+    assert shot["workspace"]["head"] == git_snapshot(root, "HEAD").commit
+    assert not (root / ".specspec-local/annotations/blobs").exists()
+    stored = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    assert set(stored.parent.iterdir()) == {stored}
+    assert "Workspace only" not in stored.read_text()
+    assert "blob" not in stored.read_text() and "color" not in stored.read_text()
+    assert load_snapshot(root).files == snapshot.files
+    assert git(root, "status", "--porcelain", "--untracked-files=all") == status
+    assert git(root, "ls-files", "--stage") == index and git(root, "show-ref") == refs
+    git(root, "check-ignore", ".specspec-local/annotations/")
+    assert not (root / ".gitignore").exists()
+
+
+def test_workspace_drift_warns_without_losing_members_and_original_is_immutable(workspace):
+    root, parent = workspace
+    setup_repository(root)
+    _, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    shot = annotations.submit(root, payload(parent, child))
+    path = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    raw = path.read_bytes()
+    assert annotations.listing(root)["shots"][0]["warnings"] == []
+    update_node(root, child, body="# Changed after capture\n")
+    shown = annotations.listing(root)["shots"][0]
+    assert shown["nodes"] == [parent, child]
+    assert child in " ".join(shown["warnings"])
+    assert shown["members"][1]["kind"] == "added"
+    assert "WARNING:" in call(root, "show").stdout
+    (root / load_snapshot(root).graph.nodes[child].path).unlink()
+    shown = annotations.listing(root)["shots"][0]
+    assert shown["members"][1]["kind"] == "absent"
+    assert path.read_bytes() == raw
+    git(root, "add", "_specspec")
+    git(root, "commit", "--allow-empty", "-m", "Move HEAD")
+    assert "HEAD moved" in " ".join(annotations.listing(root)["shots"][0]["warnings"])
+
+
+def test_drift_tracks_unselected_changes_and_literal_comments_line_endings(workspace):
+    root, parent = workspace
+    _, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    setup_repository(root)
+    shot = annotations.submit(root, payload(parent))
+    node = load_snapshot(root).graph.nodes[child]
+    path = root / node.path
+    raw = path.read_bytes()
+    for changed in (
+        raw.replace(b"type: requirement", b"type: requirement # literal"),
+        raw.replace(b"\n", b"\r\n"),
+    ):
+        path.write_bytes(changed)
+        assert load_snapshot(root).graph.nodes[child].semantic() == node.semantic()
+        shown = annotations.listing(root)["shots"][0]
+        assert child in " ".join(shown["warnings"])
+        assert shown["members"][0]["kind"] == "unchanged"
+    path.write_bytes(raw)
+    assert annotations.listing(root)["shots"][0]["warnings"] == []
+    assert shot["workspace"]["changes"] == {}
+
+
+def test_gantt_comparison_pins_branches_and_resolves_deleted_added_changed_unchanged(gantt_history):
+    root = gantt_history
+    base, target = git_snapshot(root, "stage/02-code"), git_snapshot(root, "stage/03-spec")
+    common = next(n for n in target.nodes if n.id in base.graph.nodes)
+    git(root, "checkout", "--detach", target.commit)
+    update_node(root, common.id, body=common.body + "\nComparison regression.\n")
+    git(root, "add", "_specspec")
+    git(root, "commit", "-m", "Exercise a changed surviving node")
+    target = git_snapshot(root, "HEAD")
+    diff = annotations.semantic_diff(base, target)
+    kinds = {c["id"]: c["kind"] for c in diff["changes"]}
+    removed = next(i for i, kind in kinds.items() if kind == "removed")
+    added = next(i for i, kind in kinds.items() if kind == "added")
+    changed = next(i for i, kind in kinds.items() if kind == "changed")
+    unchanged = next(n.id for n in target.nodes if n.id not in kinds)
+    git(root, "branch", "spotlight-base", base.commit)
+    git(root, "branch", "spotlight-target", target.commit)
+    shot = annotations.submit(
+        root,
+        payload(removed, added, changed, unchanged),
+        base="spotlight-base",
+        target="spotlight-target",
+    )
+    assert shot["comparison"] == {"base": base.commit, "target": target.commit}
+    assert "workspace" not in shot
+    git(root, "branch", "-f", "spotlight-target", "HEAD")
+    shown = annotations.listing(root)["shots"][0]
+    assert [m["kind"] for m in shown["members"]] == ["removed", "added", "changed", "unchanged"]
+    assert shown["warnings"] == []
+    text = call(root, "show").stdout
+    assert all(
+        f"{mark} {i}" in text
+        for mark, i in [("D", removed), ("A", added), ("M", changed), ("=", unchanged)]
+    )
+    assert annotations.load_shots(root) == [shot]
+
+
+def test_workspace_against_other_branch_uses_head_for_dirty_detection(workspace):
+    root, parent = workspace
+    setup_repository(root)
+    first = git_snapshot(root, "HEAD").commit
+    update_node(root, parent, body="# Committed update\n")
+    git(root, "add", "_specspec")
+    git(root, "commit", "-m", "New intention")
+    shot = annotations.submit(root, payload(parent), base=first, target="workspace")
+    assert shot["comparison"] == {"base": first, "target": "workspace"}
+    assert shot["workspace"]["changes"] == {}
+    assert annotations.listing(root)["shots"][0]["members"][0]["kind"] == "changed"
+
+
+def test_clean_crlf_checkout_is_not_hashed_but_native_overlay_and_dirty_files_are(workspace):
+    root, parent = workspace
+    setup_repository(root)
+    git(root, "config", "core.autocrlf", "true")
+    snapshot = load_snapshot(root)
+    node = snapshot.graph.nodes[parent]
+    raw = snapshot.files[node.path]
+    (root / node.path).write_bytes(raw.replace(b"\n", b"\r\n"))
+    assert not git(root, "diff", "--name-only", "HEAD")
+    shot = annotations.submit(root, payload(parent))
+    assert shot["workspace"]["changes"] == {}
+    native = raw.decode().replace("# Project", "# Native unsaved")
+    created, _ = request(
+        root,
+        {
+            "api_version": 6,
+            "op": "annotation-create",
+            "message": "Native",
+            "nodes": [parent],
+            "documents": {node.path: native},
+        },
+    )
+    assert created["shots"][0]["workspace"]["changes"] == {
+        parent: hashlib.sha256(native.encode()).hexdigest()
+    }
+    (root / node.path).write_bytes(raw.replace(b"# Project", b"# Dirty saved"))
+    assert parent in annotations.submit(root, payload(parent))["workspace"]["changes"]
+
+
+def test_rename_status_without_a_workspace_content_checksum(workspace):
+    root, parent = workspace
+    setup_repository(root)
+    node = load_snapshot(root).graph.nodes[parent]
+    (root / node.path).rename(root / "_specspec" / (parent + "renamed.md"))
+    shot = annotations.submit(root, payload(parent))
+    assert shot["workspace"]["changes"] == {}
+    assert annotations.listing(root)["shots"][0]["members"][0]["kind"] == "renamed"
+    assert f"R {parent}" in call(root, "show").stdout
+
+
+def test_non_git_unborn_and_sha256_workspaces(workspace):
     root, parent = workspace
     shot = annotations.submit(root, payload(parent))
-    path = root / ".specspec-local/annotations" / (shot["id"] + ".json")
-    original = path.read_bytes()
-    result = call(root, "show", "--json")
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)["result"]["shots"][0]["id"] == shot["id"]
-    text = call(root, "show").stdout
-    assert "local spotlight(s)" in text and "annotation" not in text.lower()
-    assert path.read_bytes() == original
-
-
-def test_single_shot_validates_the_whole_payload_before_publication(workspace):
-    root, parent = workspace
-    value = payload(parent)
-    value["groups"].append({"text": "Invalid second group", "color": "red", "nodes": ["Zm9vYmE="]})
-    with pytest.raises(SpecError, match="does not exist"):
-        annotations.submit(root, value)
-    assert annotations.load_shots(root) == []
-    value = payload({"id": parent, "blob": "a" * 40})
-    with pytest.raises(SpecError, match="differs from the supplied blob"):
-        annotations.submit(root, value)
-    assert annotations.load_shots(root) == []
-    address = annotations.blob_ids(load_snapshot(root))[parent][0]
-    guarded = annotations.submit(root, payload({"id": parent, "blob": address}))
-    assert guarded["groups"][0]["nodes"][0]["blob"] == address
+    assert shot["workspace"]["head"] is None
+    assert parent in shot["workspace"]["changes"]
+    assert annotations.listing(root)["shots"][0]["members"][0]["kind"] == "added"
+    git(root, "init", "--object-format=sha256")
+    unborn = annotations.submit(root, payload(parent))
+    assert unborn["workspace"] == shot["workspace"]
+    setup_repository(root)
+    committed = annotations.submit(root, payload(parent), base="HEAD", target="HEAD")
+    assert len(committed["comparison"]["target"]) == 64
+    assert "workspace" not in committed
 
 
 @pytest.mark.parametrize(
     "value",
     [
         {},
-        {"groups": [], "update": True},
+        {"message": "x", "nodes": []},
         payload("bad"),
-        payload("Zm9vYmE=", color="url(javascript:bad)"),
-        payload("Zm9vYmE=", text=" "),
         payload("Zm9vYmE=", "Zm9vYmE="),
-        payload({"id": "Zm9vYmE=", "blob": "../escape"}),
+        payload("Zm9vYmE=", text=" "),
         payload("Zm9vYmE=", text="x" * 501),
+        {"message": "x", "nodes": [{"id": "Zm9vYmE=", "blob": "a" * 40}]},
     ],
 )
-def test_annotation_inputs_are_bounded_explicit_and_literal(workspace, value):
+def test_inputs_are_bounded_explicit_and_literal(workspace, value):
     root, _ = workspace
     with pytest.raises(SpecError):
         annotations.submit(root, value)
-    assert not list((root / ".specspec-local").glob("annotations/*.json"))
-
-
-def test_cli_add_show_flush_json_and_explicit_noninteractive_consent(workspace):
-    root, parent = workspace
-    result = call(root, "add", "purple", parent, "literal <img> 🐕", "--json")
-    assert result.exit_code == 0, result.output
-    envelope = json.loads(result.stdout)
-    assert envelope["api_version"] == 6 and envelope["ok"]
-    shot_id = envelope["result"]["shots"][0]["id"]
-    listing = call(root, "show")
-    assert listing.exit_code == 0 and "literal <img> 🐕" in listing.stdout
-    assert "workspace: exact" in listing.stdout and "HEAD: unavailable" in listing.stdout
-    assert call(root, "flush", "--json").exit_code == 1
-    assert annotations.load_shots(root)[0]["id"] == shot_id
-    assert call(root, "flush", "--yes", "--json").exit_code == 0
     assert annotations.load_shots(root) == []
-    assert call(root, "update", shot_id).exit_code == 2
-    assert call(root, "submit", "-").exit_code == 2
-    assert CliRunner().invoke(main, ["spotlights", "show"]).exit_code == 2
 
 
-def test_local_git_exclusion_no_index_or_object_writes_and_workspace_retention(workspace):
+def test_context_errors_remain_advisory_on_show_and_do_not_mutate_store(workspace):
     root, parent = workspace
     setup_repository(root)
-    before_index = git(root, "ls-files", "--stage")
-    before_refs = git(root, "show-ref")
-    update_node(root, parent, body="# Workspace only\n")
-    before_status = git(root, "status", "--porcelain", "--untracked-files=all")
-    shot = annotations.submit(root, payload(parent))
-    assert git(root, "status", "--porcelain", "--untracked-files=all") == before_status
-    assert git(root, "ls-files", "--stage") == before_index
-    assert git(root, "show-ref") == before_refs
-    member = shot["groups"][0]["nodes"][0]
-    exists = subprocess.run(
-        ["git", "-C", str(root), "cat-file", "-e", member["blob"]], capture_output=True
-    )
-    assert exists.returncode != 0, "Workspace capture must not write orphan Git objects."
-    (root / load_snapshot(root).nodes[0].path).write_text("invalid", encoding="utf-8")
-    # Captured contents remain readable without loading the now-invalid graph or Git.
-    preview = annotations.preview(root, shot["id"], 0, 0)
-    assert "# Workspace only" in preview["text"]
-    assert annotations.listing(root)["shots"][0]["groups"][0]["nodes"][0]["resolution"] == {
-        "workspace": "unavailable",
-        "HEAD": "changed",
-    }
-    git(root, "check-ignore", ".specspec-local/annotations/")
-    assert not (root / ".gitignore").exists()
+    shot = annotations.submit(root, payload(parent), target="HEAD")
+    file = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    shot["comparison"]["target"] = "0" * 40
+    file.write_text(json.dumps(shot), encoding="utf-8")
+    shown = annotations.listing(root)["shots"][0]
+    assert shown["members"][0]["kind"] == "unavailable"
+    assert "Comparison unavailable" in " ".join(shown["warnings"])
+    assert call(root, "show", "--json").exit_code == 0
+    assert annotations.load_shots(root) == [shot]
 
 
 def test_tracked_local_state_is_refused(workspace):
@@ -196,119 +312,49 @@ def test_tracked_local_state_is_refused(workspace):
     with pytest.raises(SpecError, match="Git-tracked"):
         annotations.submit(root, payload(parent))
     assert annotations.load_shots(root) == []
-    assert tracked.read_text() == "Owner data"
 
 
-def test_annotation_history_uses_independent_current_schema_gantt(gantt_history):
-    root = gantt_history
-    original = git_snapshot(root, "HEAD")
-    node = next(n for n in original.nodes if n.type == "implementation")
-    before = git(root, "rev-parse", "HEAD").decode().strip()
-    shot = annotations.submit(root, payload(node.id), ref="HEAD")
-    member = shot["groups"][0]["nodes"][0]
-    assert shot["origin"] == {"kind": "commit", "commit": before}
-    assert member["blob"] == blob_id(original.files[node.path], member["blob"])
-    # A filename-only rename preserves the exact content reference.
-    current = load_snapshot(root).graph.nodes[node.id]
-    renamed = root / "_specspec" / f"{node.id}annotation-rename.md"
-    (root / current.path).rename(renamed)
-    assert (
-        annotations.listing(root)["shots"][0]["groups"][0]["nodes"][0]["resolution"]["workspace"]
-        == "exact"
-    )
-    update_node(root, node.id, body=node.body + "\nAdditional implementation evidence.\n")
-    git(root, "add", "_specspec")
-    git(
-        root,
-        "-c",
-        "core.hooksPath=/dev/null",
-        "commit",
-        "-m",
-        "Exercise annotation version resolution",
-    )
-    result = annotations.listing(root, [before, "HEAD"])
-    resolution = result["shots"][0]["groups"][0]["nodes"][0]["resolution"]
-    assert resolution == {"workspace": "changed", "HEAD": "changed", before: "exact"}
-    git(root, "checkout", "--detach", before)
-    assert annotations.load_shots(root)[0] == shot
-    assert (
-        annotations.listing(root)["shots"][0]["groups"][0]["nodes"][0]["resolution"]["HEAD"]
-        == "exact"
-    )
-    assert annotations.preview(root, shot["id"], 0, 0)["text"].encode() == original.files[node.path]
-
-
-def test_application_node_addresses_follow_native_overlays_and_comparison_bytes(workspace):
-    root, parent = workspace
-    setup_repository(root)
-    original = load_snapshot(root)
-    node = original.graph.nodes[parent]
-    changed = original.files[node.path].decode().replace("# Project", "# Native unsaved")
-    loaded, _ = request(
-        root, {"api_version": 6, "op": "read", "base": "HEAD", "documents": {node.path: changed}}
-    )
-    old = annotations.blob_ids(original)[parent]
-    assert old == loaded["base_node_blobs"][parent]
-    assert not set(old) & set(loaded["node_blobs"][parent])
-    assert loaded["node_blobs"][parent][0] == blob_id(changed.encode(), "a" * 40)
-    # No canonical fields or node format change; addresses belong to application metadata.
-    assert "blob" not in loaded["snapshot"]["nodes"][0]
-    historical, _ = request(
-        root, {"api_version": 6, "op": "read", "base": "HEAD", "target": "HEAD"}
-    )
-    assert historical["node_blobs"][parent] == old
-    assert historical["base_node_blobs"][parent] == old
-    assert load_snapshot(root).files == original.files
-
-
-def test_flush_checks_the_reviewed_shot_list_and_preserves_other_local_state(workspace):
+def test_reviewed_flush_races_consent_and_obsolete_copy_cleanup(workspace):
     root, parent = workspace
     first = annotations.submit(root, payload(parent))
-    second = annotations.submit(root, payload(parent, text="Arrived during confirmation"))
-    notes = root / ".specspec-local/owner-notes.txt"
-    notes.write_text("Keep", encoding="utf-8")
+    second = annotations.submit(root, payload(parent))
+    path = root / ".specspec-local/annotations"
+    (path / "blobs").mkdir()
+    (path / "blobs" / ("a" * 40)).write_bytes(b"obsolete node copy")
+    (path / (".shot-" + "b" * 32 + ".tmp")).write_bytes(b"unpublished")
+    notes = root / ".specspec-local/notes.txt"
+    notes.write_text("Keep")
     with pytest.raises(SpecError, match="list changed"):
         annotations.flush(root, expected=[first["id"]])
+    assert call(root, "flush", "--json").exit_code == 1
     assert len(annotations.load_shots(root)) == 2
     result, _ = request(
         root, {"api_version": 6, "op": "annotation-flush", "expected": [first["id"], second["id"]]}
     )
-    assert result == {"flushed": 2}
-    assert notes.read_text() == "Keep"
+    assert result == {"flushed": 2} and annotations.load_shots(root) == []
+    assert not list(path.iterdir()) and notes.read_text() == "Keep"
     assert load_snapshot(root).valid
-    assert not list((root / ".specspec-local/annotations/blobs").iterdir())
-    assert annotations.load_shots(root) == []
-    with pytest.raises(SpecError):
-        annotations.preview(root, first["id"], 0, 0)
-    for value in (
-        {"api_version": 6, "op": "annotation-flush"},
-        {"api_version": 6, "op": "annotation-flush", "expected": None},
-    ):
-        with pytest.raises(SpecError, match="reviewed"):
-            request(root, value)
+    assert call(root, "flush", "--yes", "--json").exit_code == 0
+    with pytest.raises(SpecError, match="reviewed"):
+        request(root, {"api_version": 6, "op": "annotation-flush"})
 
 
-def test_malformed_and_corrupted_annotation_data_is_protected_until_explicit_flush(workspace):
+def test_old_or_malformed_local_records_are_protected_and_explicitly_flushable(workspace):
     root, parent = workspace
     shot = annotations.submit(root, payload(parent))
-    file = root / ".specspec-local/annotations" / f"{shot['id']}.json"
-    raw = file.read_bytes()
-    blob = file.parent / "blobs" / shot["groups"][0]["nodes"][0]["blob"]
-    blob.write_bytes(b"corrupted")
-    with pytest.raises(SpecError, match="does not match"):
-        annotations.preview(root, shot["id"], 0, 0)
-    file.write_bytes(b"{broken")
-    with pytest.raises(SpecError, match="Protected malformed"):
-        annotations.load_shots(root)
-    with pytest.raises(SpecError):
-        annotations.submit(root, payload(parent))
-    assert file.read_bytes() == b"{broken" and load_snapshot(root).valid
-    assert raw != file.read_bytes()
+    file = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    for raw in (b'{"annotation_version":1}', b"{broken"):
+        file.write_bytes(raw)
+        with pytest.raises(SpecError, match="Protected malformed"):
+            annotations.load_shots(root)
+        with pytest.raises(SpecError):
+            annotations.submit(root, payload(parent))
+        assert file.read_bytes() == raw
     annotations.flush(root)
     assert not file.exists()
 
 
-def test_annotation_limits_refuse_eviction_or_partial_publication(workspace, monkeypatch):
+def test_metadata_limits_refuse_eviction_or_partial_publication(workspace, monkeypatch):
     root, parent = workspace
     shot = annotations.submit(root, payload(parent))
     monkeypatch.setattr(annotations, "MAX_SHOTS", 1)
@@ -316,107 +362,19 @@ def test_annotation_limits_refuse_eviction_or_partial_publication(workspace, mon
         annotations.submit(root, payload(parent))
     assert annotations.load_shots(root) == [shot]
     monkeypatch.setattr(annotations, "MAX_SHOTS", 256)
-    monkeypatch.setattr(annotations, "MAX_BLOB_BYTES", 1)
-    with pytest.raises(SpecError, match="64 MiB"):
-        annotations.submit(root, payload(parent))
-    assert annotations.load_shots(root) == [shot]
-
-
-def test_preview_never_accepts_renderer_paths_or_unsafe_indices(workspace):
-    root, parent = workspace
-    shot = annotations.submit(root, payload(parent))
-    for shot_id, group, member in [
-        ("../owner", 0, 0),
-        (shot["id"], -1, 0),
-        (shot["id"], True, 0),
-        (shot["id"], 0, 99),
-    ]:
-        with pytest.raises(SpecError):
-            annotations.preview(root, shot_id, group, member)
-    result, _ = request(root, {"api_version": 6, "op": "annotations"})
-    assert result == {"shots": [shot]}
-    assert (
-        "text"
-        in request(
-            root,
-            {
-                "api_version": 6,
-                "op": "annotation-view",
-                "shot": shot["id"],
-                "group": 0,
-                "member": 0,
-            },
-        )[0]
-    )
+    monkeypatch.setattr(annotations, "MAX_LIST_BYTES", 1)
     with pytest.raises(SpecError):
-        request(root, {"api_version": 6, "op": "annotation-view", "path": "../owner"})
+        annotations.submit(root, payload(parent))
+    assert annotations.flush(root) == {"flushed": 1}
 
 
-def test_sha256_git_object_format_is_retained_without_canonical_changes(workspace):
+def test_unsafe_obsolete_entries_are_not_deleted(workspace):
     root, parent = workspace
-    git(root, "init", "--object-format=sha256")
-    shot = annotations.submit(root, payload(parent))
-    member = shot["groups"][0]["nodes"][0]
-    assert len(member["blob"]) == 64
-    assert annotations.preview(root, shot["id"], 0, 0)["reference"] == member
-    assert member["blob"] in annotations.blob_ids(load_snapshot(root))[parent]
-
-
-def test_interrupted_unpublished_files_and_over_limit_metadata_remain_flushable(
-    workspace, monkeypatch
-):
-    root, parent = workspace
-    shot = annotations.submit(root, payload(parent))
-    path = root / ".specspec-local/annotations"
-    (path / "blobs" / (".shot-" + "a" * 32 + ".tmp")).write_bytes(b"unpublished blob")
-    (path / (".shot-" + "b" * 32 + ".tmp")).write_bytes(b"unpublished metadata")
-    # Recognized interruption leftovers do not invalidate complete immutable shots.
-    assert annotations.load_shots(root) == [shot]
-    second = annotations.submit(root, payload(parent))
-    monkeypatch.setattr(annotations, "MAX_SHOTS", 1)
-    with pytest.raises(SpecError, match="explicitly flush"):
-        annotations.load_shots(root)
-    assert annotations.flush(root) == {"flushed": 2}
-    assert not list((path / "blobs").iterdir())
-    assert not list(path.glob("*.json")) and not list(path.glob("*.tmp"))
-    assert second["id"] != shot["id"]
-
-
-def test_literal_comment_and_line_endings_change_addresses_not_node_identity(workspace):
-    root, parent = workspace
-    original = load_snapshot(root)
-    node = original.graph.nodes[parent]
-    shot = annotations.submit(root, payload(parent))
-    file = root / node.path
-    file.write_bytes(
-        original.files[node.path].replace(b"type: manifesto", b"type: manifesto # exact bytes")
-    )
-    comment = load_snapshot(root)
-    assert comment.graph.nodes[parent].semantic() == node.semantic()
-    assert annotations.blob_ids(comment)[parent] != annotations.blob_ids(original)[parent]
-    file.write_bytes(original.files[node.path].replace(b"\n", b"\r\n"))
-    crlf = load_snapshot(root)
-    assert crlf.graph.nodes[parent].semantic() == node.semantic()
-    assert annotations.blob_ids(crlf)[parent] != annotations.blob_ids(original)[parent]
-    assert (
-        annotations.listing(root)["shots"][0]["groups"][0]["nodes"][0]["resolution"]["workspace"]
-        == "changed"
-    )
-    assert annotations.preview(root, shot["id"], 0, 0)["text"].encode() == original.files[node.path]
-
-
-def test_malformed_origin_is_a_protected_diagnostic_and_unsafe_store_entries_are_refused(workspace):
-    root, parent = workspace
-    shot = annotations.submit(root, payload(parent))
-    path = root / ".specspec-local/annotations"
-    shot["origin"]["kind"] = []
-    file = path / (shot["id"] + ".json")
-    file.write_text(json.dumps(shot), encoding="utf-8")
-    result = call(root, "show", "--json")
-    assert result.exit_code == 1 and "Protected malformed shot" in result.stdout
-    annotations.flush(root)
-    unsafe = path / "blobs/owner-notes.txt"
-    unsafe.write_text("Keep", encoding="utf-8")
+    annotations.submit(root, payload(parent))
+    path = root / ".specspec-local/annotations/blobs"
+    path.mkdir()
+    unsafe = path / "owner-notes.txt"
+    unsafe.write_text("Keep")
     with pytest.raises(SpecError, match="unsafe entry"):
         annotations.flush(root)
     assert unsafe.read_text() == "Keep"

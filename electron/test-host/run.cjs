@@ -40,7 +40,7 @@ async function run() {
       assert.equal(await evaluate(`document.getElementById('body').value`),'# Retained stale desktop draft');
       assert.ok(await evaluate(`window.SpecSpecHost.getState().dirty`));
       const retained = project.cli(['spotlight','show','--json']).shots.length;
-      assert.equal(retained,21);
+      assert.equal(retained,23);
       for(let i=0;i<300;i++){if(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length===${retained}`))break;await delay(100);}
       assert.equal(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length`),retained,'Reload republishes the complete retained spotlight list.');
       assert.ok(await evaluate(`document.getElementById('spotlights-count').hidden`),'Existing spotlights form the new renderer baseline, not unread arrivals.');

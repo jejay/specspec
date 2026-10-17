@@ -72,8 +72,11 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.implementation { border-radius: 0px; }
 .card.removed { border-style: dashed; }
 .card.source-changed { border-bottom-style: dotted; }
-/* Editable highlights: exact versions only; paint never changes the card's box. */
-#cards .card[data-annotation-label] { outline: var(--annotation-ring-width, 5px) solid var(--annotation-ink); outline-offset: var(--annotation-ring-offset, -5px); }
+/* Change this one ink to experiment with spotlight/highlight colors in both hosts. */
+:root { --spotlight-color: #ffffff; }
+/* Identity-based highlights: paint never changes the card's box. */
+#cards .card[data-annotation-label] { outline: var(--annotation-ring-width, 5px) solid var(--spotlight-color); outline-offset: var(--annotation-ring-offset, -5px); }
+#annotation-warning { color: var(--vscode-editorWarning-foreground, #e2c08d); overflow-wrap: anywhere; }
 #cards .card[data-annotation-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 26px; }
 .card.added strong, .card.added h2, .git-corner.added { color: var(--git-added); }

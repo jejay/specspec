@@ -11,7 +11,7 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from .annotations import blob_ids
+from .annotations import workspace_state
 from .format import json_value, read_document, yaml_parser
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .git_objects import OBJECT_ID
@@ -170,14 +170,16 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
     snapshot = snapshot_from_files(root, files, check_sources=True)
     result: dict[str, Any] = {
         "snapshot": snapshot.to_dict(),
-        "node_blobs": blob_ids(snapshot),
         "diagnostics": [item.to_dict() for item in snapshot.diagnostics],
         "changes": changes,
         "note": "",
     }
+    head = None
     if base and snapshot.valid:
         try:
             old = git_snapshot(root, base, allow_empty=True, cache=cache)
+            if base == "HEAD":
+                head = old
             if old.files or not old.valid:
                 old.require_valid()
             comparison = semantic_diff(old, snapshot)
@@ -189,10 +191,11 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 {
                     "base_ref": base,
                     "target_ref": "workspace + open documents" if documents else "workspace",
+                    "base_commit": old.commit,
+                    "target_commit": None,
                 }
             )
             result["diff"] = comparison
-            result["base_node_blobs"] = blob_ids(old)
             if (
                 request.get("cache")
                 and old.commit
@@ -206,4 +209,9 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
             result["note"] = "Diff unavailable: " + "; ".join(
                 item.message for item in error.diagnostics
             )
+    if snapshot.valid and base:
+        try:
+            result["workspace_state"] = workspace_state(snapshot, head)
+        except SpecError:
+            result["workspace_state"] = None
     return result

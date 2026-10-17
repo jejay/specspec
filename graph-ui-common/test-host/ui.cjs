@@ -239,20 +239,22 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.ok(await evaluate(`document.getElementById('spotlights-count').hidden`));
       assert.equal(await evaluate(`document.getElementById('annotations-heading').textContent`),'Spotlights');
       assert.equal(await evaluate(`document.querySelectorAll('#annotation-filter,.annotation-swatch,.annotation-members,#annotation-preview').length`),0);
-      const colors=['rgb(230, 94, 102)','rgb(92, 158, 255)','rgb(88, 186, 122)','rgb(170, 121, 223)','rgb(53, 189, 190)','rgb(223, 194, 77)'];
-      for(let index=0;index<colors.length;index++) {
+      for(let index=0;index<answers.length;index++) {
         if(index) await evaluate(`document.getElementById('annotations-toggle').click()`);
+        await evaluate(`document.querySelector('[data-shot-id="${answers[index].id}"]').click()`);
+        for(let i=0;i<300&&!await evaluate(`window.SpecSpecHost.getState().annotationActive===${JSON.stringify(answers[index].id)}`);i++) await delay(100);
+        assert.equal(await evaluate(`window.SpecSpecHost.getState().annotationActive`),answers[index].id,'Comparison loads before spotlight application.');
         const result=await evaluate(`(() => {
-          document.querySelector('[data-shot-id="${answers[index].id}"]').click();
           const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});
           const style=getComputedStyle(c),probe=document.createElement('span');
-          probe.style.outline='8px solid red';probe.style.outlineOffset='-8px';document.body.append(probe);
+          const paint=getComputedStyle(document.getElementById('cards'));
+          probe.style.outline=paint.getPropertyValue('--annotation-ring-width')+' solid white';probe.style.outlineOffset=paint.getPropertyValue('--annotation-ring-offset');document.body.append(probe);
           const expected=getComputedStyle(probe),expectedWidth=expected.outlineWidth,expectedOffset=expected.outlineOffset;probe.remove();
           return {label:c.dataset.annotationLabel,color:style.outlineColor,width:style.outlineWidth,offset:style.outlineOffset,expectedWidth,expectedOffset,description:c.getAttribute('aria-description')};
         })()`);
-        assert.equal(result.label,'highlight');assert.equal(result.color,colors[index]);assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/Exact captured/);
+        assert.equal(result.label,'highlight');assert.equal(result.color,'rgb(255, 255, 255)');assert.equal(result.width,result.expectedWidth);assert.equal(result.offset,result.expectedOffset);assert.match(result.description,/Shift-click toggles/);
         await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});c.dispatchEvent(new PointerEvent('pointerover',{bubbles:true,pointerType:'mouse'}));})()`);
-        assert.equal(await evaluate(`getComputedStyle([...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)})).outlineColor`),colors[index]);
+        assert.equal(await evaluate(`getComputedStyle([...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)})).outlineColor`),'rgb(255, 255, 255)');
         if(index===0&&image) await screenshot(image);
         await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
         assert.ok(await evaluate(`document.getElementById('annotations-panel').hidden`));
@@ -263,13 +265,12 @@ exports.checkUI = async function checkUI(port, options = {}) {
       const clickHighlight=modifiers=>evaluate(`document.querySelector('[data-node-id="${id}"]').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,button:0,shiftKey:true,${modifiers}}))`);
       await clickHighlight('ctrlKey:true');
       assert.equal(await evaluate(`document.querySelector('[data-node-id="${id}"]').dataset.annotationLabel`),undefined);
-      for(const ink of ['#e65e66','#5c9eff','#58ba7a','#aa79df','#35bdbe','#dfc24d','']) {
+      for(const on of [true,false,true,false,true]) {
         await clickHighlight('ctrlKey:false');
-        assert.equal(await evaluate(`document.querySelector('[data-node-id="${id}"]').style.getPropertyValue('--annotation-ink')`),ink);
+        assert.equal(await evaluate(`Boolean(document.querySelector('[data-node-id="${id}"]').dataset.annotationLabel)`),on);
       }
-      await clickHighlight('ctrlKey:false');
       const highlights=await evaluate(`window.SpecSpecHost.getState().annotationHighlights`);
-      assert.equal(highlights.length,1); assert.equal(highlights[0].id,id); assert.equal(highlights[0].color,'#e65e66');
+      assert.deepEqual(highlights,[id]);
       const priorCount=await evaluate(`document.querySelectorAll('.annotation-label').length`);
       const ownerMessage=`Owner backchannel <img> ${id}`;
       await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-create').click()`);
@@ -284,13 +285,14 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.equal(await evaluate(`document.getElementById('annotation-compose').open`),false,await evaluate(`document.getElementById('annotation-compose-error').textContent`));
       assert.equal(await evaluate(`document.querySelectorAll('.annotation-label').length`),priorCount+1);
       assert.equal(await evaluate(`document.querySelector('#annotation-list img')`),null);
-      const created=options.readSpotlights().find(s=>s.groups[0].text===ownerMessage);
+      const created=options.readSpotlights().find(s=>s.message===ownerMessage);
       assert.ok(created,'The external agent reads the UI-created message through spotlight show.');
-      assert.deepEqual(created.origin,{kind:'highlights'});
-      assert.deepEqual(created.groups.map(g=>({text:g.text,color:g.color,nodes:g.nodes.map(n=>({id:n.id,blob:n.blob}))})),[{text:ownerMessage,color:'#e65e66',nodes:highlights.map(({id,blob})=>({id,blob}))}]);
+      assert.deepEqual(created.comparison,{base:'HEAD',target:'workspace'});
+      assert.deepEqual(created.nodes,highlights);
+      assert.ok(created.workspace);assert.equal('groups' in created,false);
       assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().annotationHighlights`),highlights);
       assert.deepEqual(await camera(),highlightPose); assert.equal(await editing(),highlightEditing);
-      console.log(`Real spotlight backchannel passed for ${id}: Shift/Ctrl+Shift cycle, compose/cancel, exact-version persistence and agent CLI readback.`);
+      console.log(`Real spotlight backchannel passed for ${id}: Shift/Ctrl+Shift toggles, compose/cancel, metadata-only comparison persistence and agent CLI readback.`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click()`);
       const prior=JSON.parse(saved);
       if(prior.view==='focus') {
@@ -810,7 +812,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.ok(await arrowJoins());
     phase('Git lifecycle and watcher recovery');
     await options.after?.({ evaluate, screenshot, delay });
-    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, thicker six-ink exact-version inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and eight fill modes with linear/log absolute/cohort-relative influence probes and revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
+    console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, white identity-based inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and eight fill modes with linear/log absolute/cohort-relative influence probes and revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
     throw error;

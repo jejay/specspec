@@ -14,17 +14,19 @@ stay under owner control.
 
 ## Complete Windows runs
 
-Both complete suites pass in two successive runs of the current implementation:
+Both complete suites pass with metadata-only comparison spotlights:
 
-| Host | Run 1 | Run 2 | Exit |
-| --- | ---: | ---: | --- |
-| VS Code | 218.63 s | 168.66 s | 0 / 0 |
-| Electron | 167.23 s | 170.17 s | 0 / 0 |
+| Host | Complete run | Exit |
+| --- | ---: | ---: |
+| VS Code | 61 s | 0 |
+| Electron | 53 s | 0 |
 
-Elapsed times include build and disposable-fixture setup. Both runs include each
-host's final native or reload/revision phase. Core verification passes **565 tests**:
-281 Python, 231 shared UI, 44 VS Code adapter and 9 Electron. Ruff, root/Gantt source
-checks and every maintained history revision/receipt also pass.
+Elapsed wall times include build and disposable-fixture setup; the hosts ran
+concurrently. Each includes its final native or reload/revision phase. Core
+verification passes **570 tests**: 277 Python, 240 shared UI, 44 VS Code adapter
+and 9 Electron. Ruff and working source checks pass. Maintained Gantt history and
+receipts retain current-schema validation; the local spotlight format change does
+not change canonical node format/API 6.
 
 ## End-to-end coverage
 
@@ -36,7 +38,11 @@ Both suites exercise:
 - All eight fill modes, with independent raw-count/cohort/logarithmic calculations
   for the four influence choices and unchanged world/camera checks.
 - Compact, circular-manifesto and expanded-card Spotlight backchannels, actual CLI
-  publication/readback, exact-version highlights and retained arrival baselines.
+  publication/readback, one-white-ink identity highlights and retained arrival baselines.
+- Metadata-only spotlight selection across real stage/02-code → stage/03-spec
+  comparisons, with added/deleted rings and a retained unsaved form draft.
+- Live workspace changes produce visible drift warnings in both UI and CLI while
+  the changed node remains highlighted; reverting the node clears the warning.
 - HEAD/stage/commit deletion ghosts, shared-descendant cascades, outside parents,
   uncommitted warnings and exact staged validation before fixture commits.
 - Watcher-only external/invalid-file repair, retained drafts, original records and caret.
@@ -70,6 +76,12 @@ throughput assertions tied to a fast machine.
 Disposable Chromium hosts use reduced motion for reproducible pose sampling and
 disable background/renderer/occlusion timer throttling. Production camera behavior
 retains its normal-motion tests. CDP disconnects reject pending operations promptly.
+The installed paint oracle independently checks the current 40%-to-16% fill
+schedule. Spotlight probes await the comparison/application round trip before
+sampling rings, and derive ring widths from the camera-scaled CSS properties.
+Reload checks include all 23 retained records from the backchannel, drift and
+historical-comparison scenarios.
+
 The shared UI allowance is 300 seconds, native lifecycle 160 seconds, startup/shutdown
 40 seconds and Electron reload/revisions 60 seconds. Aggregate guards remain
 400 seconds for Electron and 500 seconds for VS Code. Individual operation deadlines

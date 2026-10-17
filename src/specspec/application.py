@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .annotations import blob_ids, create_from_highlights, flush, load_shots, preview
+from .annotations import flush, load_shots, submit
 from .editor import editor_request
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .model import API_VERSION, Diagnostic, SpecError
@@ -10,7 +10,7 @@ from .output import file_patches
 from .workspace import load_snapshot
 
 
-def compare(root, base="HEAD", target=None, *, patches=False, versions=False):
+def compare(root, base="HEAD", target=None, *, patches=False):
     old = git_snapshot(root, base, allow_empty=True)
     new = git_snapshot(root, target) if target else load_snapshot(root)
     result = semantic_diff(old, new)
@@ -27,9 +27,6 @@ def compare(root, base="HEAD", target=None, *, patches=False, versions=False):
     )
     if patches:
         result["file_changes"] = file_patches(old, new)
-    if versions:
-        result["node_blobs"] = blob_ids(new)
-        result["base_node_blobs"] = blob_ids(old)
     return result, old.diagnostics + new.diagnostics
 
 
@@ -49,8 +46,7 @@ def request(root, value):
         "source-view": {"reference", "ref", "staged"},
         "source-capture": {"id", "path", "ranges", "mode", "staged", "ref"},
         "annotations": set(),
-        "annotation-create": {"groups", "base", "target", "documents"},
-        "annotation-view": {"shot", "group", "member"},
+        "annotation-create": {"message", "nodes", "base", "target", "documents"},
         "annotation-flush": {"expected"},
     }
     if (
@@ -62,16 +58,14 @@ def request(root, value):
     if op == "annotations":
         return {"shots": load_shots(root)}, []
     if op == "annotation-create":
-        shot = create_from_highlights(
+        shot = submit(
             root,
-            {"groups": value.get("groups")},
+            {"message": value.get("message"), "nodes": value.get("nodes")},
             base=value.get("base"),
             target=value.get("target"),
             documents=value.get("documents"),
         )
         return {"shots": [shot]}, []
-    if op == "annotation-view":
-        return preview(root, value.get("shot"), value.get("group"), value.get("member")), []
     if op == "annotation-flush":
         if not isinstance(value.get("expected"), list):
             raise SpecError([Diagnostic("API", "Flush requires the reviewed shot ID list.")], 2)
@@ -96,17 +90,15 @@ def request(root, value):
                     ],
                     2,
                 )
-            result, diagnostics = compare(root, base or "HEAD", target, versions=True)
+            result, diagnostics = compare(root, base or "HEAD", target)
             if not result["impact_complete"]:
                 raise SpecError(diagnostics)
-            versions = {key: result.pop(key) for key in ("node_blobs", "base_node_blobs")}
             return loaded(
                 {
                     "snapshot": result["target"],
                     "diff": result,
                     "note": "",
                     "changes": [],
-                    **versions,
                 }
             ), diagnostics
         payload = {

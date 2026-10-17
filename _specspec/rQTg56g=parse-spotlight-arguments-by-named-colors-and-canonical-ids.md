@@ -5,23 +5,18 @@ parents:
 - 7tMgRa8=
 - P2i_png=
 ---
-# Parse spotlight arguments by named colors and canonical IDs
+# Parse spotlight IDs and one message with base and target options
 
-Expose spotlight add [[color-name] [node-id]+]+ MESSAGE. Recognize red, blue,
-green, purple, turquoise and yellow as color markers and canonical padded
-Base64url IDs as members. A marker applies to following IDs until the next marker;
-IDs before the first marker use purple. Require at least one ID per marked set
-and a nonblank message of at most 500 characters. The first argument that is
-neither a named color nor a canonical ID begins the message; join remaining
-arguments with spaces so quoted and ordinary multiword messages work naturally.
-Shell quoting preserves a message as one argument; standalone colors and IDs in
-the leading prefix remain structural tokens. Support dash-leading canonical IDs.
-Reject repeated members across the new spotlight so each node has one color.
-Validate every node before atomic publication. Add supports --ref for capture
-and --json for output. Show and confirmed flush keep their existing read/lifetime
-semantics. Commands accept arguments directly rather than file/JSON input.
+Expose spotlight add NODE_ID... MESSAGE with --base REV and --target REV|workspace.
+The implicit comparison is live HEAD versus workspace; explicit Git refs resolve
+to immutable commits. Read the leading canonical full IDs, including dash-leading
+IDs, then join the remaining message words. Require unique IDs, at least one member
+and a nonblank message of at most 500 characters. Colors are ordinary message text,
+not structural arguments. Validate every ID in the target/base union before atomic
+publication. No input JSON/file is needed.
 
-One stored shot represents the whole spotlight. Ordered internal color groups
-repeat its single message, reusing the existing checkout-local storage format. The
-dropdown applies all exact matching groups to the editable highlight set. For
-retained records with overlapping groups, later groups determine the ring color.
+Spotlight show optionally selects one full shot ID and reports each record's own
+comparison, message, derived A/M/D/R/= status, title and workspace/context warnings.
+--json exposes the same records and structured statuses. Explicit spotlight flush
+--yes clears the local store. The color-free application creation operation accepts
+one message and node-ID list, with trusted current comparison and native overlays.

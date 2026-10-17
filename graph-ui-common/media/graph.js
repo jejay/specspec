@@ -579,6 +579,8 @@
   host.onMessage(message => {
     if (message.type === 'annotations') { annotations.receive(message.shots); return; }
     if (message.type === 'annotations-error') { annotations.error(message.message); return; }
+    if (message.type === 'annotation-applied') { sourceInvalid = Boolean(message.invalid); updateButtons(); annotations.applied(message.shot, message.warning); return; }
+    if (message.type === 'annotation-context') { annotations.context(); return; }
     if (message.type === 'annotation-created') { annotations.created(); return; }
     if (message.type === 'annotation-create-error') { annotations.created(message.message); return; }
     if (message.type === 'source-captured') {
@@ -660,5 +662,5 @@
     }
   });
   window.addEventListener('error', event => send({ type: 'client-error', message: event.message }));
-  updateButtons(); send({ type: 'ready' });
+  updateButtons(); send({ type: 'ready', ...(typeof restored.annotationActive === 'string' ? { spotlight: restored.annotationActive } : {}) });
 })();

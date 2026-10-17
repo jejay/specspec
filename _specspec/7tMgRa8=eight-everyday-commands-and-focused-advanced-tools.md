@@ -22,12 +22,12 @@ Delete retains --dry-run and --yes with its complete descendant and warning cont
 
 Advanced sources show/capture/reanchor and recover retain source and recovery
 controls. Spotlight add/show/flush provides immutable checkout-local spotlights.
-Add takes color names, full node IDs and one message directly as arguments;
-optional --ref selects capture revision. Show resolves workspace/HEAD and
-requested revisions; flush requires explicit consent. The application adapter
-supplies independent spotlight list/create-from-highlights/reviewed-flush
-operations and retained-byte reads, alongside derived target/base blob identities
-on graph reads. Sources show consolidates resolution and optional literal preview;
+Add takes full node IDs and one message with optional --base/--target comparison;
+show resolves each record's own context with statuses and advisory workspace drift;
+flush requires explicit consent. The application adapter supplies independent
+spotlight list/create-from-highlights/reviewed-flush operations. Graph reads expose
+sparse workspace state for warning calculation, and Git supplies committed content.
+Sources show consolidates resolution and optional literal preview;
 capture/reanchor use --dry-run for non-writing previews. Source number, mode,
 ranges, explicit revision and staged selection remain meaningful. Raw source JSON,
 mixed graph/code revision selection, reviewed deletion plans and cache hints

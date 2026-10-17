@@ -152,20 +152,20 @@ paint variables and edge compensation.
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;
   source-only, rename and deletion labels preserve their distinct meanings.
   Existing title/letter theme colors and connection inks stay independent.
-- **Spotlights** persist complete text/color/node-version batches in Git-excluded
-  project-local storage shared by the CLI and both hosts. A round red toolbar badge
+- **Spotlights** persist message/ID/comparison metadata in Git-excluded project-local
+  storage shared by the CLI and both hosts. Git owns committed node text. A round red toolbar badge
   counts new batches since this view last opened its list; existing initial entries
   count zero. Opening the list clears the count, and reload starts a new in-memory
   baseline. Arrivals preserve editing, focus and camera. A newest-first dropdown
   anchored to Spotlights shows one text entry per spotlight. Selection activates
-  all its colors with camera-scaled exact-version inset rings, closes the dropdown
-  and frames the matching union in the full canvas, retaining focused drafts.
-  Compact version counts replace member/detail/preview UI. Shift-click cycles
-  manual and spotlight-applied highlights through red/blue/green/purple/turquoise/
-  yellow/off; Ctrl/Command+Shift-click clears a node. The dropdown can save the
-  current highlights with a message for the agent, without saving native documents
-  or managed forms. Version-aware highlight references and dropdown preferences
-  are per view; immutable batches survive sessions until explicit flush. See [spotlight design and storage](spotlights.md).
+  its comparison, closes the dropdown and frames available IDs (including deleted
+  base nodes) with camera-scaled white inset rings, retaining focused drafts.
+  Edit --spotlight-color in shared graph.css to try another ink. Shift-click toggles
+  manual/spotlight membership; Ctrl/Command+Shift-click clears a node. Workspace
+  drift warns visibly while highlighting the best available nodes. The dropdown
+  saves highlights with a message/current comparison without saving documents/forms.
+  IDs and active spotlight preferences are per view; immutable metadata survives
+  sessions until explicit flush. See [spotlight design and storage](spotlights.md).
 - **Ordinary arrows** use darker shared neutral ink, mixed with black at 70% at
   70% scale and above, decreasing linearly to 35% at 16% and below. The existing
   curve/head pair and minimum pixel dimensions remain intact. Diff/draft colors and

@@ -24,7 +24,9 @@ test('sandbox defaults and narrow bounded commands never expose arbitrary CLI/sp
   assert.deepEqual(webPreferences('fixed'), { preload: 'fixed', contextIsolation: true, sandbox: true,
     nodeIntegration: false, webSecurity: true, allowRunningInsecureContent: false });
   assert.ok(validMessage({ type: 'save', body: '# Literal' }));
-  assert.ok(validMessage({ type: 'annotation-create', groups: [{ text: 'Owner intent', color: '#e65e66', nodes: [{id:'Zm9vYmE=',blob:'a'.repeat(40)}] }] }));
+  assert.ok(validMessage({ type: 'annotation-create', message:'Owner intent', nodes:['Zm9vYmE='] }));
+  assert.ok(validMessage({ type: 'annotation-select', shot:'1'.repeat(32) }));
+  assert.equal(validMessage({ type: 'annotation-view', shot:'1'.repeat(32) }), false);
   for (const v of [null, [], 'save', { type: 'spawn' }, { type: 'accept' }, { type: 'save', body: 'a'.repeat(3 * 1024 * 1024) }]) assert.ok(!validMessage(v));
   const cycle = { type: 'save' }; cycle.self = cycle; assert.ok(!validMessage(cycle));
 });

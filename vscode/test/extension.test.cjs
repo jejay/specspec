@@ -357,15 +357,15 @@ test('native spotlight creation includes actual dirty buffers without invoking S
   const f=fixture(t,{snapshot:{...snapshot,nodes:[node]}}), {doc,panel}=await f.openDocument(node);
   doc.text=doc.text.replace('# Original','# Unsaved intent'); doc.version++; doc.isDirty=true;
   f.calls.textListeners.forEach(fn=>fn({document:doc}));
-  const groups=[{text:'Please review',color:'#e65e66',nodes:[{id:node.id,blob:'a'.repeat(40)}]}];
-  await panel.send({type:'annotation-create',groups,documents:{'../forged':'ignored'}});
+  const message='Please review',nodes=[node.id];
+  await panel.send({type:'annotation-create',message,nodes,documents:{'../forged':'ignored'}});
   await waitFor(()=>panel.messages.some(m=>m.type==='annotation-created'));
   const call=f.calls.cli.find(c=>c.args[0]==='api'&&JSON.parse(c.input).op==='annotation-create');
   assert.deepEqual(JSON.parse(call.input).documents,{[node.path]:doc.text});
   assert.equal(doc.isDirty,true); assert.equal(f.calls.edits.length,0);
   assert.equal(f.calls.cli.some(c=>['add','update','delete'].includes(c.args[0])),false);
   f.workspace.isTrusted=false; const count=f.calls.cli.length;
-  await panel.send({type:'annotation-create',groups});
+  await panel.send({type:'annotation-create',message,nodes});
   await waitFor(()=>panel.messages.some(m=>m.type==='annotation-create-error'));
   assert.equal(f.calls.cli.length,count);
 });
@@ -376,7 +376,7 @@ test('external annotation shots notify all project views without reloading their
   const reads = f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length;
   const path = join(f.root, '.specspec-local', 'annotations');
   mkdirSync(path, { recursive: true });
-  options.shots = [{ id: '1'.repeat(32), groups: [{ text: 'External answer', color: '#aa79df', nodes: [] }] }];
+  options.shots = [{ id: '1'.repeat(32), message:'External answer',nodes:[],comparison:{base:'HEAD',target:'workspace'},workspace:{head:null,changes:{}} }];
   writeFileSync(join(path, '1'.repeat(32) + '.json'), '{}');
   await waitFor(() => f.calls.panels.every(panel => panel.messages.some(m => m.type === 'annotations' && m.shots.length === 1)));
   assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length, reads);

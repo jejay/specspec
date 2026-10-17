@@ -5,30 +5,21 @@ parents:
 - DG-JpDc=
 - 0dvOn3A=
 ---
-# Keep immutable spotlight shots in a checkout-local store
+# Keep immutable spotlight metadata in a checkout-local store
 
-Store each complete addition in .specspec-local/annotations/<shot-id>.json, with
-retained node bytes in its blobs subdirectory. This persistent local data belongs
-to the SpecSpec checkout and is shared by the CLI and both hosts. Git's local
-exclude protects the directory when project ignore rules do not already do so.
-Refuse spotlight writes over Git-tracked local-store files.
+Store each complete addition in .specspec-local/annotations/<shot-id>.json. This
+persistent local metadata is shared by the CLI and both hosts in one checkout.
+Git's local exclude protects the directory when project ignore rules require it;
+refuse writes over Git-tracked local-state files.
 
-Validate the entire bounded addition and capture every reference before publishing
-one atomic immutable shot. Parallel managed writes serialize; ordinary recovery
-retains its lock contract. Complete shot files are the list's source of truth.
-Preserve malformed data with actionable errors and reject storage limits rather
-than expiring or evicting shots. Explicit flush removes only the spotlight store's
-shot files and retained blobs, preserving recovery and other local state.
+Validate a bounded message, comparison and member list before publishing one atomic
+immutable file under the cooperating workspace writer lock. Complete shot files
+are the list source of truth. Protect malformed records with actionable errors;
+limits reject additions rather than evicting existing records. Explicit flush
+removes spotlight metadata and obsolete blob files while preserving recovery and
+other local state. Publication retains ordinary lock and recovery behavior.
 
-The public command is spotlight add/show/flush; the UI button is Spotlights.
-Add takes colored node sets and a single message directly as CLI arguments.
-Capture uses saved workspace bytes by default or one explicit immutable revision.
-Internal ordered groups carry the shared message, color and full node IDs with
-exact blob addresses. Existing immutable submissions keep their original bytes;
-internal paths and keys are independent of public naming. Submissions retain
-capture provenance and independently generated shot identity.
-
-UI-created spotlights capture the editable highlight set through the application
-API, preserving exact member bytes from retained content or trusted view inputs.
-Their origin kind is highlights: the set may combine revisions and native overlays.
-The CLI lists these alongside agent-created workspace/commit spotlights.
+The public commands are spotlight add/show/flush. CLI capture reads saved files;
+UI capture includes trusted native overlays and the current comparison. A spotlight
+stores references and sparse workspace drift metadata, with independently generated
+identity and capture time. Git owns committed node text.

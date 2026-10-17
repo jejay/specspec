@@ -239,17 +239,19 @@ not proof that every listed node is invalid.
 pinned Dagre/D3 dependencies and license notices and copies shared runtime sources.
 The VS Code and Electron build wrappers add their small adapters. **Edit common
 sources, not generated `vscode/media`, `vscode/out` or `electron/build` copies.**
-Immutable owner/agent spotlights and exact node-byte copies live in the Git-excluded
-project-local `.specspec-local/annotations/` store, shared by CLI and both hosts.
-[`annotations.py`](../src/specspec/annotations.py) validates/captures/publishes complete
-shots; `spotlight add/show/flush` supplies the direct-argument public interface.
+Immutable metadata-only owner/agent spotlights live in the Git-excluded project-local
+`.specspec-local/annotations/` store, shared by CLI and both hosts.
+[`annotations.py`](../src/specspec/annotations.py) validates/publishes message/ID/
+comparison records; `spotlight add/show/flush` supplies the color-free interface.
+Explicit Git refs pin commits; workspace targets retain sparse dirty-only checksum/
+deletion summaries and capture HEAD. Git owns committed node contents.
 [`AnnotationWatcher`](../graph-ui-common/host/annotations.cjs) reports arrivals separately
-from graph reloads, including historical views. The hidden application API reads the
-list, creates a shot from exact editable highlights, previews captured text and
-flushes a reviewed list. Creation shares the locked publisher with CLI addition;
-trusted hosts supply native buffers and selected revisions, while Python verifies
-all member/blob matches against retained or snapshot bytes. Snapshot read metadata supplies
-derived exact blob addresses; these are neither canonical fields nor edit gates.
+from graph reloads, including historical views. The API reads the list, creates a
+record from IDs/current comparison and flushes a reviewed list. Trusted hosts supply
+native overlays without invoking Save. Working comparison reads supply sparse
+workspace state for visible advisory drift warnings, not edit gates. Selection
+switches comparison through the shared session before applying white identity rings
+and framing available target/deleted-base nodes. No node copies or preview API exist.
 See [spotlight semantics and UI](spotlights.md). Public naming is independent of
 internal storage keys, paths and transport operation names.
 

@@ -23,7 +23,7 @@ as the border fallback when a contrast-border token is absent.
 
 At 16% scale and below every fill equals its visible border, including the white
 hovered neutral manifesto and contrast-theme borders. Actual-size and larger views
-retain their exact editing-oriented tints and text. Hover darkening and exact-version
+retain their exact editing-oriented tints and text. Hover darkening and spotlight
 rings retain their independent paint roles. Camera updates an inherited fill-progress
 CSS property on existing cards independently alongside edge paint; native inputs
 and intrinsic world positions stay intact. Two-stage color mixing preserves both

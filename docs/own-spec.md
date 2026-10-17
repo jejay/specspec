@@ -225,7 +225,7 @@ covers shared UI, host repair text and the palette playground.
 increases colored border/incident ink lightness and chroma. The neutral manifesto's
 hover border is white. [Immediate-context darkening](../_specspec/6MUwTIw=stable-root-and-transient-hover-darkening.md)
 is transient and preserves geometry/native forms. [Spotlight rings](../_specspec/E7O_6GU=view-local-label-cycle-with-inset-border.md)
-paint exact versions in one editable colored highlight set with camera-scaled inset outlines.
+paint available selected IDs in one white editable highlight set with camera-scaled inset outlines.
 
 [Quiet ordinary arrows](../_specspec/u8tHkaE=keep-ordinary-relationship-arrows-quiet-as-the-graph-is-zoomed-out.md)
 keep the overview mesh subordinate to spotlight batches. [Neutral-ink scaling](../_specspec/yCYr-E0=scale-neutral-arrow-ink-from-seventy-to-thirty-five-percent-with-zoom.md)
@@ -236,43 +236,42 @@ maps the pure, DOM and real-host paint checks.
 
 ## Persistent local spotlights and the owner backchannel
 
-[Agent answers](../_specspec/DG-JpDc=temporary-node-label-border-preview.md) are immutable
-spotlights, each one message with colored node/version sets. The [local-store
-choice](../_specspec/P2i_png=keep-immutable-annotation-shots-in-a-checkout-local-store.md)
-keeps shot files and exact retained node bytes in `.specspec-local/annotations`,
-Git-excluded and shared by both hosts for the same checkout until explicit flush.
-[Version resolution](../_specspec/63jO49Q=resolve-annotation-references-against-exact-snapshot-bytes.md)
-uses full node IDs and exact SHA-1/SHA-256 Git blob addresses against actual saved,
-native-overlay or selected revision bytes. Canonical node format is 6.
+[Owner/agent messages](../_specspec/DG-JpDc=temporary-node-label-border-preview.md) are
+immutable local spotlights with one message and unique full node IDs.
+[Comparison context](../_specspec/TaNM294=associate-a-spotlight-with-its-revision-comparison.md)
+lets one message discuss added, deleted, changed and unchanged nodes. Explicit refs
+pin commits; the implicit default follows fresh HEAD versus live workspace.
+Selecting a record switches comparison before highlighting and framing available
+target/deleted-base nodes. Missing IDs remain selected; drifted versions still ring.
 
-[Attention and list integration](../_specspec/rvz48KY=integrate-arrivals-into-an-inspectable-annotation-list-without-interruption.md)
-use a round red toolbar badge counting only new batches since this view last opened
-its dropdown. Existing entries establish a zero-count baseline; opening clears the
-count, and reload starts a new in-memory baseline. The anchored newest-first dropdown
-has one text entry per spotlight. Selection activates all its colored sets, closes
-the menu and frames the exact matching union in the full canvas, retaining drafts.
-Compact version counts replace member/detail/preview UI. Arrivals retain editing,
-focus, camera, selection and older spotlights. Independent watching works in historical views too. [Storage/identity realization](../_specspec/n-Bk32Q=implement-immutable-local-shots-and-derived-snapshot-blob-identities.md)
-and [shared UI/host realization](../_specspec/JTezmL0=transient-node-label-preview-implementation.md)
-map code and verification seams. The [spotlight guide](spotlights.md) gives the
-`spotlight add/show/flush` contract, storage/lifetime limits and verification scope.
-[Argument parsing](../_specspec/rQTg56g=parse-spotlight-arguments-by-named-colors-and-canonical-ids.md)
-recognizes named colors and full IDs before the shared message, uses purple for
-initial uncolored IDs and rejects duplicate members.
-Public naming is independent of internal store/transport keys; retained immutable
-submissions keep their original bytes.
+[The sparse-summary choice](../_specspec/c2WCD6c=store-sparse-workspace-drift-summaries-beside-comparison-references.md)
+records capture HEAD and SHA-256 checksums only for uncommitted added/modified
+workspace nodes, plus null deletion markers. All dirty nodes contribute context,
+including unselected ones; clean CRLF/filtered checkouts remain clean under Git's
+assessment. Committed node text stays in Git. [Local storage](../_specspec/P2i_png=keep-immutable-annotation-shots-in-a-checkout-local-store.md)
+holds bounded metadata-only format-2 JSON in `.specspec-local/annotations`, shared
+by both hosts until explicit reviewed flush. Older local records are protected
+with a deliberate-flush diagnostic. Canonical node format/API remain 6.
+[Identity resolution](../_specspec/63jO49Q=resolve-annotation-references-against-exact-snapshot-bytes.md)
+derives current status/title/path and advisory drift/context warnings.
+
+[The list](../_specspec/rvz48KY=integrate-arrivals-into-an-inspectable-annotation-list-without-interruption.md)
+has one newest-first entry per message, with time/comparison/count. Its round red
+badge counts new records since opening; initial/reload baselines are zero. Arrivals
+preserve focus/caret, drafts, camera, selection, dropdown choice and old entries.
+Independent watching includes historical views. [CLI parsing](../_specspec/rQTg56g=parse-spotlight-arguments-by-named-colors-and-canonical-ids.md)
+takes IDs then a message with --base/--target; show reports A/M/D/R/= and warnings.
 
 [The owner backchannel](../_specspec/7UOmpHw=send-owner-intent-back-to-agents-through-editable-highlights.md)
-unifies manual and spotlight-applied highlights. Shift-click node chrome cycles
-red/blue/green/purple/turquoise/yellow/off; Ctrl+Shift or macOS Command+Shift removes
-one member. Clear highlight removes the set. The dropdown can save it with a
-message as a new immutable spotlight for `spotlight show` to expose to the agent.
-[Version-aware capture](../_specspec/RY5LFw8=capture-one-version-aware-per-view-highlight-set.md)
-keeps exact references as per-view state and resolves retained, target/base and
-trusted native-overlay bytes atomically. Creation preserves forms/camera and uses
-highlights provenance for possibly mixed revisions; originals stay immutable.
-Native controls keep their modified clicks. Mac event handling is covered
-synthetically only; actual Mac host behavior remains unverified.
+uses Shift-click to toggle one white ink, with Ctrl/Command+Shift removal and
+whole-set clear. Change --spotlight-color in shared graph.css to try another ink.
+[Capture](../_specspec/RY5LFw8=capture-one-version-aware-per-view-highlight-set.md)
+saves IDs/message and the current comparison, including trusted native overlays
+without saving documents or managed drafts. [Backend realization](../_specspec/n-Bk32Q=implement-immutable-local-shots-and-derived-snapshot-blob-identities.md)
+and [shared host/UI realization](../_specspec/JTezmL0=transient-node-label-preview-implementation.md)
+map code and bounded verification. [The spotlight guide](spotlights.md) explains
+structures, CLI output, warning/fallback semantics and storage. Native controls
+keep modified clicks. Physical Mac modifier behavior remains unverified.
 
 [Type shapes](../_specspec/AZbsoEA=type-radii-and-content-fitting-circular-manifesto.md)
 are Implementation **0px**, Requirement **24px**, and a true manifesto circle.

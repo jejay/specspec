@@ -17,11 +17,11 @@ exports.checkCanvas = async function checkCanvas({ evaluate, input, screenshot }
       document.documentElement.style.setProperty('--vscode-contrastBorder',${JSON.stringify(theme.includes('fallback')?'initial':'#ffff00')});
       document.body.style.setProperty('--vscode-contrastBorder',${JSON.stringify(theme.includes('fallback')?'initial':'#ffff00')});document.getElementById('zoom-reset').click();})()`);
     for(const zoom of ['actual','intermediate','minimum']) {
-      await evaluate(`(() => {${zoom==='actual'?'':`for(let i=0;i<${zoom==='intermediate'?3:30};i++)document.getElementById('zoom-out').click();`}})()`);
+      await evaluate(`(() => {${zoom==='actual'?'':`for(let i=0;i<${zoom==='intermediate'?5:30};i++)document.getElementById('zoom-out').click();`}})()`);
       const results=await evaluate(`(() => {
         const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const ctx=canvas.getContext('2d');
         const rgb=color=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data];};
-        const v=document.getElementById('viewport'),q=1-Math.max(0,Math.min(1,(Number(v.dataset.scale)-0.12)/0.88));
+        const v=document.getElementById('viewport'),q=1-Math.max(0,Math.min(1,(Number(v.dataset.scale)-0.16)/(0.40-0.16)));
         const probe=document.createElement('span');document.body.append(probe);
         const records=[...document.querySelectorAll('#cards .card')].map(c=>{
           const style=getComputedStyle(c),border=style.borderTopColor,base=${JSON.stringify(theme.includes('contrast'))}?'var(--vscode-editor-background)':'color-mix(in srgb, '+c.style.getPropertyValue('--node-accent')+' 15%, var(--vscode-editor-background))';

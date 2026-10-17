@@ -22,15 +22,15 @@ classifying the files as invalid. Each refresh has bounded attempts; disposal
 cancels follow-up work, and actual invalid reads retain their repair restrictions.
 `host/annotations.cjs` watches the checkout-local immutable spotlight store independently,
 including while a revision graph is open. `media/graph-annotations.js` owns the retained
-dropdown, round red arrival-count badge and editable camera-scaled multicolor rings.
-Shift-click cycles colors and Ctrl/Command+Shift clears one member, identically
-for manual and spotlight-applied highlights. A local message dialog sends exact
-references to the guarded session's creation API; the VS Code adapter supplies
-actual native buffers without invoking Save. Immutable records are then available
-through spotlight show for owner-to-agent messages. Selection closes the menu and frames the matching union in the full canvas,
-retaining drafts. Existing initial entries establish a zero-count baseline; opening resets
+dropdown, round red arrival-count badge and editable camera-scaled white rings.
+Shift-click toggles IDs and Ctrl/Command+Shift clears one member, identically for
+manual and spotlight-applied highlights. Change --spotlight-color in media/graph.css
+to try another ink. A local message dialog sends IDs/message to the guarded creation
+API; the adapter supplies current comparison and native buffers without invoking
+Save. Selection closes the menu, switches comparison, then frames available target/
+deleted-base nodes, retaining drafts. Sparse workspace drift warns without hiding rings. Existing initial entries establish a zero-count baseline; opening resets
 new arrivals, and reload starts a new in-memory count. Python owns immutable storage
-and exact blob metadata, shared by the CLI and both hosts. Dropdown/highlight preferences
+and metadata-only comparison records, shared by the CLI and both hosts. Dropdown/highlight preferences
 are per view; unread counts are not persisted. Internal paths/transport names remain
 independent of public Spotlights naming. Neutral curve/head ink darkens from 70% at
 70% zoom and above to 35% at 16% and below; diff and hover inks stay distinct.

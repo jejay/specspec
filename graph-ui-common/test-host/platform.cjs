@@ -10,8 +10,8 @@ function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
   return {
     readSpotlights: () => fixture.cli(['spotlight', 'show', '--json']).shots,
-    submitSpotlights: id => ['red','blue','green','purple','turquoise','yellow'].map(color =>
-      fixture.cli(['spotlight', 'add', color, id, `${color} answer for ${id}`, '--json']).shots[0]),
+    submitSpotlights: id => Array.from({length:6},(_,index) =>
+      fixture.cli(['spotlight', 'add', id, `Answer ${index+1} for ${id}`, '--json']).shots[0]),
     before: async ({ evaluate, screenshot, delay }) => {
       // Working-first is intentionally a usable graph without Git classification.
       // Git-paint assertions need the completed comparison, not the first cards.
@@ -61,6 +61,39 @@ function platformChecks(fixture, host) {
         for (let i = 0; i < 300; i++) { if (await evaluate(expression)) return; await delay(100); }
         assert.ok(await evaluate(expression), JSON.stringify(await evaluate(`({message:document.getElementById('message').textContent,body:document.getElementById('body').value})`)));
       };
+      // Live context drift is advisory: the current version still receives a ring.
+      const beforeDrift=fixture.cli(['show',modified,'--json']).node;
+      const drift=fixture.cli(['spotlight','add',modified,'Live workspace drift review','--json']).shots[0];
+      await waitFor(`document.querySelector('[data-shot-id="${drift.id}"]')!==null`);
+      await evaluate(`document.getElementById('annotations-toggle').click();document.querySelector('[data-shot-id="${drift.id}"]').click()`);
+      await waitFor(`window.SpecSpecHost.getState().annotationActive==='${drift.id}'`);
+      fixture.cli(['update',modified,'--body','-','--json'],beforeDrift.body+'\nLive spotlight drift fixture.\n');
+      await waitFor(`!document.getElementById('annotation-warning').hidden&&/Workspace nodes changed/.test(document.getElementById('annotation-warning').textContent)`);
+      assert.ok(await evaluate(`document.querySelector('[data-node-id="${modified}"]').dataset.annotationLabel==='highlight'`));
+      assert.ok(fixture.cli(['spotlight','show',drift.id,'--json']).shots[0].warnings.some(w=>w.includes('Workspace nodes changed')));
+      fixture.cli(['update',modified,'--body','-','--json'],beforeDrift.body);
+      await waitFor(`document.getElementById('annotation-warning').hidden`);
+      await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click()`);
+      // A real stored two-revision comparison must switch the graph, including
+      // added/deleted nodes, without changing the checkout or losing form drafts.
+      const review=fixture.cli(['diff','stage/02-code','stage/03-spec','--json']);
+      const ids=['added','removed'].map(kind=>review.changes.find(c=>c.kind===kind).id);
+      const spotlight=fixture.cli(['spotlight','add',...ids,'Historical added/deleted review','--base','stage/02-code','--target','stage/03-spec','--json']).shots[0];
+      await waitFor(`document.querySelector('[data-shot-id="${spotlight.id}"]')!==null`);
+      const originalDraft=await evaluate(`(() => {const body=document.getElementById('body');body.value+='\\nSpotlight comparison draft fixture.';body.dispatchEvent(new Event('input'));return body.value;})()`);
+      const selected=await evaluate(`window.SpecSpecHost.getState().selected`);
+      await evaluate(`document.getElementById('annotations-toggle').click();document.querySelector('[data-shot-id="${spotlight.id}"]').click()`);
+      await waitFor(`window.SpecSpecHost.getState().annotationActive==='${spotlight.id}'`);
+      assert.ok(await evaluate(`document.getElementById('revision').textContent.includes(${JSON.stringify(spotlight.comparison.target)})`));
+      assert.ok(await evaluate(`${JSON.stringify(ids)}.every(id=>document.querySelector('[data-node-id="'+id+'"]').dataset.annotationLabel==='highlight')`));
+      assert.ok(await evaluate(`document.getElementById('save').disabled`));
+      assert.equal(await evaluate(`document.getElementById('body').value`),originalDraft);
+      assert.equal(await evaluate(`window.SpecSpecHost.getState().dirty`),true);
+      await evaluate(`document.getElementById('workspace').click()`);
+      await waitFor(`document.getElementById('revision').textContent.startsWith('HEAD → ')&&document.getElementById('annotation-warning').hidden`);
+      await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click();document.getElementById('discard').click()`);
+      if(selected) await evaluate(`document.querySelector('[data-node-id="${selected}"]')?.click()`);
+      console.log(`${host}: real metadata-only spotlight comparison switches before A/D identity highlights and preserves workspace/drafts.`);
       // Real HEAD deletion lifecycle in this disposable independent Git history.
       // Stage only the already deleted fixture file, not unrelated A/M drafts.
       await evaluate(`document.getElementById('back').click()`);
