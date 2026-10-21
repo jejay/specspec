@@ -16,6 +16,10 @@ specspec context <full-id>                 # Complete selected + ancestor bindin
 specspec query                            # Complete HEAD → workspace tree comparison
 specspec query --base main~2 --target main # Explicit versions, like spotlights
 specspec query --human                   # Original body lines, individual sources
+specspec query --max-distance 2          # Root plus inclusive longest-path levels
+specspec query --max-distance 50%        # Metric-priority half of reachable nodes
+specspec query <full-id> --influence 5   # Rooted subgraph; influence >= 5
+specspec query --min-distance 25% --influence 25% # Independent selections, union
 specspec add --parent <id> --body node.md
 specspec update <id> --body revised.md
 specspec delete <id> --dry-run              # All descendants, including shared ones
@@ -61,7 +65,13 @@ occurrences individually, without changing parents, source facts or revision sel
 `query --json` retains reconstructible API-6 records and complete source facts, with
 file-change summaries rather than patches. Use `diff` for exact text modifications.
 Original body layout remains in JSON and node files. `--human --json` is identical
-to `--json`. There are no node filters. See [query reading and source hints](query.md).
+to `--json`. Optional `query [NODE_ID]` starts at that current/deleted node, otherwise
+metric selections start at the target manifesto. `--min-distance`/`--max-distance`
+admit values <= their integer cutoff; `--influence` admits self-inclusive counts >=
+its cutoff. Percentages select a rounded-up share of the root's reachable population,
+with ID tie-breaks. Each criterion selects independently; combine by union. Scoped
+JSON identifies selected IDs, metric values, boundary parents and necessary source
+evidence. See [query selection and source hints](query.md).
 
 Mutations print changed IDs/paths and potential affected scope, not an entire graph.
 Human diagnostics go to stderr; JSON diagnostics are structured in its one envelope.

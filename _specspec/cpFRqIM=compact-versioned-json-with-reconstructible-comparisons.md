@@ -20,7 +20,10 @@ ID-based changes, relationships and source/file impact. Every base node is eithe
 shared with an unchanged target record or present in previous records; added target
 IDs are excluded from base reconstruction. Preserve both complete revision structures,
 old bodies/sources for deleted/historical nodes, and literal file changes where the
-operation requests a full diff. Reconstruct existing renderer records once in the
+operation requests a full diff. Explicit rooted query selections scope the
+comparison records to selected IDs while preserving full parent references and
+needed source evidence; selection metadata identifies the partial view and its
+external boundary. Validation describes the complete original revisions. Reconstruct existing renderer records once in the
 shared host adapter; avoid duplicating targets inside an outer loaded snapshot.
 
 HEAD is resolved freshly. Staged deletion leaves HEAD membership and D ghosts intact;

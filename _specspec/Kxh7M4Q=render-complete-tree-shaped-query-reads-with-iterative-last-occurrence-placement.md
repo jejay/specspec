@@ -2,10 +2,9 @@
 id: Kxh7M4Q=
 type: implementation
 parents:
-- B71bAFk=
 - z9YKFeE=
-- 2doGbqA=
 - B6y6hgo=
+- YkxeXd0=
 sources:
 - path: src/specspec/query.py
 - path: src/specspec/cli.py
@@ -22,6 +21,8 @@ sources:
 - path: tests/test_sources.py
 - path: tools/benchmark_query.py
 - path: docs/investigations/query-performance.md
+- path: src/specspec/query_select.py
+- path: tests/test_query_select.py
 ---
 # Render complete selected-record query reads with contract-aware source hints
 
@@ -87,3 +88,17 @@ Regressions cover compact/human golden reads, source aggregation and duplicates,
 comma-bearing paths and disjoint ranges, uncertain/removed/deleted source items,
 parent sorting in both modes, original multiline whitespace and control safety,
 identical JSON, read-only Git state and maintained temporal graph traversals.
+
+
+query_select.py computes one rooted population and shared metric batch, selecting
+inclusive absolute sets or exact rational ceil-percentage quotas in metric/ID order.
+Integer descendant bitsets count influence once per node with last-consumer release;
+minimum/maximum distances share a forward pass. Independent frontier/path/closure
+oracles cover the ranking equivalence and selection union. read_query builds the
+projection once before source reads and reuses its induced view for either renderer.
+Scoped comparison records retain external parent IDs and all necessary source facts.
+query_sources filters declaration owners to the old/new descendant evidence scope
+and propagates known changes with multi-source ancestor walks, preserving selected
+badges when the breaking declaration itself lies outside the selected binding set.
+Tests cover scoped reconstruction, selection provenance, deleted roots and shifted
+relationships, outside evidence, empty/unrelated source avoidance and read counts.

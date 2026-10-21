@@ -140,7 +140,11 @@ region facts plus separate contract classifications and completeness. Shared sou
 inspection/check/preview outcomes and conservative file-impact facts retain their
 existing meanings. Default query sources share one comma-separated line per node;
 `--human` lists each occurrence separately, with the same locations and item-level
-hints. Duplicate references remain visible in both modes. See [query source contracts](query.md).
+hints. Duplicate references remain visible in both modes. Rooted metric selections
+retain evidence from selected nodes' descendants in either original revision, so an
+excluded broken link still affects a selected ancestor. JSON identifies evidence
+owners separately from visible binding IDs; unrelated branches need no resolution.
+See [query source contracts](query.md).
 
 These derived readings use the shared bounded cached resolver. They compare selected
 versions rather than treating an older anchor's modified outcome as a new change.

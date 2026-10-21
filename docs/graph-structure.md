@@ -54,12 +54,13 @@ history remain untouched. See [the history procedure](../example/gantt/history/W
 
 ## Verification
 
-The maintained graphs contain 183 nodes/324 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The 700 tests comprise 405 Python, 240 shared UI,
+The maintained graphs contain 186 nodes/328 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. The 773 tests comprise 478 Python, 240 shared UI,
 46 VS Code adapter and 9 Electron cases. Backend, renderer and host-adapter suites
 cover independent closure/last-occurrence/selected-parent query oracles, default
 compact/human bodies and source lists, comma-separated parents, worded hints/root
-alignment, contract-aware source cues,
+alignment, rooted metric frontier/path/closure oracles, union quotas and source
+evidence boundaries, contract-aware source cues,
 batched/lazy source equivalence, per-call freshness/process counts, controlled
 polling/discovery/disposal lifecycles, complete node/edge readings,
 deep/exponentially shared graphs, remote-redundancy atomicity, native repair,

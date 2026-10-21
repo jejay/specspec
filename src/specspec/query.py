@@ -13,6 +13,7 @@ from .git import repository_paths, semantic_diff, source_change_impact
 from .graph import Graph
 from .model import Diagnostic, SpecError
 from .output import json_text
+from .query_select import Limit, reachable, scope_result, select_graph
 from .query_sources import contract_state, source_comparisons, source_contract_impact
 from .sources import BAD_OUTCOMES
 from .workspace import Snapshot
@@ -25,6 +26,7 @@ class QueryComparison:
     base: Snapshot
     target: Snapshot
     result: dict
+    display: Graph | None = None
 
     @property
     def diagnostics(self):
@@ -52,7 +54,25 @@ def compare_snapshots(base: Snapshot, target: Snapshot) -> QueryComparison:
     return QueryComparison(base, target, result)
 
 
-def read_query(root: Path, base=None, target=None) -> QueryComparison:
+def read_query(
+    root: Path,
+    base=None,
+    target=None,
+    *,
+    node_id=None,
+    min_distance=None,
+    max_distance=None,
+    influence=None,
+) -> QueryComparison:
+    limits = {
+        name: Limit.parse(value, name)
+        for name, value in (
+            ("min-distance", min_distance),
+            ("max-distance", max_distance),
+            ("influence", influence),
+        )
+        if value is not None
+    }
     for ref in (base, target):
         if ref is not None and (not ref or len(ref) > 1024):
             raise SpecError(
@@ -62,6 +82,26 @@ def read_query(root: Path, base=None, target=None) -> QueryComparison:
     comparison = compare_snapshots(old, new)
     result = comparison.result
     result.update(base_ref=base or "HEAD", target_ref=target or "workspace")
+    source_ids = None
+    if node_id is not None or limits:
+        start = (
+            node_id
+            if node_id is not None
+            else next(n.id for n in new.nodes if n.type == "manifesto")
+        )
+        comparison.display, result["selection"] = select_graph(
+            comparison_graph(old, new), start, limits
+        )
+        included = set(comparison.display.nodes)
+        source_ids = set()
+        for snapshot in (old, new):
+            if snapshot.graph:
+                source_ids.update(
+                    i
+                    for i in reachable(snapshot.graph, included)
+                    if snapshot.graph.nodes[i].sources
+                )
+        result["selection"]["source_evidence_ids"] = sorted(source_ids)
     try:
         repository_paths(root)
         git_available = True
@@ -69,7 +109,10 @@ def read_query(root: Path, base=None, target=None) -> QueryComparison:
         git_available = False
     if git_available:
         try:
-            result.update(source_change_impact(root, old.commit or "HEAD", new.commit, old, new))
+            if source_ids is None or source_ids:
+                result.update(
+                    source_change_impact(root, old.commit or "HEAD", new.commit, old, new)
+                )
             result["source_impact_complete"] = True
         except SpecError as error:
             result["notes"].append("Linked-file impact unavailable: " + str(error))
@@ -77,9 +120,17 @@ def read_query(root: Path, base=None, target=None) -> QueryComparison:
         result["notes"].append(
             "No Git comparison available: synthetic empty base; base source version unavailable."
         )
-    result["source_resolutions"] = source_comparisons(root, old, new, git_available=git_available)
+    result["source_resolutions"] = source_comparisons(
+        root,
+        old,
+        new,
+        git_available=git_available,
+        node_ids=source_ids,
+    )
     result.update(source_contract_impact(old, new, result["source_resolutions"]))
     result["affected"] = sorted(set(result["affected"]) | set(result["source_contract_affected"]))
+    if comparison.display is not None:
+        comparison.result = scope_result(result, set(comparison.display.nodes))
     return comparison
 
 
@@ -234,6 +285,11 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
     if not old.nodes and result["base_commit"] is None:
         base_label += " (empty)"
     yield f"{base_label} → {result['target_ref']}"
+    if selection := result.get("selection"):
+        yield (
+            f"Subgraph: {len(selection['ids'])}/{selection['population']} nodes; "
+            f"root {selection['root']}"
+        )
     for note in result["notes"]:
         yield "NOTE: " + note
 
@@ -282,7 +338,9 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
                 for line in contents(node_id):
                     yield continuation + line
 
-    yield from tree(comparison_graph(old, new))
+    yield from tree(
+        comparison.display if comparison.display is not None else comparison_graph(old, new)
+    )
 
 
 def render_query(comparison: QueryComparison, *, human: bool = False) -> str:

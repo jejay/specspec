@@ -11,7 +11,7 @@ and spotlight-style --base/--target selection. Validate both graphs and retain e
 empty/unavailable context. Present complete current and deleted records together
 in relationship context, ordered by last occurrence. Full headers retain all parents.
 
-Present all binding content once per node: target text for surviving/added nodes
+Present all binding content once per selected node: target text for surviving/added nodes
 and base text for deleted nodes. The compact default body projection occupies one
 line; structured bodies retain their original layout. Current version, extensions
 and source locations remain compact metadata above the body. Readable text uses

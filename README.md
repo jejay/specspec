@@ -80,6 +80,8 @@ specspec show
 specspec query
 specspec query --base HEAD --target workspace
 specspec query --human
+specspec query --max-distance 2
+specspec query --max-distance 50% --influence 25%
 specspec context qowy5AI=
 specspec diff
 ```
@@ -93,7 +95,11 @@ Parents always use comma-space separators. Default source items share one
 comma-separated `sources: ` line; `--human` preserves logical body lines and lists
 sources individually. Both retain one resolved location per reference; edits permitted by strict,
 expanding or path-only contracts stay quiet. Broken/uncertain links stay explicit. `--base`/`--target` select versions; `diff` supplies exact text changes.
-All body content remains present; original layout stays exact in JSON and node files.
+All selected body content remains present; original layout stays exact in JSON and
+node files. Optional `query [ID]` starts a rooted subgraph. Minimum/maximum distance
+cutoffs include equality; influence selects highest self-inclusive counts first.
+Percentages select a rounded-up share of reachable nodes; multiple criteria return
+the union of their independent selections.
 The context example follows the compact-ID conclusion.
 This self-referencing graph is evolving design documentation: old root revisions
 need not work with current tooling. Rigorous Git history checks use the rewritten,

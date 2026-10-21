@@ -15,7 +15,8 @@ Traversal is O(V+E) after sorting, with explicit stacks and conceptual unfolding
 Last occurrence follows traversal independently of maximum graph depth.
 
 Apply this ordering to the selected-record display projection of a comparison. Retain
-every node from either side and every relationship in reconstructible side records.
+every selected node from either side and its complete parents in reconstructible
+side records; the ordinary unfiltered query selects the entire comparison.
 Unicode continuation rails prefix displayed data. Full headers give type, filename
 stem and all direct parents. Retain all current/deleted binding content in a compact reading with sparse
 revision hints and safe terminal presentation. Structured comparison records
@@ -23,5 +24,6 @@ retain both original bodies and their whitespace. Canonical comments, spelling a
 line endings remain available through node files and the dedicated diff command.
 
 Query validates the selected saved graphs and reads code from those versions.
---json uses the complete reconstructible API-6 comparison projection. Node format
+--json uses reconstructible API-6 records for the selected scope; explicit
+subgraphs identify their population, boundary parents and induced edges. Node format
 6 and existing application operations retain their definitions.

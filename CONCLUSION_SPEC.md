@@ -77,6 +77,14 @@ Broken/uncertain links remain explicit. Raw source facts stay complete in JSON.
 Known committed source blobs/anchors populate existing per-call caches in batches;
 identical commits reuse a reader. No query cache survives the invocation.
 Query builds change summaries; exact patches and literal review belong to `diff`.
+Rooted subqueries accept an optional full node ID and --min-distance, --max-distance
+or --influence. Inclusive integer cutoffs use <= for distances and >= for influence;
+decimal percentages select exact ceil quotas from one reachable population. Full ID
+ties are deterministic and multiple criteria combine by union. A shared graph batch
+propagates distances forward and self-inclusive influence bitsets backward, releasing
+masks after their last consumer. Scoped records keep full boundary parent references
+and required old/new descendant source evidence; unrelated branches avoid resolver
+work. Default unfiltered comparisons retain all records.
 Canonical node schema and existing host operations retain their contracts.
 
 ## Canonical files and grammar

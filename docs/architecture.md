@@ -123,10 +123,20 @@ zero. Parent IDs always use comma-space separators. Default sources share one
 comma-separated metadata line per node; --human retains logical body lines and
 individual source lines. This flag changes only rendering, including when combined
 with --json. Original bodies remain exact in JSON and diff.
+`query_select.py` batches rooted reachability, a shared forward distance pass and
+reverse self-inclusive influence bitsets. Last-consumer release avoids retaining
+closure rows on chains and leaf fans. Inclusive thresholds or exact ceil-percentage
+quotas select each metric independently and union the resulting IDs. Full parent
+metadata stays intact; the induced display and scoped API-6 comparison identify
+boundary IDs rather than adding ancestor bindings. Original snapshots remain validated.
 `query_sources.py` reuses one cached SourceReader per distinct code version and interprets strict/expanding/
 path-only contracts: permitted changes stay quiet; known transitions drive source-changed and
 ancestors in both original graphs. Broken/unknown mappings stay explicit. API-6 JSON
-retains original graphs, complete raw facts and separate contract classifications;
+retains complete selected revision records, required raw source facts and separate
+contract classifications. Source evidence includes old/new descendants of selected
+nodes, keeping badges stable when an excluded owner affects a visible ancestor;
+independent branches need no resolver reads. Multi-source walks propagate effects
+once per original graph. Unfiltered queries retain both complete graphs;
 shared conservative file-impact facts remain available. Known committed source blobs
 are prefetched into the existing per-call cache in batches; no query cache crosses
 invocations. Patches belong to `diff`. See [query profiling](investigations/query-performance.md).

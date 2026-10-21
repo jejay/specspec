@@ -379,18 +379,32 @@ def show(root, node_id, dependents, as_json):
         )
 
 
-@main.command()
+@main.command(context_settings={"ignore_unknown_options": True})
+@click.argument("node_id", required=False)
 @click.option("--base", help="Base commit/ref (default: fresh HEAD).")
 @click.option("--target", help="Target commit/ref or workspace (default).")
+@click.option("--min-distance", help="Inclusive maximum shortest path, or population percentage.")
+@click.option("--max-distance", help="Inclusive maximum longest path, or population percentage.")
+@click.option(
+    "--influence", help="Inclusive minimum self-inclusive influence, or population percentage."
+)
 @click.option(
     "--human", is_flag=True, help="Preserve multiline bodies and list sources individually."
 )
 @json_option
 @click.pass_obj
 @guarded
-def query(root, base, target, human, as_json):
-    """Read a complete revision comparison as a tree; default HEAD to workspace."""
-    comparison = read_query(root_path(root), base, target)
+def query(root, node_id, base, target, min_distance, max_distance, influence, human, as_json):
+    """Read complete bindings or a rooted subgraph; default HEAD to workspace."""
+    comparison = read_query(
+        root_path(root),
+        base,
+        target,
+        node_id=node_id,
+        min_distance=min_distance,
+        max_distance=max_distance,
+        influence=influence,
+    )
     emit(
         wire.comparison(comparison.result) if as_json else render_query(comparison, human=human),
         comparison.diagnostics,

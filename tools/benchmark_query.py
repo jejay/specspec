@@ -23,15 +23,47 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-def benchmark(root: Path, runs: int, output: Path) -> dict:
+def benchmark(
+    root: Path,
+    runs: int,
+    output: Path,
+    *,
+    node_id=None,
+    min_distance=None,
+    max_distance=None,
+    influence=None,
+) -> dict:
     root = root.resolve()
+    selection = {
+        key: value
+        for key, value in {
+            "node_id": node_id,
+            "min_distance": min_distance,
+            "max_distance": max_distance,
+            "influence": influence,
+        }.items()
+        if value is not None
+    }
+    arguments = [node_id] if node_id is not None else []
+    for key, value in selection.items():
+        if key != "node_id":
+            arguments.extend(["--" + key.replace("_", "-"), value])
     timings = {}
     for kind, options in (("text", []), ("json", ["--json"])):
         seconds, digests, sizes = [], [], []
         for _ in range(runs):
             started = time.perf_counter()
             result = subprocess.run(
-                [sys.executable, "-m", "specspec", "--root", str(root), "query", *options],
+                [
+                    sys.executable,
+                    "-m",
+                    "specspec",
+                    "--root",
+                    str(root),
+                    "query",
+                    *arguments,
+                    *options,
+                ],
                 capture_output=True,
                 timeout=120,
             )
@@ -71,7 +103,7 @@ def benchmark(root: Path, runs: int, output: Path) -> dict:
     with patch("subprocess.Popen", counted):
         profile.enable()
         started = time.perf_counter()
-        query = read_query(root)
+        query = read_query(root, **selection)
         read_seconds = time.perf_counter() - started
         started = time.perf_counter()
         render_query(query)
@@ -85,6 +117,7 @@ def benchmark(root: Path, runs: int, output: Path) -> dict:
         "platform": platform.platform(),
         "root": str(root),
         "runs": runs,
+        "query": selection,
         "scope": (
             "Fresh CLI processes; OS caches not flushed; captured stdout. "
             "Profile includes instrumentation overhead."
@@ -98,6 +131,7 @@ def benchmark(root: Path, runs: int, output: Path) -> dict:
         },
         "nodes": len(query.target.nodes),
         "source_rows": len(query.result["source_resolutions"]),
+        "selection": query.result.get("selection"),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf8")
@@ -113,10 +147,27 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--node-id")
+    parser.add_argument("--min-distance")
+    parser.add_argument("--max-distance")
+    parser.add_argument("--influence")
     options = parser.parse_args()
     if options.runs < 1:
         parser.error("--runs must be positive")
-    print(json.dumps(benchmark(options.root, options.runs, options.output), indent=2))
+    print(
+        json.dumps(
+            benchmark(
+                options.root,
+                options.runs,
+                options.output,
+                node_id=options.node_id,
+                min_distance=options.min_distance,
+                max_distance=options.max_distance,
+                influence=options.influence,
+            ),
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

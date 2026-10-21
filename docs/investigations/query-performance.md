@@ -64,6 +64,35 @@ validation; source comparisons fell from roughly 9 s to 0.56 s in the fixed fixt
 Python startup, fresh Git metadata and filesystem reads also remain. This change
 does not bypass validation, silence uncertainty or promise subsecond delivery.
 
+## Rooted metric selection
+
+Rooted queries build one selected-record DAG and reachable population before code
+resolution. Minimum/maximum distances share a forward topological pass; influence
+uses one reverse pass with deduplicated integer descendant bitsets and adds self.
+Child masks are released after their last parent consumes them; leaves have no
+stored closure row. Independent priority-frontier, path and closure oracles verify
+that batch ranking preserves the requested search order, including full-ID ties.
+Absolute predicates filter before sorting and percentage quotas use bounded top-k.
+Each criterion uses the same population; only final ID sets are unioned.
+
+Counting regressions require one snapshot selection, projection, metric batch,
+source comparison and conservative source-impact read for a three-criterion query.
+Distance-only and zero-percent queries avoid influence work; empty selections avoid
+code-version readers. Necessary old/new descendant evidence preserves selected
+ancestor badges, while unrelated branches skip the resolver. Multi-source graph
+walks avoid per-owner ancestor closures. The 20,000-node chain and leaf-fan cases
+verify iterative influence calculation with a traced live-allocation ceiling of
+16 MiB in the metric batch; this is an algorithm regression budget, not a promise
+about whole-process or arbitrary dense-graph memory.
+
+The benchmark helper accepts `--node-id`, `--min-distance`, `--max-distance` and
+`--influence`; its fresh CLI processes and instrumented read use identical options.
+Reports retain selection provenance alongside output digests and Git process counts.
+For example, add `--max-distance 25% --influence 25%` to compare the independent
+union on the same external fixture. Sources below a selected ancestor remain
+necessary even if their binding is excluded, so a smaller display does not imply
+proportionally fewer source reads.
+
 ## Repeat and protect
 
 ```sh

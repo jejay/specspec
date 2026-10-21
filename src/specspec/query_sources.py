@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .model import SpecError
+from .query_select import reachable
 from .sources import BAD_OUTCOMES, SourceReader, text_lines
 from .workspace import Snapshot
 
@@ -151,8 +152,7 @@ def source_contract_impact(base: Snapshot, target: Snapshot, rows: list[dict]) -
     affected = set(changed)
     for snapshot in (base, target):
         if snapshot.graph:
-            for node_id in changed & snapshot.graph.nodes.keys():
-                affected.update(snapshot.graph.closure(node_id, ancestors=True))
+            affected.update(reachable(snapshot.graph, changed, ancestors=True))
     return {
         "source_contract_affected": sorted(affected),
         "source_contract_complete": all(r["contract"] != "unavailable" for r in rows),
@@ -160,10 +160,10 @@ def source_contract_impact(base: Snapshot, target: Snapshot, rows: list[dict]) -
 
 
 def source_comparisons(
-    root: Path, base: Snapshot, target: Snapshot, *, git_available=True
+    root: Path, base: Snapshot, target: Snapshot, *, git_available=True, node_ids=None
 ) -> list[dict]:
-    old = {n.id: n for n in base.nodes}
-    new = {n.id: n for n in target.nodes}
+    old = {n.id: n for n in base.nodes if node_ids is None or n.id in node_ids}
+    new = {n.id: n for n in target.nodes if node_ids is None or n.id in node_ids}
     references = [s for n in [*old.values(), *new.values()] for s in n.sources]
     if not references:
         return []

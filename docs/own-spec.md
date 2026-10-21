@@ -202,7 +202,15 @@ while refs/workspace files remain fresh. [Profiling evidence](investigations/que
 includes fixed-input equality, subprocess-count regressions and reproducible timings.
 [Implementation](../_specspec/Kxh7M4Q=render-complete-tree-shaped-query-reads-with-iterative-last-occurrence-placement.md)
 maps the renderer, source reader integration, CLI, plain-output golden cases and
-independent temporal/structure checks. See [the query guide](query.md). Node format/API remain 6.
+independent temporal/structure checks. [Rooted subgraph selection](../_specspec/rt-nZHM=select-rooted-query-subgraphs-by-distance-or-influence.md)
+adds minimum/maximum distance and highest-first self-inclusive influence criteria.
+The [cutoff choice](../_specspec/8O0LYEM=bound-rooted-metric-walks-with-inclusive-cutoffs-and-exact-population-quotas.md)
+uses inclusive integers or exact ceil-percentage quotas on one rooted population,
+ID tie-breaks and independent subquery unions. The [batch choice](../_specspec/YkxeXd0=batch-metric-selection-and-preserve-relevant-source-evidence.md)
+shares distance propagation and reverse influence bitsets, releases consumed masks,
+and limits code resolution to necessary original-graph evidence. Scoped JSON keeps
+complete selected bindings, external parent IDs and source provenance. See
+[the query guide](query.md). Node format/API remain 6.
 
 ## Neighborhood UI revision
 

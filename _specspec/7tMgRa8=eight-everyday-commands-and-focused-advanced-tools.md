@@ -16,7 +16,9 @@ saved workspace with --base/--target selection. Full target and deleted-base rec
 carry complete one-line body readings, worded change hints and resolved source context, with forward
 references for shared nodes. Query --human retains logical body lines and lists
 sources individually; default source items share one comma-separated line. Parent
-headers use comma-separated full IDs in both presentations. Check covers
+headers use comma-separated full IDs in both presentations. Query [ID] supports
+--min-distance, --max-distance and --influence cutoffs or percentage quotas,
+combining criteria by union. Check covers
 working files, --staged exact-index files and optional --sources mapping/retention;
 --warnings-as-errors remains available. Diff accepts optional positional BASE/TARGET,
 defaulting to freshly resolved HEAD versus working files. Root selection stays --root.

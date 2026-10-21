@@ -9,7 +9,8 @@ parents:
 Give people and coding agents a compact, understandable reading of a specification
 DAG through the query command, always in a revision comparison. The ordinary view
 compares freshly resolved HEAD with the saved workspace; explicit revisions select
-other comparisons. Present each complete current binding once, including headless
+other comparisons. Read the whole graph by default, or an explicitly selected rooted subgraph.
+Present each complete selected current binding once, including headless
 bodies, and retain complete base bindings for deleted nodes. Sparse hints identify
 changes while readers focus on the current specification. Detailed historical text
 changes remain available through the dedicated diff command and comparison records.

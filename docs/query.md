@@ -3,6 +3,10 @@
 ```sh
 specspec query                                      # Fresh HEAD → saved workspace
 specspec query --human                              # Multiline bodies, individual sources
+specspec query --max-distance 2                     # Root plus longest-path levels 1 and 2
+specspec query --max-distance 50%                   # Half the reachable graph, rounded up
+specspec query qowy5AI= --influence 5                # Custom root; self-inclusive influence >= 5
+specspec query --min-distance 25% --influence 25%    # Union of independent selections
 specspec query --base release --target workspace
 specspec query --base main~2 --target main
 specspec query --json
@@ -22,6 +26,57 @@ Old wording for modified nodes and exact text hunks belong to `specspec diff`.
 └─requirement AAAAAAU=removed-rule @ AAAAAAI= [deleted]
   The deleted binding's old text.
 ```
+
+## Rooted subgraph selection
+
+With no selection arguments, query reads the complete comparison. Supply an optional
+full case-sensitive `NODE_ID` to start at a current or deleted record; otherwise
+metric queries start at the target manifesto. A root by itself selects all its
+reachable records. The population includes that root and each unique descendant
+in the selected-record graph: target parents for current nodes, former parents for
+deleted nodes. Different former manifesto roots remain in an unfiltered reading;
+select a former root explicitly to search its separate deleted component.
+
+| Option | Priority | Inclusive absolute cutoff |
+| --- | --- | --- |
+| `--min-distance N` | Smallest shortest path first | Shortest directed path from query root **<= N** |
+| `--max-distance N` | Smallest longest path first | Longest directed path from query root **<= N** |
+| `--influence N` | Highest influence first | Self plus unique descendants **>= N** |
+
+Distances count edges, with zero at the query root. Influence has a minimum of one
+and counts shared descendants only once; it is absolute, not normalized or logged.
+Compute these values on the full rooted population, before applying any criterion.
+For example, `--max-distance 2` includes the root and nodes whose longest path is at
+most two edges. A shared node reached by a short and a longer path uses the longer
+one for maximum distance and the shorter one for minimum distance.
+
+Each option also accepts a decimal percentage in `[0,100]`. Select
+`ceil(population * percentage / 100)` records in that metric's priority order,
+breaking ties by ascending full case-sensitive ID. Thus `50%` selects 62 of 124
+nodes, including the root; `0%` selects none, and `100%` selects the population.
+Rounding uses exact decimal arithmetic. Absolute cutoffs are nonnegative integers.
+
+Multiple criteria select **independently against the same population**, then query
+returns their **union**. Their limits do not constrain one another or shrink the
+next criterion's denominator. The output retains ID-ordered last-occurrence layout,
+not search-priority print order. No extra ancestors or bodies are inserted to fill
+missing parent links; every selected record still states all its parent IDs.
+`--human`, version selection and JSON work with the same selected set.
+
+JSON `selection` identifies `root`, `population`, union `ids`, induced `edges`,
+`boundary_parents` and `partial`. Each `queries` entry records its metric, limit and
+priority-ordered `nodes` with IDs and values. Base/target/before bindings, node/file
+changes and affected sets are scoped to those IDs. Full parent references and their
+edge deltas remain, including boundary parents outside the view. Reconstruction
+recovers the selected part of each original revision; snapshot `valid` describes
+the original validated graph, not a claim that a partial view is canonical.
+
+Source badges retain their original-graph meaning: an excluded descendant's broken
+link can affect a selected ancestor. `source_evidence_ids` and complete
+`source_resolutions` retain that necessary evidence even when its owner has no
+visible binding. Unrelated branches need no source resolution. Zero-percent-only
+criteria skip metric work; any empty selection skips code reads. Both saved graphs
+are still validated.
 
 ## Tree and node hints
 
@@ -64,8 +119,8 @@ node files; `diff` supplies literal changes. `--human` preserves logical body li
 blank lines, indentation, tabs and trailing spaces instead of applying the one-line
 projection. CRLF is normalized to LF for display. Both presentations use shared
 visible terminal-control escaping and retain full content with no truncation.
-Current format-version/extensions remain compact metadata. There are no node filters
-or body quotation wrappers.
+Current format-version/extensions remain compact metadata. Selected bodies have no
+quotation wrappers.
 
 The display selects **current parents for current nodes and former parents for deleted
 nodes**. It is acyclic: a current node cannot have a deleted parent. Lost old links
@@ -108,7 +163,8 @@ broken mapping remains visibly problematic but is not a new revision change.
 Unknown mappings do not become fake changed/unchanged verdicts. Partial strict
 fragments never stand in for a complete trusted selection.
 
-Every exact union reference is checked against both selected code versions, even
+Every exact union reference in the required evidence scope is checked against both
+selected code versions, even
 when only one node declares it. Unequal declarations stay removals/additions, not
 guessed pairings by path or symbol. Duplicates remain separate rows. Comparisons
 use both versions, rather than treating an older anchor's `modified` outcome as a
@@ -130,10 +186,17 @@ A non-Git workspace identifies its synthetic empty graph and unavailable base co
 Invalid refs/schemas fail before output. Node format and application API remain **6**.
 
 `query --json` retains target/before records, original edge deltas, file-change
-summaries, refs/commits and full derived source facts. `--human --json` produces the
+summaries, refs/commits and full derived source facts for the selected scope. `--human --json` produces the
 same structured output as `--json`: human changes only the text presentation.
 Exact patches belong to
 `specspec diff`, or `specspec diff BASE TARGET` for the matching committed comparison.
+
+One rooted graph batch shares minimum/maximum distance propagation and reverse
+integer-bitset influence counts across all criteria. It releases child bitsets after
+their last parent consumes them, without per-node closure searches or path unfolding.
+Metric ranking agrees with a child-frontier priority walk; thresholds filter before
+sorting and percentage quotas use bounded top-k selection. Projection, revision
+reads and source comparisons run once, not once per metric.
 
 Known committed source blobs/anchors fill the existing per-call cache in batches;
 identical selected commits share a code reader. Every invocation resolves refs and
