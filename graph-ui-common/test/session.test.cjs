@@ -5,6 +5,9 @@ const { renderMatches, sameNode } = require('../media/graph-model.js');
 const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
 const snapshot = { valid: true, format_version: 6, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
+async function advanceClock(t, milliseconds) {
+  t.mock.timers.tick(milliseconds); await new Promise(resolve => setImmediate(resolve));
+}
 async function waitFor(check) { for (let i = 0; i < 100; i++) { if (check()) return; await pause(5); } assert.ok(check()); }
 const isComparison = c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read' && Boolean(JSON.parse(c.input).base);
 function fixture(t, options = {}) {
@@ -262,30 +265,38 @@ test('partial writes retry a bounded number of times without a false invalid vie
   assert.ok(!f.messages.some(m => m.type === 'sync-error'));
 });
 test('polling is off by default, configurable, coalesced, and cancelled on disposal', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   const f = fixture(t); await f.s.open(); assert.equal(f.s.pollTimer, undefined);
-  const before = f.calls.length; await pause(25); assert.equal(f.calls.length, before);
-  f.s.configurePolling(8); await waitFor(() => f.calls.length > before);
-  f.s.configurePolling(0); await pause(20); await f.s.queue; const off = f.calls.length; await pause(25); assert.equal(f.calls.length, off);
-  f.s.configurePolling(8); f.s.dispose(); await pause(25); assert.equal(f.calls.length, off);
+  const before = f.calls.length; await advanceClock(t, 1000); assert.equal(f.calls.length, before);
+  f.s.configurePolling(8); await advanceClock(t, 8); await f.s.queue; await f.s.annotationsWork;
+  assert.ok(f.calls.length > before);
+  f.s.configurePolling(16); const replaced = f.calls.length;
+  await advanceClock(t, 15); assert.equal(f.calls.length, replaced, 'Replacing an interval cancels its old ticks.');
+  await advanceClock(t, 1); await f.s.queue; await f.s.annotationsWork; assert.ok(f.calls.length > replaced);
+  f.s.configurePolling(0); await advanceClock(t, f.s.host.debounceMs); await f.s.queue;
+  const off = f.calls.length; await advanceClock(t, 10_000); assert.equal(f.calls.length, off);
+  f.s.configurePolling(8); f.s.dispose(); await advanceClock(t, 10_000); assert.equal(f.calls.length, off);
   for (const value of [-1, 0.5, NaN, '10', 2_147_483_648]) assert.throws(() => pollInterval(value), /Polling interval/);
 });
 test('polls do not pile up behind slow reads or refresh immutable historical targets', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   const f = fixture(t, { revisions: ['HEAD', 'HEAD'] }); await f.s.open();
   const cli = f.s.host.cli, before = f.calls.filter(isComparison).length;
-  let release, entered = 0;
-  const blocked = new Promise(resolve => { release = resolve; });
+  const blocked = gate(t); let entered = 0;
   f.s.host.cli = async (args, input) => {
-    if (isComparison({ args, input })) { entered++; await blocked; }
+    if (isComparison({ args, input })) { entered++; await blocked.waiting; }
     return cli(args, input);
   };
-  f.s.configurePolling(1); await waitFor(() => entered === 1);
+  f.s.configurePolling(10); await advanceClock(t, 10); assert.equal(entered, 1);
   for (let i = 0; i < 20; i++) f.s.requestRefresh();
-  await pause(10); f.s.configurePolling(0);
+  await advanceClock(t, 100); f.s.configurePolling(0);
   assert.equal(entered, 1, 'One comparison stays in flight while ticks and refresh hints coalesce.');
-  f.s.host.cli = cli; release();
-  await waitFor(() => f.calls.filter(isComparison).length >= before + 2); await f.s.queue;
-  assert.equal(f.calls.filter(isComparison).length, before + 2, 'The blocked read gets exactly one coalesced follow-up.');
-  await f.s.chooseRevisions(); const count = f.calls.filter(isComparison).length; f.s.configurePolling(2); f.s.scheduleRefresh(); await pause(25);
+  f.s.host.cli = cli; blocked.release(); await f.s.queue;
+  await advanceClock(t, f.s.host.debounceMs); await f.s.queue;
+  assert.equal(f.calls.filter(isComparison).length, before + 2, 'Already-requested work gets one coalesced follow-up after polling stops.');
+  await advanceClock(t, 1000); assert.equal(f.calls.filter(isComparison).length, before + 2);
+  await f.s.chooseRevisions(); const count = f.calls.filter(isComparison).length;
+  f.s.configurePolling(10); f.s.scheduleRefresh(); await advanceClock(t, 30); await f.s.annotationsWork;
   assert.equal(f.calls.filter(isComparison).length, count);
   assert.ok(f.calls.some(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations'));
 });

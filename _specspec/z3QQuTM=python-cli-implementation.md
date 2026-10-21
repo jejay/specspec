@@ -18,8 +18,8 @@ sources:
 ---
 # Package the compact CLI and complete binding context
 
-Hatchling packages src/specspec; Click exposes eight everyday commands: init, show,
-context, add, update, delete, check and diff. Advanced source/recovery tools retain
+Hatchling packages src/specspec; Click exposes nine everyday commands: init, show,
+context, query, add, update, delete, check and diff. Advanced source/recovery tools retain
 explicit ownership and uncertainty. Hidden api accepts bounded versioned application
 requests. UTF-8 files/stdin carry binding bodies; full IDs remain canonical.
 

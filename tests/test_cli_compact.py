@@ -28,7 +28,7 @@ def api(root, **value):
 
 
 @pytest.mark.parametrize("encoding", ["ascii", "cp1252"])
-@pytest.mark.parametrize("args", [[], ["diff"]])
+@pytest.mark.parametrize("args", [[], ["diff"], ["query"]])
 def test_help_is_safe_through_legacy_windows_pipe_encodings(workspace, encoding, args):
     root, _ = workspace
     result = subprocess.run(
@@ -40,12 +40,13 @@ def test_help_is_safe_through_legacy_windows_pipe_encodings(workspace, encoding,
     assert result.stdout.decode("ascii").startswith("Usage:")
 
 
-def test_eight_commands_advanced_help_and_no_parallel_legacy_surface(workspace):
+def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspace):
     root, node_id = workspace
     assert {n for n, c in main.commands.items() if not c.hidden} == {
         "init",
         "show",
         "context",
+        "query",
         "add",
         "update",
         "delete",

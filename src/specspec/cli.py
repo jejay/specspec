@@ -28,6 +28,7 @@ from .output import (
     render_receipt,
     safe_text,
 )
+from .query import read_query, render_query
 from .source_commands import register as register_sources
 from .source_commands import target_graph
 from .source_schema import MAX_REFERENCES, validate_source
@@ -92,7 +93,7 @@ class Commands(click.Group):
         for label, names in [
             (
                 "Everyday commands",
-                ["init", "show", "context", "add", "update", "delete", "check", "diff"],
+                ["init", "show", "context", "query", "add", "update", "delete", "check", "diff"],
             ),
             ("Advanced tools", ["sources", "spotlight", "recover"]),
         ]:
@@ -376,6 +377,22 @@ def show(root, node_id, dependents, as_json):
             as_json=as_json,
             text=lambda r: render_node(r["node"]),
         )
+
+
+@main.command()
+@click.option("--base", help="Base commit/ref (default: fresh HEAD).")
+@click.option("--target", help="Target commit/ref or workspace (default).")
+@json_option
+@click.pass_obj
+@guarded
+def query(root, base, target, as_json):
+    """Read a complete revision comparison as a tree; default HEAD to workspace."""
+    comparison = read_query(root_path(root), base, target)
+    emit(
+        wire.comparison(comparison.result) if as_json else render_query(comparison),
+        comparison.diagnostics,
+        as_json=as_json,
+    )
 
 
 @main.command(context_settings={"ignore_unknown_options": True})

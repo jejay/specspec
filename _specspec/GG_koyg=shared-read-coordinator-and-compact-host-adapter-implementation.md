@@ -5,6 +5,7 @@ parents:
 - -UedVEw=
 - cpFRqIM=
 - nIj9fmE=
+- wkCbtnQ=
 sources:
 - path: graph-ui-common/host/reads.cjs
 - path: graph-ui-common/host/documents.cjs
@@ -21,6 +22,7 @@ sources:
 - path: vscode/test/extension.test.cjs
 - path: vscode/test-host/remote.cjs
 - path: docs/loading.md
+- path: docs/investigations/polling-test-race.md
 ---
 # Share current graph reads while preserving host persistence owners
 
@@ -45,3 +47,11 @@ geometry and cascade ghost lifecycles; Git-paint probes wait for the completed
 comparison rather than misclassifying provisional cards. Native Save/undo and managed
 writer lifecycles remain separate. Presentation and polling/deadline contracts retain
 their established owners.
+
+Polling lifecycle tests use virtual timers and controlled real Git discovery. The
+fixture exposes actual sessions/watchers so tests await their queues and disposal.
+A late initial discovery remains a valid watcher refresh while polling is off;
+periodic shutdown and pending-discovery disposal are asserted independently. Shared
+session tests cover exact interval replacement and coalesced pending reads without
+wall-clock quiet sleeps. The polling investigation records a deterministic 5-to-6
+call reproduction and the corrected oracle. Product scheduling remains unchanged.

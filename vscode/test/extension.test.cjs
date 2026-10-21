@@ -15,7 +15,7 @@ function fixture(t, options = {}) {
   mkdirSync(join(root, '_specspec'));
   mkdirSync(join(root, 'vscode'));
   const uri = path => ({ scheme: 'file', fsPath: resolve(path), toString() { return this.fsPath; } });
-  const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], gitLookups: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
+  const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], gitWatchers: [], sessions: [], gitLookups: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
   const backups = new Map();
   const context = { extensionUri: uri(join(root, 'vscode')), extensionMode: 2, subscriptions: [],
     workspaceState: { get: key => backups.get(key), keys: () => [...backups.keys()], update: async (key, value) => { value === undefined ? backups.delete(key) : backups.set(key, value); } } };
@@ -138,6 +138,20 @@ function fixture(t, options = {}) {
     Module._load = function(request, parent, ...rest) {
       if (request === 'vscode') return vscode;
       if (request === './bridge' && parent?.filename === extensionPath) return { createClient: () => ({ invoke, dispose() {} }) };
+      if (request === './common/host/session.cjs' && parent?.filename === extensionPath) {
+        const portable = originalLoad.call(this, request, parent, ...rest);
+        return { ...portable, GraphSession: class extends portable.GraphSession {
+          constructor(...args) { super(...args); calls.sessions.push(this); }
+        } };
+      }
+      if (request === './common/host/git-watch.cjs' && parent?.filename === extensionPath) {
+        const portable = originalLoad.call(this, request, parent, ...rest);
+        return { ...portable, GitWatcher: class extends portable.GitWatcher {
+          constructor(root, changed, failed) {
+            super(root, changed, failed, undefined, options.gitExecute); calls.gitWatchers.push(this);
+          }
+        } };
+      }
       return originalLoad.call(this, request, parent, ...rest);
     };
     require(extensionPath).activate(context);
@@ -318,16 +332,74 @@ test('watchers include directory replacement, refresh external changes, and poll
   f.calls.panels[0].dispose(); await waitFor(() => f.calls.watchers[0].disposed);
 });
 
+const nextTurn = () => new Promise(resolve => setImmediate(resolve));
+const nonGit = () => Object.assign(new Error('Not a Git repository'), { code: 128 });
+async function advanceClock(t, milliseconds, session) {
+  t.mock.timers.tick(milliseconds); await nextTurn();
+  await session.queue; await session.annotationsWork; await nextTurn();
+}
+
 test('polling setting changes take effect and disposal stops old-root timers', async t => {
-  const settings = { pollIntervalMs: 0 }, f = fixture(t, { settings });
-  await f.calls.commands.get('specspec.openGraph')(); const first = f.calls.cli.length;
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const settings = { pollIntervalMs: 0 }, f = fixture(t, { settings, gitExecute: async () => { throw nonGit(); } });
+  await f.calls.commands.get('specspec.openGraph')();
+  const session = f.calls.sessions[0];
+  await f.calls.gitWatchers[0].discovery;
+  const debounce = session.host.debounceMs ?? 200;
+  await advanceClock(t, debounce, session); // Settle the independent startup watcher hint.
+  const first = f.calls.cli.length;
+  await advanceClock(t, 1000, session); assert.equal(f.calls.cli.length, first);
   settings.pollIntervalMs = 10; f.calls.configure({ affectsConfiguration: () => true });
-  await waitFor(() => f.calls.cli.length > first);
+  await advanceClock(t, 10, session); assert.ok(f.calls.cli.length > first);
   settings.pollIntervalMs = 0; f.calls.configure({ affectsConfiguration: () => true });
-  await new Promise(r => setTimeout(r, 260)); const off = f.calls.cli.length;
-  await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, off);
+  await advanceClock(t, debounce, session); // Configuration itself legitimately refreshes.
+  assert.equal(session.pollTimer, undefined);
+  const off = f.calls.cli.length;
+  await advanceClock(t, 10_000, session); assert.equal(f.calls.cli.length, off);
   settings.pollIntervalMs = 10; f.calls.configure({ affectsConfiguration: () => true }); f.calls.panels[0].dispose();
-  await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, off);
+  await nextTurn(); assert.equal(session.disposed, true); // Disposal drains received native edits first.
+  await advanceClock(t, 10_000, session); assert.equal(f.calls.cli.length, off);
+});
+
+test('polling off permits late initial Git discovery and subsequent file watcher refreshes', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  let rejectDiscovery;
+  const settings = { pollIntervalMs: 0 }, f = fixture(t, { settings,
+    gitExecute: () => new Promise((_, reject) => { rejectDiscovery = reject; }) });
+  t.after(() => rejectDiscovery?.(nonGit()));
+  await f.calls.commands.get('specspec.openGraph')();
+  const session = f.calls.sessions[0], before = f.calls.cli.length;
+  settings.pollIntervalMs = 10; f.calls.configure({ affectsConfiguration: () => true });
+  await advanceClock(t, 10, session); assert.ok(f.calls.cli.length > before);
+  settings.pollIntervalMs = 0; f.calls.configure({ affectsConfiguration: () => true });
+  await advanceClock(t, 70, session);
+  rejectDiscovery(nonGit()); await f.calls.gitWatchers[0].discovery; await nextTurn();
+  await advanceClock(t, 190, session); const off = f.calls.cli.length;
+  await advanceClock(t, 30, session);
+  const late = f.calls.cli.slice(off);
+  assert.equal(session.pollTimer, undefined);
+  assert.deepEqual(late.map(c => JSON.parse(c.input).op), ['read'],
+    'The old 260/30 ms quiet window sees a legitimate discovery refresh, not a poll.');
+  const settled = f.calls.cli.length;
+  await advanceClock(t, 1000, session); assert.equal(f.calls.cli.length, settled);
+  f.calls.watchers[0].change();
+  await advanceClock(t, session.host.debounceMs ?? 200, session);
+  assert.equal(f.calls.cli.length, settled + 1, 'File watching stays active with polling disabled.');
+});
+
+test('closing a panel while initial Git discovery is pending ignores its late completion', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  let rejectDiscovery;
+  const f = fixture(t, { gitExecute: () => new Promise((_, reject) => { rejectDiscovery = reject; }) });
+  t.after(() => rejectDiscovery?.(nonGit()));
+  await f.calls.commands.get('specspec.openGraph')();
+  const session = f.calls.sessions[0], watcher = f.calls.gitWatchers[0], discovery = watcher.discovery;
+  const before = f.calls.cli.length, messages = f.calls.panels[0].messages.length;
+  f.calls.panels[0].dispose(); await nextTurn();
+  assert.equal(session.disposed, true); assert.equal(watcher.closed, true);
+  rejectDiscovery(nonGit()); await discovery;
+  await advanceClock(t, 10_000, session);
+  assert.equal(f.calls.cli.length, before); assert.equal(f.calls.panels[0].messages.length, messages);
 });
 
 test('opening a nested project creates an independent graph tab', async t => {

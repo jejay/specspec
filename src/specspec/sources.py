@@ -217,11 +217,11 @@ class SourceReader:
                 self.blobs[oid] = "Anchor object is missing or is not a blob."
                 continue
             size = int(fields[2])
-            total += size
-            if size > MAX_BYTES or total > MAX_TOTAL_BYTES:
+            if size > MAX_BYTES or total + size > MAX_TOTAL_BYTES:
                 self.blobs[oid] = "Source object read budget exceeded."
             else:
                 accepted.append(oid)
+                total += size
         if accepted:
             data = request(["cat-file", "--batch"], ("\n".join(accepted) + "\n").encode())
             offset = 0

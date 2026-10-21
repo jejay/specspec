@@ -4,12 +4,17 @@ type: requirement
 parents:
 - 0dvOn3A=
 ---
-# Expose eight everyday commands and focused advanced tools
+# Expose everyday commands and focused advanced tools
 
-The everyday vocabulary is init, show, context, add, update, delete, check and diff.
+The everyday vocabulary is init, show, context, query, add, update, delete, check
+and diff.
 Show without an ID lists concise node summaries; show ID reads its complete record;
 show ID --dependents reports structural descendants. Context supplies complete selected
-and ancestor binding text, with surrounding IDs identified separately. Check covers
+and ancestor binding text, with surrounding IDs identified separately. Query reads
+a complete revision comparison as a tree-shaped view, defaulting to fresh HEAD versus
+saved workspace with --base/--target selection. Full target and deleted-base records
+carry complete plain bodies, sparse change hints and resolved source context, with forward
+references for shared nodes. Check covers
 working files, --staged exact-index files and optional --sources mapping/retention;
 --warnings-as-errors remains available. Diff accepts optional positional BASE/TARGET,
 defaulting to freshly resolved HEAD versus working files. Root selection stays --root.

@@ -1,7 +1,7 @@
 # SpecSpec
 
 Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
-[Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
+[Command guide](docs/cli.md): nine everyday commands, readable defaults, compact JSON and full node-aware diffs.
 [Graph structure](docs/graph-structure.md): immediate justifications form a shortcut-free DAG;
 node format 6 and API 6 are the current contracts.
 
@@ -77,11 +77,18 @@ After installation, from this repository root:
 ```sh
 specspec check --warnings-as-errors
 specspec show
+specspec query
+specspec query --base HEAD --target workspace
 specspec context qowy5AI=
 specspec diff
 ```
 
-The context example follows the current compact-ID conclusion back to its intentions.
+[`query`](docs/query.md) reads a complete revision comparison, defaulting to fresh
+HEAD versus saved workspace. Compact rails and full parent headers frame plain
+current bodies, with deleted base records alongside them under their former parents.
+Sources show one resolved location per reference; edits permitted by strict,
+expanding or path-only contracts stay quiet. Broken/uncertain links stay explicit. `--base`/`--target` select versions; `diff` supplies exact text changes.
+Bodies remain unabridged. The context example follows the compact-ID conclusion.
 This self-referencing graph is evolving design documentation: old root revisions
 need not work with current tooling. Rigorous Git history checks use the rewritten,
 current-schema [Gantt bundle](example/gantt/history/WALKTHROUGH.md), not obsolete

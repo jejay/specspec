@@ -25,6 +25,13 @@ checkout, staging, object/ref/index writes or automatic hooks occur in these rea
 Large graphs are chunked rather than truncated. Error/unsupported-schema/conflict
 and unborn/absent graph semantics stay explicit.
 
+The standalone `query` command also batches known committed source-file blobs and
+region anchors into its existing invocation-local cache. Identical selected commits
+reuse a code reader; workspace bytes remain fresh and separate from index entries.
+There is no persistent or cross-call query cache. [Query profiling](investigations/query-performance.md)
+records the source process-fanout bottleneck, fixed-input output equivalence and a
+reproducible benchmark helper. These measurements exclude terminal rendering.
+
 Round-trip YAML frontmatter is memoized by exact header text within the current
 Python process, with isolated mutable copies, at most 256 entries and an 8 MiB
 header-text budget. Body text, node schema, graph, source paths and runtime recovery/
@@ -82,7 +89,11 @@ its uncertain outcome for inspection. The preview lane checks published render a
 displayed commit identity, so queued background work cannot retarget a clicked source.
 
 HEAD/ref watching is asynchronous and shared by both hosts. Canonical text and
-Spotlight metadata have independent watchers. Index stat-cache writes and Git
+Spotlight metadata have independent watchers. Polling zero stops periodic ticks,
+while watcher hints, explicit Refresh and already-requested coalesced work remain
+valid. Initial Git discovery can therefore legitimately refresh after polling is
+disabled. [Polling lifecycle tests](investigations/polling-test-race.md) control those
+independent events and await disposal rather than assuming a wall-clock quiet window. Index stat-cache writes and Git
 extension status churn leave HEAD-to-working presentation unchanged. Explicit
 staged source actions read the current index when invoked.
 

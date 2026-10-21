@@ -108,6 +108,12 @@ def render_plan(plan):
     return "\n".join(lines)
 
 
+def physical_lines(text: str) -> list[str]:
+    """LF-delimited file lines, retaining CR and Unicode separators as payload."""
+    parts = text.split("\n")
+    return [part + "\n" for part in parts[:-1]] + ([parts[-1]] if parts[-1] else [])
+
+
 def line_endings(raw: bytes):
     crlf = raw.count(b"\r\n")
     lf = raw.count(b"\n") - crlf
@@ -127,14 +133,14 @@ def file_patches(base, target):
         }
         try:
             a, b = (old or b"").decode("utf8"), (new or b"").decode("utf8")
+            left, right = physical_lines(a), physical_lines(b)
+            fromfile = "/dev/null" if old is None else "a/" + path
+            tofile = "/dev/null" if new is None else "b/" + path
+            rows = difflib.unified_diff(
+                left, right, fromfile=fromfile, tofile=tofile, lineterm="\n"
+            )
             patch = []
-            for line in difflib.unified_diff(
-                a.splitlines(keepends=True),
-                b.splitlines(keepends=True),
-                fromfile="/dev/null" if old is None else "a/" + path,
-                tofile="/dev/null" if new is None else "b/" + path,
-                lineterm="\n",
-            ):
+            for line in rows:
                 if line.endswith("\n"):
                     patch.append(line)
                 else:

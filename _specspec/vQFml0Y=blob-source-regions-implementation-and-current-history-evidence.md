@@ -46,6 +46,8 @@ sources:
 
 `source_schema` validates whole-file and anchored hints. `SourceReader` batches
 object checks/bytes, caches mappings and resolves worktree/index/commit targets.
+Batch admission reserves only eligible content bytes; oversized objects stay
+explicit without starving unrelated bounded blobs.
 Strict reports internal edits; expanding absorbs internal/contained changes; both
 preserve separate regions and exclude outer insertions/gaps. Ambiguity, deletion,
 wrong/missing blobs, entry/path/UTF-8/binary/LFS/budget problems remain visible.

@@ -27,6 +27,8 @@ Git installation; publication is separately authorized.
 src/specspec/
   model.py / format.py      # Current schema, diagnostics and targeted Markdown
   graph.py                 # Rooted DAG, deterministic order, iterative closures
+  query.py                 # Plain current-state reads with sparse revision/source hints
+  query_sources.py         # Declaration, byte, selected-text and location comparisons
   workspace.py             # Discovery, validated byte transactions and recovery
   deletion.py              # Descendant scope and uncommitted-file assessment
   git.py                   # Index/revision reads and semantic/source impact
@@ -50,12 +52,26 @@ success, 1 validation/rejected operation, 2 invocation/I/O failure. Diagnostics 
 stable codes, severity, path/optional ID and actionable text. Body input supports files
 or `-` stdin. Full-parent updates explicitly replace the supplied set.
 
-The [compact command guide](docs/cli.md) defines eight everyday verbs with readable
+The [compact command guide](docs/cli.md) defines nine everyday verbs with readable
 text/Markdown defaults and explicit compact JSON. Full review diffs show all canonical
 file hunks, semantic node/relationship changes and separate linked-source impact.
 Comparison transport shares unchanged records; both hosts use the same read coordinator
 with optional native overlays and working-first loading. Native persistence stays
 separate from managed writes. Node format is **6** and protocol is **6**.
+
+[`query`](docs/query.md) always compares revisions, defaulting to fresh HEAD versus
+saved workspace with spotlight-style --base/--target selection. Iterative ordered
+last-occurrence walks print a selected-record overlay: current parents/text for
+current nodes, former parents/text for deleted nodes marked D. Current records have
+no deleted parents, so the projection is acyclic without a full edge union. It is a
+reading, not a new canonical graph. Compact rails and full parent headers remain.
+Source hints respect strict/expanding/path-only permissions: accepted edits stay
+quiet, while known contract transitions drive S and original-graph ancestor effects.
+Broken/uncertain links remain explicit. Raw source facts stay complete in JSON.
+Known committed source blobs/anchors populate existing per-call caches in batches;
+identical commits reuse a reader. No query cache survives the invocation.
+Query builds change summaries; exact patches and literal review belong to `diff`.
+Canonical node schema and existing host operations retain their contracts.
 
 ## Canonical files and grammar
 
@@ -136,7 +152,8 @@ reports internal edits; expanding absorbs contained changes; both exclude outer
 insertions/gaps. Bounded/cached mapping reports ambiguity/deletion/unavailable or
 unsafe data. Literal previews expose originals when target mapping is unreliable.
 Git tree edges retain blobs. Explicit capture/reanchor follows normal native/managed
-save ownership. Source impact remains conservative at file level.
+save ownership. Shared raw file impact remains conservative; query's compact cues
+separately honor the reference's declared change permissions.
 
 Watchers coalesce hints and retry transient reads, directly compare records and retain
 native form/caret/cameras. Superseded generation/text reads have a distinct error;

@@ -5,7 +5,7 @@ One CLI serves people and coding agents. Default output is readable text/Markdow
 format. Canonical node format is **6**; upgrade the CLI and both host builds
 together. The CLI does not supply old command aliases or old protocol readers.
 
-## Eight everyday commands
+## Nine everyday commands
 
 ```sh
 specspec init manifesto.md                 # New project only; - reads UTF-8 stdin
@@ -13,6 +13,8 @@ specspec show                              # IDs/types/headings, not every body
 specspec show <full-id>                     # Complete node metadata and binding text
 specspec show <full-id> --dependents        # Structural potential impact
 specspec context <full-id>                 # Complete selected + ancestor bindings
+specspec query                            # Complete HEAD → workspace tree comparison
+specspec query --base main~2 --target main # Explicit versions, like spotlights
 specspec add --parent <id> --body node.md
 specspec update <id> --body revised.md
 specspec delete <id> --dry-run              # All descendants, including shared ones
@@ -40,6 +42,18 @@ the heading (falling back to `node`); advanced `--slug` explicitly overrides it.
 order. Surrounding child/sibling IDs are identified without dumping their bodies.
 Advanced `--max-bytes N` budgets the actual encoded response and refuses an
 insufficient budget rather than truncating required binding text.
+
+`query` is always a revision comparison: fresh `HEAD` to saved `workspace` by default,
+with spotlight-style `--base` and `--target` options. Current records use current
+parents; deleted D records use former parents and old text in the same reading.
+Ascending-ID last-occurrence placement and short `↪ ID ↓` references keep sharing
+compact. Two-column rails (`│ │`, `├─R`) frame full parent headers and plain bodies.
+A/M/D/R and literal-only F mark node changes. S marks known source-contract changes
+and ancestors; edits allowed by strict/expanding/path-only references stay quiet.
+One-line source locations retain explicit broken/uncertain/restored hints.
+`query --json` retains reconstructible API-6 records and complete source facts, with
+file-change summaries rather than patches. Use `diff` for exact text modifications.
+There are no node filters or body-squashing options. See [query reading and source hints](query.md).
 
 Mutations print changed IDs/paths and potential affected scope, not an entire graph.
 Human diagnostics go to stderr; JSON diagnostics are structured in its one envelope.

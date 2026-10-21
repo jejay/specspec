@@ -152,7 +152,7 @@
       <text x="88" y="837" class="heading" style="font-size:26px">Agent / external shell</text>
       <text x="655" y="834" class="caption">No UI port or built-in connector</text>
       <text x="88" y="880" class="code" style="font-size:21px">specspec --root &lt;project&gt; context &lt;id&gt; --json</text>
-      <text x="88" y="908" class="caption">Read: show / context / diff · write: add / update / delete · check [--staged]</text>
+      <text x="88" y="908" class="caption">Read: show / context / query / diff · write: add / update / delete · check [--staged]</text>
       <text x="88" y="936" class="caption" style="font-size:15px">Check stdout + exit status. Context preserves the selected node + all required ancestors.</text>
       <path d="M954 841H1197V744" class="request"/>
       <text x="1068" y="819" text-anchor="middle" class="label purple">same CLI contract</text>

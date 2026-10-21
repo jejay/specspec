@@ -27,7 +27,7 @@ sources:
 ---
 # Implement the compact command surface and complete review projection
 
-Click presents eight everyday verbs with focused advanced tools and a bounded hidden
+Click presents nine everyday verbs with focused advanced tools and a bounded hidden
 application adapter. Output rendering separates readable text/Markdown from explicit
 compact API-6 envelopes. Mutation receipts retain IDs/paths/scope and warnings rather
 than full graphs. Node format 6 and canonical identities/source grammar remain stable.
@@ -49,4 +49,4 @@ the current operations and separate protocol 6 from node schema 6.
 Static command help uses ASCII punctuation so Click can render help through legacy
 Windows pipe encodings. Readable result/diagnostic and structured envelope emission
 retain their explicit UTF-8 byte paths. Subprocess regressions force ASCII/cp1252
-stdout encodings for root and diff help without changing canonical project text.
+stdout encodings for root, diff and query help without changing canonical project text.

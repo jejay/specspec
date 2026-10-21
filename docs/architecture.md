@@ -107,11 +107,24 @@ returns diagnostics and a `.valid` flag; `.require_valid()` raises for an unusab
 graph. Library calls stay in-process; the host's API channels are project-scoped
 child processes with bounded pipes.
 
-`show`, `context`, `show ID --dependents` and `diff` are the compact read-side entry
-points for engineers/agents. Text/Markdown is default; explicit `--json` selects compact
-API 6. `context` contains complete selected/ancestor bindings and identifies surrounding
-IDs without dumping their bodies. Its explicit byte budget fails rather than truncating
-required text. [The command guide](cli.md) describes all eight everyday verbs.
+`show`, `context`, `query`, `show ID --dependents` and `diff` are the compact read-side
+entry points for engineers/agents. Text/Markdown is default; explicit `--json` selects
+compact API 6. `context` contains complete selected/ancestor bindings and identifies
+surrounding IDs without dumping their bodies. Its explicit byte budget fails rather
+than truncating required text. [`query`](query.md) reads complete revision comparisons
+with spotlight-style HEAD/workspace defaults. Ordered iterative last-occurrence walks
+print one selected-record overlay with current records/parents plus base-only deleted
+records/former parents. No current node has a deleted parent, so this display is
+acyclic even if the complete edge union is cyclic. It retains compact rails, full
+parent headers, complete plain bodies and D ghosts without canonical revalidation.
+`query_sources.py` reuses one cached SourceReader per distinct code version and interprets strict/expanding/
+path-only contracts: permitted changes stay quiet; known transitions drive S and
+ancestors in both original graphs. Broken/unknown mappings stay explicit. API-6 JSON
+retains original graphs, complete raw facts and separate contract classifications;
+shared conservative file-impact facts remain available. Known committed source blobs
+are prefetched into the existing per-call cache in batches; no query cache crosses
+invocations. Patches belong to `diff`. See [query profiling](investigations/query-performance.md).
+[The command guide](cli.md) describes all nine everyday verbs.
 
 The renderer uses local assets and a nonce-protected CSP, inserting project text
 through `textContent`/`value`, never executable Markdown. Electron's

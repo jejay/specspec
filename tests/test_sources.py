@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from test_git import git
 
 from specspec.cli import main
+from specspec.git_objects import blob_id
 from specspec.source_schema import validate_source
 from specspec.sources import SourceReader, map_regions
 from specspec.workspace import add_node, load_snapshot, update_node
@@ -191,6 +192,49 @@ def test_same_commit_index_blob_capture_and_hook_reads_exact_index(project):
     assert git(root, "ls-files", "--stage") == index
     git(root, "add", "new.py")
     assert invoke(root, "check", "--staged", "--sources")[0] == 1
+
+
+def test_oversized_batch_object_does_not_starve_eligible_blobs(project, monkeypatch):
+    root, _ = project
+    small = b"ok\n"
+    small_id = blob_id(small, "0" * 40)
+    # Force the oversized object's address to sort first, exposing admission
+    # accounting rather than accidentally accepting the small object first.
+    for i in range(1000):
+        large = f"large-{i}:".encode().ljust(64, b"x")
+        if blob_id(large, "0" * 40) < small_id:
+            break
+    else:
+        pytest.fail("Could not construct deterministic ordered object fixture")
+    (root / "large.py").write_bytes(large)
+    (root / "small.py").write_bytes(small)
+    git(root, "add", "large.py", "small.py")
+    git(root, "commit", "-m", "Sized source objects")
+    reader = SourceReader(root, ref="HEAD")
+    monkeypatch.setattr("specspec.sources.MAX_BYTES", 8)
+    monkeypatch.setattr("specspec.sources.MAX_TOTAL_BYTES", 16)
+    large_id = blob_id(large, "0" * 40)
+    reader.batch({large_id, small_id})
+    assert reader.blobs[small_id] == small
+    assert "budget" in reader.blobs[large_id].lower()
+    assert reader.data("small.py") == small
+
+
+def test_source_batch_still_enforces_aggregate_eligible_content_budget(project, monkeypatch):
+    root, _ = project
+    payloads = [b"first-12-byte", b"second-12byt", b"third-12byte"]
+    ids = {blob_id(raw, "0" * 40) for raw in payloads}
+    for index, raw in enumerate(payloads):
+        (root / f"batch-{index}.py").write_bytes(raw)
+    git(root, "add", ".")
+    git(root, "commit", "-m", "Aggregate source objects")
+    reader = SourceReader(root, ref="HEAD")
+    monkeypatch.setattr("specspec.sources.MAX_BYTES", 16)
+    monkeypatch.setattr("specspec.sources.MAX_TOTAL_BYTES", 24)
+    reader.batch(ids)
+    assert set(reader.blobs) == ids
+    assert 0 < sum(len(raw) for raw in reader.blobs.values() if isinstance(raw, bytes)) <= 24
+    assert any(isinstance(value, str) and "budget" in value for value in reader.blobs.values())
 
 
 def test_unretained_blob_and_wrong_object_type_are_explicit(project):

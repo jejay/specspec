@@ -59,7 +59,7 @@ def assert_current_bindings(nodes) -> None:
         "withdrawal flags",
     )
     for node in nodes:
-        assert node.body.startswith("# "), node.id
+        assert node.body.strip(), node.id
         assert not any(marker in node.body for marker in markers), node.id
         if node.type == "implementation":
             assert node.sources, node.id

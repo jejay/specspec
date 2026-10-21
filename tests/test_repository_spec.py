@@ -77,6 +77,9 @@ def test_binding_guard_allows_runtime_supersession_but_rejects_retired_design_se
         "Discard generation-changed results and read current input.\n",
     )
     gantt_verifier.assert_current_bindings([current])
+    gantt_verifier.assert_current_bindings(
+        [replace(node, body="Complete binding text can stand without a heading.\n")]
+    )
     for section in ["## Superseded design", "## Resolved follow-up", "## Later correction"]:
         with pytest.raises(AssertionError):
             gantt_verifier.assert_current_bindings([replace(current, body=current.body + section)])

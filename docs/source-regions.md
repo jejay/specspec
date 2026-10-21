@@ -121,6 +121,29 @@ Whole-file source impact reporting remains conservative. A change outside a link
 region may alter imports, callers or other semantics; region mapping is **not** a
 complete dependency analysis or reason to silently narrow review impact.
 
+## Revision-comparison query
+
+`specspec query` defaults to HEAD versus saved workspace; `--base` and `--target`
+select other versions. Its source rows resolve every union declaration against both
+code versions, independently of whether that exact reference occurs in both node
+versions. The reference class determines change cues: strict accepts relocation and
+outside/gap/boundary edits; expanding also absorbs reliably mapped contained edits;
+path-only whole-file hints permit content changes and require a safe regular file.
+Permitted changes add no source hint or S badge. Binary/LFS/large whole files need
+no spurious line warning because that class does not require readable lines.
+
+Known valid/broken transitions, including restoration, drive S and ancestors in
+both original graphs. Missing/strict-conflicting links and ambiguous/unavailable
+mappings stay visible. An existing problem need not be a new revision change.
+Reference +/- is independent of code edits. JSON retains raw byte/text/position/
+region facts plus separate contract classifications and completeness. Shared source
+inspection/check/preview outcomes and conservative file-impact facts retain their
+existing meanings. See [query source contracts](query.md).
+
+These derived readings use the shared bounded cached resolver. They compare selected
+versions rather than treating an older anchor's modified outcome as a new change.
+They never reanchor or certify that permitted edits still fulfill the intention.
+
 ## Both graph hosts
 
 Expanded Implementation forms show source buttons labeled with original anchor
@@ -146,7 +169,9 @@ The host coalesces source work to one active request and the newest pending requ
   20 million line-pair cells. Rename occurrence searches are capped at 128 commits.
   Exceeded budgets are explicit, not truncated successful mappings.
 - Batch object reads, caches and no external diff/textconv/lazy-fetch are used for
-  source mapping. Missing objects require an explicit user Git action, not background
+  source mapping. Query preloads known committed paths/anchors within the call;
+  workspace files stay independent of index bytes. Oversized objects consume no
+  accepted-content budget and remain separate from eligible bounded objects. Missing objects require an explicit user Git action, not background
   downloads or a silent new source snapshot. There is no persistent source index.
 
 This schema change requires reconstructing **every** maintained Gantt revision/ref,

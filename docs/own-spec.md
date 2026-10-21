@@ -149,11 +149,15 @@ bind to the published view and displayed commit, while [metadata events](../_spe
 and [HEAD/ref watching](../_specspec/yEoFkOE=discover-git-watch-paths-asynchronously-and-coalesce-notifications.md)
 coalesce their own work. The [implementation](../_specspec/HZHjxQ8=implement-responsive-source-and-metadata-read-scheduling.md)
 links channels, scheduling and causal/installed regressions.
+The [polling lifecycle verification choice](../_specspec/wkCbtnQ=verify-polling-shutdown-independently-of-watcher-completion.md)
+separates periodic ticks from still-valid watcher hints and pending work.
+[Its causal investigation](investigations/polling-test-race.md) reproduces the late
+initial-discovery race and verifies shutdown/disposal with controlled clocks.
 
 ## Compact command and shared-read contract
 
 [Compact command intention](../_specspec/0dvOn3A=compact-useful-command-interface.md)
-leads the [eight-command vocabulary](../_specspec/7tMgRa8=eight-everyday-commands-and-focused-advanced-tools.md),
+leads the [everyday command vocabulary](../_specspec/7tMgRa8=eight-everyday-commands-and-focused-advanced-tools.md),
 [readable defaults](../_specspec/sJ5dyh4=readable-default-results-and-complete-context.md),
 [full review diffs](../_specspec/7kYVG_E=complete-node-aware-text-and-relationship-diffs.md)
 and [compact API 6](../_specspec/cpFRqIM=compact-versioned-json-with-reconstructible-comparisons.md).
@@ -165,6 +169,34 @@ current operational recipes; original owner source remains unchanged in AGENTS.m
 [CLI/review implementation](../_specspec/SF12qpA=compact-cli-and-full-review-implementation.md)
 and [shared host implementation](../_specspec/GG_koyg=shared-read-coordinator-and-compact-host-adapter-implementation.md)
 map the code and verification seams.
+
+[Complete tree-shaped reads](../_specspec/kiOMI7I=read-complete-specification-graphs-in-a-token-conscious-tree-shaped-view.md)
+serve human and agent readers with complete revision comparisons. The
+[last-occurrence choice](../_specspec/T693TDw=place-full-records-at-the-last-occurrence-of-an-ordered-unfolded-walk.md)
+orders selected-record projections through iterative reverse/forward DFS. The
+[compact-header choice](../_specspec/nLqvWcM=keep-compact-query-rails-and-complete-parent-headers.md)
+keeps two-column rails and every direct parent in full headers. The
+[comparison choice](../_specspec/h3zqGZU=read-current-records-with-sparse-revision-hints.md)
+uses spotlight-style HEAD/workspace defaults, complete plain current/base bodies
+and sparse change hints. The [selected-record overlay](../_specspec/B71bAFk=keep-deleted-bindings-in-the-selected-record-comparison-graph.md)
+keeps deleted D records among current records, selecting former parents only for
+deleted nodes. This projection is acyclic while original revision graphs remain
+reconstructible. Normal records stay unmarked; exact text changes belong to `diff`.
+The [source comparison choice](../_specspec/jWl96h0=compare-source-declarations-and-resolved-version-locations-independently.md)
+separates reference-list changes, conservative linked-file impact, selected code
+text and actual per-version locations under shared strict/expanding resolution.
+The [contract-aware query choice](../_specspec/z9YKFeE=signal-query-source-changes-through-their-declared-tracking-contracts.md)
+keeps changes permitted by strict/expanding/path-only references quiet, including S
+badges. Known contract transitions propagate through both original graphs. One-line
+sources retain broken/uncertain/restored hints; JSON keeps complete raw source facts
+and separate contract classifications. Shared file-impact reporting stays broader.
+The [per-invocation batch choice](../_specspec/2doGbqA=batch-known-query-source-blobs-within-each-invocation.md)
+loads known committed source blobs and anchors into the existing per-call cache,
+while refs/workspace files remain fresh. [Profiling evidence](investigations/query-performance.md)
+includes fixed-input equality, subprocess-count regressions and reproducible timings.
+[Implementation](../_specspec/Kxh7M4Q=render-complete-tree-shaped-query-reads-with-iterative-last-occurrence-placement.md)
+maps the renderer, source reader integration, CLI, plain-output golden cases and
+independent temporal/structure checks. See [the query guide](query.md). Node format/API remain 6.
 
 ## Neighborhood UI revision
 
@@ -331,6 +363,7 @@ Use the installed CLI or development Python; this checkout already has a graph:
 
 ```sh
 python -m specspec show
+python -m specspec query
 python -m specspec context <full-id>
 python -m specspec show <full-id> --dependents
 python -m specspec update <full-id> --body <body-file>
