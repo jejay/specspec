@@ -382,14 +382,17 @@ def show(root, node_id, dependents, as_json):
 @main.command()
 @click.option("--base", help="Base commit/ref (default: fresh HEAD).")
 @click.option("--target", help="Target commit/ref or workspace (default).")
+@click.option(
+    "--human", is_flag=True, help="Preserve multiline bodies and list sources individually."
+)
 @json_option
 @click.pass_obj
 @guarded
-def query(root, base, target, as_json):
+def query(root, base, target, human, as_json):
     """Read a complete revision comparison as a tree; default HEAD to workspace."""
     comparison = read_query(root_path(root), base, target)
     emit(
-        wire.comparison(comparison.result) if as_json else render_query(comparison),
+        wire.comparison(comparison.result) if as_json else render_query(comparison, human=human),
         comparison.diagnostics,
         as_json=as_json,
     )

@@ -13,8 +13,10 @@ show ID --dependents reports structural descendants. Context supplies complete s
 and ancestor binding text, with surrounding IDs identified separately. Query reads
 a complete revision comparison as a tree-shaped view, defaulting to fresh HEAD versus
 saved workspace with --base/--target selection. Full target and deleted-base records
-carry complete plain bodies, sparse change hints and resolved source context, with forward
-references for shared nodes. Check covers
+carry complete one-line body readings, worded change hints and resolved source context, with forward
+references for shared nodes. Query --human retains logical body lines and lists
+sources individually; default source items share one comma-separated line. Parent
+headers use comma-separated full IDs in both presentations. Check covers
 working files, --staged exact-index files and optional --sources mapping/retention;
 --warnings-as-errors remains available. Diff accepts optional positional BASE/TARGET,
 defaulting to freshly resolved HEAD versus working files. Root selection stays --root.

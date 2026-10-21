@@ -15,6 +15,7 @@ specspec show <full-id> --dependents        # Structural potential impact
 specspec context <full-id>                 # Complete selected + ancestor bindings
 specspec query                            # Complete HEAD → workspace tree comparison
 specspec query --base main~2 --target main # Explicit versions, like spotlights
+specspec query --human                   # Original body lines, individual sources
 specspec add --parent <id> --body node.md
 specspec update <id> --body revised.md
 specspec delete <id> --dry-run              # All descendants, including shared ones
@@ -45,15 +46,22 @@ insufficient budget rather than truncating required binding text.
 
 `query` is always a revision comparison: fresh `HEAD` to saved `workspace` by default,
 with spotlight-style `--base` and `--target` options. Current records use current
-parents; deleted D records use former parents and old text in the same reading.
+parents; deleted records use former parents and old text in the same reading.
 Ascending-ID last-occurrence placement and short `↪ ID ↓` references keep sharing
-compact. Two-column rails (`│ │`, `├─R`) frame full parent headers and plain bodies.
-A/M/D/R and literal-only F mark node changes. S marks known source-contract changes
-and ancestors; edits allowed by strict/expanding/path-only references stay quiet.
-One-line source locations retain explicit broken/uncertain/restored hints.
+compact. Two-column rails frame full parent headers and one-line body readings;
+root content has no extra indent. Single newlines become spaces and longer runs
+become ` ¶ `. Types and change hints use lowercase words: `added`, `modified`,
+`deleted`, `renamed`, `file-only` (literal changes) and `source-changed` (known
+contract changes, including ancestors). There is no legend. Edits allowed by
+strict/expanding/path-only references stay quiet.
+Parent headers always separate full IDs with `, `. Default source items share one
+`sources: ` line with comma-space separators, preserving duplicates and individual
+broken/uncertain/restored hints. `--human` keeps logical body lines and lists source
+occurrences individually, without changing parents, source facts or revision selection.
 `query --json` retains reconstructible API-6 records and complete source facts, with
 file-change summaries rather than patches. Use `diff` for exact text modifications.
-There are no node filters or body-squashing options. See [query reading and source hints](query.md).
+Original body layout remains in JSON and node files. `--human --json` is identical
+to `--json`. There are no node filters. See [query reading and source hints](query.md).
 
 Mutations print changed IDs/paths and potential affected scope, not an entire graph.
 Human diagnostics go to stderr; JSON diagnostics are structured in its one envelope.

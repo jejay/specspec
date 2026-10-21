@@ -11,19 +11,21 @@ and spotlight-style --base/--target selection. Validate both graphs and retain e
 empty/unavailable context. Present complete current and deleted records together
 in relationship context, ordered by last occurrence. Full headers retain all parents.
 
-Present one complete plain Markdown body per node: target text for surviving/added
-nodes and base text for deleted nodes. Preserve logical blank lines, indentation,
-tabs and trailing spaces under the two-column continuation rails. Current version,
-extensions and source locations remain compact metadata above the body. Binding
-text has its ordinary reading form, with shared terminal-control escaping.
+Present all binding content once per node: target text for surviving/added nodes
+and base text for deleted nodes. The compact default body projection occupies one
+line; structured bodies retain their original layout. Current version, extensions
+and source locations remain compact metadata above the body. Readable text uses
+shared terminal-control escaping.
 
-Show A/M/D/R for added/modified/deleted/filename-renamed nodes, and S independently
-for contract-relevant linked-source changes including ancestors. F identifies only
-literal node-file changes with unchanged semantic/path classification. Unchanged
+Show added/modified/deleted/renamed for semantic/path node changes, and
+source-changed independently for contract-relevant linked-source changes including
+ancestors. File-only identifies literal node-file changes with unchanged
+semantic/path classification. Unchanged
 headers have no badge. Display selected revision names once; committed identities
 and full before/target records remain available in structured output.
 
-Readable sources occupy one line per reference occurrence. Show the target path and
+Readable source items retain one location per reference occurrence. Compact output
+groups them into one line per node; human output lists them individually. Show the target path and
 actual ranges, or the base location for removed declarations. Normal readings are
 unmarked. Sparse hints identify ref+/ref- independently of contract-relevant code
 changes. Each source class defines permitted edits; those edits add no change cue.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -16,12 +17,7 @@ from .query_sources import contract_state, source_comparisons, source_contract_i
 from .sources import BAD_OUTCOMES
 from .workspace import Snapshot
 
-LEGEND = (
-    "M=manifesto R=requirement I=implementation; @=parents; [A/M/D/R]=node change; "
-    "S=source-contract change; F=file-only; ↪=below"
-)
-TYPE_CODES = {"manifesto": "M", "requirement": "R", "implementation": "I"}
-STATUS = {"added": "A", "changed": "M", "removed": "D", "renamed": "R"}
+STATUS = {"added": "added", "changed": "modified", "removed": "deleted", "renamed": "renamed"}
 
 
 @dataclass
@@ -167,7 +163,7 @@ def tree_entries(graph: Graph, included: set[str] | None = None):
         last = child == last_child
         unbranched = parent is None and not forest
         branch = "" if unbranched else prefix + ("└─" if last else "├─")
-        continuation = "  " if unbranched else prefix + ("  " if last else "│ ")
+        continuation = "" if unbranched else prefix + ("  " if last else "│ ")
         reference = parents.get(child) != parent
         yield child, reference, branch, continuation
         if not reference:
@@ -175,7 +171,7 @@ def tree_entries(graph: Graph, included: set[str] | None = None):
             stack.append(frame(child, "" if unbranched else continuation, descendants))
 
 
-def source_line(row: dict) -> str:
+def source_item(row: dict) -> str:
     """Show one location; permitted contract changes need no annotation."""
     removed = row["declaration"] == "-"
     chosen, other = (row["base"], row["target"]) if removed else (row["target"], row["base"])
@@ -207,10 +203,24 @@ def source_line(row: dict) -> str:
         if not (restored and not removed and other_issue == "missing"):
             hints.append(("target " if removed else "base ") + other_issue)
     suffix = " [" + "; ".join(hints) + "]" if hints else ""
-    return "sources: " + label + suffix
+    return label + suffix
 
 
-def query_lines(comparison: QueryComparison) -> Iterator[str]:
+def source_line(row: dict) -> str:
+    """Present one source occurrence on a human-readable metadata line."""
+    return "sources: " + source_item(row)
+
+
+def body_line(body: str) -> str:
+    """Flatten LF/CRLF runs without truncating text or parsing Markdown."""
+    return re.sub(
+        r"\n+",
+        lambda match: " " if len(match[0]) == 1 else " ¶ ",
+        body.replace("\r\n", "\n"),
+    )
+
+
+def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator[str]:
     old, new, result = comparison.base, comparison.target, comparison.result
     before = {n.id: n for n in old.nodes}
     after = {n.id: n for n in new.nodes}
@@ -224,7 +234,6 @@ def query_lines(comparison: QueryComparison) -> Iterator[str]:
     if not old.nodes and result["base_commit"] is None:
         base_label += " (empty)"
     yield f"{base_label} → {result['target_ref']}"
-    yield LEGEND
     for note in result["notes"]:
         yield "NOTE: " + note
 
@@ -234,12 +243,12 @@ def query_lines(comparison: QueryComparison) -> Iterator[str]:
         kind = changes.get(node_id)
         hints = [STATUS[kind]] if kind else []
         if node_id in affected:
-            hints.append("S")
+            hints.append("source-changed")
         if not kind and any(n and n.path in file_changed for n in (a, b)):
-            hints.append("F")
-        header = f"{TYPE_CODES[node.type]} {PurePosixPath(node.path).stem}"
+            hints.append("file-only")
+        header = f"{node.type} {PurePosixPath(node.path).stem}"
         if node.parents:
-            header += " @ " + " · ".join(sorted(node.parents))
+            header += " @ " + ", ".join(sorted(node.parents))
         return header + (" [" + " ".join(hints) + "]" if hints else "")
 
     def contents(node_id):
@@ -249,13 +258,20 @@ def query_lines(comparison: QueryComparison) -> Iterator[str]:
             metadata.append(f"format_version: {node.format_version}")
         if node.extensions:
             metadata.append("extensions: " + json_text(node.extensions))
-        metadata.extend(source_line(row) for row in sources[node_id])
+        rows = sources[node_id]
+        if human:
+            metadata.extend(source_line(row) for row in rows)
+        elif rows:
+            metadata.append("sources: " + ", ".join(source_item(row) for row in rows))
         yield from metadata
         if metadata:
             yield ""
-        # Preserve all logical body lines and their whitespace. The CLI handles
-        # terminal controls; this is a reading view, not a raw-file archive.
-        yield from node.body.replace("\r\n", "\n").split("\n")
+        # Originals stay intact in JSON and diff. The CLI applies shared
+        # terminal-control escaping to either text presentation.
+        if human:
+            yield from node.body.replace("\r\n", "\n").split("\n")
+        else:
+            yield body_line(node.body)
 
     def tree(graph):
         for node_id, reference, branch, continuation in tree_entries(graph):
@@ -269,5 +285,5 @@ def query_lines(comparison: QueryComparison) -> Iterator[str]:
     yield from tree(comparison_graph(old, new))
 
 
-def render_query(comparison: QueryComparison) -> str:
-    return "\n".join(query_lines(comparison))
+def render_query(comparison: QueryComparison, *, human: bool = False) -> str:
+    return "\n".join(query_lines(comparison, human=human))

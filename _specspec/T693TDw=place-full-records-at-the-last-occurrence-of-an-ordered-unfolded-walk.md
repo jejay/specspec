@@ -17,9 +17,9 @@ Last occurrence follows traversal independently of maximum graph depth.
 Apply this ordering to the selected-record display projection of a comparison. Retain
 every node from either side and every relationship in reconstructible side records.
 Unicode continuation rails prefix displayed data. Full headers give type, filename
-stem and all direct parents. Preserve complete current/deleted binding text and
-whitespace with sparse revision hints and safe terminal presentation. Structured
-comparison records retain both versions. Canonical comments, spelling and literal
+stem and all direct parents. Retain all current/deleted binding content in a compact reading with sparse
+revision hints and safe terminal presentation. Structured comparison records
+retain both original bodies and their whitespace. Canonical comments, spelling and literal
 line endings remain available through node files and the dedicated diff command.
 
 Query validates the selected saved graphs and reads code from those versions.

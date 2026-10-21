@@ -17,8 +17,8 @@ changes rather than inferred code changes.
 
 Use shared SourceReader strict/expanding mapping, rename/context evidence, safe
 paths, batched objects, caches and budgets. Structured readings retain each side's
-actual path, inclusive ranges and outcome. Compact readable rows show one location
-with sparse change/uncertainty hints. Whole text-file hints resolve to all logical lines;
+actual path, inclusive ranges and outcome. Readable items show one location
+with sparse change/uncertainty hints; grouping is a presentation choice. Whole text-file hints resolve to all logical lines;
 empty text files have an empty selection. Missing/ambiguous/conflicting/unavailable
 mappings retain their outcomes; partial strict fragments remain untrusted selections.
 Binary, LFS, invalid UTF-8 and budget-limited files retain explicit line uncertainty.

@@ -79,16 +79,22 @@ specspec check --warnings-as-errors
 specspec show
 specspec query
 specspec query --base HEAD --target workspace
+specspec query --human
 specspec context qowy5AI=
 specspec diff
 ```
 
 [`query`](docs/query.md) reads a complete revision comparison, defaulting to fresh
-HEAD versus saved workspace. Compact rails and full parent headers frame plain
-current bodies, with deleted base records alongside them under their former parents.
-Sources show one resolved location per reference; edits permitted by strict,
+HEAD versus saved workspace. Compact rails and full parent headers frame one-line
+current body readings, with deleted base records alongside them under their former
+parents. Single newlines become spaces; longer runs become ` ¶ `. Types and change
+hints use lowercase words without a legend; root content has no extra indent.
+Parents always use comma-space separators. Default source items share one
+comma-separated `sources: ` line; `--human` preserves logical body lines and lists
+sources individually. Both retain one resolved location per reference; edits permitted by strict,
 expanding or path-only contracts stay quiet. Broken/uncertain links stay explicit. `--base`/`--target` select versions; `diff` supplies exact text changes.
-Bodies remain unabridged. The context example follows the compact-ID conclusion.
+All body content remains present; original layout stays exact in JSON and node files.
+The context example follows the compact-ID conclusion.
 This self-referencing graph is evolving design documentation: old root revisions
 need not work with current tooling. Rigorous Git history checks use the rewritten,
 current-schema [Gantt bundle](example/gantt/history/WALKTHROUGH.md), not obsolete

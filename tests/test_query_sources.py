@@ -88,7 +88,7 @@ def test_source_fact_matrix(project, code, mode, content, position, region, outc
         git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Broad mapping")
     (root / "code.py").write_bytes(code.encode("utf8"))
     query, values = rows(project)
-    assert query.result["changes"] == []  # Code changes do not manufacture node M.
+    assert query.result["changes"] == []  # Code changes do not manufacture node modifications.
     assert len(values) == 1 and values[0]["declaration"] == "="
     row = values[0]
     assert row["bytes"] == ("same" if code == BASE else "changed")
@@ -112,7 +112,7 @@ def test_source_fact_matrix(project, code, mode, content, position, region, outc
         assert "[" not in source_line(row)
     else:
         assert source_line(row).endswith(" [" + outcome + "]")
-    assert ("[S]" in text) == (expected == "changed")
+    assert ("[source-changed]" in text) == (expected == "changed")
     assert "region=" not in text and "bytes=" not in text
     assert "file changed" not in text and "region changed" not in text and "moved" not in text
 
@@ -356,18 +356,93 @@ def test_unchanged_source_display_is_one_plain_location_without_metadata_dump(pr
     assert "[=]" not in text
 
 
-def test_source_display_keeps_duplicate_reference_rows_and_only_hints_metadata_edits(project):
+@pytest.mark.parametrize("human", [False, True])
+def test_source_display_keeps_duplicate_references_and_only_hints_metadata_edits(project, human):
     root, _, _, implementation, source = project
     update_node(
         root, implementation, sources=[source, {**source, "symbol": "Long\nnew description"}]
     )
     query = read_query(root)
-    text = render_query(query)
-    displayed = [line for line in text.split("\n") if "sources: " in line]
-    assert len(displayed) == 2
+    text = render_query(query, human=human)
+    displayed = [line.lstrip("│ ") for line in text.split("\n") if "sources: " in line]
+    expected = [source_line(row) for row in query.result["source_resolutions"]]
+    assert displayed == (
+        expected
+        if human
+        else ["sources: " + ", ".join(s.removeprefix("sources: ") for s in expected)]
+    )
+    assert len(displayed) == (2 if human else 1)
     assert sum("[ref+]" in line for line in displayed) == 1
     assert "Long" not in text and source["blob"] not in text
     assert all("changed" not in line for line in displayed)
+
+
+@pytest.mark.parametrize("human", [False, True])
+def test_cli_source_lists_preserve_duplicates_ranges_quoted_paths_and_individual_issues(
+    project, human
+):
+    root, _, _, implementation, source = project
+    (root / "extra, source.py").write_bytes(b"new file\n")
+    update_node(
+        root,
+        implementation,
+        sources=[
+            source,
+            source,
+            {**source, "ranges": [[2, 2], [4, 4]]},
+            {"path": "extra, source.py"},
+            {"path": "missing, source.py"},
+            {**source, "blob": "b" * 40},
+        ],
+    )
+    query, values = rows(project)
+    expected = [source_line(row) for row in values]
+    args = ["--root", str(root), "query", *(["--human"] if human else [])]
+    result = CliRunner().invoke(main, args)
+    assert result.exit_code == 0, result.output
+    displayed = [line.lstrip("│ ") for line in result.stdout.split("\n") if "sources: " in line]
+    assert displayed == (
+        expected
+        if human
+        else ["sources: " + ", ".join(s.removeprefix("sources: ") for s in expected)]
+    )
+    assert len(displayed) == (6 if human else 1)
+    text = "\n".join(displayed)
+    assert '"extra, source.py":1 [ref+; file added]' in text
+    assert '"missing, source.py" [ref+; missing]' in text
+    assert "code.py:2,4 [ref+]" in text and "[ref+; unavailable]" in text
+    assert sum(s.startswith("sources: code.py:2-3") for s in expected) == 2
+    assert query.result["source_resolutions"] == read_query(root).result["source_resolutions"]
+    if not human:
+        assert text.count("sources: ") == 1
+
+
+@pytest.mark.parametrize("human", [False, True])
+@pytest.mark.parametrize("removed", ["reference", "node"])
+def test_removed_and_deleted_sources_keep_base_locations_and_target_issues(project, human, removed):
+    root, _, _, implementation, source = project
+    update_node(root, implementation, sources=[source, source, {"path": "code.py"}])
+    commit(root, "Multiple base source occurrences")
+    if removed == "reference":
+        update_node(root, implementation, sources=[])
+    else:
+        result = CliRunner().invoke(main, ["--root", str(root), "delete", implementation, "--yes"])
+        assert result.exit_code == 0, result.output
+    (root / "code.py").unlink()
+    query, values = rows(project)
+    expected = [source_line(row) for row in values]
+    assert len(expected) == 3 and all("[ref-; target missing]" in item for item in expected)
+    text = render_query(query, human=human)
+    displayed = [line.lstrip("│ ") for line in text.split("\n") if "sources: " in line]
+    assert displayed == (
+        expected
+        if human
+        else ["sources: " + ", ".join(s.removeprefix("sources: ") for s in expected)]
+    )
+    assert sum("code.py:2-3" in item for item in expected) == 2
+    assert any("code.py:1-5" in item for item in expected)
+    if removed == "node":
+        assert f"{implementation}mapping @" in text and "[deleted source-changed]" in text
 
 
 def test_source_line_keeps_reference_changes_and_uncertainty_independent():
@@ -445,7 +520,9 @@ def test_outer_boundary_insertions_are_permitted_without_source_badges(project, 
     query, values = rows(project)
     assert values[0]["target"]["outcome"] == "resolved"
     assert values[0]["contract"] == "same" and "[" not in source_line(values[0])
-    assert not query.result["source_contract_affected"] and "[S]" not in render_query(query)
+    assert not query.result["source_contract_affected"] and "[source-changed]" not in render_query(
+        query
+    )
 
 
 @pytest.mark.parametrize(
@@ -466,7 +543,7 @@ def test_whole_file_content_changes_are_permitted_even_without_line_targets(proj
     assert values[0]["bytes"] == "changed" and values[0]["contract"] == "same"
     assert query.result["source_changes"]  # Retained raw evidence, not a query badge.
     assert not query.result["source_contract_affected"] and not query.result["affected"]
-    assert "[" not in source_line(values[0]) and "[S]" not in render_query(query)
+    assert "[" not in source_line(values[0]) and "[source-changed]" not in render_query(query)
 
 
 def test_expanding_partial_deletion_is_permitted_but_total_loss_is_a_change(project):
@@ -590,7 +667,7 @@ def test_contract_change_ancestors_use_both_original_graphs(project):
         implementation,
     }
     text = render_query(query)
-    assert "[M S]" in text and "[A S]" in text
+    assert "[modified source-changed]" in text and "[added source-changed]" in text
 
 
 def test_committed_source_blobs_are_batched_with_lazy_equivalent_facts(project, monkeypatch):
@@ -630,7 +707,8 @@ def test_committed_source_blobs_are_batched_with_lazy_equivalent_facts(project, 
     lazy = read_query(root)
     assert processes["--batch-check"] > 24 and processes["--batch"] > 24
     assert lazy.result == optimized.result
-    assert render_query(lazy) == render_query(optimized)
+    for human in (False, True):
+        assert render_query(lazy, human=human) == render_query(optimized, human=human)
 
 
 def test_identical_selected_commits_reuse_one_invocation_local_code_reader(project, monkeypatch):

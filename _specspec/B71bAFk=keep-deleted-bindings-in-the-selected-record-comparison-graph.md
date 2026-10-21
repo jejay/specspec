@@ -8,8 +8,8 @@ parents:
 
 Choose each surviving or added node from the target, including its current parents,
 and each base-only deleted node from the base, including its former parents. Render
-this selected-record projection in one ordinary tree-shaped reading. D marks deleted
-records and their complete old bodies. Shared deleted nodes use the same forward
+this selected-record projection in one ordinary tree-shaped reading. The deleted label marks
+records with their complete old binding content. Shared deleted nodes use the same forward
 references and last-occurrence placement as current nodes. Headers retain all of
 the chosen record's parents.
 

@@ -54,14 +54,16 @@ history remain untouched. See [the history procedure](../example/gantt/history/W
 
 ## Verification
 
-The versioned graphs contain 181 nodes/320 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The 666 tests comprise 371 Python, 240 shared UI,
+The maintained graphs contain 183 nodes/324 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. The 700 tests comprise 405 Python, 240 shared UI,
 46 VS Code adapter and 9 Electron cases. Backend, renderer and host-adapter suites
-cover independent closure/last-occurrence/selected-parent query oracles, contract-aware
-source cues, batched/lazy source equivalence, per-call freshness/process counts,
-and controlled polling/discovery/disposal lifecycles,
-complete node/edge readings, deep/exponentially shared graphs, remote-redundancy atomicity, native
-repair, an owner-configured hook in a disposable repository and exact-index/revision checks.
+cover independent closure/last-occurrence/selected-parent query oracles, default
+compact/human bodies and source lists, comma-separated parents, worded hints/root
+alignment, contract-aware source cues,
+batched/lazy source equivalence, per-call freshness/process counts, controlled
+polling/discovery/disposal lifecycles, complete node/edge readings,
+deep/exponentially shared graphs, remote-redundancy atomicity, native repair,
+an owner-configured hook in a disposable repository and exact-index/revision checks.
 Gantt verification checks all eight retained commits, 123 actual CLI receipt states,
 source retention and all three runnable model stages.
 

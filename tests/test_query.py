@@ -21,7 +21,7 @@ from specspec.graph import build_graph
 from specspec.model import FORMAT_VERSION, SpecNode
 from specspec.output import safe_text
 from specspec.query import (
-    LEGEND,
+    body_line,
     compare_snapshots,
     comparison_graph,
     last_occurrence_parents,
@@ -85,9 +85,10 @@ def call(root, *args):
 def entries(text):
     pattern = re.compile(
         r"^((?:│ |  )*)(?:(├─|└─))?"
-        r"(?:[MRI] ([A-Za-z0-9_-]{7}=)[a-z0-9-]+"
-        r"(?: @ [A-Za-z0-9_-]{7}=(?: · [A-Za-z0-9_-]{7}=)*)?"
-        r"(?: \[(?:[AMDR](?: S)?|S(?: F)?|F)\])?"
+        r"(?:(?:manifesto|requirement|implementation) ([A-Za-z0-9_-]{7}=)[a-z0-9-]+"
+        r"(?: @ [A-Za-z0-9_-]{7}=(?:, [A-Za-z0-9_-]{7}=)*)?"
+        r"(?: \[(?:(?:added|modified|deleted|renamed)(?: source-changed)?"
+        r"|source-changed(?: file-only)?|file-only)\])?"
         r"|↪ ([A-Za-z0-9_-]{7}=) ↓)$"
     )
     result, trail = [], []
@@ -124,37 +125,63 @@ def test_last_occurrence_not_deepest_parent_and_compact_golden_read():
     assert text == "\n".join(
         [
             "HEAD → workspace",
-            LEGEND,
-            f"M {identity(0)}root",
-            "  format_version: 6",
-            "  ",
-            "  Root.",
-            "  ",
-            f"├─R {identity(1)}left @ {identity(0)}",
-            "│ Left first.",
-            "│ ",
-            "│ Left last.",
-            "│ ",
-            f"│ └─R {identity(2)}deep @ {identity(1)}",
-            "│   Deep.",
-            "│   ",
+            f"manifesto {identity(0)}root",
+            "format_version: 6",
+            "",
+            "Root. ",
+            f"├─requirement {identity(1)}left @ {identity(0)}",
+            "│ Left first. ¶ Left last. ",
+            f"│ └─requirement {identity(2)}deep @ {identity(1)}",
+            "│   Deep. ",
             f"│   └─↪ {identity(4)} ↓",
-            f"└─R {identity(3)}right @ {identity(0)}",
-            "  Right.",
-            "  ",
-            f"  └─R {identity(4)}shared @ {identity(2)} · {identity(3)}",
-            "    Shared.",
-            "    ",
-            f"    └─I {identity(5)}code @ {identity(4)}",
-            "      Implementation.",
-            "      ",
+            f"└─requirement {identity(3)}right @ {identity(0)}",
+            "  Right. ",
+            f"  └─requirement {identity(4)}shared @ {identity(2)}, {identity(3)}",
+            "    Shared. ",
+            f"    └─implementation {identity(5)}code @ {identity(4)}",
+            "      Implementation. ",
         ]
     )
     assert text.count("Shared.") == 1
     assert "@@" not in text and "[=]" not in text and "├─ R" not in text
 
 
-def test_compact_nested_bars_and_every_sorted_direct_parent():
+def test_human_golden_read_preserves_lines_and_uses_the_same_parent_commas():
+    text = render_query(comparison(example()), human=True)
+    assert text == "\n".join(
+        [
+            "HEAD → workspace",
+            f"manifesto {identity(0)}root",
+            "format_version: 6",
+            "",
+            "Root.",
+            "",
+            f"├─requirement {identity(1)}left @ {identity(0)}",
+            "│ Left first.",
+            "│ ",
+            "│ Left last.",
+            "│ ",
+            f"│ └─requirement {identity(2)}deep @ {identity(1)}",
+            "│   Deep.",
+            "│   ",
+            f"│   └─↪ {identity(4)} ↓",
+            f"└─requirement {identity(3)}right @ {identity(0)}",
+            "  Right.",
+            "  ",
+            f"  └─requirement {identity(4)}shared @ {identity(2)}, {identity(3)}",
+            "    Shared.",
+            "    ",
+            f"    └─implementation {identity(5)}code @ {identity(4)}",
+            "      Implementation.",
+            "      ",
+        ]
+    )
+    assert " ¶ " not in text
+    assert entries(text) == entries(render_query(comparison(example())))
+
+
+@pytest.mark.parametrize("human", [False, True])
+def test_compact_nested_bars_and_every_sorted_direct_parent(human):
     g = graph(
         [
             node(0, kind="manifesto"),
@@ -167,12 +194,13 @@ def test_compact_nested_bars_and_every_sorted_direct_parent():
             node(65, [2]),
         ]
     )
-    text = render_query(comparison(g))
-    assert "│ │ └─R" in text and "│  │" not in text
-    full = next(line for line in text.split("\n") if f"R {identity(64)}node-64" in line)
-    assert full.endswith(f" @ {identity(3)} · {identity(63)} · {identity(51)}")
+    text = render_query(comparison(g), human=human)
+    assert "│ │ └─requirement" in text and "│  │" not in text
+    full = next(line for line in text.split("\n") if f"requirement {identity(64)}node-64" in line)
+    assert full.endswith(f" @ {identity(3)}, {identity(63)}, {identity(51)}")
+    assert " · " not in full
     assert last_occurrence_parents(g)[identity(64)] in full
-    assert f"M {identity(0)}node-0\n" in text
+    assert f"manifesto {identity(0)}node-0\n" in text
 
 
 def test_parent_order_and_input_order_do_not_choose_placement():
@@ -183,7 +211,8 @@ def test_parent_order_and_input_order_do_not_choose_placement():
     assert render_query(comparison(g)) == render_query(comparison(reordered))
 
 
-def test_generated_dags_and_induced_forests_match_literal_unfolding():
+@pytest.mark.parametrize("human", [False, True])
+def test_generated_dags_and_induced_forests_match_literal_unfolding(human):
     randomizer = random.Random(51)
     for _ in range(80):
         nodes = [node(0, kind="manifesto")]
@@ -219,7 +248,7 @@ def test_generated_dags_and_induced_forests_match_literal_unfolding():
                 for parent in g.parents[child]:
                     if parent in expected:
                         assert full[parent] < full[child]
-        occurrences = entries(render_query(comparison(g)))
+        occurrences = entries(render_query(comparison(g), human=human))
         assert len(occurrences) == len(g.edges()) + 1
         assert sorted([p, c] for p, c, _ in occurrences if p) == g.edges()
 
@@ -272,7 +301,7 @@ def test_union_cycles_and_reparenting_keep_deleted_nodes_in_the_overlay_once():
     assert any(p == identity(4) and c == identity(3) and not ref for p, c, ref in occurrences)
     assert result.result["added_edges"] == [[identity(0), identity(2)], [identity(2), identity(1)]]
     assert [identity(1), identity(2)] in result.result["removed_edges"]
-    assert f"R {identity(3)}node-3 @ {identity(1)} · {identity(4)} [D]" in text
+    assert f"requirement {identity(3)}node-3 @ {identity(1)}, {identity(4)} [deleted]" in text
     assert "@@" not in text and "frontmatter" not in text
 
 
@@ -295,7 +324,8 @@ def selected_unfolding(base, target):
     return parents, paths
 
 
-def test_generated_comparisons_match_independent_selected_parent_and_unfolding_oracles():
+@pytest.mark.parametrize("human", [False, True])
+def test_generated_comparisons_match_independent_selected_parent_and_unfolding_oracles(human):
     randomizer = random.Random(175)
 
     def generate(order):
@@ -328,7 +358,7 @@ def test_generated_comparisons_match_independent_selected_parent_and_unfolding_o
         positions = {i: n for n, i in enumerate(projection.order)}
         assert all(positions[p] < positions[c] for p, c in edges)
         assert last_occurrence_parents(projection) == {i: p[-1] for i, p in paths.items() if p}
-        occurrences = entries(render_query(comparison_value))
+        occurrences = entries(render_query(comparison_value, human=human))
         assert sorted([p, c] for p, c, _ in occurrences if p) == edges
         assert Counter(i for _, i, ref in occurrences if not ref) == Counter(expected.keys())
         full = {i: n for n, (_, i, ref) in enumerate(occurrences) if not ref}
@@ -344,7 +374,7 @@ def test_overlay_keeps_new_display_shortcuts_without_revalidating_or_mutating_ca
     assert any(d.code == "REDUNDANT_PARENT" for d in diagnostics)
     assert [identity(1), identity(3)] in projection.edges()
     assert [identity(2), identity(3)] in projection.edges()
-    assert f"@ {identity(1)} · {identity(2)} [D]" in render_query(result)
+    assert f"@ {identity(1)}, {identity(2)} [deleted]" in render_query(result)
     assert (
         result.base.graph.edges() == base.edges() and result.target.graph.edges() == target.edges()
     )
@@ -356,8 +386,8 @@ def test_deleted_children_remain_visible_under_a_parent_whose_current_type_is_im
     result = comparison(target, base)
     text = render_query(result)
     assert (identity(1), identity(2), False) in entries(text)
-    assert f"I {identity(1)}node-1 @ {identity(3)} [M]" in text
-    assert f"R {identity(2)}node-2 @ {identity(1)} [D]" in text
+    assert f"implementation {identity(1)}node-1 @ {identity(3)} [modified]" in text
+    assert f"requirement {identity(2)}node-2 @ {identity(1)} [deleted]" in text
 
 
 def test_deleted_node_does_not_reintroduce_its_old_parent_link_to_a_surviving_child():
@@ -381,7 +411,9 @@ def test_comparison_with_distinct_manifestos_keeps_both_roots_without_a_deleted_
         (None, identity(2), False),
         (identity(2), identity(3), False),
     ]
-    assert f"M {identity(0)}node-0 [D]" in text and f"M {identity(2)}node-2 [A]" in text
+    assert f"manifesto {identity(0)}node-0 [deleted]" in text
+    assert f"manifesto {identity(2)}node-2 [added]" in text
+    assert "\nBody 0. \n" in text and "\nBody 2. \n" in text
 
 
 def test_deep_overlay_remains_iterative():
@@ -404,42 +436,87 @@ def test_deep_overlay_remains_iterative():
     assert last_occurrence_parents(projection)["A01249A="] == "A01248A="
 
 
+@pytest.mark.parametrize("human", [False, True])
 @pytest.mark.parametrize(
-    "body",
+    "body,expected",
     [
-        "No heading",
-        "first\n\nlast\n",
-        "# Head\r\n\r\n  nested\ttext  \r\n",
-        "literal \\u202e\n",
-        "a\rb\u2028c\u2029\n",
-        "\nleading\n\n\n",
+        ("No heading", "No heading"),
+        ("soft\nline\nbreaks", "soft line breaks"),
+        ("first\n\nlast\n", "first ¶ last "),
+        ("first\n\n\n\nlast", "first ¶ last"),
+        ("one\r\ntwo\r\n\r\nthree", "one two ¶ three"),
+        ("# Head\r\n\r\n  nested\ttext  \r\n", "# Head ¶   nested\ttext   "),
+        ("literal \\u202e\n", "literal \\u202e "),
+        ("a\rb\u2028c\u2029\n", "a\rb\u2028c\u2029 "),
+        ("\nleading\n\n\n", " leading ¶ "),
+        ("first\n \nlast", "first   last"),
+        ("- one\n- two\n", "- one - two "),
+        ("```py\na()\n\nb()\n```\n", "```py a() ¶ b() ``` "),
     ],
 )
-def test_plain_current_body_preserves_complete_lines_and_whitespace(body):
+def test_body_presentation_flattens_only_the_default_and_preserves_human_lines(
+    body, expected, human
+):
     g = graph([node(0, kind="manifesto", body=body)])
-    text = render_query(comparison(g))
-    expected = "\n".join("  " + line for line in body.replace("\r\n", "\n").split("\n"))
-    assert text.endswith(expected)
+    query = comparison(g)
+    text = render_query(query, human=human)
+    assert body_line(body) == expected and "\n" not in expected
+    body_rows = body.replace("\r\n", "\n").split("\n") if human else [expected]
+    assert text.split("\n") == [
+        "HEAD → workspace",
+        f"manifesto {identity(0)}node-0",
+        "format_version: 6",
+        "",
+        *body_rows,
+    ]
+    assert query.target.graph.nodes[identity(0)].body == body
     assert "body @@" not in text and "No newline at end of file" not in text
 
 
-def test_modified_node_shows_only_current_body_with_a_hint():
+def test_full_word_hints_need_no_legend_and_keep_independent_source_and_literal_cues():
+    g = example()
+    query = comparison(g)
+    query.result["source_contract_affected"] = [identity(0)]
+    query.result["file_changes"] = [{"path": g.nodes[identity(0)].path, "kind": "changed"}]
+    text = render_query(query)
+    assert text.split("\n")[:2] == [
+        "HEAD → workspace",
+        f"manifesto {identity(0)}root [source-changed file-only]",
+    ]
+    assert "=parents" not in text and "=manifesto" not in text and "=below" not in text
+    assert body_line("") == ""
+
+
+@pytest.mark.parametrize("human", [False, True])
+def test_modified_node_shows_only_current_body_with_a_hint(human):
     old = graph([node(0, kind="manifesto", body="Old wording\n")])
     new = graph([node(0, kind="manifesto", body="# Current wording\n\n  nested\n")])
-    text = render_query(comparison(new, old))
-    assert f"M {identity(0)}node-0 [M]" in text
+    text = render_query(comparison(new, old), human=human)
+    assert f"manifesto {identity(0)}node-0 [modified]" in text
     assert "Old wording" not in text
-    assert "  # Current wording\n  \n    nested\n" in text
-    assert "[M F]" not in text and "@@" not in text
+    expected = "\n# Current wording\n\n  nested\n" if human else "\n# Current wording ¶   nested "
+    assert expected in text
+    assert "[modified file-only]" not in text and "@@" not in text
 
 
-def test_deleted_node_keeps_base_body_but_survivors_keep_target_text():
-    old = graph([node(0, kind="manifesto", body="Old root\n"), node(1, [0], body="Deleted body\n")])
+@pytest.mark.parametrize("human", [False, True])
+def test_deleted_node_keeps_base_body_but_survivors_keep_target_text(human):
+    old = graph(
+        [
+            node(0, kind="manifesto", body="Old root\n"),
+            node(1, [0], body="Deleted first\n\nDeleted last\nwrapped\n"),
+        ]
+    )
     new = graph([node(0, kind="manifesto", body="Current root\n")])
-    text = render_query(comparison(new, old))
+    text = render_query(comparison(new, old), human=human)
     assert "Old root" not in text and "Current root" in text
-    assert f"R {identity(1)}node-1 @ {identity(0)} [D]" in text
-    assert text.endswith("  Deleted body\n  ")
+    assert f"requirement {identity(1)}node-1 @ {identity(0)} [deleted]" in text
+    expected = (
+        "  Deleted first\n  \n  Deleted last\n  wrapped\n  "
+        if human
+        else "  Deleted first ¶ Deleted last wrapped "
+    )
+    assert text.endswith(expected)
 
 
 def test_current_extensions_are_complete_without_old_metadata_or_raw_frontmatter():
@@ -448,7 +525,7 @@ def test_current_extensions_are_complete_without_old_metadata_or_raw_frontmatter
     new_node = replace(old_node, extensions={"org.example:note": [None, True, {"text": "全体"}]})
     text = render_query(comparison(graph([new_node]), graph([old_node])))
     assert 'extensions: {"org.example:note":[null,true,{"text":"全体"}]}' in text
-    assert "  Binding without a heading\n  " in text
+    assert "\nBinding without a heading " in text
     assert "Old extension" not in text and "---" not in text
 
 
@@ -474,11 +551,11 @@ def test_comment_only_eol_changes_and_renames_have_literal_not_fake_semantic_sta
     result = read_query(root)
     assert result.result["changes"] == []
     text = render_query(result)
-    assert "[F]" in text and "frontmatter" not in text and "# comment" not in text
+    assert "[file-only]" in text and "frontmatter" not in text and "# comment" not in text
     path.rename(root / f"_specspec/{parent}renamed.md")
     result = read_query(root)
     assert result.result["changes"] == [{"id": parent, "kind": "renamed", "fields": ["path"]}]
-    assert "- file: " not in render_query(result) and "[R]" in render_query(result)
+    assert "- file: " not in render_query(result) and "[renamed]" in render_query(result)
 
 
 def test_cr_only_frontmatter_stays_hidden_behind_a_literal_change_hint(workspace):
@@ -489,11 +566,12 @@ def test_cr_only_frontmatter_stays_hidden_behind_a_literal_change_hint(workspace
     path.write_bytes(path.read_bytes().replace(b"\n", b"\r"))
     result = read_query(root)
     text = render_query(result)
-    assert "@@" not in text and "[F]" not in text  # Bare CR also changes the semantic body.
-    assert "[M]" in text and "\\u000d" in safe_text(text)
+    assert "@@" not in text and "[file-only]" not in text  # Bare CR also changes the body.
+    assert "[modified]" in text and "\\u000d" in safe_text(text)
 
 
-def test_cli_default_comparison_json_round_trip_and_read_only_git_state(workspace):
+@pytest.mark.parametrize("human", [False, True])
+def test_cli_comparison_json_round_trip_and_read_only_git_state(workspace, human):
     root, parent = workspace
     setup_repository(root)
     _, child = add_node(
@@ -502,13 +580,20 @@ def test_cli_default_comparison_json_round_trip_and_read_only_git_state(workspac
     before = load_snapshot(root)
     index, refs = git(root, "ls-files", "--stage"), git(root, "show-ref")
     objects = git(root, "count-objects", "-v")
-    result = call(root)
-    assert result.exit_code == 0 and f"{child}child @ {parent} [A]" in result.stdout
-    assert "No heading" in result.stdout and "Complete last line." in result.stdout
-    structured = call(root, "--json")
+    args = ["--human"] if human else []
+    result = call(root, *args)
+    assert result.exit_code == 0 and f"{child}child @ {parent} [added]" in result.stdout
+    expected_body = (
+        "\n  No heading\n  \n  Complete last line.\n"
+        if human
+        else "\n  No heading ¶ Complete last line. \n"
+    )
+    assert expected_body in result.stdout
+    structured = call(root, *args, "--json")
     assert structured.exit_code == 0, structured.output
     value = json.loads(structured.stdout)
     assert value["api_version"] == 6 and value["ok"]
+    assert value == json.loads(call(root, "--json").stdout)
     expanded = expand_comparison(value["result"])
     assert expanded["base"]["nodes"] == read_query(root).base.to_dict()["nodes"]
     assert expanded["target"]["nodes"] == before.to_dict()["nodes"]
@@ -545,13 +630,20 @@ def test_diff_provides_exact_patches_while_query_keeps_change_summaries(workspac
     assert (destination / n.path).read_bytes() == query.target.files[n.path]
 
 
-def test_cli_large_multiline_body_and_visible_controls(workspace):
+@pytest.mark.parametrize("human", [False, True])
+def test_cli_large_multiline_body_and_visible_controls(workspace, human):
     root, parent = workspace
     body = "# Once only\n\n" + "full line\n" * 7000 + "Last line\t  \x1b[2J\u202e\n"
     update_node(root, parent, body=body)
-    result = call(root)
+    result = call(root, *(["--human"] if human else []))
     assert result.exit_code == 0, result.output
-    assert result.stdout.count("full line\n") == 7000
+    if human:
+        assert result.stdout.count("full line\n") == 7000
+        assert "# Once only\n\nfull line\n" in result.stdout
+    else:
+        assert result.stdout.count("full line ") == 7000 and "full line\n" not in result.stdout
+        bodies = [line for line in result.stdout.split("\n") if "# Once only" in line]
+        assert len(bodies) == 1 and bodies[0].startswith("# Once only ¶ full line ")
     assert "Last line\t  \\u001b[2J\\u202e" in result.stdout
     assert "\x1b" not in result.stdout and "\u202e" not in result.stdout
     record = json.loads(call(root, "--json").stdout)["result"]["target"]["nodes"][0]
@@ -611,10 +703,11 @@ def test_maintained_gantt_revisions_workspace_and_comparison_match_shared_semant
         result = call(root, "--base", base, "--target", target, "--json")
         assert result.exit_code == 0, result.output
         assert json.loads(result.stdout)["result"]["changes"] == query.result["changes"]
-        text = render_query(query)
-        assert Counter(i for _, i, ref in entries(text) if not ref) == Counter(
-            {n.id for n in [*query.base.nodes, *query.target.nodes]}
-        )
+        for human in (False, True):
+            text = render_query(query, human=human)
+            assert Counter(i for _, i, ref in entries(text) if not ref) == Counter(
+                {n.id for n in [*query.base.nodes, *query.target.nodes]}
+            )
     commits = git(root, "rev-list", "--all").decode().splitlines()
     assert len(commits) == 8
     for commit in commits:
@@ -655,4 +748,5 @@ def test_unicode_query_and_ascii_help_survive_legacy_pipes(workspace, encoding):
     )
     assert help_result.returncode == 0
     text = help_result.stdout.decode("ascii")
-    assert "--base" in text and "--target" in text and "--one-line-body" not in text
+    assert "--base" in text and "--target" in text and "--human" in text
+    assert "--one-line-body" not in text

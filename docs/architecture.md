@@ -116,9 +116,15 @@ with spotlight-style HEAD/workspace defaults. Ordered iterative last-occurrence 
 print one selected-record overlay with current records/parents plus base-only deleted
 records/former parents. No current node has a deleted parent, so this display is
 acyclic even if the complete edge union is cyclic. It retains compact rails, full
-parent headers, complete plain bodies and D ghosts without canonical revalidation.
+parent headers, complete one-line body projections and deleted ghosts without
+canonical revalidation. Single newlines become spaces; longer runs become ` ¶ `.
+Types/statuses use lowercase words without a legend; root content aligns at column
+zero. Parent IDs always use comma-space separators. Default sources share one
+comma-separated metadata line per node; --human retains logical body lines and
+individual source lines. This flag changes only rendering, including when combined
+with --json. Original bodies remain exact in JSON and diff.
 `query_sources.py` reuses one cached SourceReader per distinct code version and interprets strict/expanding/
-path-only contracts: permitted changes stay quiet; known transitions drive S and
+path-only contracts: permitted changes stay quiet; known transitions drive source-changed and
 ancestors in both original graphs. Broken/unknown mappings stay explicit. API-6 JSON
 retains original graphs, complete raw facts and separate contract classifications;
 shared conservative file-impact facts remain available. Known committed source blobs

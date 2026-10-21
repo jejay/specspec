@@ -4,8 +4,8 @@ type: implementation
 parents:
 - B71bAFk=
 - z9YKFeE=
-- nLqvWcM=
 - 2doGbqA=
+- B6y6hgo=
 sources:
 - path: src/specspec/query.py
 - path: src/specspec/cli.py
@@ -29,12 +29,13 @@ query.py reuses spotlight snapshot selection and semantic comparison, validating
 both selected revisions. A non-writing display projection chooses target records
 for current nodes and base records for deleted nodes, each with that record's own
 parents. Iterative reverse/forward walks render one overlay with full sorted parent
-headers, compact rails, last-occurrence ownership and complete plain bodies. The
+headers, compact rails, last-occurrence ownership and complete default one-line body readings. The
 projection preserves chosen edges without canonical reduction or type/root checks;
 its construction is acyclic even when a full revision-edge union would be cyclic.
 
-A/M/D/R identify node changes. F marks literal-only changes. S identifies known
-source-contract changes and ancestors in both original graphs, independently of
+Lowercase added/modified/deleted/renamed identify node changes. File-only marks
+literal-only changes. Source-changed identifies known contract changes and
+ancestors in both original graphs, independently of
 shared conservative file-impact facts. Normal records and permitted code edits
 stay unmarked. Query keeps summaries and reconstructed original graphs; diff owns
 canonical patch review and raw LF-exact textual changes.
@@ -65,3 +66,24 @@ pre-existing broken links, unavailable anchors, binary/large whole-file hints,
 caching, original-graph ancestor ripple, declaration independence and historical
 selection. Plain text/metadata, source facts, exact diff application, saved-buffer
 semantics, read-only Git/files and legacy pipe safety retain regression coverage.
+
+body_line normalizes CRLF and replaces single LF runs with a space and longer runs
+with " ¶ ", without truncating text or changing original bodies. The readable
+renderer spells out types and change hints, carries revisions/notes without a legend,
+and aligns root content at column zero. Golden and newline-run matrices cover
+paragraphs, headless text, Markdown markers, other whitespace, controls and deleted
+bodies. Complete original bodies remain reconstructible in JSON and diff. The
+one-line projection is the ordinary reading behavior; --human retains logical body lines.
+
+query_lines/render_query accept a presentation-only human option; the CLI forwards
+--human for text while --json retains its identical complete comparison. Every
+parent header uses comma-space separators. source_item retains one reference's
+location and hints; compact metadata joins all items under one sources prefix,
+while human metadata uses source_line once per occurrence. Empty lists add no row,
+and duplicate occurrences stay visible in either format. Rendering does not change
+snapshot selection, source reads, contract classification or cache lifetimes.
+
+Regressions cover compact/human golden reads, source aggregation and duplicates,
+comma-bearing paths and disjoint ranges, uncertain/removed/deleted source items,
+parent sorting in both modes, original multiline whitespace and control safety,
+identical JSON, read-only Git state and maintained temporal graph traversals.

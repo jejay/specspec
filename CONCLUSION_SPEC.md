@@ -62,11 +62,17 @@ separate from managed writes. Node format is **6** and protocol is **6**.
 [`query`](docs/query.md) always compares revisions, defaulting to fresh HEAD versus
 saved workspace with spotlight-style --base/--target selection. Iterative ordered
 last-occurrence walks print a selected-record overlay: current parents/text for
-current nodes, former parents/text for deleted nodes marked D. Current records have
+current nodes, former parents/text for nodes marked deleted. Current records have
 no deleted parents, so the projection is acyclic without a full edge union. It is a
 reading, not a new canonical graph. Compact rails and full parent headers remain.
+Default bodies occupy one line: single newlines become spaces and longer runs
+become ` ¶ `. Types/change hints use lowercase words without a legend, and root
+content has no extra indent. Parents use comma-space separators in every mode.
+Default sources share one comma-separated line per node; --human keeps logical body
+lines and lists each source separately. Both modes retain the same derived facts;
+--human does not alter --json. Original bodies remain exact in JSON and node files.
 Source hints respect strict/expanding/path-only permissions: accepted edits stay
-quiet, while known contract transitions drive S and original-graph ancestor effects.
+quiet, while known contract transitions drive source-changed and original-graph ancestor effects.
 Broken/uncertain links remain explicit. Raw source facts stay complete in JSON.
 Known committed source blobs/anchors populate existing per-call caches in batches;
 identical commits reuse a reader. No query cache survives the invocation.

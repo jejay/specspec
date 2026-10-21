@@ -129,16 +129,18 @@ code versions, independently of whether that exact reference occurs in both node
 versions. The reference class determines change cues: strict accepts relocation and
 outside/gap/boundary edits; expanding also absorbs reliably mapped contained edits;
 path-only whole-file hints permit content changes and require a safe regular file.
-Permitted changes add no source hint or S badge. Binary/LFS/large whole files need
+Permitted changes add no source hint or source-changed badge. Binary/LFS/large whole files need
 no spurious line warning because that class does not require readable lines.
 
-Known valid/broken transitions, including restoration, drive S and ancestors in
+Known valid/broken transitions, including restoration, drive source-changed and ancestors in
 both original graphs. Missing/strict-conflicting links and ambiguous/unavailable
 mappings stay visible. An existing problem need not be a new revision change.
 Reference +/- is independent of code edits. JSON retains raw byte/text/position/
 region facts plus separate contract classifications and completeness. Shared source
 inspection/check/preview outcomes and conservative file-impact facts retain their
-existing meanings. See [query source contracts](query.md).
+existing meanings. Default query sources share one comma-separated line per node;
+`--human` lists each occurrence separately, with the same locations and item-level
+hints. Duplicate references remain visible in both modes. See [query source contracts](query.md).
 
 These derived readings use the shared bounded cached resolver. They compare selected
 versions rather than treating an older anchor's modified outcome as a new change.

@@ -177,17 +177,23 @@ orders selected-record projections through iterative reverse/forward DFS. The
 [compact-header choice](../_specspec/nLqvWcM=keep-compact-query-rails-and-complete-parent-headers.md)
 keeps two-column rails and every direct parent in full headers. The
 [comparison choice](../_specspec/h3zqGZU=read-current-records-with-sparse-revision-hints.md)
-uses spotlight-style HEAD/workspace defaults, complete plain current/base bodies
-and sparse change hints. The [selected-record overlay](../_specspec/B71bAFk=keep-deleted-bindings-in-the-selected-record-comparison-graph.md)
-keeps deleted D records among current records, selecting former parents only for
+uses spotlight-style HEAD/workspace defaults, complete current/base binding content
+and sparse worded change hints. The [default one-line choice](../_specspec/AY1g-sU=read-each-query-binding-on-one-line-with-paragraph-separators.md)
+joins single newlines with a space and longer runs with ` ¶ `; original bodies remain
+exact in JSON/diff. The [compact/human presentation choice](../_specspec/B6y6hgo=offer-compact-and-human-query-presentations-with-comma-separated-lists.md)
+groups sources into one comma-separated line by default; `--human` keeps logical
+body lines and lists sources individually. Parent IDs always use comma-space
+separators. Both modes retain the same facts and JSON. Lowercase type/status words
+make the legend unnecessary, and root content aligns with its header. The [selected-record overlay](../_specspec/B71bAFk=keep-deleted-bindings-in-the-selected-record-comparison-graph.md)
+keeps deleted records among current records, selecting former parents only for
 deleted nodes. This projection is acyclic while original revision graphs remain
 reconstructible. Normal records stay unmarked; exact text changes belong to `diff`.
 The [source comparison choice](../_specspec/jWl96h0=compare-source-declarations-and-resolved-version-locations-independently.md)
 separates reference-list changes, conservative linked-file impact, selected code
 text and actual per-version locations under shared strict/expanding resolution.
 The [contract-aware query choice](../_specspec/z9YKFeE=signal-query-source-changes-through-their-declared-tracking-contracts.md)
-keeps changes permitted by strict/expanding/path-only references quiet, including S
-badges. Known contract transitions propagate through both original graphs. One-line
+keeps changes permitted by strict/expanding/path-only references quiet, including
+source-changed badges. Known contract transitions propagate through both original graphs. One-line
 sources retain broken/uncertain/restored hints; JSON keeps complete raw source facts
 and separate contract classifications. Shared file-impact reporting stays broader.
 The [per-invocation batch choice](../_specspec/2doGbqA=batch-known-query-source-blobs-within-each-invocation.md)
