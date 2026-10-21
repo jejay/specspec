@@ -18,16 +18,17 @@ sources:
 # Render continuous absolute and cohort-relative influence
 
 The shared graph model reuses iterative, deduplicated descendant traversal and
-per-revision maximum distances. Lazy raw normalization ranges feed linear or
-log1p normalization and the continuous three-anchor sRGB ramp. The shared template
+per-revision maximum distances. Snapshot-local influence includes self; structural
+descendantCount subtracts one. Lazy raw ranges feed influence-minus-one linear or
+natural-log normalization and the continuous three-anchor sRGB ramp. The shared template
 exposes all four influence modes; the renderer uses target/base context, concise
 continuous legends and persistent per-view mode selection. Scaling formulas live
 in the tutorial. Compact and
 expanded cards share normalization. Neutral drafts, manifesto treatment and existing
 Git/highlight/form/camera roles stay independent.
 
-Pure tests cover shared descendants, absolute zero-based normalization, cohorts by
-longest path, positive cohort minima, log1p before normalization, ties, invalid
+Pure tests cover shared descendants, self-inclusive influence and linear normalization, cohorts by
+longest path, positive cohort minima, log before normalization, ties, invalid
 inputs, order invariance and interpolation. DOM tests cover focus, independent
 base/target versions, refreshed ranges, all four preferences and preservation of
 drafts, caret, geometry and camera. The common real-host probe checks all four

@@ -112,9 +112,10 @@
       }
     }
     // A cycle (and its blocked descendants) has no finite maximum; leave unknown.
-    const descendantCounts = new Map();
-    function descendantCount(id) {
-      if (!descendantCounts.has(id)) {
+    const influences = new Map();
+    function influence(id) {
+      if (!nodes.has(id)) return undefined;
+      if (!influences.has(id)) {
         const seen = new Set([id]), stack = [...(children.get(id) || [])];
         while (stack.length) {
           const current = stack.pop();
@@ -122,10 +123,11 @@
           seen.add(current);
           for (const child of children.get(current) || []) stack.push(child);
         }
-        descendantCounts.set(id, seen.size - 1);
+        influences.set(id, seen.size);
       }
-      return descendantCounts.get(id);
+      return influences.get(id);
     }
+    const descendantCount = id => (influence(id) ?? 1) - 1;
     // Influence needs all non-root counts, but ordinary modes need not pay for
     // that traversal. Cache both normalization domains only on first use.
     let influenceRanges;
@@ -133,10 +135,10 @@
       if (!INFLUENCE_MODES.includes(mode) || !nodes.has(id)
         || nodes.get(id).type === 'manifesto' || !maxDistances.has(id)) return undefined;
       if (!influenceRanges) {
-        const cohorts = new Map(); let maximum = 0;
+        const cohorts = new Map(); let maximum = 1;
         for (const [key, node] of nodes) {
           if (node.type === 'manifesto' || !maxDistances.has(key)) continue;
-          const count = descendantCount(key), depth = maxDistances.get(key);
+          const count = influence(key), depth = maxDistances.get(key);
           maximum = Math.max(maximum, count);
           const range = cohorts.get(depth) || { min: count, max: count };
           range.min = Math.min(range.min, count); range.max = Math.max(range.max, count);
@@ -145,11 +147,11 @@
         influenceRanges = { maximum, cohorts };
       }
       const { min, max } = mode.endsWith('relative-influence')
-        ? influenceRanges.cohorts.get(maxDistances.get(id)) : { min: 0, max: influenceRanges.maximum };
-      const scale = mode.startsWith('log-') ? Math.log1p : value => value;
-      return max > min ? (scale(descendantCount(id)) - scale(min)) / (scale(max) - scale(min)) : 0;
+        ? influenceRanges.cohorts.get(maxDistances.get(id)) : { min: 1, max: influenceRanges.maximum };
+      const scale = mode.startsWith('log-') ? Math.log : value => value - 1;
+      return max > min ? (scale(influence(id)) - scale(min)) / (scale(max) - scale(min)) : 0;
     }
-    return { minDistances, maxDistances, children, descendantCount, influenceRatio };
+    return { minDistances, maxDistances, children, influence, descendantCount, influenceRatio };
   }
 
   function influenceColor(value) {

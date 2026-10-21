@@ -215,11 +215,11 @@ The exact distance/type/revision spectrum is `#bc82c9`, `#7e97e6`, `#1facce`, `#
 `#ca8d3e`, `#dc7b7c`. Requirement index 4, Implementation 0, Added 3, M/R 1, D 6,
 source-only 5. Distance `(d-1)%7`; neutral `#929baa`, distance/type root `#d3d3d3`.
 Eight modes have concise color legends; revision colors the root by comparison too.
-Absolute influence counts unique descendants and linearly scales zero to the highest
-non-manifesto count. Relative influence scales cohort minimum to maximum, grouping
-by maximum manifesto distance. Their logarithmic counterparts transform raw counts with `log1p` before
-normalization: `log1p(c)/log1p(M)` for absolute, and
-`(log1p(c)-log1p(lo))/(log1p(hi)-log1p(lo))` for relative. All four modes use
+Influence counts self plus unique descendants, with a minimum of one. Absolute
+influence uses `(c-1)/(M-1)` for the non-manifesto maximum M. Relative influence
+scales cohort minimum to maximum, grouping by maximum manifesto distance. Their
+logarithmic counterparts apply natural log before normalization: `log(c)/log(M)`
+for absolute and `(log(c)-log(lo))/(log(hi)-log(lo))` for relative. All four modes use
 continuous sRGB green `#4df884` → yellow `#e8d62c` → red `#ba2208`, with full
 target/base context, shared lazy raw ranges, green tied cohorts and a neutral gray
 manifesto. Git theme titles/corners and edge patterns

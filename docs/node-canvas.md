@@ -93,13 +93,13 @@ paint variables and edge compensation.
   nodes use target/base metrics respectively, not the revision union or placement
   backbone. Legends show concise hop swatches; the mode selector names the metric.
   Downstream, Git, and source-impact cues remain independent.
-- **Influence fills** count unique descendants at every depth. Absolute influence
-  uses `count / highestNonManifestoCount`; Relative influence uses
-  `(count - cohortMin) / (cohortMax - cohortMin)`, grouping by maximum manifesto
-  distance. Log Absolute Influence uses `log1p(count) / log1p(maximum)`, while
-  Log Relative Influence uses `(log1p(count) - log1p(cohortMin)) /
-  (log1p(cohortMax) - log1p(cohortMin))`. Transform raw counts before normalization,
-  with the +1 defining zero. All four choices remain available. Zero denominators
+- **Influence fills** count self plus unique descendants at every depth, with a
+  minimum of one. Absolute influence uses `(count-1) / (highestNonManifestoCount-1)`;
+  Relative influence uses `(count - cohortMin) / (cohortMax - cohortMin)`, grouping
+  by maximum manifesto distance. Log Absolute Influence uses `log(count) / log(maximum)`,
+  while Log Relative Influence uses `(log(count) - log(cohortMin)) /
+  (log(cohortMax) - log(cohortMin))`. Linear modes subtract one; log modes apply
+  natural log before normalization. All four choices remain available. Zero denominators
   use green, including equal positive counts and singletons. The manifesto remains neutral gray. Full target/base revisions supply
   the ranges independently of focus and comparison unions. Raw ranges/counts are
   lazy per metrics instance and shared by linear/log modes. Continuous sRGB interpolation through green `#4df884`,

@@ -8,16 +8,17 @@ parents:
 ---
 # Normalize revision-local influence on a continuous warm ramp
 
-Reuse each full revision's unique descendant counts and longest manifesto paths.
-For count c and highest non-manifesto count M, Absolute influence uses c/M and
-Log Absolute Influence uses log1p(c)/log1p(M). For cohort minimum lo and maximum hi
-at the node's maximum manifesto distance, Relative influence uses (c-lo)/(hi-lo).
-Log Relative Influence uses (log1p(c)-log1p(lo))/(log1p(hi)-log1p(lo)). Apply the
-logarithm to each raw count before subtracting the transformed minimum. Any fixed
-logarithm base gives the same normalized result; use natural log1p numerically.
+Reuse each full revision's self-inclusive influence and longest manifesto paths.
+For influence c and highest non-manifesto influence M, Absolute influence uses
+(c-1)/(M-1) and Log Absolute Influence uses log(c)/log(M). For cohort minimum lo
+and maximum hi at the node's maximum manifesto distance, Relative influence uses
+(c-lo)/(hi-lo). Log Relative Influence uses
+(log(c)-log(lo))/(log(hi)-log(lo)). Apply natural log to each influence before
+subtracting the transformed minimum. Linear scales transform each value by
+subtracting one, including their domain endpoints.
 
-A zero denominator maps to zero: equal-count groups, singleton groups and all-zero
-graphs use green. The manifesto retains its neutral gray accent and white hover
+A zero denominator maps to zero: equal-influence groups, singleton groups and
+leaf-only graphs use green. The manifesto retains its neutral gray accent and white hover
 border, outside the influence scales. Unknown or cycle-blocked path context and
 unsaved new/orphaned drafts use neutral presentation.
 

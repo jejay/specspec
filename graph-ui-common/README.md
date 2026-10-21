@@ -44,10 +44,10 @@ Legends pair colors with concise labels; tutorial text lives in the
 See [spotlight semantics](../docs/spotlights.md).
 
 The eight Color by modes include continuous Absolute influence, Relative influence,
-Log Absolute Influence and Log Relative Influence. All count unique all-depth
-descendants; absolute uses zero to the non-root maximum, relative uses cohort
-minimum/maximum at equal longest distance. Log modes transform raw counts with
-`log1p` before normalization, and linear modes remain available. The shared model
+Log Absolute Influence and Log Relative Influence. Influence counts self plus
+unique all-depth descendants, with a minimum of one. Linear scales subtract one;
+log scales apply natural log. Absolute uses one to the non-root maximum; relative
+uses cohort minimum/maximum at equal longest distance. Both scales remain available. The shared model
 lazily caches each revision's raw domains for all four choices. A warm green/yellow/red sRGB ramp and gradient
 legend stay separate from the exact seven-color distance/type/status table. Full
 target/base context survives focus, and ties use green while the manifesto stays gray.

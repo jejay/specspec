@@ -762,15 +762,15 @@ exports.checkUI = async function checkUI(port, options = {}) {
           .map(p=>[p.dataset.parent,p.dataset.child]).filter(([a,b])=>ids.has(a)&&ids.has(b));
         const counts=new Map(cards.map(c=>{const id=c.dataset.nodeId,seen=new Set([id]),stack=[id];
           while(stack.length){const current=stack.pop();for(const [a,b] of links)if(a===current&&!seen.has(b)){seen.add(b);stack.push(b);}}
-          return [id,seen.size-1];}));
+          return [id,seen.size];}));
         const root=cards.find(c=>c.classList.contains('manifesto')).dataset.nodeId,depths=new Map([[root,0]]);
         for(let round=0;round<cards.length;round++)for(const id of ids){if(depths.has(id))continue;const parents=links.filter(([,b])=>b===id).map(([a])=>a);
           if(parents.length&&parents.every(p=>depths.has(p)))depths.set(id,1+Math.max(...parents.map(p=>depths.get(p))));}
-        const maximum=Math.max(0,...[...ids].filter(id=>id!==root).map(id=>counts.get(id)));
+        const maximum=Math.max(1,...[...ids].filter(id=>id!==root).map(id=>counts.get(id)));
         return new Map([...ids].map(id=>{const peers=[...ids].filter(p=>depths.get(p)===depths.get(id)).map(p=>counts.get(p));
-          const lo=Math.min(...peers),hi=Math.max(...peers),logCount=Math.log(counts.get(id)+1);
-          const logMaximum=Math.log(maximum+1),logLo=Math.log(lo+1),logHi=Math.log(hi+1);
-          return [id,{'absolute-influence':id===root?'#d3d3d3':model.influenceColor(maximum?counts.get(id)/maximum:0),
+          const lo=Math.min(...peers),hi=Math.max(...peers),logCount=Math.log(counts.get(id));
+          const logMaximum=Math.log(maximum),logLo=Math.log(lo),logHi=Math.log(hi);
+          return [id,{'absolute-influence':id===root?'#d3d3d3':model.influenceColor(maximum>1?(counts.get(id)-1)/(maximum-1):0),
             'relative-influence':id===root?'#d3d3d3':model.influenceColor(hi>lo?(counts.get(id)-lo)/(hi-lo):0),
             'log-absolute-influence':id===root?'#d3d3d3':model.influenceColor(logMaximum?logCount/logMaximum:0),
             'log-relative-influence':id===root?'#d3d3d3':model.influenceColor(logHi>logLo?(logCount-logLo)/(logHi-logLo):0)}];}));

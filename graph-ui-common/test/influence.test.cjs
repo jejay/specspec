@@ -10,10 +10,14 @@ function snapshot(edges, extra = []) {
 const diamond = () => snapshot([['root','a'],['root','b'],['root','c'],['a','left'],['a','right'],
   ['left','shared'],['right','shared'],['b','shared'],['shared','tail']]);
 
-test('absolute influence counts unique descendants and scales from zero to the highest non-manifesto count', () => {
+test('absolute influence includes self and scales influence minus one to the highest non-manifesto value', () => {
   const graph = diamond();
   graph.nodes.find(n => n.id === 'tail').type = 'implementation';
   const before = JSON.stringify(graph), metrics = model.metrics(graph);
+  assert.equal(metrics.influence('root'), 8);
+  assert.equal(metrics.influence('a'), 5);
+  assert.equal(metrics.influence('tail'), 1);
+  assert.equal(metrics.influence('missing'), undefined);
   assert.equal(metrics.descendantCount('root'), 7);
   assert.equal(metrics.descendantCount('a'), 4, 'A shared node and its tail contribute once each.');
   assert.equal(metrics.influenceRatio('a'), 1);
@@ -46,7 +50,7 @@ test('relative influence groups by maximum path, not shortest path, and normaliz
   assert.equal(d.influenceRatio('c','relative-influence'), 0);
 });
 
-test('all-zero absolute ranges, tied positive cohorts and singleton cohorts use green; the manifesto stays gray', () => {
+test('all-one absolute ranges, tied positive cohorts and singleton cohorts use green; the manifesto stays gray', () => {
   for (const graph of [snapshot([['root','a'],['root','b']]), snapshot([['root','a'],['a','leaf']]),
     snapshot([['root','a'],['root','b'],['a','left'],['b','right']])]) {
     const metrics = model.metrics(graph);
@@ -62,7 +66,7 @@ test('all-zero absolute ranges, tied positive cohorts and singleton cohorts use 
   assert.equal(model.metrics({ nodes: [], edges: [] }).influenceRatio('missing'),undefined);
 });
 
-test('logarithmic influence transforms raw counts before absolute and positive-minimum cohort normalization', () => {
+test('logarithmic influence transforms self-inclusive counts before absolute and cohort normalization', () => {
   const edges=[['root','a'],['root','b'],['root','c']];
   for (const [id,count] of [['a',9],['b',3],['c',1]]) for(let i=0;i<count;i++) edges.push([id,`${id}-${i}`]);
   const metrics=model.metrics(snapshot(edges));
@@ -71,7 +75,7 @@ test('logarithmic influence transforms raw counts before absolute and positive-m
   assert.equal(metrics.influenceRatio('b','absolute-influence'),1/3,'The linear comparison remains available and unchanged.');
   for (const mode of ['log-absolute-influence','log-relative-influence']) {
     assert.equal(metrics.influenceRatio('a',mode),1);
-    assert.equal(metrics.influenceRatio('a-0',mode),0,'log(0+1) is finite and leaves stay green.');
+    assert.equal(metrics.influenceRatio('a-0',mode),0,'log(1) is finite and leaves stay green.');
     assert.equal(model.color(mode,{type:'manifesto'},metrics.influenceRatio('root',mode)),'#d3d3d3');
   }
   assert.equal(metrics.influenceRatio('c','log-relative-influence'),0,'The positive minimum still maps to green.');
@@ -141,15 +145,17 @@ test('generated current-shaped DAGs agree with independent closure/cohort oracle
     const reach=ids.map(()=>ids.map(()=>false));
     for (const [a,b] of edges) reach[index.get(a)][index.get(b)]=true;
     for (let k=0;k<ids.length;k++) for (let i=0;i<ids.length;i++) for (let j=0;j<ids.length;j++) reach[i][j] ||= reach[i][k]&&reach[k][j];
-    const counts=new Map(ids.map((id,i)=>[id,reach[i].filter(Boolean).length]));
+    const counts=new Map(ids.map((id,i)=>[id,1+reach[i].filter(Boolean).length]));
     const maximum=Math.max(...ids.filter(id=>id!=='root').map(id=>counts.get(id)));
     const metrics=model.metrics(graph),reversed=model.metrics({...graph,nodes:[...graph.nodes].reverse(),edges:[...edges].reverse()});
     for (const id of ids.filter(id=>id!=='root')) {
       const peers=ids.filter(peer=>depths.get(peer)===depths.get(id)).map(peer=>counts.get(peer));
       const low=Math.min(...peers),high=Math.max(...peers);
+      assert.equal(metrics.influence(id),counts.get(id));
+      assert.equal(metrics.descendantCount(id),counts.get(id)-1);
       for (const mode of model.INFLUENCE_MODES) {
-        const scale=mode.startsWith('log-')?value=>Math.log(value+1):value=>value;
-        const lo=mode.endsWith('absolute-influence')?0:low,hi=mode.endsWith('absolute-influence')?maximum:high;
+        const scale=mode.startsWith('log-')?Math.log:value=>value-1;
+        const lo=mode.endsWith('absolute-influence')?1:low,hi=mode.endsWith('absolute-influence')?maximum:high;
         const expected=hi>lo?(scale(counts.get(id))-scale(lo))/(scale(hi)-scale(lo)):0;
         assert.ok(Math.abs(metrics.influenceRatio(id,mode)-expected)<1e-12);
         assert.ok(Math.abs(reversed.influenceRatio(id,mode)-expected)<1e-12);
