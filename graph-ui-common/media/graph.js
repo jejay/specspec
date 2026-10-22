@@ -2,6 +2,7 @@
 (() => {
   const host = window.SpecSpecHost, model = window.SpecSpecGraph;
   const $ = id => document.getElementById(id);
+  const bindingEditor = window.SpecSpecVendor.createBindingEditor($('body'), document.currentScript?.nonce || '');
   const restored = host.getState() || {};
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
@@ -59,6 +60,9 @@
   function formChanged() { dirty = true; updateButtons(); saveDraft(); documentEdit(); }
 
   function updateButtons() {
+    const previous = state?.diff?.base.nodes.find(node => node.id === selected);
+    bindingEditor.configure({ key: creating ? '__new__' : selected, native: state?.document,
+      original: !creating && state?.diff && currentNode() ? previous?.body || '' : undefined });
     $('sync-notice').hidden = !sourceInvalid;
     $('sync-notice').textContent = state?.document ? 'Last valid graph · Repair Markdown; native Save retains document text.'
       : 'Last valid graph · Repair Markdown and refresh to resume editing.';
@@ -450,7 +454,7 @@
 
   function loadForm() {
     const node = graph.nodes.get(selected);
-    if (!node) { $('editor').hidden = true; $('before-section').hidden = true; return; }
+    if (!node) { $('editor').hidden = true; return; }
     $('editor').hidden = false; $('title').textContent = title(node);
     $('identity').textContent = `${node.id}\n${description(node)}\n${node.path}`;
     const context = contextFor(node.id);
@@ -461,8 +465,6 @@
     try { sameSources = JSON.stringify(JSON.parse($('sources').value)) === JSON.stringify(node.sources); } catch { /* Intermediate JSON typing. */ }
     if (!sameSources) $('sources').value = JSON.stringify(node.sources, null, 2);
     $('sources-label').hidden = node.type !== 'implementation'; sourceLinks(); populateParents(node.parents, node.type);
-    const old = state.diff?.base.nodes.find(item => item.id === selected);
-    $('before-section').hidden = !old; $('before').textContent = old?.body || '';
   }
 
   function select(id, force = false) {
@@ -529,7 +531,7 @@
     $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'New node draft';
     $('type-label').hidden = false;
     $('node-type').value = 'requirement'; $('body').value = ''; $('sources').value = '[]';
-    $('sources-label').hidden = true; $('before-section').hidden = true;
+    $('sources-label').hidden = true;
     populateParents(parent && parent.type !== 'implementation' ? [parent.id] : [], 'requirement');
     draw(); saveDraft();
   });
@@ -661,6 +663,7 @@
       event.preventDefault(); send({ type: event.key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo' });
     }
   });
+  window.addEventListener('pagehide', () => bindingEditor.destroy(), { once: true });
   window.addEventListener('error', event => send({ type: 'client-error', message: event.message }));
   updateButtons(); send({ type: 'ready', ...(typeof restored.annotationActive === 'string' ? { spotlight: restored.annotationActive } : {}) });
 })();

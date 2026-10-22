@@ -113,6 +113,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
       input: params => active.send('Input.dispatchMouseEvent', params, context.session) });
     phase('Git/theme setup');
     await options.before?.({ evaluate, screenshot, delay });
+    phase('inline binding editor');
+    await require('./inline.cjs').checkInline({ evaluate, screenshot, delay });
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
     assert.equal(await evaluate(`document.getElementById('accept')`), null);
@@ -633,28 +635,25 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.ok(await evaluate(`document.querySelector('#cards .expanded').contains(document.getElementById('editor'))`));
     await delay(100);await checkShapes();
     const textFit = await evaluate(`(() => {
-      const body=document.getElementById('body'),pre=document.getElementById('before'),section=document.getElementById('before-section');
-      const original={value:body.value,text:pre.textContent,hidden:section.hidden,bodyFont:body.style.fontSize,preFont:pre.style.fontSize};
-      const results=[];
+      const body=document.getElementById('body'),content=body.querySelector('.cm-content'),gutter=body.querySelector('.cm-gutters');
+      const original=body.style.fontSize,results=[];
       try {
-        section.hidden=false;
         for(const size of [13,14,16]) {
-          body.style.fontSize=pre.style.fontSize=size+'px';
-          const span=document.createElement('span');span.style.cssText='position:absolute;white-space:pre;';span.style.font=getComputedStyle(body).font;span.textContent='M'.repeat(80);body.parentElement.append(span);
+          body.style.fontSize=size+'px';
+          const span=document.createElement('span');span.style.cssText='position:absolute;white-space:pre;';span.style.font=getComputedStyle(content).font;span.textContent='M'.repeat(80);body.querySelector('.cm-scroller').append(span);
           const inkWidth=span.offsetWidth;span.remove();
-          const s=getComputedStyle(body),available=body.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight);
-          pre.textContent='M';const height=pre.offsetHeight;pre.textContent='M'.repeat(80);
-          results.push({size,available,inkWidth,editorFits:inkWidth<=available,displayFits:pre.offsetHeight===height&&pre.scrollWidth<=pre.clientWidth});
+          const available=body.clientWidth-gutter.offsetWidth-12;
+          results.push({size,available,inkWidth,editorFits:inkWidth<=available});
         }
-      } finally {body.value=original.value;pre.textContent=original.text;section.hidden=original.hidden;body.style.fontSize=original.bodyFont;pre.style.fontSize=original.preFont;}
+      } finally {body.style.fontSize=original;}
       return results;
     })()`);
-    assert.ok(textFit.every(r=>r.editorFits&&r.displayFits),`80-column text must fit editor and display: ${JSON.stringify(textFit)}`);
+    assert.ok(textFit.every(r=>r.editorFits),`80-column text must fit the inline editor: ${JSON.stringify(textFit)}`);
     await delay(100);await checkShapes();
     const circleWidth=await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`);
     await evaluate(`document.getElementById('body').style.height='540px'`);await delay(250);
     await checkShapes();
-    assert.ok(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`)>circleWidth,'Resizing the native root textarea grows its circle.');
+    assert.ok(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`)>circleWidth,'Resizing the inline root editor grows its circle.');
     assert.ok(await arrowJoins());assert.deepEqual(await curveCollisions(),[]);
     await evaluate(`document.getElementById('body').style.height=''`);await delay(250);
     await checkShapes();assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').offsetWidth`),circleWidth);
@@ -682,7 +681,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     assert.ok(await arrowJoins(), 'Focused connections must settle before the head.');
     await screenshot('origin-focused');
     await checkHover(branch, '#body', 'hover-focused');
-    // Resize the real textarea; verify links move with intrinsic (unscaled) bounds.
+    // Resize the inline editor; verify links move with intrinsic (unscaled) bounds.
     await evaluate(`document.getElementById('body').style.height = '540px'`);
     await delay(250);
     const geometry = await evaluate(`(() => {

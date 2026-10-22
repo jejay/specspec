@@ -109,7 +109,7 @@
     });
     $('viewport').addEventListener('click', event => {
       if (!event.shiftKey || event.altKey || event.button !== 0) return;
-      if (event.target.closest?.('input, textarea, select, a, label, [contenteditable]:not([contenteditable="false"]), button:not(.card)')) return;
+      if (event.target.closest?.('.binding-editor, input, textarea, select, a, label, [contenteditable]:not([contenteditable="false"]), button:not(.card)')) return;
       const card = event.target.closest?.('.card'), id = card?.dataset.nodeId;
       if (card?.parentElement !== cards() || !id || id === '__draft__') return;
       event.preventDefault(); event.stopImmediatePropagation();

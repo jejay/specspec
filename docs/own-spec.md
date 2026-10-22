@@ -225,8 +225,13 @@ refs are reconstructed together. Node format is 7; API remains 6.
 ## Neighborhood UI revision
 
 [Focused editing](../_specspec/t8RQMdE=.md) expands the same native
-form within compact direct parents/children. Actual links and candidate parents are
-separate; child counts include unique all-depth descendants. [Path bounds](../_specspec/FHfnj08=.md)
+form within compact direct parents/children. [Inline changes](../_specspec/6Bk988A=.md)
+keep original and edited binding text together. The [shared control choice](../_specspec/ZacVi3g=.md)
+uses a locally bundled CodeMirror unified diff in both VS Code and Electron,
+retaining each host's save/undo owner; [its realization](../_specspec/bQscaSo=.md)
+maps target-only edits, themed change blocks and unit/installed-host checks.
+Actual links and candidate parents are separate; child counts include unique
+all-depth descendants. [Path bounds](../_specspec/FHfnj08=.md)
 use full individual revisions, while [neighborhood context](../_specspec/V0xi_J8=.md)
 keeps potential impact understandable. Counts and distances are derived presentation.
 

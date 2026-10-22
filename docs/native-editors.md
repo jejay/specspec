@@ -31,6 +31,26 @@ VS Code must finish wiring the editor before all its messages are deliverable.
 Initialization errors are reported in notifications/Output, with a raw-Markdown
 escape for unparseable nodes.
 
+## Inline binding-text changes
+
+Both hosts use the same locally bundled CodeMirror unified diff editor inside the
+expanded node card. It mimics VS Code's inline diff presentation: original text
+appears in red blocks above the editable green additions, with character-level
+highlights, line numbers and change gutters. Theme diff tokens supply colors;
+Electron has standalone fallbacks. This is a shared web editor, not an embedded
+VS Code editor or a second base-revision text field.
+
+The baseline is the selected comparison's base body (normally fresh HEAD), while
+the target includes current unsaved form edits. Baseline refreshes preserve the
+draft, caret and undo. Added nodes compare against empty text; new-node drafts and
+working-only provisional reads use plain editing. Historical target text is
+read-only; deleted ghosts retain a copyable read-only base body. Parent and source
+settings remain separate form controls.
+
+Only target text enters saves, edit requests and draft recovery. Managed project
+and Electron forms have local editor undo; bound VS Code forms keep native
+TextDocument undo/redo. Switching nodes starts a fresh local editor history.
+
 ## Editing and persistence
 
 Form input immediately sends a document-edit request, with rapid pending typing

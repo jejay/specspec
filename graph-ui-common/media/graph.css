@@ -102,6 +102,25 @@ label { display: block; margin: 10px 0; font-size: 12px; }
 textarea, input, select { width: 100%; margin-top: 5px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border, transparent); padding: 6px; }
 textarea, pre { font-family: var(--vscode-editor-font-family, monospace); font-size: var(--vscode-editor-font-size, 13px); }
 textarea { resize: vertical; }
+.binding-field { margin: 10px 0; font-size: 12px; }
+#binding-label { margin: 0 0 5px; }
+.binding-editor { height: 300px; min-height: 160px; resize: vertical; overflow: hidden; border: 1px solid var(--vscode-input-border, transparent); background: var(--vscode-editor-background); color: var(--vscode-editor-foreground, var(--vscode-foreground)); font-family: var(--vscode-editor-font-family, monospace); font-size: var(--vscode-editor-font-size, 13px); }
+.binding-editor:focus-within { outline: 2px solid var(--vscode-focusBorder); outline-offset: 2px; }
+.binding-editor .cm-editor { height: 100%; font-size: inherit; }
+.binding-editor .cm-scroller { overflow: auto; font-family: inherit; line-height: 1.5; cursor: text; }
+.binding-editor .cm-content { padding: 6px 0; caret-color: var(--vscode-editorCursor-foreground, currentColor); }
+.binding-editor .cm-gutters { background: var(--vscode-editorGutter-background, var(--vscode-editor-background)); color: var(--vscode-editorLineNumber-foreground, #858585); border: 0; }
+.binding-editor .cm-editor .cm-changedLine { background: var(--vscode-diffEditor-insertedLineBackground, #2ea04326); }
+.binding-editor .cm-editor.cm-merge-b .cm-changedText { background: var(--vscode-diffEditor-insertedTextBackground, #2ea04340); }
+.binding-editor .cm-editor .cm-deletedChunk { background: var(--vscode-diffEditor-removedLineBackground, #f8514926); }
+.binding-editor .cm-editor .cm-deletedChunk .cm-deletedText { background: var(--vscode-diffEditor-removedTextBackground, #f8514940); }
+.binding-editor .cm-deletedLine { text-decoration: none; }
+.binding-editor .cm-deletedLine::before { content: '− '; color: var(--git-deleted); }
+.binding-editor .cm-editor .cm-changedLineGutter { background: var(--git-added); }
+.binding-editor .cm-editor .cm-deletedLineGutter { background: var(--git-deleted); }
+.binding-editor .cm-selectionBackground, .binding-editor .cm-focused .cm-selectionBackground { background: var(--vscode-editor-selectionBackground, #264f78); }
+body.vscode-high-contrast .binding-editor .cm-changedLine, body.vscode-high-contrast-light .binding-editor .cm-changedLine { border-left: 2px solid var(--git-added); }
+body.vscode-high-contrast .binding-editor .cm-deletedChunk, body.vscode-high-contrast-light .binding-editor .cm-deletedChunk { border-left: 2px solid var(--git-deleted); }
 #parents-fieldset { margin: 10px 0; padding: 8px; border: 1px solid var(--vscode-panel-border, #777); min-width: 0; }
 #parents-fieldset legend { font-size: 12px; }
 .form-help { margin: 4px 0; font-size: 12px; color: var(--vscode-descriptionForeground); }

@@ -1,5 +1,13 @@
 # Shared graph UI
 
+`src/binding-editor.js` supplies the locally bundled CodeMirror unified diff used
+by both hosts. Binding Markdown has one editable target with inline original-text
+blocks, inserted-line and character highlights, line numbers and change gutters.
+The control preserves the form's value/selection interface; only target text is
+sent to save, native edit and recovery paths. Comparison changes preserve drafts
+and managed history. Native file forms delegate undo to VS Code's document;
+managed/Electron forms use CodeMirror history. See [inline editing](../docs/native-editors.md#inline-binding-text-changes).
+
 One host-neutral implementation of the native DOM/SVG canvas. `media/` contains
 the renderer, camera and presentation model; `view.cjs` supplies the safe local
 HTML shell; `host/session.cjs` serializes API-6 operations/render handshakes;
@@ -83,3 +91,7 @@ retain independent paths. Ordinary CLI commands keep the one-shot bridge.
 `test/camera.test.cjs` isolates rectangle state/inversion and synthetic Mac mapping;
 `test-host/canvas.cjs` runs early in each installed suite to inspect computed paint,
 floating chrome, real pointer capture/outside release and native editing.
+`test/binding-editor.test.cjs` checks literal unified changes, selection/history,
+permissions, resource changes and target-only input. `test-host/inline.cjs` checks
+actual contenteditable typing, themed diff paint and draft/caret preservation in
+both installed hosts.

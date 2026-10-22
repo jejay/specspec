@@ -4,3 +4,4 @@ export { select } from 'd3-selection';
 export { zoom, zoomIdentity } from 'd3-zoom';
 export { line, curveBasis, curveBumpX } from 'd3-shape';
 import 'd3-transition';
+export { createBindingEditor } from './binding-editor';

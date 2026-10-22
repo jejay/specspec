@@ -15,8 +15,8 @@ is `#d3d3d3`; its hovered border is white. Other colored borders and revision-co
 manifestos use the hue-emphasis conclusion.
 
 Ordinary expanded cards are 860 world units wide. Their 822px-wide native content
-budget is retained inside the expanded manifesto circle. Textareas and revision
-previews share host editor monospace font/size with monospace/13px fallback. Keep
+budget is retained inside the expanded manifesto circle. The inline binding editor
+and source textareas share host editor monospace font/size with monospace/13px fallback. Keep
 soft wrapping for longer text and verify typical 80 ASCII columns at 13/14/16px.
 
 Git corners use 20px / 800 weight with absolute bottom-right anchoring and 26px

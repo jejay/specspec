@@ -161,7 +161,11 @@ function platformChecks(fixture, host) {
       const manual = Buffer.concat([prefix, Buffer.from('# Manual watcher-only update\n')]);
       writeFileSync(path, manual);
       await waitFor(`document.getElementById('body').value==='# Manual watcher-only update\\n'`);
-      await evaluate(`document.getElementById('body').value='# Retained external draft';document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
+      assert.ok(await evaluate(`Boolean(!document.getElementById('before-section')&&document.querySelector('#body .cm-deletedChunk')&&document.querySelector('#body .cm-changedLine'))`),'Both hosts display the comparison inside the binding editor.');
+      await evaluate(`(() => {const body=document.getElementById('body');body.focus();body.setSelectionRange(0,body.value.length);document.execCommand('insertText',false,'# Retained external draft');})()`);
+      await waitFor(`document.getElementById('body').value==='# Retained external draft'&&window.SpecSpecHost.getState().dirty`);
+      await evaluate(`document.getElementById('body').setSelectionRange(2,8)`);
+      await screenshot(`${host}-editable-inline-diff`);
       const baseline = await evaluate(`window.SpecSpecHost.getState().originalNode`);
       const external = Buffer.concat([prefix, Buffer.from('# External watcher update\n')]);
       writeFileSync(path, external);

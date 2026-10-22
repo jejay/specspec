@@ -46,7 +46,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <div id="detail-parking" hidden><section id="node-details" class="node-settings">
     <h2 id="title">Select a node</h2><p id="identity"></p><p id="focus-context" class="form-help"></p><form id="editor" hidden>
     <label id="type-label">Type<select id="node-type"><option value="requirement">Requirement</option><option value="implementation">Implementation</option></select></label>
-    <label>Binding Markdown<textarea id="body" rows="14" spellcheck="false"></textarea></label>
+    <div class="binding-field"><p id="binding-label">Binding Markdown <span class="form-help">· Inline changes: − removed / + added</span></p><div id="body" class="binding-editor"></div></div>
     <fieldset id="parents-fieldset"><legend>Parents</legend>
     <p id="parents-summary" class="form-help" role="status"></p><ul id="parent-links"></ul>
     <div id="parent-add-controls"><label for="parent-candidate">Add a parent</label>
@@ -60,8 +60,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <label>Tracking<select id="source-mode"><option value="strict">Strict (specific)</option><option value="expanding">Expanding (broad)</option></select></label>
     <label><input type="checkbox" id="source-staged"> Capture staged code · Default: HEAD</label>
     <button type="button" id="capture-source">Append source reference to this form</button></section>
-    <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="delete">Delete node &amp; descendants</button><button type="button" id="discard">Discard form edits</button></div></form>
-    <section id="before-section" hidden><h3>Base revision text</h3><pre id="before"></pre></section></section></div>
+    <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="delete">Delete node &amp; descendants</button><button type="button" id="discard">Discard form edits</button></div></form></section></div>
     <dialog id="source-preview" aria-labelledby="source-preview-title"><h2 id="source-preview-title">Source preview</h2><p id="source-preview-status"></p><pre id="source-preview-code" tabindex="0"></pre><button id="close-source-preview" type="button">Close</button></dialog>
     <dialog id="annotation-compose" aria-labelledby="annotation-compose-title"><form id="annotation-compose-form"><h2 id="annotation-compose-title">Create spotlight from highlights</h2><label for="annotation-message">Message for the agent</label><textarea id="annotation-message" rows="4" maxlength="500" required></textarea><p id="annotation-compose-error" role="status"></p><button id="annotation-compose-cancel" type="button">Cancel</button><button id="annotation-compose-save" type="submit">Create spotlight</button></form></dialog>
     <script nonce="${nonce}" src="${resource('host.js')}"></script>

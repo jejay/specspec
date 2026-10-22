@@ -18,9 +18,9 @@ sources:
 Shared CSS uses ordinary theme text, 15% resting/24% hovered accent tints and shared
 contrast-theme rules. Neutral distance/type roots keep `#d3d3d3`; colored hover
 borders use the hue emphasis contract. Expanded ordinary cards are 860 wide and
-the native textarea/revision text keeps an 822px content budget with host monospace
-font/size. Typical 80-column ASCII fitting is checked at 13/14/16px.
+the inline binding editor keeps an 822px content budget with host monospace
+font/size and room for its line-number/change gutters. Typical 80-column ASCII fitting is checked at 13/14/16px.
 
 Git letters are 20px/800 weight with bottom-right anchoring and badge clearance.
 Actual-host tests check compact content/corner fit, circular marker placement,
-editor/pre width, tint/hover restoration, native DOM/caret and unchanged geometry.
+inline-editor width, tint/hover restoration, native DOM/caret and unchanged geometry.

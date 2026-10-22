@@ -20,7 +20,9 @@ function fixture(t, options = {}) {
   dom.window.SpecSpecHost = { postMessage: message => messages.push(message), getState: () => saved, setState: value => { saved = value; },
     onMessage: listener => dom.window.addEventListener('message', event => listener(event.data)) };
   dom.window.confirm = () => true;
-  dom.window.structuredClone = structuredClone; // Browser API not supplied by jsdom.
+  dom.window.structuredClone = structuredClone; // Browser APIs not supplied by jsdom.
+  dom.window.Range.prototype.getClientRects = () => [];
+  dom.window.Range.prototype.getBoundingClientRect = () => ({ left: 0, right: 0, top: 0, bottom: 0 });
   for (const name of ['vendor/graph-vendor.js', 'graph-model.js', 'graph-camera.js', 'graph-annotations.js', 'graph.js']) {
     dom.window.eval(readFileSync(join(__dirname, '../media', name), 'utf8'));
   }
@@ -73,7 +75,7 @@ test('camera paint and rectangle framing preserve native editing, highlights and
   assert.equal($('frame-selection').hidden,false);pointer('pointerup',450,360,{},dom.window);
   assert.equal($('frame-selection').hidden,true);assert.equal($('frame-area').getAttribute('aria-pressed'),'false');
   assert.equal(world(),initial);assert.equal($('body'),body);assert.equal(body.value,'# Keep the draft');
-  assert.deepEqual([body.selectionStart,body.selectionEnd],[2,7]);assert.equal(dom.window.document.activeElement,body);
+  assert.deepEqual([body.selectionStart,body.selectionEnd],[2,7]);assert.ok(body.contains(dom.window.document.activeElement));
   assert.equal(saved().originalNode,original);assert.equal(saved().selected,'child');assert.equal(saved().dirty,true);
   assert.ok(messages.every(m=>['ready','rendered'].includes(m.type)));
   await new Promise(resolve=>dom.window.setTimeout(resolve,1));
@@ -233,7 +235,7 @@ test('a new shot catches attention without focus/caret/camera/form, graph or geo
   assert.equal($('annotations-panel').hidden, true); assert.equal($('annotation-arrival'), null);
   assert.equal($('annotation-read'), null); assert.equal($('annotation-show'), null);
   assert.match($('annotation-live').textContent, /new spotlight/); assert.equal($('annotation-list').querySelector('img'), null);
-  assert.equal(dom.window.document.activeElement, body); assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection], [2,6,'backward']);
+  assert.ok(body.contains(dom.window.document.activeElement)); assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection], [2,6,'backward']);
   assert.equal(body.value, '# A managed draft'); assert.equal(saved().dirty, true); assert.equal(saved().selected, 'child');
   assert.equal(messages.length, count); assert.equal(JSON.stringify(snapshot), before); assert.equal($('graph').style.transform, camera);
   assert.deepEqual([...$('cards').children].map(c => [c.style.left,c.style.top,c.style.width,c.style.height]), world);
@@ -665,7 +667,7 @@ test('historical reversed links and expanded native forms use the displayed neig
   assertDarkening($, [], ['root>sibling']);
   assert.deepEqual([...$('cards').children], cards);
   assert.equal(saved(), draft); assert.equal(messages.length, count);
-  assert.equal(dom.window.document.activeElement, body);
+  assert.ok(body.contains(dom.window.document.activeElement));
   assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
 });
 
@@ -736,7 +738,7 @@ test('hovering inside an expanded form does not flicker or disturb native drafts
   assert.equal(saved(), draft);
   assert.equal(saved().originalNode, child);
   assert.equal(messages.length, count);
-  assert.equal(dom.window.document.activeElement, body);
+  assert.ok(body.contains(dom.window.document.activeElement));
   assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
   assert.equal(hoverEvent(dom, body, 'pointermove').defaultPrevented, false);
 });
@@ -1086,7 +1088,8 @@ test('historical and removed nodes are read-only, with old text visible', t => {
   assert.equal($('body').readOnly, true);
   assert.equal($('save').disabled, true); assert.equal($('delete').disabled, true);
   assert.equal($('new').disabled, true);
-  assert.equal($('before').textContent, '# Child\n');
+  assert.equal($('body').value, '# Child\n');
+  assert.equal($('before-section'), null);
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'root');
   assert.equal($('parent-links').querySelectorAll('button').length, 0);
   assert.equal($('parent-add-controls').hidden, true);
@@ -1272,7 +1275,7 @@ test('revision mode switches and restores without disturbing a native draft, car
   send({type:'snapshot',snapshot,diagnostics:[],readonly:false,diff});
   for(const mode of model.COLOR_MODES) {
     $('color-mode').value=mode;$('color-mode').dispatchEvent(new dom.window.Event('change'));
-    assert.equal($('body'),body);assert.equal(body.value,'# Draft');assert.equal(dom.window.document.activeElement,body);
+    assert.equal($('body'),body);assert.equal(body.value,'# Draft');assert.ok(body.contains(dom.window.document.activeElement));
     assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[2,5,'backward']);
     assert.equal($('graph').style.transform,camera);assert.equal(saved().originalNode,child);
   }
@@ -1304,7 +1307,7 @@ test('distance switches and refreshed path bounds retain the same dirty form, ca
   const camera = $('graph').style.transform;
   $('color-mode').value = 'max-distance'; $('color-mode').dispatchEvent(new dom.window.Event('change'));
   assert.equal($('body'), body);
-  assert.equal(dom.window.document.activeElement, body);
+  assert.ok(body.contains(dom.window.document.activeElement));
   assert.deepEqual([body.selectionStart, body.selectionEnd, body.selectionDirection], [2, 5, 'backward']);
   assert.equal(saved().originalNode, snapshot.nodes[1]);
   assert.equal($('graph').style.transform, camera);
@@ -1444,7 +1447,7 @@ test('continuous influence colors and gradient legends retain full-revision doma
     mode(kind);
     assert.equal(card('b').style.getPropertyValue('--node-accent'),influenceMiddleColor(kind),'Hidden a/c remain part of both normalization domains.');
     assert.equal(card('b').querySelector('.git-corner').textContent,'M');
-    assert.equal($('body'),body);assert.equal(dom.window.document.activeElement,body);
+    assert.equal($('body'),body);assert.ok(body.contains(dom.window.document.activeElement));
     assert.equal(body.value,'# Retain draft');assert.deepEqual([body.selectionStart,body.selectionEnd,body.selectionDirection],[2,6,'backward']);
     assert.equal($('graph').style.transform,camera);assert.deepEqual(positions(),world);
     assert.deepEqual([...$('edges').children].map(p=>p.getAttribute('d')),routes);assert.equal(saved().originalNode,baseline);
@@ -1576,7 +1579,7 @@ test('refresh retains native textarea focus, selection and the original draft ba
   $('body').value = '# Draft in progress'; $('body').dispatchEvent(new dom.window.Event('input'));
   $('body').focus(); $('body').setSelectionRange(3, 8, 'backward');
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
-  assert.equal(dom.window.document.activeElement, $('body'));
+  assert.ok($('body').contains(dom.window.document.activeElement));
   assert.equal($('body').selectionStart, 3);
   assert.equal($('body').selectionEnd, 8);
   assert.equal($('body').selectionDirection, 'backward');
