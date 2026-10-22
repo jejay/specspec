@@ -10,12 +10,23 @@ technical conclusions. The graph also records the user's later corrections.
 Use the installed CLI, or `python -m specspec` in the development environment:
 
 ```sh
-python -m specspec show --json
-python -m specspec context <node-id> --json
-python -m specspec impact <node-id> --json
+python -m specspec query --max-distance 2
+python -m specspec query <node-id> --max-distance 0 --with-ancestors
+python -m specspec show <node-id> --dependents
+python -m specspec diff
 ```
 
-Before changing code, read the relevant node and its ancestors. Distinguish core
+Inspect owner changes with Git status and full specification/code diffs. Query's
+change hints are an orientation aid; `specspec diff` supplies canonical-file hunks
+and `git diff` supplies code patches. Read untracked files explicitly. Use `--json`
+when processing structured results; ordinary readable query output is complete.
+
+Before changing code, read the relevant node and its ancestors. Use
+`query <node-id> --max-distance 0 --with-ancestors` for a focused complete reading,
+or add `--with-ancestors` to a larger selected subgraph. Completion follows every
+parent path after metric selection; added ancestors consume no match quota. Skip
+redundant reads only when those complete bindings have already been read. CLI reads
+saved files, not unsaved editor buffers. Distinguish core
 intentions from revisable conclusions by their relationships and explanations,
 not proposed/accepted statuses. Review is risk-proportionate: earlier intentions
 will often receive more attention, but depth is not a confidence score or a review

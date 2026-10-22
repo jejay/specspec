@@ -8,8 +8,8 @@ parents:
 
 Use plain readable text and Markdown for terminal and LLM callers, independent of
 redirection. Node listings contain full IDs, types, headings and relationship summaries;
-one-node/context reads show labelled metadata and complete binding bodies. Context
-includes required ancestors in deterministic graph order and clearly identifies
+single-node and ancestor-completed query reads show labelled metadata and complete binding bodies. Ancestor-completed queries
+include required ancestors in deterministic graph order and clearly identifies
 optional surrounding IDs without unexpectedly dumping their bodies. Explicit byte
 budgets count the actual representation and fail rather than truncate required text.
 

@@ -1,7 +1,7 @@
 # SpecSpec
 
 Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
-[Command guide](docs/cli.md): nine everyday commands, readable defaults, compact JSON and full node-aware diffs.
+[Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
 [Graph structure](docs/graph-structure.md): immediate justifications form a shortcut-free DAG;
 node format 6 and API 6 are the current contracts.
 
@@ -82,7 +82,7 @@ specspec query --base HEAD --target workspace
 specspec query --human
 specspec query --max-distance 2
 specspec query --max-distance 50% --influence 25%
-specspec context qowy5AI=
+specspec query 6EmKDz8= --max-distance 0 --with-ancestors
 specspec diff
 ```
 
@@ -100,7 +100,11 @@ node files. Optional `query [ID]` starts a rooted subgraph. Minimum/maximum dist
 cutoffs include equality; influence selects highest self-inclusive counts first.
 Percentages select a rounded-up share of reachable nodes; multiple criteria return
 the union of their independent selections.
-The context example follows the compact-ID conclusion.
+`--with-ancestors` completes all matched nodes' parent paths after selection,
+without consuming quotas. The example reads the five bindings that justify
+left-to-right graph development. Omitted direct children/siblings appear as IDs
+only. JSON distinguishes matches from added ancestors; an advanced `--max-bytes`
+bounds the exact encoded response and fails rather than truncating.
 This self-referencing graph is evolving design documentation: old root revisions
 need not work with current tooling. Rigorous Git history checks use the rewritten,
 current-schema [Gantt bundle](example/gantt/history/WALKTHROUGH.md), not obsolete
@@ -116,7 +120,7 @@ specspec show
 specspec add --parent <manifesto-id> --body requirement.md
 specspec check
 specspec update <requirement-id> --body revised-requirement.md
-specspec context <requirement-id> --json
+specspec query <requirement-id> --max-distance 0 --with-ancestors
 ```
 
 `--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `delete` takes one or more root IDs and physically removes them AND all descendants, including children shared with surviving parents. It warns before removing any affected uncommitted node, even if staged; preview with `--dry-run`, and use `--yes` for noninteractive warned deletion. The remaining DAG must be valid; no reparenting or manifesto deletion. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
@@ -225,7 +229,7 @@ At overview altitude, node fills strengthen toward their painted borders over th
 
 Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** offers **Min. Distance to Manifesto** (shortest directed path, default), **Max. Distance to Manifesto** (longest directed path), **Absolute influence**, **Relative influence**, **Log Absolute Influence**, **Log Relative Influence**, **Node type**, and **Git/Revision Status**, with legends. Distance modes cycle through the seven colors selected in the playground, from purple (one hop) to red, repeating after seven hops. Node types reuse the selected yellow-green and purple; Added fills take the teal-green closer to the existing added text cue. Paths count relationships from the manifesto in each revision—not the focused subset or comparison overlay. None is an acceptance score. In distance/type/influence modes the manifesto keeps a gray accent and white hover border, with the same tinted background as other cards—not a solid pale fill. In **Git/Revision Status**, including on the manifesto, fills use rainbow green for A, blue for M/R, red for D, amber for linked-source impact and neutral gray for unchanged nodes. Labels distinguish rename, deletion and source-only impact; no comparison and unsaved drafts are neutral, not fictitious Git changes. Existing themed titles/letters and connection colors remain separate. Status-colored manifesto borders retain their hue on hover like other nodes. All unrelated nodes, including the manifesto, can still darken temporarily.
 
-**Influence** counts unique direct and indirect descendants, excluding the node itself. All four influence modes use a continuous red → yellow → green spectrum (strongest → weakest, no blue). **Absolute influence** maps zero to green and the highest non-manifesto count to red. **Relative influence** compares only nodes with the same **maximum** distance to the manifesto, mapping that group's lowest count to green and highest to red. **Log Absolute Influence** and **Log Relative Influence** apply `log(influence + 1)` to the raw counts before normalization in those same domains. This keeps zero defined and emphasizes differences among smaller counts while retaining both linear choices. Tied/singleton groups use green; the manifesto stays gray. Counts and normalization use the full target revision for surviving nodes and full base revision for deleted nodes, even in a focused neighborhood. The continuous legend explains the selected domain; Git accents and spotlight rings remain independent.
+**Influence** counts self plus unique direct and indirect descendants, with a minimum of one. All four influence modes use a continuous red → yellow → green spectrum (strongest → weakest, no blue). **Absolute influence** normalizes `(influence - 1) / (maximum - 1)`, mapping one to green and the highest non-manifesto count to red. **Relative influence** compares only nodes with the same **maximum** distance to the manifesto, mapping that group's lowest count to green and highest to red. **Log Absolute Influence** and **Log Relative Influence** apply `log(influence)` before normalization in those same domains. This keeps leaf counts defined and emphasizes differences among smaller counts while retaining both linear choices. Tied/singleton groups use green; the manifesto stays gray. Counts and normalization use the full target revision for surviving nodes and full base revision for deleted nodes, even in a focused neighborhood. The continuous legend explains the selected domain; Git accents and spotlight rings remain independent.
 
 To experiment with the distance/type/revision palette yourself, open [`tools/rainbow-playground/index.html`](tools/rainbow-playground/index.html) directly in a browser. Adjust color count, lightness, chroma and hue endpoints; preview dark/light tinted nodes and copy parameters JSON, full palette JSON or CSS variables to paste back to the assistant. This separate offline tool does not apply or save anything in SpecSpec. See its [guide](tools/rainbow-playground/README.md).
 

@@ -63,6 +63,7 @@ def read_query(
     min_distance=None,
     max_distance=None,
     influence=None,
+    with_ancestors: bool = False,
 ) -> QueryComparison:
     limits = {
         name: Limit.parse(value, name)
@@ -90,7 +91,7 @@ def read_query(
             else next(n.id for n in new.nodes if n.type == "manifesto")
         )
         comparison.display, result["selection"] = select_graph(
-            comparison_graph(old, new), start, limits
+            comparison_graph(old, new), start, limits, with_ancestors=with_ancestors
         )
         included = set(comparison.display.nodes)
         source_ids = set()
@@ -286,10 +287,18 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
         base_label += " (empty)"
     yield f"{base_label} → {result['target_ref']}"
     if selection := result.get("selection"):
-        yield (
-            f"Subgraph: {len(selection['ids'])}/{selection['population']} nodes; "
-            f"root {selection['root']}"
-        )
+        if selection.get("with_ancestors"):
+            yield (
+                f"Subgraph: {len(selection['matched_ids'])}/{selection['population']} matches + "
+                f"{len(selection['ancestor_ids'])} ancestors; root {selection['root']}"
+            )
+            if omitted := selection["surrounding"]["omitted_ids"]:
+                yield "Surrounding IDs (bodies omitted): " + ", ".join(omitted)
+        else:
+            yield (
+                f"Subgraph: {len(selection['ids'])}/{selection['population']} nodes; "
+                f"root {selection['root']}"
+            )
     for note in result["notes"]:
         yield "NOTE: " + note
 

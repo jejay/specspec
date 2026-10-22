@@ -2,7 +2,7 @@
 id: z3QQuTM=
 type: implementation
 parents:
-- -9Up2uc=
+- -fXS-dI=
 sources:
 - path: pyproject.toml
 - path: src/specspec/__main__.py
@@ -18,12 +18,13 @@ sources:
 ---
 # Package the compact CLI and complete binding context
 
-Hatchling packages src/specspec; Click exposes nine everyday commands: init, show,
-context, query, add, update, delete, check and diff. Advanced source/recovery tools retain
+Hatchling packages src/specspec; Click exposes eight everyday commands: init, show,
+query, add, update, delete, check and diff. Advanced source/recovery tools retain
 explicit ownership and uncertainty. Hidden api accepts bounded versioned application
 requests. UTF-8 files/stdin carry binding bodies; full IDs remain canonical.
 
-output.py renders readable summaries, complete node/context bodies and full canonical
+query.py/query_select.py supply complete selected bindings and optional ancestor
+completion through one pipeline. output.py renders readable node summaries and canonical
 file review patches with relationship and separate linked-source impact. Compact API 6
 emits one UTF-8 envelope, small mutation receipts and reconstructible comparisons.
 Node format remains 6. Byte budgets cover the actual chosen representation and required

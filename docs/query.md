@@ -7,6 +7,8 @@ specspec query --max-distance 2                     # Root plus longest-path lev
 specspec query --max-distance 50%                   # Half the reachable graph, rounded up
 specspec query qowy5AI= --influence 5                # Custom root; self-inclusive influence >= 5
 specspec query --min-distance 25% --influence 25%    # Union of independent selections
+specspec query 6EmKDz8= --max-distance 0 --with-ancestors # One node's full justification
+specspec query qowy5AI= --max-distance 2 --with-ancestors # Slice plus every ancestor
 specspec query --base release --target workspace
 specspec query --base main~2 --target main
 specspec query --json
@@ -60,7 +62,8 @@ Multiple criteria select **independently against the same population**, then que
 returns their **union**. Their limits do not constrain one another or shrink the
 next criterion's denominator. The output retains ID-ordered last-occurrence layout,
 not search-priority print order. No extra ancestors or bodies are inserted to fill
-missing parent links; every selected record still states all its parent IDs.
+missing parent links by default; every selected record still states all its parent
+IDs. `--with-ancestors` explicitly completes their upstream bindings after selection.
 `--human`, version selection and JSON work with the same selected set.
 
 JSON `selection` identifies `root`, `population`, union `ids`, induced `edges`,
@@ -77,6 +80,58 @@ link can affect a selected ancestor. `source_evidence_ids` and complete
 visible binding. Unrelated branches need no source resolution. Zero-percent-only
 criteria skip metric work; any empty selection skips code reads. Both saved graphs
 are still validated.
+
+## Complete the justification of a selection
+
+`--with-ancestors` has one meaning: **add every ancestor of every matched node**.
+It runs after the ordinary selection and independent metric unions. Metrics,
+priority order, rooted population and percentage quotas retain their original
+meaning; additional ancestors consume no quota. Even an ancestor outside the
+chosen root's reachable subgraph appears when needed, including every other
+parent branch of a shared descendant. Bindings appear once with normal
+last-occurrence placement; complete parent records precede complete child records.
+
+For example, given `A -> B -> C -> D -> E`:
+
+- `query C --max-distance 0 --with-ancestors` matches C and reads A, B, C.
+- `query C --max-distance 1 --with-ancestors` matches C, D and reads A, B, C, D.
+- `query C --with-ancestors` still matches C's whole downstream subgraph first.
+
+The letters above are schematic; real commands require full node IDs. Try
+`specspec query 6EmKDz8= --max-distance 0 --with-ancestors` in this checkout for the
+five bindings that justify left-to-right graph development. There is no separate
+ancestor direction/mode or `context` command. With neither a root nor criteria,
+query already reads the complete comparison, including distinct former roots;
+`--with-ancestors` leaves that result unchanged. Empty matches add nothing.
+
+Completed `selection` metadata includes `with_ancestors: true`, `matched_ids`, added
+`ancestor_ids` and final `ids`, alongside the original `queries` and `population`.
+Its preamble distinguishes match counts from additional ancestors; the final count
+can exceed the rooted population. `surrounding` identifies omitted `child_ids`,
+`sibling_ids` and their deduplicated `omitted_ids` union. These are direct children
+and nodes sharing at least one direct parent with an **original match**, minus all
+included bindings. Added ancestors do not expand the surrounding scope. Readable
+output lists omitted IDs once, never their bodies. It is neighborhood information,
+not another inherited requirement or a radius/depth filter.
+
+Completion follows the same selected-record projection as the reading: target
+parents/text for survivors, former parents/text for deleted records. A deleted
+record can therefore reach a surviving ancestor's current binding. To read one
+historical justification faithfully, select that revision explicitly, e.g.
+`query ID --base REV --target REV --max-distance 0 --with-ancestors`. Original base
+edges/records remain reconstructible; `boundary_parents` describes both original
+revisions and can still contain an old external parent after completion.
+
+One multi-source parent walk completes the union before one induced view and source
+comparison. Including the manifesto can require evidence from other branches to
+retain its global source-change badge; fewer printed bindings do not guarantee
+proportionally fewer code reads. This is the same source contract as other queries.
+
+Advanced `--max-bytes N` bounds the final UTF-8 result and its final LF, including
+the JSON envelope or shared visible terminal-control escaping. Each response is
+formatted once. An insufficient budget reports BUDGET without truncating any
+binding or emitting a partial success result. Both presentations and JSON support
+the same safeguard; query never silently shortens required context.
 
 ## Tree and node hints
 

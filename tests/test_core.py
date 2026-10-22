@@ -231,9 +231,10 @@ def test_cli_end_to_end_and_budget(tmp_path):
         ).exit_code
         == 2
     )
-    result = runner.invoke(main, [*prefix, "context", node_id, "--json"])
-    assert len(json.loads(result.output)["result"]["nodes"]) == 2
-    result = runner.invoke(main, [*prefix, "context", node_id, "--max-bytes", "10", "--json"])
+    args = [*prefix, "query", node_id, "--max-distance", "0", "--with-ancestors", "--json"]
+    result = runner.invoke(main, args)
+    assert len(json.loads(result.output)["result"]["target"]["nodes"]) == 2
+    result = runner.invoke(main, [*args, "--max-bytes", "10"])
     assert result.exit_code == 1
     assert json.loads(result.output)["diagnostics"][0]["code"] == "BUDGET"
     assert runner.invoke(main, [*prefix, "export", "--format", "mermaid"]).exit_code == 2

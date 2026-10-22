@@ -566,13 +566,17 @@ def test_benchmark_profiles_the_same_selection_as_its_fresh_cli_processes(query_
         min_distance="0",
         max_distance="50%",
         influence="50%",
+        with_ancestors=True,
     )
     assert report["query"] == {
         "node_id": identity(3),
         "min_distance": "0",
         "max_distance": "50%",
         "influence": "50%",
+        "with_ancestors": True,
     }
+    assert report["selection"]["matched_ids"] == [identity(3), identity(4)]
+    assert report["selection"]["ancestor_ids"] == [identity(0), identity(1)]
     assert report["selection"]["population"] == 4
     assert len(report["selection"]["queries"]) == 3
     assert report["profile"]["git_processes"]

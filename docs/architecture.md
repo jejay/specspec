@@ -46,7 +46,7 @@ that same CLI contract, or imports the library into its own Python process.
 | --- | --- |
 | Owner in VS Code | Open a canonical node file for a native graph/text-document editor; use **Open Graph** for project actions or **Compare Revisions** for independent comparisons. Browse relationships, edit forms, inspect source previews and review Git differences. |
 | Owner in Electron | **Trust and Open** a local project, then use the same canvas, forms and comparisons. Saves use Python-managed commands rather than VS Code documents. |
-| Agent in its own harness | Invoke `specspec` from the shell with `--json`, or use the Python library. Read context/dependents, deepen conclusions, link implementation sources and validate changes. People can use this CLI too. |
+| Agent in its own harness | Invoke `specspec query` from the shell (readable by default, explicit `--json` for structured processing), or use the Python library. Complete selected readings with `--with-ancestors` and inspect dependents, deepen conclusions, link implementation sources and validate changes. People can use this CLI too. |
 | Direct Markdown and Git | Manual node edits are allowed. Ordinary editor/Git tools own raw text, staging, commits and branch selection. SpecSpec supplies graph-aware diagnostics, diffs and opt-in exact-index checks. |
 
 The **owner–agent conversation is outside SpecSpec**. The current product does not
@@ -57,7 +57,9 @@ use the same tools as other CLI clients; meaningful choices remain revisable.
 A typical agent loop is:
 
 1. Inspect owner edits and the working/index state before acting; read the selected
-   node and its complete ancestor context with `context <id> --json`.
+   node and its complete ancestor context with
+   `query <id> --max-distance 0 --with-ancestors`. Rooted query limits help orient;
+   `diff` provides exact specification changes and ordinary Git provides code patches.
 2. Use `show <id> --dependents --json` and `diff <ref> --json` to understand dependencies
    and changes. Discuss consequential scope changes with the owner; use `add`/`update`
    for requested graph refinement and preview destructive `delete` operations.
@@ -107,11 +109,13 @@ returns diagnostics and a `.valid` flag; `.require_valid()` raises for an unusab
 graph. Library calls stay in-process; the host's API channels are project-scoped
 child processes with bounded pipes.
 
-`show`, `context`, `query`, `show ID --dependents` and `diff` are the compact read-side
+`show`, `query`, `show ID --dependents` and `diff` are the compact read-side
 entry points for engineers/agents. Text/Markdown is default; explicit `--json` selects
-compact API 6. `context` contains complete selected/ancestor bindings and identifies
-surrounding IDs without dumping their bodies. Its explicit byte budget fails rather
-than truncating required text. [`query`](query.md) reads complete revision comparisons
+compact API 6. Query's `--with-ancestors` completes selected bindings through every
+parent path and identifies omitted surrounding child/sibling IDs without their
+bodies. The shared emitter formats once and applies an optional `--max-bytes` to
+the actual UTF-8 result plus final newline, including envelopes/control escaping;
+it fails rather than truncating. [`query`](query.md) reads complete revision comparisons
 with spotlight-style HEAD/workspace defaults. Ordered iterative last-occurrence walks
 print one selected-record overlay with current records/parents plus base-only deleted
 records/former parents. No current node has a deleted parent, so this display is
@@ -128,7 +132,11 @@ reverse self-inclusive influence bitsets. Last-consumer release avoids retaining
 closure rows on chains and leaf fans. Inclusive thresholds or exact ceil-percentage
 quotas select each metric independently and union the resulting IDs. Full parent
 metadata stays intact; the induced display and scoped API-6 comparison identify
-boundary IDs rather than adding ancestor bindings. Original snapshots remain validated.
+boundary IDs. Optional ancestor completion uses one multi-source parent walk after
+selection and before the final induced view/source work. JSON distinguishes matches
+from additional ancestors, without changing the original quotas/population. Neighbor
+IDs come only from matches, with each shared parent's children scanned once.
+Complete unfiltered reads need no extra view. Original snapshots remain validated.
 `query_sources.py` reuses one cached SourceReader per distinct code version and interprets strict/expanding/
 path-only contracts: permitted changes stay quiet; known transitions drive source-changed and
 ancestors in both original graphs. Broken/unknown mappings stay explicit. API-6 JSON
@@ -140,7 +148,7 @@ once per original graph. Unfiltered queries retain both complete graphs;
 shared conservative file-impact facts remain available. Known committed source blobs
 are prefetched into the existing per-call cache in batches; no query cache crosses
 invocations. Patches belong to `diff`. See [query profiling](investigations/query-performance.md).
-[The command guide](cli.md) describes all nine everyday verbs.
+[The command guide](cli.md) describes all eight everyday verbs.
 
 The renderer uses local assets and a nonce-protected CSP, inserting project text
 through `textContent`/`value`, never executable Markdown. Electron's

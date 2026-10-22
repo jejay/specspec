@@ -22,7 +22,16 @@ def test_stdin_is_utf8_and_preserves_binding_whitespace(tmp_path):
 def test_budget_covers_serialized_json_response(workspace):
     root, manifesto = workspace
     runner = CliRunner()
-    args = ["--root", str(root), "context", manifesto, "--json"]
+    args = [
+        "--root",
+        str(root),
+        "query",
+        manifesto,
+        "--max-distance",
+        "0",
+        "--with-ancestors",
+        "--json",
+    ]
     result = runner.invoke(main, args)
     assert result.exit_code == 0
     exact_size = len(result.output.encode("utf-8"))

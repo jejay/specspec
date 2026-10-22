@@ -52,7 +52,7 @@ success, 1 validation/rejected operation, 2 invocation/I/O failure. Diagnostics 
 stable codes, severity, path/optional ID and actionable text. Body input supports files
 or `-` stdin. Full-parent updates explicitly replace the supplied set.
 
-The [compact command guide](docs/cli.md) defines nine everyday verbs with readable
+The [compact command guide](docs/cli.md) defines eight everyday verbs with readable
 text/Markdown defaults and explicit compact JSON. Full review diffs show all canonical
 file hunks, semantic node/relationship changes and separate linked-source impact.
 Comparison transport shares unchanged records; both hosts use the same read coordinator
@@ -85,6 +85,13 @@ propagates distances forward and self-inclusive influence bitsets backward, rele
 masks after their last consumer. Scoped records keep full boundary parent references
 and required old/new descendant source evidence; unrelated branches avoid resolver
 work. Default unfiltered comparisons retain all records.
+--with-ancestors completes the matched set with every selected-record ancestor after
+quotas, preserving their original population and metrics. JSON separates matches,
+added ancestors and omitted direct-child/sibling identities. Ancestor completion
+uses one multi-source walk before the final view/source comparison. A root with
+--max-distance 0 gives its complete upstream reading through this same query path.
+The emitter formats once; advanced --max-bytes bounds its exact UTF-8 response,
+envelope/control escaping and final newline, failing without partial success.
 Canonical node schema and existing host operations retain their contracts.
 
 ## Canonical files and grammar

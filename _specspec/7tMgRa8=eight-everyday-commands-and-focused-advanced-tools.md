@@ -6,11 +6,11 @@ parents:
 ---
 # Expose everyday commands and focused advanced tools
 
-The everyday vocabulary is init, show, context, query, add, update, delete, check
-and diff.
+The everyday vocabulary is init, show, query, add, update, delete, check and diff.
 Show without an ID lists concise node summaries; show ID reads its complete record;
-show ID --dependents reports structural descendants. Context supplies complete selected
-and ancestor binding text, with surrounding IDs identified separately. Query reads
+show ID --dependents reports structural descendants. Query --with-ancestors
+completes the selected bindings with every ancestor, identifying omitted surrounding
+children and siblings by ID. Query reads
 a complete revision comparison as a tree-shaped view, defaulting to fresh HEAD versus
 saved workspace with --base/--target selection. Full target and deleted-base records
 carry complete one-line body readings, worded change hints and resolved source context, with forward
@@ -18,7 +18,10 @@ references for shared nodes. Query --human retains logical body lines and lists
 sources individually; default source items share one comma-separated line. Parent
 headers use comma-separated full IDs in both presentations. Query [ID] supports
 --min-distance, --max-distance and --influence cutoffs or percentage quotas,
-combining criteria by union. Check covers
+combining criteria by union. --with-ancestors completes that union without consuming
+quotas. --max-distance 0 selects only the root before completion. An advanced
+--max-bytes bounds the actual encoded response and fails rather than truncating.
+Check covers
 working files, --staged exact-index files and optional --sources mapping/retention;
 --warnings-as-errors remains available. Diff accepts optional positional BASE/TARGET,
 defaulting to freshly resolved HEAD versus working files. Root selection stays --root.

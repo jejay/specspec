@@ -2,9 +2,9 @@
 id: Kxh7M4Q=
 type: implementation
 parents:
-- z9YKFeE=
 - B6y6hgo=
-- YkxeXd0=
+- z9YKFeE=
+- -fXS-dI=
 sources:
 - path: src/specspec/query.py
 - path: src/specspec/cli.py
@@ -23,6 +23,8 @@ sources:
 - path: docs/investigations/query-performance.md
 - path: src/specspec/query_select.py
 - path: tests/test_query_select.py
+- path: tests/test_query_ancestors.py
+  symbol: ancestor completion, neighbor oracles and exact budgets
 ---
 # Render complete selected-record query reads with contract-aware source hints
 
@@ -102,3 +104,17 @@ and propagates known changes with multi-source ancestor walks, preserving select
 badges when the breaking declaration itself lies outside the selected binding set.
 Tests cover scoped reconstruction, selection provenance, deleted roots and shifted
 relationships, outside evidence, empty/unrelated source avoidance and read counts.
+
+
+Ancestor completion retains matched IDs and their metric provenance, then walks
+all selected-record parent paths once and adds the deduplicated ancestor bindings.
+The same induced view feeds compact/human output, reconstruction and source scope.
+Surrounding IDs come only from omitted children/siblings of the original matches;
+shared matched parents contribute their child sets once. Empty selections remain
+empty, and complete unfiltered comparisons need no extra projection. The query
+preamble distinguishes match quotas from extra ancestors, which may lie outside
+the rooted population. CLI query carries --with-ancestors and an advanced exact
+UTF-8 byte budget through a single-format emitter; there is one ancestor-reading
+command. Tests cover independent closure/neighbor oracles, multi-parent completion,
+ancestor provenance, historical ghosts and changed parents, representation/budget
+boundaries, complete source evidence and invocation-local pass/read counts.

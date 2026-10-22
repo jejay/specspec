@@ -152,7 +152,11 @@ def test_full_id_round_trips_cli_native_plan_context_and_dependents(workspace):
     root, manifesto = workspace
     snapshot, child = add_node(root, "requirement", [manifesto], "# Child\n", "child")
     runner = CliRunner()
-    for command in [["show"], ["context"], ["show", "--dependents"]]:
+    for command in [
+        ["show"],
+        ["query", "--max-distance", "0", "--with-ancestors"],
+        ["show", "--dependents"],
+    ]:
         result = runner.invoke(main, ["--root", str(root), *command, child, "--json"])
         assert result.exit_code == 0, result.output
         assert child in result.output
@@ -177,7 +181,7 @@ def test_full_id_round_trips_cli_native_plan_context_and_dependents(workspace):
         ["restore", child],
         ["list", "--retired"],
         ["list", "--live"],
-        ["context", manifesto, "--include-retired"],
+        ["query", manifesto, "--include-retired"],
     ]:
         assert runner.invoke(main, ["--root", str(root), *args, "--json"]).exit_code == 2
 
@@ -197,7 +201,11 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     )
     assert added.exit_code == 0, added.output
     assert json.loads(added.output)["result"]["changed_ids"] == [node_id]
-    for command in [["show"], ["context"], ["show", "--dependents"]]:
+    for command in [
+        ["show"],
+        ["query", "--max-distance", "0", "--with-ancestors"],
+        ["show", "--dependents"],
+    ]:
         result = runner.invoke(main, [*prefix, *command, node_id, "--json"])
         assert result.exit_code == 0, result.output
     result = runner.invoke(

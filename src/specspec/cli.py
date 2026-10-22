@@ -20,7 +20,6 @@ from .model import MAX_FILE_BYTES, Diagnostic, SpecError
 from .output import (
     envelope,
     json_text,
-    render_context,
     render_diff,
     render_listing,
     render_node,
@@ -46,20 +45,29 @@ from .workspace import (
 )
 
 
-def emit(result: Any, diagnostics=None, *, as_json=False, ok=True, text=None):
+def emit(result: Any, diagnostics=None, *, as_json=False, ok=True, text=None, max_bytes=None):
     diagnostics = diagnostics or []
+    value = None
     if as_json:
-        click.echo(json_text(envelope(result, diagnostics, ok)).encode("utf8"))
-        return
-    if result is not None:
-        value = (
+        value = json_text(envelope(result, diagnostics, ok))
+    elif result is not None:
+        value = safe_text(
             text(result)
             if text
             else result
             if isinstance(result, str)
             else "\n".join(f"{key}: {json_text(val)}" for key, val in result.items())
         )
-        click.echo(safe_text(value).encode("utf8"))
+    if value is not None:
+        raw = value.encode("utf8")
+        size = len(raw) + 1
+        if max_bytes is not None and size > max_bytes:
+            raise SpecError(
+                [Diagnostic("BUDGET", f"Query response needs {size} bytes; increase --max-bytes.")]
+            )
+        click.echo(raw)
+    if as_json:
+        return
     for d in diagnostics:
         location = f" ({d.path})" if d.path else ""
         click.echo(
@@ -93,7 +101,7 @@ class Commands(click.Group):
         for label, names in [
             (
                 "Everyday commands",
-                ["init", "show", "context", "query", "add", "update", "delete", "check", "diff"],
+                ["init", "show", "query", "add", "update", "delete", "check", "diff"],
             ),
             ("Advanced tools", ["sources", "spotlight", "recover"]),
         ]:
@@ -391,10 +399,26 @@ def show(root, node_id, dependents, as_json):
 @click.option(
     "--human", is_flag=True, help="Preserve multiline bodies and list sources individually."
 )
+@click.option(
+    "--with-ancestors", is_flag=True, help="Add every ancestor after selecting the matched nodes."
+)
+@click.option("--max-bytes", type=click.IntRange(min=1), hidden=True)
 @json_option
 @click.pass_obj
 @guarded
-def query(root, node_id, base, target, min_distance, max_distance, influence, human, as_json):
+def query(
+    root,
+    node_id,
+    base,
+    target,
+    min_distance,
+    max_distance,
+    influence,
+    human,
+    with_ancestors,
+    max_bytes,
+    as_json,
+):
     """Read complete bindings or a rooted subgraph; default HEAD to workspace."""
     comparison = read_query(
         root_path(root),
@@ -404,55 +428,14 @@ def query(root, node_id, base, target, min_distance, max_distance, influence, hu
         min_distance=min_distance,
         max_distance=max_distance,
         influence=influence,
+        with_ancestors=with_ancestors,
     )
     emit(
         wire.comparison(comparison.result) if as_json else render_query(comparison, human=human),
         comparison.diagnostics,
         as_json=as_json,
+        max_bytes=max_bytes,
     )
-
-
-@main.command(context_settings={"ignore_unknown_options": True})
-@click.argument("node_id")
-@click.option("--max-bytes", type=click.IntRange(min=1), hidden=True)
-@json_option
-@click.pass_obj
-@guarded
-def context(root, node_id, max_bytes, as_json):
-    """Read complete selected/ancestor bindings, never silently truncated."""
-    snapshot = load_snapshot(root_path(root))
-    require_node(snapshot, node_id)
-    graph = snapshot.require_valid()
-    required = graph.closure(node_id, ancestors=True) | {node_id}
-    children = graph.children[node_id]
-    siblings = {
-        child for parent in graph.parents[node_id] for child in graph.children[parent]
-    } - required
-    result = {
-        "selected": node_id,
-        "required_ids": sorted(required),
-        "child_ids": sorted(children),
-        "sibling_ids": sorted(siblings),
-        "nodes": [graph.nodes[i].to_dict() for i in graph.order if i in required],
-        "omitted_ids": sorted((children | siblings) - required),
-    }
-    actual = (
-        json_text(envelope(result, snapshot.diagnostics))
-        if as_json
-        else safe_text(render_context(result))
-    )
-    size = len(actual.encode("utf8")) + 1
-    if max_bytes is not None and size > max_bytes:
-        raise SpecError(
-            [
-                Diagnostic(
-                    "BUDGET",
-                    f"Required context and omission metadata need {size} bytes; "
-                    "increase --max-bytes.",
-                )
-            ]
-        )
-    emit(result, snapshot.diagnostics, as_json=as_json, text=render_context)
 
 
 @main.command(context_settings={"ignore_unknown_options": True})

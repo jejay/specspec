@@ -88,6 +88,16 @@ about whole-process or arbitrary dense-graph memory.
 The benchmark helper accepts `--node-id`, `--min-distance`, `--max-distance` and
 `--influence`; its fresh CLI processes and instrumented read use identical options.
 Reports retain selection provenance alongside output digests and Git process counts.
+`--with-ancestors` completes the selected matches in one multi-source parent walk,
+before the single final induced view and source comparison. Shared matched parents
+contribute surrounding sibling IDs once. Match quotas and population sizes remain
+unchanged; JSON identifies the extra ancestors. The counting regression covers one
+completion, projection, metric batch, induced view and source comparison, and
+rendering either presentation does not repeat any read or selection work. The
+helper forwards `--with-ancestors` identically to fresh processes and its profile.
+An exact query byte budget is measured after formatting once, not by rendering or
+serializing the response again. Including the manifesto can require all descendant
+source evidence to preserve its global badge even for a one-node matched selection.
 For example, add `--max-distance 25% --influence 25%` to compare the independent
 union on the same external fixture. Sources below a selected ancestor remain
 necessary even if their binding is excluded, so a smaller display does not imply

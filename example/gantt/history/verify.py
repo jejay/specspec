@@ -65,6 +65,21 @@ def assert_current_bindings(nodes) -> None:
             assert node.sources, node.id
 
 
+def reachable_records(records, seeds, *, ancestors=False):
+    """Independent receipt oracle over declarations, not the query selector."""
+    adjacency = {key: set() for key in records}
+    for key, record in records.items():
+        for parent in record["parents"]:
+            adjacency[key if ancestors else parent].add(parent if ancestors else key)
+    seen, pending = set(), [key for key in seeds if key in records]
+    while pending:
+        key = pending.pop()
+        if key not in seen:
+            seen.add(key)
+            pending.extend(adjacency[key])
+    return seen
+
+
 def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     current = load_snapshot(root)
     current.require_valid()
@@ -76,8 +91,13 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             assert node.sources and all((root / s["path"]).is_file() for s in node.sources)
 
     receipts = [json.loads(line) for line in (root / "history/cli.jsonl").read_text().splitlines()]
+    revisions = json.loads((root / "history/revisions.json").read_text())
+    checkpoints = {
+        row[key] for row in revisions for key in ("spec_receipt", "implementation_receipt")
+    }
     records: dict[str, SpecNode] = {}
     recorded_graphs = {}
+    baseline = {}
     for ordinal, receipt in enumerate(receipts, 1):
         assert receipt["exit_code"] == 0 and receipt["api_version"] == API_VERSION
         assert not receipt["diagnostics"], receipt
@@ -128,12 +148,47 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 del records[node_id]
         graph, diagnostics = build_graph(list(records.values()))
         assert not diagnostics, diagnostics
-        if action == "context":
+        if action == "query":
             selected = argv[3]
-            assert result["selected"] == selected
-            assert set(result["required_ids"]) == graph.closure(selected, ancestors=True) | {
-                selected
+            assert argv[4:] == ["--max-distance", "0", "--with-ancestors", "--json"]
+            selection = result["selection"]
+            current_records = {key: node.to_dict() for key, node in records.items()}
+            projection = baseline | current_records
+            required = graph.closure(selected, ancestors=True) | {selected}
+            assert selection["with_ancestors"]
+            assert selection["matched_ids"] == [selected]
+            assert set(selection["ancestor_ids"]) == required - {selected}
+            assert set(selection["ids"]) == required
+            assert selection["population"] == len(reachable_records(projection, [selected]))
+            assert selection["partial"] == (required != projection.keys())
+            assert selection["queries"] == [
+                {"metric": "max-distance", "limit": "0", "nodes": [{"id": selected, "value": 0}]}
+            ]
+            assert selection["edges"] == [edge for edge in graph.edges() if set(edge) <= required]
+            parents = set(projection[selected]["parents"])
+            children = {key for key, node in projection.items() if selected in node["parents"]}
+            siblings = {
+                key for key, node in projection.items() if parents.intersection(node["parents"])
             }
+            assert selection["surrounding"] == {
+                "child_ids": sorted(children - required),
+                "sibling_ids": sorted(siblings - required),
+                "omitted_ids": sorted((children | siblings) - required),
+            }
+            evidence = set()
+            boundary = set()
+            for revision in (baseline, current_records):
+                evidence.update(
+                    key for key in reachable_records(revision, required) if revision[key]["sources"]
+                )
+                boundary.update(
+                    parent
+                    for key, node in revision.items()
+                    if key in required
+                    for parent in node["parents"]
+                )
+            assert selection["source_evidence_ids"] == sorted(evidence)
+            assert selection["boundary_parents"] == sorted(boundary - required)
         elif action == "show" and "--dependents" in argv:
             assert result["id"] == argv[3]
             assert set(result["affected"]) == graph.closure(argv[3])
@@ -144,16 +199,17 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             "add",
             "update",
             "delete",
-            "context",
+            "query",
             "show",
             "check",
         }
         recorded_graphs[ordinal] = {key: node.to_dict() for key, node in records.items()}
+        if ordinal in checkpoints:
+            baseline = recorded_graphs[ordinal]
     assert recorded_graphs[len(receipts)] == contents(current), (
         "Receipts differ from the working graph."
     )
 
-    revisions = json.loads((root / "history/revisions.json").read_text())
     assert len(revisions) == 3
     assert all(len(r["deleted_ids"]) * 2 >= r["node_count_before"] for r in revisions[1:])
     checked = []

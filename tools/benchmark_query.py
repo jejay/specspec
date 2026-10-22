@@ -32,6 +32,7 @@ def benchmark(
     min_distance=None,
     max_distance=None,
     influence=None,
+    with_ancestors=False,
 ) -> dict:
     root = root.resolve()
     selection = {
@@ -41,13 +42,15 @@ def benchmark(
             "min_distance": min_distance,
             "max_distance": max_distance,
             "influence": influence,
+            "with_ancestors": with_ancestors or None,
         }.items()
         if value is not None
     }
     arguments = [node_id] if node_id is not None else []
     for key, value in selection.items():
         if key != "node_id":
-            arguments.extend(["--" + key.replace("_", "-"), value])
+            option = "--" + key.replace("_", "-")
+            arguments.extend([option] if value is True else [option, value])
     timings = {}
     for kind, options in (("text", []), ("json", ["--json"])):
         seconds, digests, sizes = [], [], []
@@ -151,6 +154,7 @@ def main():
     parser.add_argument("--min-distance")
     parser.add_argument("--max-distance")
     parser.add_argument("--influence")
+    parser.add_argument("--with-ancestors", action="store_true")
     options = parser.parse_args()
     if options.runs < 1:
         parser.error("--runs must be positive")
@@ -164,6 +168,7 @@ def main():
                 min_distance=options.min_distance,
                 max_distance=options.max_distance,
                 influence=options.influence,
+                with_ancestors=options.with_ancestors,
             ),
             indent=2,
         )

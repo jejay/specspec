@@ -144,6 +144,9 @@ hints. Duplicate references remain visible in both modes. Rooted metric selectio
 retain evidence from selected nodes' descendants in either original revision, so an
 excluded broken link still affects a selected ancestor. JSON identifies evidence
 owners separately from visible binding IDs; unrelated branches need no resolution.
+Ancestor completion runs before source scope selection. An added ancestor such as
+the manifesto retains its global badge and can require evidence from other branches,
+even when their binding bodies remain omitted.
 See [query source contracts](query.md).
 
 These derived readings use the shared bounded cached resolver. They compare selected

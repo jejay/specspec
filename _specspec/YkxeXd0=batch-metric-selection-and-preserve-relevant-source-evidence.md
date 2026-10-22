@@ -21,7 +21,11 @@ ID tie-breaks therefore preserves next-node semantics without unfolding paths or
 rerunning graph searches, reads or source resolution per criterion. Apply absolute
 predicates before sorting; percentage quotas may use bounded top-k selection.
 
-Select before source work. Resolve declarations owned by selected nodes or their
+Select before source work. Optional ancestor completion uses one multi-source
+parent walk before constructing the final view; quotas retain their original
+matched sets. Collect surrounding identities through deduplicated matched parents.
+Resolve source evidence after completion, including other branches when necessary
+for added ancestors' badges. Resolve declarations owned by selected nodes or their
 descendants in either original revision, since excluded descendants can change a
 selected ancestor's source badge. Merge graph reachability and ancestor propagation
 per revision rather than repeating closure per node. Resolve each exact declaration

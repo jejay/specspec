@@ -36,7 +36,7 @@ explain removed branches and predecessor trees retain their reasoning.
 
 `cli.jsonl` contains actual managed CLI inputs/results; `revisions.json` records
 stage commits and receipt ordinals. The verifier checks all retained refs, current
-schema/DAG/source retention, exact indexes, recorded context/impact, stage order,
+schema/DAG/source retention, exact indexes, recorded ancestor-query/dependent results, stage order,
 semantic/edge/source deltas, redirects and isolated model stages. Runtime/snapshot
 agreement is checked byte-for-byte. Browser tests cover real local planning/input/
 file/storage behavior. Independent corpus clones supply Git and host integration.

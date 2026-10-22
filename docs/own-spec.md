@@ -210,7 +210,13 @@ ID tie-breaks and independent subquery unions. The [batch choice](../_specspec/Y
 shares distance propagation and reverse influence bitsets, releases consumed masks,
 and limits code resolution to necessary original-graph evidence. Scoped JSON keeps
 complete selected bindings, external parent IDs and source provenance. See
-[the query guide](query.md). Node format/API remain 6.
+[the query guide](query.md). The [ancestor completion choice](../_specspec/-fXS-dI=complete-query-matches-with-every-ancestor-and-optional-surrounding-identities.md)
+adds every matched record's parents after selection, distinguishes additional
+bindings from quota matches and lists omitted nearby IDs without their bodies.
+The query emitter formats once and supports an exact encoded byte budget. The
+same query pipeline supplies complete agent context; the current everyday surface
+has eight verbs. Current-command receipts, source anchors and all retained Gantt
+refs are reconstructed together. Node format/API remain 6.
 
 ## Neighborhood UI revision
 
@@ -379,7 +385,7 @@ Use the installed CLI or development Python; this checkout already has a graph:
 ```sh
 python -m specspec show
 python -m specspec query
-python -m specspec context <full-id>
+python -m specspec query <full-id> --max-distance 0 --with-ancestors
 python -m specspec show <full-id> --dependents
 python -m specspec update <full-id> --body <body-file>
 python -m specspec delete <full-id> --dry-run --json

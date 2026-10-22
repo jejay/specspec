@@ -7,7 +7,7 @@ parents:
 ---
 # Export complete binding ancestor context within an explicit budget
 
-Export the selected node and all required ancestors in parent-before-child order.
+Export selected bindings and all required ancestors in parent-before-child order.
 Supply direct children and siblings as separately identified optional context.
 Deduplicate records deterministically. Measure actual encoded output, including the JSON envelope when selected,
 against the byte budget. If required text exceeds it, report a budget error;

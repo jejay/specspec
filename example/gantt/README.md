@@ -101,7 +101,7 @@ From the clone:
 ```sh
 python -m specspec show
 python -m specspec diff
-python -m specspec context <full-id> --json
+python -m specspec query <full-id> --max-distance 0 --with-ancestors
 npm test
 npm run test:browser
 ```

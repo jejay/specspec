@@ -41,7 +41,7 @@ def test_cli_outputs_have_no_content_hashes(workspace):
         ["show"],
         ["show", manifesto],
         ["show", manifesto, "--dependents"],
-        ["context", manifesto],
+        ["query", manifesto, "--max-distance", "0", "--with-ancestors"],
         ["check"],
     ]:
         result = runner.invoke(

@@ -5,14 +5,13 @@ One CLI serves people and coding agents. Default output is readable text/Markdow
 format. Canonical node format is **6**; upgrade the CLI and both host builds
 together. The CLI does not supply old command aliases or old protocol readers.
 
-## Nine everyday commands
+## Eight everyday commands
 
 ```sh
 specspec init manifesto.md                 # New project only; - reads UTF-8 stdin
 specspec show                              # IDs/types/headings, not every body
 specspec show <full-id>                     # Complete node metadata and binding text
 specspec show <full-id> --dependents        # Structural potential impact
-specspec context <full-id>                 # Complete selected + ancestor bindings
 specspec query                            # Complete HEAD → workspace tree comparison
 specspec query --base main~2 --target main # Explicit versions, like spotlights
 specspec query --human                   # Original body lines, individual sources
@@ -20,6 +19,8 @@ specspec query --max-distance 2          # Root plus inclusive longest-path leve
 specspec query --max-distance 50%        # Metric-priority half of reachable nodes
 specspec query <full-id> --influence 5   # Rooted subgraph; influence >= 5
 specspec query --min-distance 25% --influence 25% # Independent selections, union
+specspec query <full-id> --max-distance 0 --with-ancestors # Node + every ancestor
+specspec query <full-id> --max-distance 2 --with-ancestors # Branch slice + ancestors
 specspec add --parent <id> --body node.md
 specspec update <id> --body revised.md
 specspec delete <id> --dry-run              # All descendants, including shared ones
@@ -42,11 +43,6 @@ update. Related multi-file Markdown changes must be made coherently and checked;
 managed writes never normalize them. See [graph structure](graph-structure.md).
 Add derives a filename summary from
 the heading (falling back to `node`); advanced `--slug` explicitly overrides it.
-
-`context` prints every required ancestor and the selected node in deterministic
-order. Surrounding child/sibling IDs are identified without dumping their bodies.
-Advanced `--max-bytes N` budgets the actual encoded response and refuses an
-insufficient budget rather than truncating required binding text.
 
 `query` is always a revision comparison: fresh `HEAD` to saved `workspace` by default,
 with spotlight-style `--base` and `--target` options. Current records use current
@@ -71,7 +67,16 @@ admit values <= their integer cutoff; `--influence` admits self-inclusive counts
 its cutoff. Percentages select a rounded-up share of the root's reachable population,
 with ID tie-breaks. Each criterion selects independently; combine by union. Scoped
 JSON identifies selected IDs, metric values, boundary parents and necessary source
-evidence. See [query selection and source hints](query.md).
+evidence. `--with-ancestors` completes the matched set through every parent path
+without changing its metrics, population or quotas. JSON separates `matched_ids`
+from added `ancestor_ids`; final `ids` include both. Omitted direct children and
+siblings of the matches are identified separately by ID, without their bodies.
+Added ancestors do not expand that surrounding scope. An unfiltered complete query
+already contains every ancestor, so completion is a no-op there.
+Advanced `--max-bytes N` bounds the actual encoded query result plus its final
+newline, including the JSON envelope or visible terminal escaping. Insufficient
+budgets fail without truncation or a partial success result. See
+[query selection and source hints](query.md).
 
 Mutations print changed IDs/paths and potential affected scope, not an entire graph.
 Human diagnostics go to stderr; JSON diagnostics are structured in its one envelope.
@@ -154,8 +159,8 @@ at 16 MiB, node files at 1 MiB; the UI bridge retains its existing process/outpu
 Git hook/CI setup is owner-controlled. Put `specspec check --staged` (optionally
 `--sources`) in your existing hook framework or manually managed hook; preserve its
 other commands and executable/environment selection. SpecSpec does not install or
-replace hooks. No `hook`, `list`, `impact`, `validate`, `export` or public `editor`
-command remains. Mermaid export is not part of this two-representation CLI.
+replace hooks. The public read interface uses `query` for ancestor context; no
+`context`, `hook`, `list`, `impact`, `validate`, `export` or public `editor` command remains. Mermaid export is not part of this two-representation CLI.
 
 The original owner source in root `AGENTS.md` and `INTENTION_SPEC.md` is preserved.
 Use this guide and [the current graph tour](own-spec.md) for today's operational

@@ -45,7 +45,6 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
     assert {n for n, c in main.commands.items() if not c.hidden} == {
         "init",
         "show",
-        "context",
         "query",
         "add",
         "update",
@@ -62,6 +61,7 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
     assert "Everyday commands:" in help_text and "Advanced tools:" in help_text
     assert "api" not in help_text and "editor" not in help_text
     for args in [
+        ("context", node_id),
         ("list",),
         ("export",),
         ("impact", node_id),
@@ -105,14 +105,18 @@ def test_required_context_is_complete_without_optional_body_dump(workspace):
     _, sibling = add_node(
         root, "requirement", [parent], "# Sibling\nSECRET OPTIONAL BODY\n", "sibling"
     )
-    text = call(root, "context", selected).stdout
+    args = ["query", selected, "--max-distance", "0", "--with-ancestors"]
+    text = call(root, *args).stdout
     assert "# Selected" in text and "SECRET OPTIONAL BODY" not in text and sibling in text
-    data = call(root, "context", selected, "--json")
+    data = call(root, *args, "--json")
     result = json.loads(data.stdout)["result"]
-    assert {n["id"] for n in result["nodes"]} == {parent, selected}
+    assert {n["id"] for n in result["target"]["nodes"]} == {parent, selected}
+    assert result["selection"]["matched_ids"] == [selected]
+    assert result["selection"]["ancestor_ids"] == [parent]
+    assert result["selection"]["surrounding"]["omitted_ids"] == [sibling]
     exact = len(data.stdout.encode("utf8"))
-    assert call(root, "context", selected, "--json", "--max-bytes", str(exact)).exit_code == 0
-    assert call(root, "context", selected, "--json", "--max-bytes", str(exact - 1)).exit_code == 1
+    assert call(root, *args, "--json", "--max-bytes", str(exact)).exit_code == 0
+    assert call(root, *args, "--json", "--max-bytes", str(exact - 1)).exit_code == 1
 
 
 def test_human_controls_are_literal_but_machine_body_is_unchanged(workspace):

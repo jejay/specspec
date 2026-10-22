@@ -27,7 +27,7 @@ sources:
 ---
 # Implement the compact command surface and complete review projection
 
-Click presents nine everyday verbs with focused advanced tools and a bounded hidden
+Click presents eight everyday verbs with focused advanced tools and a bounded hidden
 application adapter. Output rendering separates readable text/Markdown from explicit
 compact API-6 envelopes. Mutation receipts retain IDs/paths/scope and warnings rather
 than full graphs. Node format 6 and canonical identities/source grammar remain stable.
@@ -36,7 +36,9 @@ Full review output combines stable-ID classification, every canonical-file hunk,
 relationship labels and separate linked-source context. Comment/whitespace/newline
 changes remain represented. API comparisons carry one target plus previous differing/
 deleted records and ID-based metadata; projections reconstruct both complete revisions.
-Context preserves required bindings and budgets actual encoded output. Read-only source
+Query ancestor completion preserves every chosen parent path. The shared emitter
+formats once and budgets actual encoded query output, including envelopes and
+terminal-control escaping, before writing a complete result. Read-only source
 inspection and deliberate capture/reanchor share the domain resolver and writer.
 
 Tests cover text/control/Unicode output, actual byte budgets, API validation, complete

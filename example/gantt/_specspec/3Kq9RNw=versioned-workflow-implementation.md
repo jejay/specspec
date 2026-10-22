@@ -11,15 +11,15 @@ sources:
 - path: history/cli.jsonl
 - path: history/revisions.json
 - path: history/verify.py
-  blob: f0ef960fb39e7785dc183019e7d99b3cceec2cb8
+  blob: 9c104715a59bcdb8e03925f9a857f2870fcbf6c3
   mode: expanding
   ranges:
   - - 1
-    - 293
+    - 349
 ---
 # Map the specification workflow to actual Git and CLI artifacts
 
-`history/cli.jsonl` records actual current-CLI graph writes/context/impact/validation
+`history/cli.jsonl` records actual current-CLI graph writes/ancestor-query/dependent/validation
 results. `revisions.json` records real stage commits and receipt ordinals. Agent
 specification commits precede runnable code and implementation mappings. Redirect
 commit messages explain deletion scope; predecessor trees retain earlier reasoning.

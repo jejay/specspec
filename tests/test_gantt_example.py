@@ -30,11 +30,13 @@ def test_example_graph_is_independent_and_usable_as_complete_agent_context(gantt
         Path(git(gantt_history, "rev-parse", "--show-toplevel").decode().strip()) == gantt_history
     )
     implementation = next(n for n in example.nodes if n.type == "implementation")
-    code, envelope = invoke(gantt_history, "context", implementation.id)
+    code, envelope = invoke(
+        gantt_history, "query", implementation.id, "--max-distance", "0", "--with-ancestors"
+    )
     assert code == 0 and envelope["ok"]
     required = graph.closure(implementation.id, ancestors=True) | {implementation.id}
-    assert set(envelope["result"]["required_ids"]) == required
-    assert required <= {n["id"] for n in envelope["result"]["nodes"]}
+    assert set(envelope["result"]["selection"]["ids"]) == required
+    assert required == {n["id"] for n in envelope["result"]["target"]["nodes"]}
     assert "fingerprint" not in envelope["result"]
 
 
@@ -79,7 +81,15 @@ def test_deleted_example_reasoning_lives_in_previous_commits_not_current_context
     removed = next(
         n for n in previous.nodes if n.id not in before.graph.nodes and n.type == "requirement"
     )
-    assert invoke(gantt_history, "context", removed.id)[0] == 1
+    args = ["query", removed.id, "--max-distance", "0", "--with-ancestors"]
+    assert invoke(gantt_history, *args)[0] == 2
+    code, response = invoke(
+        gantt_history, *args, "--base", "stage/01-code", "--target", "stage/01-code"
+    )
+    assert code == 0 and removed.id in response["result"]["selection"]["matched_ids"]
+    assert {n["id"] for n in response["result"]["target"]["nodes"]} == previous.graph.closure(
+        removed.id, ancestors=True
+    ) | {removed.id}
     assert not (gantt_history / removed.path).exists()
     assert (
         git(gantt_history, "show", f"stage/01-code:{removed.path}") == previous.files[removed.path]

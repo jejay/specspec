@@ -109,7 +109,7 @@ python -m pytest tests/test_example_checkout.py tests/test_gantt_example.py test
 
 The verifier clones temporarily and checks **all retained refs/commits**, current
 schema/DAG, positive current bindings, agent specification commit names, independent
-Git/index, tags, actual receipt/context/dependent contents,
+Git/index, tags, actual receipt/ancestor-query/dependent contents,
 stage ordering, both deletion sets/reasons, semantic/edge/source diffs and all runnable
 model stages. It compares the final runtime/tests and graph with the tracked
 snapshot to catch drift. Git integration and real-host fixtures use the same clone
@@ -122,7 +122,10 @@ The current receipts use application API 6 and shortcut-free node format 6 throu
 the maintained history. Command/protocol cutovers refresh actual receipts, teaching
 text, ledgers, refs, source retention, bundle and snapshot together; runnable
 application code and historical node identities remain stable. Old manual clones
-remain preserved.
+remain preserved. Agent readings use `query ID --max-distance 0 --with-ancestors`.
+Actual query receipts retain match/ancestor/neighbor provenance; the verifier checks
+it against the reconstructed working and prior committed graphs. All maintained
+refs and the tracked snapshot use the same current command vocabulary.
 
 All retained graphs are transitively reduced: every direct parent adds ancestry.
 Actual reconstructed CLI commands name the minimal parent sets at creation,

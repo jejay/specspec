@@ -27,8 +27,8 @@ the same original population and its own quota; combine only their final ID sets
 A root alone reads its complete reachable subgraph. Graph ordering after selection
 retains the existing last-occurrence reading, not metric-priority print order.
 
-Text and JSON contain complete selected bindings, without adding ancestors to fill
-external parent links. Headers and node metadata preserve all direct parent IDs.
+Metric selection produces complete matched bindings and external parent links.
+Optional ancestor completion adds upstream bindings after the independent quotas. Headers and node metadata preserve all direct parent IDs.
 JSON selection metadata identifies root, population, union IDs, induced edges,
 boundary parents and each criterion's ordered IDs and values. Scoped base/target
 records and change summaries reconstruct the selected part of each revision, with

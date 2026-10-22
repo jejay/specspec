@@ -37,7 +37,11 @@ and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
 manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
-Use `show`, `context` and `show ID --dependents` before code changes.
+Use `query ID --max-distance 0 --with-ancestors` and `show ID --dependents`
+before code changes. Query's optional ancestor completion follows every parent path
+after selection; added bindings consume no metric quota. `specspec diff` supplies
+canonical-file hunks; ordinary `git diff` supplies code patches. Read untracked
+files explicitly and coordinate with unsaved native documents.
 Canonical node format 6 and application API 6 use
 canonical padded Base64url IDs over five bytes, including `=`, and `<id><slug>.md`
 files. Each direct parent adds ancestry: a direct parent cannot already be an

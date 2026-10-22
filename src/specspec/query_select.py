@@ -107,7 +107,9 @@ def induced(graph: Graph, included: set[str]) -> Graph:
     )
 
 
-def select_graph(graph: Graph, root: str, limits: dict[str, Limit]) -> tuple[Graph, dict]:
+def select_graph(
+    graph: Graph, root: str, limits: dict[str, Limit], *, with_ancestors: bool = False
+) -> tuple[Graph, dict]:
     if root not in graph.nodes:
         raise SpecError([Diagnostic("QUERY", f"No query root with full ID {root}.")], 2)
     population = reachable(graph, [root])
@@ -143,6 +145,26 @@ def select_graph(graph: Graph, root: str, limits: dict[str, Limit]) -> tuple[Gra
                 "nodes": [{"id": i, "value": counts[i]} for i in ordered],
             }
         )
+    completion = {}
+    if with_ancestors:
+        matched = included
+        included = reachable(graph, matched, ancestors=True)
+        parents, children, siblings = set(), set(), set()
+        for node_id in matched:
+            parents.update(graph.parents[node_id])
+            children.update(graph.children[node_id])
+        for parent in parents:
+            siblings.update(graph.children[parent])
+        completion = {
+            "with_ancestors": True,
+            "matched_ids": sorted(matched),
+            "ancestor_ids": sorted(included - matched),
+            "surrounding": {
+                "child_ids": sorted(children - included),
+                "sibling_ids": sorted(siblings - included),
+                "omitted_ids": sorted((children | siblings) - included),
+            },
+        }
     view = induced(graph, included)
     return view, {
         "root": root,
@@ -151,6 +173,7 @@ def select_graph(graph: Graph, root: str, limits: dict[str, Limit]) -> tuple[Gra
         "edges": view.edges(),
         "queries": queries,
         "partial": included != graph.nodes.keys(),
+        **completion,
     }
 
 

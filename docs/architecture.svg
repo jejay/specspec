@@ -113,7 +113,7 @@
       <rect x="314" y="739" width="626" height="134" rx="12" fill="#e9f0e9"/>
       <text x="340" y="774" class="heading">Shell / terminal</text>
       <text x="730" y="772" class="caption">People can use this too.</text>
-      <text x="340" y="813" class="code" style="font-size:21px">specspec context &lt;id&gt; --json</text>
+      <text x="340" y="813" class="code" style="font-size:14px">specspec query &lt;id&gt; --max-distance 0 --with-ancestors --json</text>
       <text x="340" y="848" class="small">show · diff · sources · add · update · delete · check</text>
     </g>
 
@@ -271,7 +271,7 @@
       <text x="326" y="1702" text-anchor="middle" class="label teal" style="font-size:13px">1</text>
       <text x="348" y="1704" class="body" style="font-weight:650;fill:#203a40">Read the workbench</text>
       <text x="314" y="1736" class="caption">Owner edits + complete ancestors</text>
-      <text x="314" y="1763" class="code" style="font-size:16px">git diff · context · dependents</text>
+      <text x="314" y="1763" class="code" style="font-size:16px">git diff · query · dependents</text>
     </g>
     <path d="M609 1700H669" class="request"/>
     <g id="reason-and-refine" aria-label="Reason about intentions and deepen independently revisable conclusions">

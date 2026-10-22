@@ -82,16 +82,6 @@ def render_listing(snapshot):
     )
 
 
-def render_context(result):
-    parts = [
-        f"Binding context for {result['selected']} · {len(result['required_ids'])} required nodes"
-    ]
-    parts.extend(render_node(n) for n in result["nodes"])
-    if result["omitted_ids"]:
-        parts.append("Surrounding nodes (bodies not included): " + ", ".join(result["omitted_ids"]))
-    return "\n\n".join(parts)
-
-
 def render_receipt(result, verb="Changed"):
     lines = [f"{verb}: " + ", ".join(result["changed_ids"])]
     lines += [f"  {n['id']}  {n['path']}" for n in result.get("nodes", [])]

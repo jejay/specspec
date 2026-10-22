@@ -35,12 +35,25 @@ def test_repository_graph_is_usable_as_agent_context():
     graph = snapshot.require_valid()
     # Exercise a real implementation record while allowing identities to evolve.
     implementation = next(node for node in snapshot.nodes if node.type == "implementation")
-    result = CliRunner().invoke(main, ["--root", str(ROOT), "context", implementation.id, "--json"])
+    result = CliRunner().invoke(
+        main,
+        [
+            "--root",
+            str(ROOT),
+            "query",
+            implementation.id,
+            "--max-distance",
+            "0",
+            "--with-ancestors",
+            "--json",
+        ],
+    )
     assert result.exit_code == 0, result.output
     context = json.loads(result.output)["result"]
     required = graph.closure(implementation.id, ancestors=True) | {implementation.id}
-    assert set(context["required_ids"]) == required
-    assert required <= {node["id"] for node in context["nodes"]}
+    assert set(context["selection"]["ids"]) == required
+    assert context["selection"]["matched_ids"] == [implementation.id]
+    assert required == {node["id"] for node in context["target"]["nodes"]}
     assert "fingerprint" not in context
 
 
