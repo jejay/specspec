@@ -36,7 +36,7 @@ headers, compact rails, last-occurrence ownership and complete default one-line 
 projection preserves chosen edges without canonical reduction or type/root checks;
 its construction is acyclic even when a full revision-edge union would be cyclic.
 
-Lowercase added/modified/deleted/renamed identify node changes. File-only marks
+Lowercase added/modified/deleted identify node changes. File-only marks
 literal-only changes. Source-changed identifies known contract changes and
 ancestors in both original graphs, independently of
 shared conservative file-impact facts. Normal records and permitted code edits

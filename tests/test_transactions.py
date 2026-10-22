@@ -9,8 +9,8 @@ from specspec.workspace import add_node, delete_nodes, load_snapshot, recover, s
 
 def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
     root, manifesto = workspace
-    _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
-    before, child = add_node(root, "requirement", [parent], "Child\n", "child")
+    _, parent = add_node(root, "requirement", [manifesto], "Parent\n")
+    before, child = add_node(root, "requirement", [parent], "Child\n")
     original = Path.unlink
     deletions = 0
 

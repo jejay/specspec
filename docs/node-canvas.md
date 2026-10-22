@@ -148,9 +148,9 @@ paint variables and edge compensation.
   confirmed parameters L=.69, C=.12, hue 320 → 20. Distance one starts at the first
   swatch, seven ends at the last, then repeats. Type mode uses yellow-green/purple; Added uses the teal-green closer to its text cue;
   gray manifesto zero remains outside both distance/type palettes. Git/Revision
-  Status instead uses rainbow green A, blue M/R, red D and amber source impact,
+  Status instead uses rainbow green A, blue M, red D and amber source impact,
   including on the manifesto. Unchanged/no-comparison/draft fills are neutral;
-  source-only, rename and deletion labels preserve their distinct meanings.
+  source-only, modification and deletion labels preserve their distinct meanings.
   Existing title/letter theme colors and connection inks stay independent.
 - **Spotlights** persist message/ID/comparison metadata in Git-excluded project-local
   storage shared by the CLI and both hosts. Git owns committed node text. A round red toolbar badge

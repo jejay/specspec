@@ -13,7 +13,7 @@ function comparison(value, current) {
   const previous = new Map(value.before.map(n => [n.id, n]));
   const base = new Map(target.nodes.filter(n => !added.has(n.id)).map(n => [n.id, n]));
   for (const [id, node] of previous) base.set(id, node);
-  for (const c of value.changes) if (['changed','removed','renamed'].includes(c.kind) && !previous.has(c.id)) throw new Error('Incomplete previous node records.');
+  for (const c of value.changes) if (['changed','removed'].includes(c.kind) && !previous.has(c.id)) throw new Error('Incomplete previous node records.');
   const { before, ...rest } = value;
   return { ...rest, target, base: snapshot({ ...value.base, nodes: [...base.values()].sort((a,b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0) }) };
 }

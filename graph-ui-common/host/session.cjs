@@ -385,7 +385,7 @@ class GraphSession {
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
     const common = ['--json'];
-    if (current.format_version !== 6) throw new Error('Unsupported specification format.');
+    if (current.format_version !== 7) throw new Error('Unsupported specification format.');
     const nodes = new Map(current.nodes.map(n => [n.id, n])), id = message.id;
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('Select a current node. Draft retained.');
     let args, input;
@@ -394,8 +394,8 @@ class GraphSession {
       if (!Array.isArray(message.parents) || message.parents.some(p => typeof p !== 'string' || !nodes.has(p))) throw new Error('Invalid parent IDs.');
       const parents = message.parents.flatMap(p => ['--parent', p]);
       if (message.type === 'add') {
-        if (!['requirement', 'implementation'].includes(message.nodeType) || typeof message.slug !== 'string') throw new Error('Invalid new-node form.');
-        args = ['add', '--type', message.nodeType, '--slug', message.slug, ...parents, '--body', '-'];
+        if (!['requirement', 'implementation'].includes(message.nodeType)) throw new Error('Invalid new-node form.');
+        args = ['add', '--type', message.nodeType, ...parents, '--body', '-'];
       } else {
         // No graph-wide stale gate: only overwriting this node needs user attention.
         if (!this.host.sameNode(message.originalNode, nodes.get(id)) && !await this.host.confirm('This node changed outside your draft (or its original contents are unavailable). Save your draft over its current text, parents and sources? Cancel keeps your unsaved text.')) { await this.post({ type: 'cancelled' }); return; }

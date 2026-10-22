@@ -30,7 +30,7 @@ def create(root, nodes, message="Please reconsider these nodes", **options):
 
 def test_ui_creation_is_readable_by_cli_without_canonical_index_or_ref_changes(workspace):
     root, parent = workspace
-    snapshot, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    snapshot, child = add_node(root, "requirement", [parent], "# Child\n")
     setup_repository(root)
     index, refs = git(root, "ls-files", "--stage"), git(root, "show-ref")
     message = 'Please explain <img onerror="bad()"> 🐕'
@@ -86,7 +86,7 @@ def test_historical_backchannel_selects_target_and_deleted_base_nodes(gantt_hist
 
 def test_identity_capture_uses_current_version_and_rejects_unknown_ids_atomically(workspace):
     root, parent = workspace
-    snapshot, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    snapshot, child = add_node(root, "requirement", [parent], "# Child\n")
     update_node(root, child, body="# Current version\n")
     shot = create(root, [parent, child])
     current = load_snapshot(root)

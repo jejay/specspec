@@ -71,7 +71,8 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
         ("annotations",),
     ]:
         assert call(root, *args).exit_code == 2
-    assert "--slug" not in call(root, "add", "--help").stdout
+    for args in [("init", "-"), ("add", "--parent", node_id, "--body", "-")]:
+        assert call(root, *args, "--slug", "unused", input="# Body\n").exit_code == 2
     assert "--clear-parents" not in call(root, "update", "--help").stdout
 
 
@@ -80,7 +81,7 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     result = call(root, "init", "-", "--json", input="# Manifesto 🐕\n")
     assert result.exit_code == 0, result.output
     first = json.loads(result.stdout)
-    assert API_VERSION == 6 and FORMAT_VERSION == 6
+    assert API_VERSION == 6 and FORMAT_VERSION == 7
     assert first["api_version"] == 6 and "snapshot" not in first["result"]
     parent = first["result"]["changed_ids"][0]
     result = call(
@@ -88,7 +89,8 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     )
     assert result.exit_code == 0, result.output
     receipt = json.loads(result.stdout)["result"]
-    assert receipt["nodes"][0]["path"].endswith("useful-heading.md")
+    child = receipt["changed_ids"][0]
+    assert receipt["nodes"][0]["path"] == f"_specspec/{child}.md"
     assert set(receipt["nodes"][0]) == {"id", "path"}
     assert len(result.stdout) < 1000 and '"body"' not in result.stdout
     listing = call(root, "show").stdout
@@ -101,10 +103,8 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
 
 def test_required_context_is_complete_without_optional_body_dump(workspace):
     root, parent = workspace
-    _, selected = add_node(root, "requirement", [parent], "# Selected\n", "selected")
-    _, sibling = add_node(
-        root, "requirement", [parent], "# Sibling\nSECRET OPTIONAL BODY\n", "sibling"
-    )
+    _, selected = add_node(root, "requirement", [parent], "# Selected\n")
+    _, sibling = add_node(root, "requirement", [parent], "# Sibling\nSECRET OPTIONAL BODY\n")
     args = ["query", selected, "--max-distance", "0", "--with-ancestors"]
     text = call(root, *args).stdout
     assert "# Selected" in text and "SECRET OPTIONAL BODY" not in text and sibling in text
@@ -130,9 +130,9 @@ def test_human_controls_are_literal_but_machine_body_is_unchanged(workspace):
 
 def test_full_diff_contains_raw_only_changes_edges_and_linked_source_summary(workspace):
     root, parent = workspace
-    _, left = add_node(root, "requirement", [parent], "# Left\n", "left")
-    _, other = add_node(root, "requirement", [parent], "# Other\n", "other")
-    snapshot, child = add_node(root, "requirement", [left, other], "# Child\n\nold line\n", "child")
+    _, left = add_node(root, "requirement", [parent], "# Left\n")
+    _, other = add_node(root, "requirement", [parent], "# Other\n")
+    snapshot, child = add_node(root, "requirement", [left, other], "# Child\n\nold line\n")
     setup_repository(root)
     update_node(root, child, body="# Child\n\nnew line\n", parents=[left])
     parent_node = snapshot.graph.nodes[parent]
@@ -184,9 +184,7 @@ def test_full_diff_exposes_line_endings_and_final_newlines(workspace, after):
 
 def test_shared_application_delta_keeps_ghosts_through_staging_until_commit(workspace):
     root, parent = workspace
-    original, child = add_node(
-        root, "requirement", [parent], "# Deleted historical body\n", "deleted"
-    )
+    original, child = add_node(root, "requirement", [parent], "# Deleted historical body\n")
     setup_repository(root)
     delete_nodes(root, [child])
     for staged in (False, True):
@@ -208,7 +206,7 @@ def test_shared_application_delta_keeps_ghosts_through_staging_until_commit(work
 def test_compact_projection_deduplicates_unchanged_revisions(workspace):
     root, parent = workspace
     for i in range(12):
-        add_node(root, "requirement", [parent], f"# Requirement {i}\n" + "body " * 1000, f"n-{i}")
+        add_node(root, "requirement", [parent], f"# Requirement {i}\n" + "body " * 1000)
     setup_repository(root)
     original, _ = compare(root)
     compact = comparison(original)

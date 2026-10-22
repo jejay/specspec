@@ -57,7 +57,7 @@ text/Markdown defaults and explicit compact JSON. Full review diffs show all can
 file hunks, semantic node/relationship changes and separate linked-source impact.
 Comparison transport shares unchanged records; both hosts use the same read coordinator
 with optional native overlays and working-first loading. Native persistence stays
-separate from managed writes. Node format is **6** and protocol is **6**.
+separate from managed writes. Node format is **7** and protocol is **6**.
 
 [`query`](docs/query.md) always compares revisions, defaulting to fresh HEAD versus
 saved workspace with spotlight-style --base/--target selection. Iterative ordered
@@ -97,17 +97,17 @@ Canonical node schema and existing host operations retain their contracts.
 ## Canonical files and grammar
 
 Use a flat project-root `_specspec` with direct regular node Markdown files.
-The unique manifesto contains integer `format_version: 6`. Requirements depend on
+The unique manifesto contains integer `format_version: 7`. Requirements depend on
 manifesto/requirement parents; implementation leaves depend on requirements. All
 nodes form one rooted connected DAG. Frontmatter fields are `id`, `type`, `parents`,
 manifesto `format_version`, optional implementation `sources` and optional namespaced
-JSON-compatible `extensions`. Bodies are binding current text; summaries aid discovery.
+JSON-compatible `extensions`. Bodies carry binding current text and readable headings.
 
 IDs are padded RFC 4648 Base64url over `secrets.token_bytes(5)`: **40 random bits**,
-seven payload symbols plus `=`. Filename is `<id><ascii-slug>.md`. Lock-scoped
+seven payload symbols plus `=`. Filename is `<id>.md`. Lock-scoped
 creation retries exact/casefold collisions; input validation detects portable aliases.
-Full identities and zero pad bits are canonical. VS Code associates `**/_specspec/???????=*.md` and asks Python to validate
-the actual resource. Stable IDs survive body/parent/summary changes.
+Full identities and zero pad bits are canonical. VS Code associates `**/_specspec/???????=.md` and asks Python to validate
+the actual resource. IDs and paths remain stable through body and parent changes.
 
 Bootstrap the unique manifesto/version, then validate typed metadata, YAML keys,
 alias/tag restrictions, file entries/paths, UTF-8 and the 1 MiB node-file budget.
@@ -116,7 +116,7 @@ unaffected frontmatter comments during targeted writes. Lists/headings structure
 coherent element; independently reusable/reviewable reasoning warrants another node.
 
 The graph engine builds node/parent/child maps, deterministic heap-based Kahn order
-and iterative closures/cycle witnesses. Node format 6 requires a transitively reduced
+and iterative closures/cycle witnesses. Node format 7 requires a transitively reduced
 DAG: each direct parent adds ancestry. After basic graph checks pass, shared ancestor
 traversals diagnose redundant edges with deterministic alternative paths. Validation
 never normalizes edges. Managed candidates, native overlays, revisions and exact
@@ -156,7 +156,7 @@ unapplied-form recovery has separate explicit handling.
 Read exact staged/commit blobs through NUL-delimited Git paths/object reads.
 `check --staged` validates the intended index; owner-managed hooks/CI call it without
 a SpecSpec installer. Optional `--sources` adds staged source resolution/retention. Compare full IDs, normalized records,
-raw files, filename-only changes and added/removed edges. Potential impact uses both
+raw files and added/removed edges. Potential impact uses both
 old/new closures and source references. Absent base graphs/genuinely unborn HEAD are
 empty baselines; invalid/unavailable revisions receive diagnostics.
 
@@ -227,7 +227,7 @@ smooth tangent heads. Minimum paint floors are 1.6 screen-pixel strokes and 6-pi
 heads with compensated dashes. Camera changes update paint, not world arrangement.
 
 The exact distance/type/revision spectrum is `#bc82c9`, `#7e97e6`, `#1facce`, `#37b390`, `#92a64b`,
-`#ca8d3e`, `#dc7b7c`. Requirement index 4, Implementation 0, Added 3, M/R 1, D 6,
+`#ca8d3e`, `#dc7b7c`. Requirement index 4, Implementation 0, Added 3, M 1, D 6,
 source-only 5. Distance `(d-1)%7`; neutral `#929baa`, distance/type root `#d3d3d3`.
 Eight modes have concise color legends; revision colors the root by comparison too.
 Influence counts self plus unique descendants, with a minimum of one. Absolute
@@ -263,7 +263,7 @@ ring width max(5, 3 / k) follows graph scale with a 3px screen minimum and equal
 Shift-click toggles, Ctrl/Command+Shift removes, and Clear highlight clears the shared
 manual/spotlight ID set. A message modal captures the current comparison and trusted
 native overlays without saving documents or managed drafts. CLI show reports each
-record's A/M/D/R/= statuses, missing/unavailable members and advisory warnings.
+record's A/M/D/= statuses, missing/unavailable members and advisory warnings.
 
 The dropdown, active identity and highlight IDs are per view. A round red badge
 counts new records since opening, with zero initial/reload baselines; arrivals

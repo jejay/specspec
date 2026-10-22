@@ -13,7 +13,7 @@ from specspec.workspace import add_node, encode, load_snapshot, recover, update_
 
 def test_changed_source_maps_to_implementation_and_ancestors(workspace):
     root, manifesto = workspace
-    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n", "behavior")
+    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n")
     source = root / "source.py"
     source.write_text("print('before')\n")
     _, implementation = add_node(
@@ -21,7 +21,6 @@ def test_changed_source_maps_to_implementation_and_ancestors(workspace):
         "implementation",
         [requirement],
         "Mapping\n",
-        "mapping",
         sources=[{"path": "source.py"}],
     )
     setup_repository(root)
@@ -38,12 +37,12 @@ def test_changed_source_maps_to_implementation_and_ancestors(workspace):
 
 def test_new_untracked_sources_are_reported(workspace):
     root, manifesto = workspace
-    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n", "behavior")
+    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n")
     setup_repository(root)
     base = git_snapshot(root, "HEAD")
     (root / "new.py").write_text("print('new')\n")
     target, implementation = add_node(
-        root, "implementation", [requirement], "Mapping\n", "mapping", sources=[{"path": "new.py"}]
+        root, "implementation", [requirement], "Mapping\n", sources=[{"path": "new.py"}]
     )
     result = source_change_impact(root, "HEAD", None, base, target)
     assert result["source_changes"] == [{"path": "new.py", "implementation_ids": [implementation]}]

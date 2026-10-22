@@ -4,7 +4,7 @@
   const api = window.RainbowPlayground, $ = id => document.getElementById(id);
   const keys = Object.keys(api.DEFAULTS);
   let current, valid = true;
-  const mappingNames = { requirement: 'Requirement', implementation: 'Implementation', added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Source impact' };
+  const mappingNames = { requirement: 'Requirement', implementation: 'Implementation', added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', 'source-changed': 'Source impact' };
   function node(accent, title, subtitle, manifesto = false) {
     const card = document.createElement('div'); card.className = 'node'+(manifesto ? ' manifesto' : '');
     card.style.setProperty('--accent', accent);

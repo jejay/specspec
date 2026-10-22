@@ -80,7 +80,7 @@
         "viewType": "specspec.graphEditor",
         "displayName": "SpecSpec Graph",
         "selector": [
-          { "filenamePattern": "**/_specspec/???????=*.md" }
+          { "filenamePattern": "**/_specspec/???????=.md" }
         ],
         "priority": "default"
       }

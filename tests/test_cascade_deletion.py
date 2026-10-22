@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -26,13 +27,13 @@ from specspec.workspace import (
 
 
 def branch(root, manifesto):
-    _, left = add_node(root, "requirement", [manifesto], "# Left\n", "left")
-    _, right = add_node(root, "requirement", [manifesto], "# Right\n", "right")
-    _, full = add_node(root, "requirement", [left], "# Full child\n", "full")
-    _, shared = add_node(root, "requirement", [left, right], "# Shared child\n", "shared")
-    _, other = add_node(root, "requirement", [right], "# Outside parent\n", "other")
-    _, deep = add_node(root, "requirement", [shared, other], "# Deeper partial\n", "deep")
-    before, code = add_node(root, "implementation", [full, deep], "# Shared realization\n", "code")
+    _, left = add_node(root, "requirement", [manifesto], "# Left\n")
+    _, right = add_node(root, "requirement", [manifesto], "# Right\n")
+    _, full = add_node(root, "requirement", [left], "# Full child\n")
+    _, shared = add_node(root, "requirement", [left, right], "# Shared child\n")
+    _, other = add_node(root, "requirement", [right], "# Outside parent\n")
+    _, deep = add_node(root, "requirement", [shared, other], "# Deeper partial\n")
+    before, code = add_node(root, "implementation", [full, deep], "# Shared realization\n")
     return before, left, right, full, shared, deep, code, other
 
 
@@ -41,6 +42,16 @@ def commit(root):
     git(root, "config", "core.autocrlf", "false")
     git(root, "add", "_specspec")
     git(root, "commit", "-m", "Keep original specification")
+
+
+def replace_leaf_identity(root, node):
+    """A valid manual ID replacement can still be a Git-detected file rename."""
+    replacement = new_node(node.type, node.parents, node.body)
+    replacement = replace(node, id=replacement.id, path=replacement.path)
+    (root / replacement.path).write_bytes(serialize(replacement))
+    (root / node.path).unlink()
+    load_snapshot(root).require_valid()
+    return replacement.id, replacement.path
 
 
 def invoke(root, *args, **kwargs):
@@ -112,9 +123,9 @@ def test_only_uncommitted_descendant_warns_even_when_staged_or_semantically_unch
     root, manifesto = workspace
     before, left, right, full, shared, deep, code, other = branch(root, manifesto)
     commit(root)
-    target = shared
+    target = code if kind == "renamed" else shared
     if kind in {"untracked", "staged-added", "ignored"}:
-        _, target = add_node(root, "requirement", [shared, other], "# Uncommitted child\n", "new")
+        _, target = add_node(root, "requirement", [shared, other], "# Uncommitted child\n")
         if kind == "ignored":
             (root / ".gitignore").write_text("_specspec/\n", encoding="utf-8")
     path = load_snapshot(root).graph.nodes[target].path
@@ -128,9 +139,7 @@ def test_only_uncommitted_descendant_warns_even_when_staged_or_semantically_unch
             == before.graph.nodes[target].semantic()
         )
     elif kind == "renamed":
-        destination = f"_specspec/{target}renamed.md"
-        (root / path).rename(root / destination)
-        path = destination
+        target, path = replace_leaf_identity(root, before.graph.nodes[target])
     if kind in {"staged-added", "staged-modified", "renamed"}:
         git(root, "add", "-A", "_specspec")
     elif kind == "staged-mode":
@@ -178,7 +187,7 @@ def test_new_or_changed_requested_root_warns_and_source_only_edits_do_not(worksp
 
 def test_no_git_and_unborn_head_warn_instead_of_claiming_committed_nodes(workspace):
     root, manifesto = workspace
-    _, child = add_node(root, "requirement", [manifesto], "# New\n", "new")
+    _, child = add_node(root, "requirement", [manifesto], "# New\n")
     before = load_snapshot(root)
     result, preview = invoke(root, child, "--dry-run")
     assert result.exit_code == 0
@@ -197,7 +206,7 @@ def test_no_git_and_unborn_head_warn_instead_of_claiming_committed_nodes(workspa
 
 def test_warnings_are_delivered_before_the_first_unlink_even_with_json_yes(workspace, monkeypatch):
     root, manifesto = workspace
-    _, child = add_node(root, "requirement", [manifesto], "# New\n", "new")
+    _, child = add_node(root, "requirement", [manifesto], "# New\n")
     messages = []
     original_emit, original_unlink = cli_module.emit, Path.unlink
 
@@ -246,12 +255,11 @@ def test_reviewed_scope_is_recomputed_and_refused_before_writes_if_it_changes(wo
     commit(root)
     plan = deletion_plan(before, [left])
     if change == "descendant":
-        add_node(root, "requirement", [shared, other], "# New child\n", "new")
+        add_node(root, "requirement", [shared, other], "# New child\n")
     elif change == "warning":
         update_node(root, deep, body="# Now uncommitted\n")
     else:
-        node = before.graph.nodes[deep]
-        (root / node.path).rename(root / "_specspec" / f"{deep}renamed.md")
+        replace_leaf_identity(root, before.graph.nodes[code])
     before = load_snapshot(root)
     result, response = invoke(root, left, "--yes", "--reviewed-plan", "-", input=json.dumps(plan))
     assert result.exit_code == 1, result.output
@@ -309,7 +317,7 @@ def test_detached_linked_worktree_assessment_uses_its_own_index(workspace, tmp_p
 
 def test_noninteractive_text_refuses_uncommitted_deletion_even_if_stdin_says_yes(workspace):
     root, manifesto = workspace
-    before, child = add_node(root, "requirement", [manifesto], "# New\n", "new")
+    before, child = add_node(root, "requirement", [manifesto], "# New\n")
     result = CliRunner().invoke(main, ["--root", str(root), "delete", child], input="y\n")
     assert result.exit_code == 1 and "No files removed" in result.stderr
     assert load_snapshot(root).files == before.files
@@ -336,7 +344,7 @@ def test_nested_literal_project_paths_are_scoped_and_plan_does_not_touch_index(t
     root.mkdir()
     before = initialize(root, "# Root\n")
     manifesto = before.nodes[0].id
-    before, child = add_node(root, "requirement", [manifesto], "# Child\n", "child")
+    before, child = add_node(root, "requirement", [manifesto], "# Child\n")
     git(tmp_path, "add", ".")
     git(tmp_path, "commit", "-m", "Commit nested graph")
     index = (tmp_path / ".git/index").read_bytes()
@@ -351,8 +359,8 @@ def test_nested_literal_project_paths_are_scoped_and_plan_does_not_touch_index(t
 def test_long_chain_plan_is_iterative_and_invalid_requests_do_not_remove_files(workspace):
     root, manifesto = workspace
     nodes = [load_snapshot(root).nodes[0]]
-    for index in range(1300):
-        nodes.append(new_node("requirement", [nodes[-1].id], "# Deep\n", f"deep-{index}"))
+    for _ in range(1300):
+        nodes.append(new_node("requirement", [nodes[-1].id], "# Deep\n"))
     snapshot = snapshot_from_files(root, {n.path: serialize(n) for n in nodes})
     plan = deletion_plan(snapshot, [nodes[1].id, nodes[500].id])
     assert len(plan["deleted_ids"]) == len(set(plan["deleted_ids"])) == 1300

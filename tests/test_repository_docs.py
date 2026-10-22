@@ -12,7 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize(
-    "path", ["README.md", "docs/architecture.md", "docs/own-spec.md", "branding/README.md"]
+    "path",
+    ["README.md", "AGENTS.md", "INTENTION_SPEC.md", "CONCLUSION_SPEC.md", "branding/README.md"]
+    + [p.relative_to(ROOT).as_posix() for p in sorted((ROOT / "docs").rglob("*.md"))]
+    + [
+        "example/gantt/README.md",
+        "example/gantt/AGENTS.md",
+        "example/gantt/history/WALKTHROUGH.md",
+    ],
 )
 def test_engineering_entry_point_local_links_resolve(path):
     document = ROOT / path
@@ -21,6 +28,24 @@ def test_engineering_entry_point_local_links_resolve(path):
             continue
         target = target.split("#", 1)[0]
         assert (document.parent / target).exists(), (path, target)
+
+
+def test_current_documentation_uses_id_only_node_path_examples():
+    paths = [
+        ROOT / name
+        for name in ["README.md", "AGENTS.md", "INTENTION_SPEC.md", "CONCLUSION_SPEC.md"]
+    ]
+    paths += list((ROOT / "docs").rglob("*.md")) + list((ROOT / "docs").glob("*.svg"))
+    paths += list((ROOT / "example/gantt").rglob("*.md"))
+    for path in paths:
+        if "_specspec" in path.parts:
+            continue
+        text = path.read_text(encoding="utf8")
+        assert "--slug" not in text, path
+        assert not re.search(r"[A-Za-z0-9_-]{7}=[A-Za-z0-9_-]+\.md", text), path
+        assert "???????=*.md" not in text, path
+        assert "<slug>" not in text, path
+        assert not re.search(r"filename[- ]only|filename summary|summary-only", text, re.I), path
 
 
 @pytest.mark.parametrize("path", ["docs/architecture.svg", "docs/architecture-interfaces.svg"])

@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from .annotations import snapshots
 from .git import repository_paths, semantic_diff, source_change_impact
@@ -18,7 +18,7 @@ from .query_sources import contract_state, source_comparisons, source_contract_i
 from .sources import BAD_OUTCOMES
 from .workspace import Snapshot
 
-STATUS = {"added": "added", "changed": "modified", "removed": "deleted", "renamed": "renamed"}
+STATUS = {"added": "added", "changed": "modified", "removed": "deleted"}
 
 
 @dataclass
@@ -311,7 +311,7 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
             hints.append("source-changed")
         if not kind and any(n and n.path in file_changed for n in (a, b)):
             hints.append("file-only")
-        header = f"{node.type} {PurePosixPath(node.path).stem}"
+        header = f"{node.type} {node.id}"
         if node.parents:
             header += " @ " + ", ".join(sorted(node.parents))
         return header + (" [" + " ".join(hints) + "]" if hints else "")

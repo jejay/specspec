@@ -25,13 +25,13 @@
     onRectangleChange: active => { $('frame-area').setAttribute('aria-pressed', String(active)); if (active) clearHover(); },
   });
   $('frame-area').title = `Frame rectangle (${camera.rectangleModifier}-drag)`;
-  const elements = ['body', 'sources', 'slug', 'node-type'];
+  const elements = ['body', 'sources', 'node-type'];
   const title = node => node.body.split(/\r?\n/).find(line => line.startsWith('#'))?.replace(/^#+\s*/, '') || node.body.split(/\r?\n/).find(line => line.trim()) || node.type;
   const send = message => host.postMessage(message);
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 6 && !state.readonly &&
+  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 7 && !state.readonly &&
     (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
   const draftCard = () => creating || orphaned();
@@ -46,7 +46,7 @@
 
   function saveDraft() {
     host.setState({ selected, view, colorMode, cameras: { ...cameras }, ...annotations.presentation(), dirty, creating, originalNode, draft: dirty || creating ? {
-      body: $('body').value, sources: $('sources').value, slug: $('slug').value,
+      body: $('body').value, sources: $('sources').value,
       nodeType: $('node-type').value, parents: [...formParents],
     } : undefined });
   }
@@ -67,7 +67,7 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 6 || state.readonly || state.provisional || pending || Boolean(state.document);
+    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 7 || state.readonly || state.provisional || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
@@ -231,7 +231,7 @@
   }
 
   function gitCorner(card, kind) {
-    const entry = { added: ['A', 'Added'], changed: ['M', 'Modified'], removed: ['D', 'Deleted'], renamed: ['R', 'Renamed'] }[kind];
+    const entry = { added: ['A', 'Added'], changed: ['M', 'Modified'], removed: ['D', 'Deleted'] }[kind];
     if (!entry) return; // Linked-source impact is not a node modification.
     const marker = document.createElement('span'); marker.className = `git-corner ${kind}`;
     marker.textContent = entry[0]; marker.title = `${entry[1]} relative to the comparison base`;
@@ -455,7 +455,7 @@
     $('identity').textContent = `${node.id}\n${description(node)}\n${node.path}`;
     const context = contextFor(node.id);
     $('focus-context').textContent = `${context.descendantCount(node.id)} downstream nodes (all depths) · ${snapshotName(node.id)} revision`;
-    $('type-label').hidden = true; $('slug-label').hidden = true;
+    $('type-label').hidden = true;
     if ($('body').value !== node.body) $('body').value = node.body;
     let sameSources = false;
     try { sameSources = JSON.stringify(JSON.parse($('sources').value)) === JSON.stringify(node.sources); } catch { /* Intermediate JSON typing. */ }
@@ -520,15 +520,15 @@
   });
 
   $('new').addEventListener('click', () => {
-    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 6) return;
+    if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 7) return;
     if (dirty && !confirm('Discard unsaved form changes?')) return;
     const parent = currentNode();
     cancelSourcePreview(); rememberCamera(); delete cameras.draft;
     creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
     $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'New node draft';
-    $('type-label').hidden = false; $('slug-label').hidden = false;
-    $('node-type').value = 'requirement'; $('slug').value = ''; $('body').value = ''; $('sources').value = '[]';
+    $('type-label').hidden = false;
+    $('node-type').value = 'requirement'; $('body').value = ''; $('sources').value = '[]';
     $('sources-label').hidden = true; $('before-section').hidden = true;
     populateParents(parent && parent.type !== 'implementation' ? [parent.id] : [], 'requirement');
     draw(); saveDraft();
@@ -551,7 +551,7 @@
     event.preventDefault(); if (!editable() || pending) return;
     pending = true; updateButtons();
     send({ type: creating ? 'add' : 'save', id: selected, originalNode,
-      body: $('body').value, parents: [...formParents], sources: $('sources').value, slug: $('slug').value, nodeType: $('node-type').value,
+      body: $('body').value, parents: [...formParents], sources: $('sources').value, nodeType: $('node-type').value,
       ...(state.document ? { documentVersion, editSequence } : {}) });
   });
   $('delete').addEventListener('click', () => {
@@ -625,7 +625,7 @@
     if (state.document) documentVersion = state.document.version;
     if (!restored.used && state.document?.recoveredForm && !restored.draft) {
       const form = state.document.recoveredForm;
-      restored.draft = { body: form.body, parents: form.parents, sources: form.sources, slug: '', nodeType: graph.nodes.get(state.document.nodeId)?.type };
+      restored.draft = { body: form.body, parents: form.parents, sources: form.sources, nodeType: graph.nodes.get(state.document.nodeId)?.type };
       restored.dirty = true; selected = state.document.nodeId; view = 'focus';
     }
     if (!restored.used && message.selectedId && !restored.draft) { selected = message.selectedId; view = 'focus'; }
@@ -638,8 +638,8 @@
       if (state.document) documentVersion = undefined; // Restored out-of-band drafts need conflict confirmation.
       if (!creating) loadForm();
       $('editor').hidden = false; $('body').value = restored.draft.body; $('sources').value = restored.draft.sources;
-      $('slug').value = restored.draft.slug; $('node-type').value = restored.draft.nodeType;
-      $('type-label').hidden = !creating; $('slug-label').hidden = !creating;
+      $('node-type').value = restored.draft.nodeType;
+      $('type-label').hidden = !creating;
       if (creating) { $('title').textContent = 'New node'; $('identity').textContent = 'Restored unsaved draft'; }
       populateParents(restored.draft.parents, formNodeType());
       $('sources-label').hidden = formNodeType() !== 'implementation';

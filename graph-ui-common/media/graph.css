@@ -80,14 +80,14 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #cards .card[data-annotation-label]:focus-visible { box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .badges { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding-right: 26px; }
 .card.added strong, .card.added h2, .git-corner.added { color: var(--git-added); }
-.card.changed strong, .card.changed h2, .card.renamed strong, .card.renamed h2, .git-corner.changed, .git-corner.renamed { color: var(--git-modified); }
+.card.changed strong, .card.changed h2, .git-corner.changed { color: var(--git-modified); }
 .card.removed strong, .card.removed h2, .git-corner.removed { color: var(--git-deleted); }
 .git-corner { position: absolute; right: 10px; bottom: 8px; font-size: 20px; font-weight: 800; line-height: 1; pointer-events: none; }
 .badges:empty { display: none; }
 .badge { font-size: 10px; padding: 2px 5px; border-radius: 4px; background: var(--vscode-editorWidget-background); border: 1px solid color-mix(in srgb, var(--node-accent, #8993a4) 50%, transparent); white-space: nowrap; }
 .git-badge.added { color: var(--git-added); border-color: var(--git-added); }
 .git-badge.removed { color: var(--git-deleted); border-color: var(--git-deleted); }
-.git-badge.changed, .git-badge.renamed { color: var(--git-modified); border-color: var(--git-modified); }
+.git-badge.changed { color: var(--git-modified); border-color: var(--git-modified); }
 .git-badge.source-changed { color: var(--vscode-gitDecoration-modifiedResourceForeground, #e2c08d); border-color: currentColor; }
 .card.expanded { height: auto; overflow: visible; padding: 18px; box-shadow: 0 0 0 2px var(--vscode-focusBorder); }
 .node-settings { width: 100%; min-width: 0; }

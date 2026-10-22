@@ -57,7 +57,7 @@
     // Reserve the Added green near the default Git text #81b88b (~149.5° OKLCH).
     // Requirement gets an unused green-family swatch; narrow palettes may reuse.
     const roles = { implementation: nearest(300), added: nearest(149.5), changed: nearest(264),
-      removed: nearest(30), renamed: nearest(264), 'source-changed': nearest(75) };
+      removed: nearest(30), 'source-changed': nearest(75) };
     return { kind: 'specspec-rainbow-palette', version: 1, parameters, colors: samples.map(s => s.hex),
       mappings: { requirement: nearest(165, new Set(Object.values(roles))), ...roles },
       gamutReducedIndices: samples.flatMap((s,i) => s.gamutReduced ? [i] : []), samples };

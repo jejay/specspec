@@ -147,7 +147,7 @@ def file_patches(base, target):
 
 
 def render_diff(result, summary=False):
-    codes = {"added": "A", "changed": "M", "removed": "D", "renamed": "R"}
+    codes = {"added": "A", "changed": "M", "removed": "D"}
     counts = {kind: sum(c["kind"] == kind for c in result["changes"]) for kind in codes}
     lines = [
         f"{result.get('base_ref', 'base')} → {result.get('target_ref', 'workspace')}",
@@ -162,8 +162,6 @@ def render_diff(result, summary=False):
         lines += ["", f"{codes[c['kind']]} {node_label(n)} · {n['type']}"]
         if c["fields"]:
             lines.append("  Changed: " + ", ".join(c["fields"]))
-        if c["id"] in old and c["id"] in new and old[c["id"]]["path"] != new[c["id"]]["path"]:
-            lines.append(f"  File: {old[c['id']]['path']} → {new[c['id']]['path']}")
     if not summary:
         # Canonical patches contain frontmatter and body. Their complete set also
         # includes comment/whitespace changes with no semantic node modification.

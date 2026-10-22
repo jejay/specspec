@@ -2,7 +2,7 @@
 
 One CLI serves people and coding agents. Default output is readable text/Markdown;
 `--json` explicitly selects compact UTF-8 API **6**. Redirection does not change the
-format. Canonical node format is **6**; upgrade the CLI and both host builds
+format. Canonical node format is **7**; upgrade the CLI and both host builds
 together. The CLI does not supply old command aliases or old protocol readers.
 
 ## Eight everyday commands
@@ -41,8 +41,8 @@ no direct parent may already be an indirect parent. REDUNDANT_PARENT reports the
 affected edge and alternative path, including redundancies on other nodes after an
 update. Related multi-file Markdown changes must be made coherently and checked;
 managed writes never normalize them. See [graph structure](graph-structure.md).
-Add derives a filename summary from
-the heading (falling back to `node`); advanced `--slug` explicitly overrides it.
+Init and add create `_specspec/<id>.md`, including the ID's trailing `=`.
+Paths depend only on identity; headings and binding text remain inside the document.
 
 `query` is always a revision comparison: fresh `HEAD` to saved `workspace` by default,
 with spotlight-style `--base` and `--target` options. Current records use current
@@ -51,7 +51,7 @@ Ascending-ID last-occurrence placement and short `↪ ID ↓` references keep sh
 compact. Two-column rails frame full parent headers and one-line body readings;
 root content has no extra indent. Single newlines become spaces and longer runs
 become ` ¶ `. Types and change hints use lowercase words: `added`, `modified`,
-`deleted`, `renamed`, `file-only` (literal changes) and `source-changed` (known
+`deleted`, `file-only` (literal changes) and `source-changed` (known
 contract changes, including ancestors). There is no legend. Edits allowed by
 strict/expanding/path-only references stay quiet.
 Parent headers always separate full IDs with `, `. Default source items share one
@@ -86,7 +86,7 @@ Read-only exploration does not stage, commit, install hooks or fetch source obje
 ## Full review diff
 
 Diff groups nodes by stable ID and readable heading, identifies type/parent/source/
-metadata/path changes, and shows **all changed canonical-file hunks** including YAML,
+metadata changes, and shows **all changed canonical-file hunks** including YAML,
 body text, comments, whitespace, line endings and final newlines. Added/deleted files
 are shown completely. A relationship overview labels both ends with full IDs/titles.
 `diff --summary` is explicitly abridged; it is not the default. Git supplies directly
@@ -131,13 +131,13 @@ index graph/code. `recover` restores recognized interrupted transaction states;
 `spotlight add NODE_ID... MESSAGE [--base REV] [--target REV|workspace]` adds a
 color-free comparison spotlight. IDs may include deleted or unchanged members.
 Explicit Git refs pin commits; the implicit default follows live HEAD → workspace.
-`spotlight show [SHOT_ID]` reports each record's own A/M/D/R/= statuses and advisory
+`spotlight show [SHOT_ID]` reports each record's own A/M/D/= statuses and advisory
 workspace drift. Only uncommitted workspace nodes have saved checksums; Git owns
 committed text and no node copies are retained. `spotlight flush --yes` explicitly
 clears local metadata and obsolete copies. See [local spotlights](spotlights.md)
 for complete structures, warning behavior, native-buffer boundaries and UI selection.
 
-Advanced source-array `--sources`, summary `--slug`, source `--symbol`/`--replace`,
+Advanced source-array `--sources`, source `--symbol`/`--replace`,
 mixed metadata `--graph-ref` and `delete --reviewed-plan FILE|-` remain available
 without bloating everyday help. Reviewed deletion plans are rechecked under lock;
 plan transport does not waive warnings, native dirty guards or original-byte checks.

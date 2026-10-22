@@ -20,7 +20,6 @@ from .model import (
     ID_RE,
     MAX_FILE_BYTES,
     NODE_TYPES,
-    SLUG_RE,
     Diagnostic,
     SpecError,
     SpecNode,
@@ -189,15 +188,7 @@ def parse_node(
         check(False, str(error))
     filename = PurePosixPath(path).name
     if isinstance(node_id, str):
-        prefix = node_id
-        check(
-            filename.startswith(prefix) and filename.endswith(".md"), "Filename must match its id."
-        )
-        if filename.startswith(prefix) and filename.endswith(".md"):
-            check(
-                bool(SLUG_RE.fullmatch(filename[len(prefix) : -3])),
-                "Filename slug is not portable.",
-            )
+        check(filename == f"{node_id}.md", "Filename must equal its full id followed by .md.")
     if errors:
         raise SpecError(errors)
     return SpecNode(

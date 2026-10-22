@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { GraphSession, pollInterval } = require('../host/session.cjs');
 const { renderMatches, sameNode } = require('../media/graph-model.js');
 const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
-const snapshot = { valid: true, format_version: 6, nodes: [node], edges: [] };
+const snapshot = { valid: true, format_version: 7, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function advanceClock(t, milliseconds) {
   t.mock.timers.tick(milliseconds); await new Promise(resolve => setImmediate(resolve));
@@ -217,9 +217,10 @@ test('disposal releases an outstanding renderer wait', async t => {
 test('serialized operations pass body as stdin, never renderer commands', async t => {
   const f = fixture(t); await f.s.open();
   await Promise.all([f.s.run(() => f.s.handle({ type: 'refresh' })), f.s.run(() => f.s.handle({ type: 'refresh' }))]);
-  await f.s.handle({ type: 'add', nodeType: 'requirement', slug: 'literal', parents: [], body: '# Literal $(touch anything)', sources: '[]' });
+  await f.s.handle({ type: 'add', nodeType: 'requirement', parents: [], body: '# Literal $(touch anything)', sources: '[]' });
   const write = f.calls.find(c => c.args[0] === 'add'); assert.equal(write.input, '# Literal $(touch anything)');
   assert.ok(!write.args.includes(write.input)); assert.ok(!write.args.includes('--expect'));
+  assert.ok(!write.args.includes('--slug'));
   await assert.rejects(f.s.handle({ type: 'exec', command: 'anything' }), /Select a current node|Unknown graph/);
 });
 test('unrelated changes do not block drafts; every save re-reads actual files', async t => {

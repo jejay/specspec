@@ -21,7 +21,7 @@ def request(root, payload, *args):
 
 def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
     root, manifesto = workspace
-    snapshot, node_id = add_node(root, "requirement", [manifesto], "# Original\n", "node")
+    snapshot, node_id = add_node(root, "requirement", [manifesto], "# Original\n")
     node = next(node for node in snapshot.nodes if node.id == node_id)
     path = root / node.path
     original = (
@@ -54,10 +54,26 @@ def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
     assert {p.name: p.read_bytes() for p in (root / "_specspec").iterdir()} == before
 
 
+def test_native_plan_diagnoses_noncanonical_filename_without_saving(workspace):
+    root, manifesto = workspace
+    snapshot = load_snapshot(root)
+    node = snapshot.graph.nodes[manifesto]
+    destination = f"_specspec/{manifesto}extra.md"
+    (root / node.path).rename(root / destination)
+    before = (root / destination).read_bytes()
+    planned = request(
+        root, {"edit": {"path": destination, "id": manifesto, "body": "# Repair draft\n"}}
+    )
+    assert not planned["snapshot"]["valid"]
+    assert any("Filename must equal" in d["message"] for d in planned["diagnostics"])
+    assert planned["changes"][0]["path"] == destination
+    assert (root / destination).read_bytes() == before
+
+
 def test_body_typing_does_not_reorder_or_reformat_untouched_frontmatter(workspace):
     root, manifesto = workspace
-    _, parent = add_node(root, "requirement", [manifesto], "# Parent", "parent")
-    snapshot, node_id = add_node(root, "implementation", [parent], "# Impl", "impl")
+    _, parent = add_node(root, "requirement", [manifesto], "# Parent")
+    snapshot, node_id = add_node(root, "implementation", [parent], "# Impl")
     node = next(n for n in snapshot.nodes if n.id == node_id)
     raw = (root / node.path).read_text(encoding="utf-8")
     raw = raw.replace(f"- {parent}", f"- {parent}  # parent list comment")
@@ -96,8 +112,8 @@ def test_body_typing_does_not_reorder_or_reformat_untouched_frontmatter(workspac
 
 def test_invalid_native_buffers_have_diagnostics_and_can_be_repaired(workspace):
     root, manifesto = workspace
-    _, requirement = add_node(root, "requirement", [manifesto], "# Requirement", "requirement")
-    snapshot, node_id = add_node(root, "implementation", [requirement], "# Impl\n", "impl")
+    _, requirement = add_node(root, "requirement", [manifesto], "# Requirement")
+    snapshot, node_id = add_node(root, "implementation", [requirement], "# Impl\n")
     node = next(n for n in snapshot.nodes if n.id == node_id)
     invalid = request(root, {"edit": {"path": node.path, "id": node_id, "sources": "[{"}})
     assert not invalid["snapshot"]["valid"]
@@ -127,8 +143,8 @@ def test_invalid_native_buffers_have_diagnostics_and_can_be_repaired(workspace):
 
 def test_source_planning_uses_current_text_type_not_the_initial_tab_type(workspace):
     root, manifesto = workspace
-    _, parent = add_node(root, "requirement", [manifesto], "# Parent", "parent")
-    snapshot, child = add_node(root, "requirement", [parent], "# Child", "child")
+    _, parent = add_node(root, "requirement", [manifesto], "# Parent")
+    snapshot, child = add_node(root, "requirement", [parent], "# Child")
     node = next(n for n in snapshot.nodes if n.id == child)
     raw = (root / node.path).read_text(encoding="utf-8")
     (root / "impl.py").write_text("# linked source\n", encoding="utf-8")
@@ -157,8 +173,8 @@ def test_source_planning_uses_current_text_type_not_the_initial_tab_type(workspa
 
 def test_cycle_diagnostics_use_the_full_overlay_and_retirement_edits_are_rejected(workspace):
     root, manifesto = workspace
-    snapshot, first = add_node(root, "requirement", [manifesto], "# First", "first")
-    snapshot, second = add_node(root, "requirement", [first], "# Second", "second")
+    snapshot, first = add_node(root, "requirement", [manifesto], "# First")
+    snapshot, second = add_node(root, "requirement", [first], "# Second")
     node = next(n for n in snapshot.nodes if n.id == first)
     cycle = request(root, {"edit": {"path": node.path, "id": first, "parents": [second]}})
     assert not cycle["snapshot"]["valid"]

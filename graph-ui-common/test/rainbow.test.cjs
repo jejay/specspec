@@ -45,16 +45,15 @@ test('node-type and colored revision swatches come from the same rainbow table',
   }
   assert.equal(model.TYPE_COLORS.requirement,model.RAINBOW_COLORS[4]);
   assert.equal(model.TYPE_COLORS.implementation,model.RAINBOW_COLORS[0]);
-  for(const kind of ['added','changed','removed','renamed','source-changed']) {
+  for(const kind of ['added','changed','removed','source-changed']) {
     assert.ok(model.RAINBOW_COLORS.includes(model.REVISION_COLORS[kind]));
   }
   assert.equal(model.REVISION_COLORS.added,model.RAINBOW_COLORS[3]);
   assert.equal(model.REVISION_COLORS.changed,model.RAINBOW_COLORS[1]);
   assert.equal(model.REVISION_COLORS.removed,model.RAINBOW_COLORS[6]);
-  assert.equal(model.REVISION_COLORS.renamed,model.REVISION_COLORS.changed);
   assert.equal(model.REVISION_COLORS['source-changed'],model.RAINBOW_COLORS[5]);
   assert.deepEqual(model.TYPE_COLORS,{manifesto:'#d3d3d3',requirement:'#92a64b',implementation:'#bc82c9'});
-  for(const [kind,hex] of Object.entries({added:'#37b390',changed:'#7e97e6',removed:'#dc7b7c',renamed:'#7e97e6','source-changed':'#ca8d3e'})) {
+  for(const [kind,hex] of Object.entries({added:'#37b390',changed:'#7e97e6',removed:'#dc7b7c','source-changed':'#ca8d3e'})) {
     assert.equal(model.color('git-revision',{type:'manifesto'},0,kind),hex);
     assert.equal(model.color('git-revision',{type:'requirement'},10,kind),hex);
   }

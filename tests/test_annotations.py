@@ -26,7 +26,7 @@ def call(root, *args):
 def test_color_free_cli_add_show_statuses_and_atomic_rejection(workspace):
     root, parent = workspace
     setup_repository(root)
-    _, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    _, child = add_node(root, "requirement", [parent], "# Child\n")
     result = call(root, "add", parent, child, "One", "shared", "message", "--json")
     assert result.exit_code == 0, result.output
     shot = json.loads(result.stdout)["result"]["shots"][0]
@@ -89,12 +89,12 @@ def test_dash_leading_ids_and_color_names_in_message(workspace, node_id):
 
 def test_only_dirty_nodes_get_checksums_no_node_copies_or_git_writes(workspace):
     root, parent = workspace
-    _, changed = add_node(root, "requirement", [parent], "# Changed\n", "changed")
-    _, removed = add_node(root, "requirement", [parent], "# Removed\n", "removed")
+    _, changed = add_node(root, "requirement", [parent], "# Changed\n")
+    _, removed = add_node(root, "requirement", [parent], "# Removed\n")
     setup_repository(root)
     index, refs = git(root, "ls-files", "--stage"), git(root, "show-ref")
     update_node(root, changed, body="# Workspace only\n")
-    _, added = add_node(root, "requirement", [parent], "# Added\n", "added")
+    _, added = add_node(root, "requirement", [parent], "# Added\n")
     snapshot = load_snapshot(root)
     (root / snapshot.graph.nodes[removed].path).unlink()
     snapshot = load_snapshot(root)
@@ -123,7 +123,7 @@ def test_only_dirty_nodes_get_checksums_no_node_copies_or_git_writes(workspace):
 def test_workspace_drift_warns_without_losing_members_and_original_is_immutable(workspace):
     root, parent = workspace
     setup_repository(root)
-    _, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    _, child = add_node(root, "requirement", [parent], "# Child\n")
     shot = annotations.submit(root, payload(parent, child))
     path = root / ".specspec-local/annotations" / (shot["id"] + ".json")
     raw = path.read_bytes()
@@ -145,7 +145,7 @@ def test_workspace_drift_warns_without_losing_members_and_original_is_immutable(
 
 def test_drift_tracks_unselected_changes_and_literal_comments_line_endings(workspace):
     root, parent = workspace
-    _, child = add_node(root, "requirement", [parent], "# Child\n", "child")
+    _, child = add_node(root, "requirement", [parent], "# Child\n")
     setup_repository(root)
     shot = annotations.submit(root, payload(parent))
     node = load_snapshot(root).graph.nodes[child]
@@ -244,15 +244,17 @@ def test_clean_crlf_checkout_is_not_hashed_but_native_overlay_and_dirty_files_ar
     assert parent in annotations.submit(root, payload(parent))["workspace"]["changes"]
 
 
-def test_rename_status_without_a_workspace_content_checksum(workspace):
+def test_heading_changes_keep_spotlight_identity_and_canonical_path(workspace):
     root, parent = workspace
     setup_repository(root)
     node = load_snapshot(root).graph.nodes[parent]
-    (root / node.path).rename(root / "_specspec" / (parent + "renamed.md"))
+    update_node(root, parent, body="# Different heading\n")
     shot = annotations.submit(root, payload(parent))
-    assert shot["workspace"]["changes"] == {}
-    assert annotations.listing(root)["shots"][0]["members"][0]["kind"] == "renamed"
-    assert f"R {parent}" in call(root, "show").stdout
+    assert parent in shot["workspace"]["changes"]
+    member = annotations.listing(root)["shots"][0]["members"][0]
+    assert member["kind"] == "changed"
+    assert load_snapshot(root).graph.nodes[parent].path == node.path
+    assert f"M {parent}" in call(root, "show").stdout
 
 
 def test_non_git_unborn_and_sha256_workspaces(workspace):

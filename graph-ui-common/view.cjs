@@ -46,7 +46,6 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <div id="detail-parking" hidden><section id="node-details" class="node-settings">
     <h2 id="title">Select a node</h2><p id="identity"></p><p id="focus-context" class="form-help"></p><form id="editor" hidden>
     <label id="type-label">Type<select id="node-type"><option value="requirement">Requirement</option><option value="implementation">Implementation</option></select></label>
-    <label id="slug-label">Filename summary<input id="slug" maxlength="120"></label>
     <label>Binding Markdown<textarea id="body" rows="14" spellcheck="false"></textarea></label>
     <fieldset id="parents-fieldset"><legend>Parents</legend>
     <p id="parents-summary" class="form-help" role="status"></p><ul id="parent-links"></ul>

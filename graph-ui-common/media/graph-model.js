@@ -20,8 +20,8 @@
   const INFLUENCE_RGB = INFLUENCE_COLORS.map(hex => [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16)));
   const NEUTRAL_COLOR = '#929baa';
   const TYPE_COLORS = { manifesto: '#d3d3d3', requirement: RAINBOW_COLORS[4], implementation: RAINBOW_COLORS[0] };
-  const REVISION_COLORS = { added: RAINBOW_COLORS[3], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[6], renamed: RAINBOW_COLORS[1], 'source-changed': RAINBOW_COLORS[5], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
-  const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', renamed: 'R · Renamed', 'source-changed': 'Linked source changed', unchanged: 'Same as base', uncompared: 'Workspace', draft: 'Draft' };
+  const REVISION_COLORS = { added: RAINBOW_COLORS[3], changed: RAINBOW_COLORS[1], removed: RAINBOW_COLORS[6], 'source-changed': RAINBOW_COLORS[5], unchanged: NEUTRAL_COLOR, uncompared: NEUTRAL_COLOR, draft: NEUTRAL_COLOR };
+  const REVISION_LABELS = { added: 'A · Added', changed: 'M · Modified', removed: 'D · Deleted', 'source-changed': 'Linked source changed', unchanged: 'Same as base', uncompared: 'Workspace', draft: 'Draft' };
   const COLOR_MODES = ['distance', 'max-distance', ...INFLUENCE_MODES, 'type', 'git-revision'];
 
   function sameNode(left, right) {

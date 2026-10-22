@@ -11,7 +11,6 @@ STATUS = {
     "added": "A",
     "removed": "D",
     "changed": "M",
-    "renamed": "R",
     "unchanged": "=",
     "absent": "?",
     "unavailable": "!",

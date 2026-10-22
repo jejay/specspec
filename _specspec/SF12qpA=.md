@@ -30,7 +30,7 @@ sources:
 Click presents eight everyday verbs with focused advanced tools and a bounded hidden
 application adapter. Output rendering separates readable text/Markdown from explicit
 compact API-6 envelopes. Mutation receipts retain IDs/paths/scope and warnings rather
-than full graphs. Node format 6 and canonical identities/source grammar remain stable.
+than full graphs. Node format 7 and canonical identities/source grammar remain stable.
 
 Full review output combines stable-ID classification, every canonical-file hunk,
 relationship labels and separate linked-source context. Comment/whitespace/newline
@@ -46,7 +46,7 @@ raw-only patches, compact/expanded equivalence, deleted membership through stagi
 commit, source retention and exact-index distinction. The Gantt corpus uses actual
 current CLI receipts across all retained refs, preserving identities, redirects,
 application bytes and positive spec-before-code checkpoints. Guides and diagrams name
-the current operations and separate protocol 6 from node schema 6.
+the current operations and separate protocol 6 from node schema 7.
 
 Static command help uses ASCII punctuation so Click can render help through legacy
 Windows pipe encodings. Readable result/diagnostic and structured envelope emission

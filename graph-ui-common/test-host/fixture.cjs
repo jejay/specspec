@@ -18,7 +18,7 @@ function fixture(source, python) {
     const modified = s.nodes.find(n => n.type === 'requirement' && n.parents.includes(manifesto.id));
     if (!modified) throw new Error('The UI fixture needs a current manifesto-child requirement.');
     cli(['update', modified.id, '--body', '-', '--json'], '# Modified UI fixture intention\n\nDisposable test content, not the real project.\n');
-    const added = cli(['add', '--parent', manifesto.id, '--slug', 'added-ui-fixture', '--body', '-', '--json'], '# Added UI fixture intention\n\nDisposable test content.\n').changed_ids[0];
+    const added = cli(['add', '--parent', manifesto.id, '--body', '-', '--json'], '# Added UI fixture intention\n\nDisposable test content.\n').changed_ids[0];
     s = cli(['show', '--json']);
     const removed = s.nodes.find(n => n.type === 'implementation');
     // A managed physical deletion exercises D; this disposable terminal node only.

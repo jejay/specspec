@@ -284,7 +284,7 @@ def test_cli_scopes_bindings_and_reconstructs_selected_revisions_with_full_bound
     assert Counter(i for _, i, ref in entries(result.stdout) if not ref) == Counter(
         {identity(3), identity(4)}
     )
-    assert f"requirement {identity(3)}node-3 @ {identity(1)}\nBody 3." in result.stdout
+    assert f"requirement {identity(3)} @ {identity(1)}\nBody 3." in result.stdout
     expected = "  Current\n  \n    indented\n" if human else "  Current ¶   indented "
     assert expected in result.stdout
     value = json.loads(call(root, *args, "--json").stdout)["result"]
@@ -302,7 +302,7 @@ def test_cli_scopes_bindings_and_reconstructs_selected_revisions_with_full_bound
         ]
         assert expanded[side]["valid"]  # Original graph validity, not canonicality of this view.
     assert value["changes"] == [{"id": identity(4), "kind": "changed", "fields": ["body"]}]
-    assert all(c["path"].endswith(f"{identity(4)}node-4.md") for c in value["file_changes"])
+    assert all(c["path"].endswith(f"{identity(4)}.md") for c in value["file_changes"])
 
 
 def test_deleted_records_reparenting_and_explicit_deleted_root_use_selected_edges(query_project):
@@ -324,7 +324,7 @@ def test_default_metric_root_is_target_manifesto_and_old_roots_remain_explicit(q
     root = query_project
     g = load_snapshot(root).graph
     old = g.nodes[identity(0)]
-    new = replace(old, id=identity(99), path=f"_specspec/{identity(99)}new-root.md")
+    new = replace(old, id=identity(99), path=f"_specspec/{identity(99)}.md")
     (root / old.path).unlink()
     (root / new.path).write_bytes(serialize(new))
     for index in (1, 2):
@@ -384,13 +384,13 @@ def test_cli_accepts_hyphen_leading_full_ids_and_keeps_every_boundary_parent(que
     snapshot = load_snapshot(root)
     old = snapshot.graph.nodes[identity(8)]
     (root / old.path).unlink()
-    new = replace(old, id="-AAAAAA=", path="_specspec/-AAAAAA=hyphen.md")
+    new = replace(old, id="-AAAAAA=", path="_specspec/-AAAAAA=.md")
     (root / new.path).write_bytes(serialize(new))
     result = call(root, "-AAAAAA=", "--max-distance", "0", "--json")
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["result"]["selection"]["ids"] == ["-AAAAAA="]
     result = call(root, identity(6), "--max-distance", "0")
-    assert f"requirement {identity(6)}node-6 @ {identity(4)}, {identity(5)}" in result.stdout
+    assert f"requirement {identity(6)} @ {identity(4)}, {identity(5)}" in result.stdout
     value = json.loads(call(root, identity(6), "--max-distance", "0", "--json").stdout)["result"]
     assert value["selection"]["boundary_parents"] == [identity(4), identity(5)]
 
@@ -482,13 +482,12 @@ def test_excluded_descendant_evidence_preserves_selected_badges_and_skips_unrela
     project, monkeypatch, reparent
 ):
     root, manifesto, requirement, implementation, _ = project
-    _, other = add_node(root, "requirement", [manifesto], "Other\n", "other")
+    _, other = add_node(root, "requirement", [manifesto], "Other\n")
     add_node(
         root,
         "implementation",
         [other],
         "Other source\n",
-        "other-source",
         [{"path": "unrelated.py"}],
     )
     git(root, "add", "_specspec")

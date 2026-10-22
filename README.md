@@ -3,7 +3,7 @@
 Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
 [Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
 [Graph structure](docs/graph-structure.md): immediate justifications form a shortcut-free DAG;
-node format 6 and API 6 are the current contracts.
+node format 7 and API 6 are the current contracts.
 
 New engineers: [architecture guide](docs/architecture.md) and
 [owner/agent workflow SVG](docs/architecture.svg).
@@ -40,7 +40,7 @@ explains the recurring obligation. Plausible graph emergence/revision is enough;
 
 ## Implementation source regions
 
-[Source-region guide](docs/source-regions.md): canonical node format 6 supports
+[Source-region guide](docs/source-regions.md): canonical node format 7 supports
 whole-file hints and full Git blob anchors with multiple inclusive ranges.
 **Strict** (specific) reports internal changes; **expanding** (broad) includes them.
 Positions resolve without renumbering the spec; ambiguity/deletion/unavailable
@@ -129,8 +129,8 @@ The CLI and graph editor are recommended, but manual `_specspec` Markdown edits 
 
 Node IDs are canonical padded Base64url of **five random bytes (40 bits)**:
 seven symbols plus `=`, eight characters in total. The full trailing equals sign
-belongs to the identity and also separates it from the filename summary, for
-example `XV5_rPQ=specspec-manifesto.md`. Tool creation retries project-local
+belongs to the identity. Each filename is exactly `<id>.md`, for example
+`XV5_rPQ=.md`, with readable headings inside the document. Tool creation retries project-local
 collisions against current node files, including case-only aliases, under the writer
 lock. IDs remain case-sensitive; these are references, not security tokens.
 
@@ -138,7 +138,7 @@ The flat `_specspec` directory contains nodes only. Global `format_version` meta
 
 ## Schema, deletion and the default HEAD comparison
 
-Canonical node format **6** has no `managed_hash`, `status` or `retired` field. Withdraw a node
+Canonical node format **7** has no `managed_hash`, `status` or `retired` field. Withdraw a node
 by deleting its Markdown file (`specspec delete <id>...` or a valid manual deletion).
 Explain why in your normal Git commit. Earlier content stays in Git history, not
 flagged files. Managed deletion cascades through every full/partial child at every
@@ -154,10 +154,10 @@ nodes. Unborn Git has an empty baseline; non-Git/invalid baselines show a clear
 comparison-unavailable note. No default polling, staging, commits or status-restore
 workflow is introduced. Native-document Delete requires saved project documents.
 
-Only the current compact-ID node format **6** schema and structured API **6** are supported. Obsolete
+Only the current compact-ID node format **7** schema and structured API **6** are supported. Obsolete
 node formats, UUID IDs and unknown fields are rejected, not silently normalized.
 There is no permanent migration command or editor conversion control. Both working
-graphs were converted once through a temporary journaled tool. Old root-history
+graphs use exact ID-only filenames. Old root-history
 comparisons may fail; that is expected and is not a compatibility test obligation.
 Upgrade the CLI and extension together. Gantt's maintained standalone history was
 rebuilt through current CLI executions and is cloned from its bundle for tests.
@@ -227,7 +227,7 @@ Curved connections run directly from right to left card boundaries, including ci
 
 At overview altitude, node fills strengthen toward their painted borders over the same 100%-to-12% interval that quiets ordinary arrows. At minimum zoom, nodes read as solid colored shapes; actual-size editing keeps the 15% resting/24% hover tints. The canvas shows concise color legends and leaves tutorial text in documentation.
 
-Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** offers **Min. Distance to Manifesto** (shortest directed path, default), **Max. Distance to Manifesto** (longest directed path), **Absolute influence**, **Relative influence**, **Log Absolute Influence**, **Log Relative Influence**, **Node type**, and **Git/Revision Status**, with legends. Distance modes cycle through the seven colors selected in the playground, from purple (one hop) to red, repeating after seven hops. Node types reuse the selected yellow-green and purple; Added fills take the teal-green closer to the existing added text cue. Paths count relationships from the manifesto in each revision—not the focused subset or comparison overlay. None is an acceptance score. In distance/type/influence modes the manifesto keeps a gray accent and white hover border, with the same tinted background as other cards—not a solid pale fill. In **Git/Revision Status**, including on the manifesto, fills use rainbow green for A, blue for M/R, red for D, amber for linked-source impact and neutral gray for unchanged nodes. Labels distinguish rename, deletion and source-only impact; no comparison and unsaved drafts are neutral, not fictitious Git changes. Existing themed titles/letters and connection colors remain separate. Status-colored manifesto borders retain their hue on hover like other nodes. All unrelated nodes, including the manifesto, can still darken temporarily.
+Click a node to open its **neighborhood view**: compact parents to the left, compact children to the right, and all editing controls inside the expanded selected node. **← Total graph** returns to the overview without discarding a draft; **Resume draft** continues it. **Color by** offers **Min. Distance to Manifesto** (shortest directed path, default), **Max. Distance to Manifesto** (longest directed path), **Absolute influence**, **Relative influence**, **Log Absolute Influence**, **Log Relative Influence**, **Node type**, and **Git/Revision Status**, with legends. Distance modes cycle through the seven colors selected in the playground, from purple (one hop) to red, repeating after seven hops. Node types reuse the selected yellow-green and purple; Added fills take the teal-green closer to the existing added text cue. Paths count relationships from the manifesto in each revision—not the focused subset or comparison overlay. None is an acceptance score. In distance/type/influence modes the manifesto keeps a gray accent and white hover border, with the same tinted background as other cards—not a solid pale fill. In **Git/Revision Status**, including on the manifesto, fills use rainbow green for A, blue for M, red for D, amber for linked-source impact and neutral gray for unchanged nodes. Labels distinguish modification, deletion and source-only impact; no comparison and unsaved drafts are neutral, not fictitious Git changes. Existing themed titles/letters and connection colors remain separate. Status-colored manifesto borders retain their hue on hover like other nodes. All unrelated nodes, including the manifesto, can still darken temporarily.
 
 **Influence** counts self plus unique direct and indirect descendants, with a minimum of one. All four influence modes use a continuous red → yellow → green spectrum (strongest → weakest, no blue). **Absolute influence** normalizes `(influence - 1) / (maximum - 1)`, mapping one to green and the highest non-manifesto count to red. **Relative influence** compares only nodes with the same **maximum** distance to the manifesto, mapping that group's lowest count to green and highest to red. **Log Absolute Influence** and **Log Relative Influence** apply `log(influence)` before normalization in those same domains. This keeps leaf counts defined and emphasizes differences among smaller counts while retaining both linear choices. Tied/singleton groups use green; the manifesto stays gray. Counts and normalization use the full target revision for surviving nodes and full base revision for deleted nodes, even in a focused neighborhood. The continuous legend explains the selected domain; Git accents and spotlight rings remain independent.
 
@@ -288,7 +288,7 @@ command and Linux/Windows CI checks are documented in `electron/README.md`; Linu
 remote CI, installers/signing and Claude Code/Codex connectors are **not claimed completed**.
 The adapter seam supports later integration work, not an existing agent integration.
 
-**Git cues:** node titles and bottom-right **A/M/D** (plus **R** for rename) share themed
+**Git cues:** node titles and bottom-right **A/M/D** share themed
 colors, relative to the selected base. A/D use VS Code Git resource foregrounds; M uses
 the theme's modified-gutter blue, since modified-resource foreground is often amber.
 Electron uses Dark Modern/default Git colors. Larger, heavier corner letters fit within unchanged compact cards. Semantic fills, source-only impact and

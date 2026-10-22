@@ -59,7 +59,7 @@ if (process.versions.electron) {
       assert.ok(await evaluate(`document.getElementById('copy').disabled&&document.getElementById('swatches').children.length===12`));
       await evaluate(`document.getElementById('reset').click()`);
       assert.deepEqual(await evaluate(`JSON.parse(document.getElementById('result').value).colors`),require('../media/graph-model.js').RAINBOW_COLORS);
-      assert.deepEqual(await evaluate(`JSON.parse(document.getElementById('result').value).mappings`),{requirement:4,implementation:0,added:3,changed:1,removed:6,renamed:1,'source-changed':5});
+      assert.deepEqual(await evaluate(`JSON.parse(document.getElementById('result').value).mappings`),{requirement:4,implementation:0,added:3,changed:1,removed:6,'source-changed':5});
       await evaluate(`document.getElementById('format').value='css';document.getElementById('format').dispatchEvent(new Event('change'))`);
       assert.ok(await evaluate(`document.getElementById('result').value.includes('--rainbow-7: #dc7b7c')`));
       assert.ok(await evaluate(`document.getElementById('result').value.includes('--palette-requirement: var(--rainbow-5)')&&document.getElementById('result').value.includes('--palette-added: var(--rainbow-4)')`));

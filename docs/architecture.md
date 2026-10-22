@@ -21,9 +21,9 @@ that same CLI contract, or imports the library into its own Python process.
 ## The mental model
 
 - **Canonical data is a Markdown DAG, not a database.** Each direct
-  `_specspec/<id><slug>.md` file has strict YAML frontmatter and a binding body.
+  `_specspec/<id>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only shortcut-free node format 6, API 6
+  potentially multiple parents, and terminal implementations. Only shortcut-free node format 7, API 6
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
@@ -253,7 +253,7 @@ setup preserves existing commands; SpecSpec does not install or replace hooks. O
 switches branches.
 
 Semantic diffs match full IDs, distinguishing body/parent/metadata
-changes from pure filename renames and raw file changes. They return both snapshots
+changes from raw file changes. They return both snapshots
 and edge additions/removals. Structural impact includes descendants from **both**
 old and new graphs, so removing an edge cannot hide its earlier dependents.
 Changed linked source paths identify implementation nodes and their ancestors,
@@ -339,16 +339,16 @@ resvg --width 2000 docs/architecture-interfaces.svg .specspec-local/interfaces-p
 
 ### Canonical reasoning behind these boundaries
 
-- [Descriptive engineering map](../_specspec/yJnnDfM=describe-runtime-boundaries-in-an-offline-engineering-map.md),
-  [actor-first overview choice](../_specspec/Rmh2lfc=actor-first-architecture-overview.md)
-  and [map implementation](../_specspec/58igdyQ=actor-first-architecture-map-implementation.md).
-- [Interface zoom choice](../_specspec/Pxcs6Oc=tooling-interface-detail-zoom.md)
-  and [interface documentation implementation](../_specspec/Ryqivvg=tooling-interface-detail-implementation.md).
-- [Shared Python backend](../_specspec/LvYBN_4=shared-python-json-backend.md)
-  and [shared UI/session](../_specspec/YOPhqYc=shared-ui-and-host-session.md).
-- [Managed transactions/recovery](../_specspec/6SyZ-BU=recoverable-workspace-mutations.md)
-  versus [native documents](../_specspec/GQdmCrA=native-node-documents-and-independent-graph-views.md).
-- [Hash-free synchronization](../_specspec/tvic3PQ=hash-free-schema-and-watcher-reconciliation.md),
-  [Git snapshot semantics](../_specspec/Yfy0414=staged-validation-and-semantic-diffs.md),
-  and [current-only IDs/schema](../_specspec/qowy5AI=canonical-base64url-and-current-only-backend.md).
-- [Independent example workspaces/history](../_specspec/83D9YWw=external-example-checkouts.md).
+- [Descriptive engineering map](../_specspec/yJnnDfM=.md),
+  [actor-first overview choice](../_specspec/Rmh2lfc=.md)
+  and [map implementation](../_specspec/58igdyQ=.md).
+- [Interface zoom choice](../_specspec/Pxcs6Oc=.md)
+  and [interface documentation implementation](../_specspec/Ryqivvg=.md).
+- [Shared Python backend](../_specspec/LvYBN_4=.md)
+  and [shared UI/session](../_specspec/YOPhqYc=.md).
+- [Managed transactions/recovery](../_specspec/6SyZ-BU=.md)
+  versus [native documents](../_specspec/GQdmCrA=.md).
+- [Hash-free synchronization](../_specspec/tvic3PQ=.md),
+  [Git snapshot semantics](../_specspec/Yfy0414=.md),
+  and [current-only IDs/schema](../_specspec/qowy5AI=.md).
+- [Independent example workspaces/history](../_specspec/83D9YWw=.md).

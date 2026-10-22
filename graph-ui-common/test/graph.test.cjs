@@ -28,7 +28,7 @@ function fixture(t, options = {}) {
     dom.window.close();
     assert.deepEqual(messages.filter(message => message.type === 'client-error'), [], 'Renderer errors must not be mistaken for successful DOM tests.');
   });
-  const snapshot = { format_version: 6, valid: true, nodes: [root, child], edges: [['root', 'child']] };
+  const snapshot = { format_version: 7, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
   send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
@@ -115,9 +115,9 @@ test('tool copy stays concise and positive while project text and validation evi
 
 test('canonical compact IDs retain equals signs in cards, parent pickers and save messages', t => {
   const { dom, snapshot, send, $, messages } = fixture(t);
-  const shortRoot = { ...root, id: '-_____8=', path: '_specspec/-_____8=root.md' };
-  const shortChild = { ...child, id: 'Zm9vYmE=', parents: [shortRoot.id], path: '_specspec/Zm9vYmE=child.md' };
-  const candidate = { ...child, id: 'ZnJlc2g=', parents: [shortRoot.id], path: '_specspec/ZnJlc2g=candidate.md' };
+  const shortRoot = { ...root, id: '-_____8=', path: '_specspec/-_____8=.md' };
+  const shortChild = { ...child, id: 'Zm9vYmE=', parents: [shortRoot.id], path: '_specspec/Zm9vYmE=.md' };
+  const candidate = { ...child, id: 'ZnJlc2g=', parents: [shortRoot.id], path: '_specspec/ZnJlc2g=.md' };
   send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [shortRoot, shortChild, candidate], edges: [[shortRoot.id, shortChild.id], [shortRoot.id, candidate.id]] }, diagnostics: [], readonly: false });
   assert.ok(dom.window.document.querySelector('[data-node-id="-_____8="] small').textContent.endsWith(shortRoot.id));
   dom.window.document.querySelector('[data-node-id="Zm9vYmE="]').click();
@@ -891,7 +891,7 @@ test('restored obsolete status colors fall back to distance without losing a dra
     colorMode: 'status', selected: 'child', view: 'focus', dirty: true,
     originalNode: child, creating: false,
     cameras: { 'focus:child': { x: 30, y: -50, k: 0.8 } },
-    draft: { body: '# My draft\n', sources: '[]', slug: '', nodeType: 'requirement', parents: ['root'] },
+    draft: { body: '# My draft\n', sources: '[]', nodeType: 'requirement', parents: ['root'] },
   } });
   assert.equal(saved().colorMode, 'distance');
   assert.equal($('body').value, '# My draft\n');
@@ -904,7 +904,8 @@ test('graph renders and new-node creation goes through a typed message', t => {
   assert.equal(dom.window.document.querySelectorAll('.card').length, 2);
   assert.equal($('new').disabled, false);
   $('new').click();
-  $('slug').value = 'new-conclusion'; $('body').value = '# New\n';
+  assert.equal($('slug'), null);
+  $('body').value = '# New\n';
   $('parent-candidate').value = 'root';
   $('parent-candidate').dispatchEvent(new dom.window.Event('change'));
   $('add-parent').click();
@@ -913,6 +914,7 @@ test('graph renders and new-node creation goes through a typed message', t => {
   assert.equal(message.type, 'add');
   assert.equal('expect' in message, false);
   assert.equal(message.body, '# New\n');
+  assert.equal('slug' in message, false);
   assert.deepEqual([...message.parents], ['root']);
   assert.equal($('save').disabled, true);
 });
@@ -989,7 +991,7 @@ test('parent drafts survive refresh and can be discarded without losing the orig
 test('restored parent drafts retain original contents and do not turn candidates into links', t => {
   const { dom, messages, $ } = fixture(t, { restored: {
     selected: 'child', dirty: true, creating: false, originalNode: child,
-    draft: { body: '# Unsaved\n', sources: '[]', slug: '', nodeType: 'requirement', parents: [] },
+    draft: { body: '# Unsaved\n', sources: '[]', nodeType: 'requirement', parents: [] },
   } });
   assert.equal($('parent-links').children.length, 0);
   assert.ok([...$('parent-candidate').options].some(option => option.value === 'root'));
@@ -1001,7 +1003,7 @@ test('restored parent drafts retain original contents and do not turn candidates
 test('old invalid manifesto parent drafts cannot restore editable root links', t => {
   const { dom, messages, $ } = fixture(t, { restored: {
     selected: 'root', dirty: true, creating: false, originalNode: root,
-    draft: { body: '# Unsaved purpose\n', sources: '[]', slug: '', nodeType: 'requirement', parents: ['child'] },
+    draft: { body: '# Unsaved purpose\n', sources: '[]', nodeType: 'requirement', parents: ['child'] },
   } });
   assert.equal($('body').value, '# Unsaved purpose\n');
   assert.equal($('parent-links').children.length, 0);
@@ -1064,7 +1066,7 @@ test('deleted edited nodes retain a visible copyable draft without inventing a c
 test('pre-hash-removal drafts keep their text but do not manufacture an original node record', t => {
   const { $, saved, messages, dom } = fixture(t, { restored: {
     selected: 'child', dirty: true, formFingerprint: 'obsolete',
-    draft: { body: '# Legacy draft', sources: '[]', parents: ['root'], slug: '', nodeType: 'requirement' },
+    draft: { body: '# Legacy draft', sources: '[]', parents: ['root'], nodeType: 'requirement' },
   } });
   assert.equal($('body').value, '# Legacy draft'); assert.equal(saved().originalNode, undefined);
   assert.equal('formFingerprint' in saved(), false); assert.match($('message').textContent, /changed outside/);
@@ -1220,16 +1222,16 @@ test('minimum/maximum distance modes have exact labels, different fills/legends,
   assert.ok(messages.every(m => ['ready', 'rendered'].includes(m.type)));
 });
 
-test('revision fills include changed manifesto, added/removed/renamed/source-only and unchanged nodes in overview and focus', t => {
+test('revision fills include changed manifesto, added/removed/source-only and unchanged nodes in overview and focus', t => {
   const { dom, $, snapshot, send, saved, messages } = fixture(t);
   const extra=(id,fields={})=>({...child,id,body:'# '+id,...fields});
-  const old=extra('old'),added=extra('new'),renamed=extra('rename'),source=extra('source'),plain=extra('plain');
-  const base={...snapshot,nodes:[root,child,old,renamed,source,plain],edges:[...snapshot.edges,['root','old'],['root','rename'],['root','source'],['root','plain']]};
-  const target={...base,nodes:[root,child,added,renamed,source,plain],edges:base.edges.filter(e=>e[1]!=='old').concat([['root','new']])};
-  const diff={base,target,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'},{id:'old',kind:'removed'},{id:'new',kind:'added'},{id:'rename',kind:'renamed'}],source_affected:['source','child'],added_edges:[['root','new']],removed_edges:[['root','old']]};
+  const old=extra('old'),added=extra('new'),source=extra('source'),plain=extra('plain');
+  const base={...snapshot,nodes:[root,child,old,source,plain],edges:[...snapshot.edges,['root','old'],['root','source'],['root','plain']]};
+  const target={...base,nodes:[root,child,added,source,plain],edges:base.edges.filter(e=>e[1]!=='old').concat([['root','new']])};
+  const diff={base,target,changes:[{id:'root',kind:'changed'},{id:'child',kind:'changed'},{id:'old',kind:'removed'},{id:'new',kind:'added'}],source_affected:['source','child'],added_edges:[['root','new']],removed_edges:[['root','old']]};
   send({type:'snapshot',snapshot:target,diagnostics:[],readonly:false,diff});
   const card=id=>dom.window.document.querySelector(`[data-node-id="${id}"]`);
-  const kinds={root:'changed',child:'changed',old:'removed',new:'added',rename:'renamed',source:'source-changed',plain:'unchanged'};
+  const kinds={root:'changed',child:'changed',old:'removed',new:'added',source:'source-changed',plain:'unchanged'};
   const world=()=>[...$('cards').children].map(c=>[c.dataset.nodeId,c.style.left,c.style.top,c.style.width,c.style.height]);
   const before=JSON.stringify(target),positions=world(),camera=$('graph').style.transform;
   $('color-mode').value='git-revision';$('color-mode').dispatchEvent(new dom.window.Event('change'));
@@ -1238,7 +1240,7 @@ test('revision fills include changed manifesto, added/removed/renamed/source-onl
     assert.ok(card(id).classList.contains('revision-colored'));
   }
   assert.deepEqual(world(),positions);assert.equal($('graph').style.transform,camera);
-  assert.match($('legend').textContent,/A · Added.*M · Modified.*D · Deleted.*R · Renamed.*Linked source changed.*Same as base/);
+  assert.match($('legend').textContent,/A · Added.*M · Modified.*D · Deleted.*Linked source changed.*Same as base/);
   assert.doesNotMatch($('legend').textContent,/Manifesto|hops|No comparison/);
   assert.equal(saved().colorMode,'git-revision');
   assert.equal(card('source').querySelector('.git-corner'),null);
@@ -1260,7 +1262,7 @@ test('revision fills include changed manifesto, added/removed/renamed/source-onl
 
 test('revision mode switches and restores without disturbing a native draft, caret, camera or original contents', t => {
   const restored={colorMode:'git-revision',selected:'child',view:'focus',dirty:true,originalNode:child,
-    cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Draft',sources:'[]',slug:'',nodeType:'requirement',parents:['root']}};
+    cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Draft',sources:'[]',nodeType:'requirement',parents:['root']}};
   const { dom, $, saved, snapshot, send }=fixture(t,{restored});
   assert.equal($('color-mode').value,'git-revision');
   assert.match($('legend').textContent,/Workspace/);
@@ -1319,7 +1321,7 @@ test('maximum-distance preference restores without rebasing a draft or camera', 
   const { $, saved } = fixture(t, { restored: {
     colorMode: 'max-distance', selected: 'child', view: 'focus', dirty: true,
     originalNode: child, cameras: { 'focus:child': { x: 40, y: -70, k: 1.6 } },
-    draft: { body: '# Restored', sources: '[]', slug: '', nodeType: 'requirement', parents: ['root'] },
+    draft: { body: '# Restored', sources: '[]', nodeType: 'requirement', parents: ['root'] },
   } });
   assert.equal($('color-mode').value, 'max-distance');
   assert.equal(saved().colorMode, 'max-distance');
@@ -1495,7 +1497,7 @@ test('influence uses independent base/target revisions even when the display uni
 test('all four influence preferences restore with recovered drafts and existing per-view cameras', t => {
   for (const colorMode of model.INFLUENCE_MODES) {
     const {$,saved}=fixture(t,{restored:{colorMode,selected:'child',view:'focus',dirty:true,originalNode:child,
-      cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Restored',sources:'[]',slug:'',nodeType:'requirement',parents:['root']}}});
+      cameras:{'focus:child':{x:40,y:-70,k:1.6}},draft:{body:'# Restored',sources:'[]',nodeType:'requirement',parents:['root']}}});
     assert.equal($('color-mode').value,colorMode);assert.equal(saved().colorMode,colorMode);
     assert.equal($('body').value,'# Restored');assert.equal(saved().originalNode,child);
     assert.deepEqual({...saved().cameras['focus:child']},{x:40,y:-70,k:1.6});
@@ -1681,13 +1683,13 @@ test('project text cannot inject markup or scripts into node cards', t => {
 });
 
 
-test('Git A/M/D/R corners match semantic kinds in compact and expanded cards', t => {
+test('Git A/M/D corners match semantic kinds in compact and expanded cards', t => {
   const {dom,snapshot,send,$}=fixture(t);
-  const added={...child,id:'added',body:'# Added'},removed={...child,id:'removed',body:'# Deleted'},renamed={...child,id:'renamed',body:'# Renamed'};
-  const base={...snapshot,nodes:[root,child,removed,renamed],edges:[['root','child'],['root','removed'],['root','renamed']]};
-  const target={...snapshot,nodes:[root,{...child,body:'# Modified child'},added,renamed],edges:[['root','child'],['root','added'],['root','renamed']]};
-  send({type:'snapshot',snapshot:target,readonly:false,diagnostics:[],diff:{base,target,changes:[{id:'child',kind:'changed'},{id:'added',kind:'added'},{id:'removed',kind:'removed'},{id:'renamed',kind:'renamed'}],added_edges:[['root','added']],removed_edges:[['root','removed']]}});
-  for(const [id,letter] of [['child','M'],['added','A'],['removed','D'],['renamed','R']]){
+  const added={...child,id:'added',body:'# Added'},removed={...child,id:'removed',body:'# Deleted'};
+  const base={...snapshot,nodes:[root,child,removed],edges:[['root','child'],['root','removed']]};
+  const target={...snapshot,nodes:[root,{...child,body:'# Modified child'},added],edges:[['root','child'],['root','added']]};
+  send({type:'snapshot',snapshot:target,readonly:false,diagnostics:[],diff:{base,target,changes:[{id:'child',kind:'changed'},{id:'added',kind:'added'},{id:'removed',kind:'removed'}],added_edges:[['root','added']],removed_edges:[['root','removed']]}});
+  for(const [id,letter] of [['child','M'],['added','A'],['removed','D']]){
     const card=dom.window.document.querySelector(`[data-node-id="${id}"]`);
     assert.equal(card.querySelector('.git-corner').textContent,letter);assert.match(card.querySelector('.git-corner').getAttribute('aria-label'),/comparison base/);
   }

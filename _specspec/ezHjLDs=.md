@@ -19,7 +19,8 @@ Init, add and the library generate their paths solely from the random full ID.
 CLI creation accepts binding text, type, parents and applicable sources; visual
 creation forms expose those same fields. Readable labels come from binding text.
 VS Code discovers **/_specspec/???????=.md and delegates actual validation to Python.
-Body and heading changes retain the same path. ID-leading hyphens and portable
+Body and heading changes retain the same path. Revision node changes are
+additions, modifications and removals, with paths derived from identity. ID-leading hyphens and portable
 casefold collision checks keep their existing protections.
 
 Cut over the working self-graph and tracked example together, preserving IDs and

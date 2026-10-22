@@ -53,7 +53,7 @@ Spotlight <32-hex-id> · <capture-time>
   = xyzABCA=  Unchanged intention
 ```
 
-The markers are **A** added, **D** deleted, **M** changed, **R** filename-only rename,
+The markers are **A** added, **D** deleted, **M** changed,
 **=** unchanged, **?** absent and **!** unavailable context. Status follows the
 shared semantic graph comparison; literal-byte-only drift can warn without an M.
 Titles and paths are derived on display, not retained copies. JSON keeps the
@@ -135,7 +135,7 @@ changes**, including unselected nodes so context drift is noticeable:
   are dirty, so a clean CRLF/clean-filter checkout does not hash every node.
   Native overlays participate when they differ from saved contents.
 - Deleted nodes use `null`, a deletion marker, not a checksum.
-- Filename-only moves preserve ID/content identity and need no checksum.
+- IDs determine canonical paths; binding and heading edits keep those paths stable.
 
 On display, compare the capture HEAD and sparse changes with current workspace
 state. HEAD movement, changed sparse entries and unavailable state produce
@@ -144,7 +144,7 @@ history, an edit lock or a correctness guarantee. New commits can warn even when
 node text remains the same. Staging alone does not change the workspace snapshot.
 No node bytes, committed-node hashes, per-color groups, blob archive or captured-
 text preview are stored. Local drift checks leave canonical schema/edit protection
-unchanged. Node format/API remain 6; the separate local spotlight format is 2.
+unchanged. Node format is 7; API remains 6; the separate local spotlight format is 2.
 
 ## Storage and lifetime
 
@@ -179,7 +179,7 @@ Editable highlight IDs remain until Clear highlight. External deletion or
 ## Verification
 
 Backend tests cover dirty-only literal checksums, clean CRLF/native boundaries,
-workspace/branch/committed comparisons, A/M/D/R/= statuses, absent/unavailable nodes,
+workspace/branch/committed comparisons, A/M/D/= statuses, absent/unavailable nodes,
 HEAD/context drift, atomic validation, immutable records, exclusion, limits and
 reviewed flush. Temporal tests use an independent maintained current-schema Gantt
 clone. Shared renderer/session tests cover comparison-before-framing, identity

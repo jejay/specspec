@@ -29,36 +29,35 @@ def test_gantt_index_reads_staged_corruption_not_repaired_worktree(gantt_history
     assert git_snapshot(root, "stage/03-code").valid
 
 
-def test_gantt_full_identity_rename_parent_edges_and_impact(gantt_history):
+def test_gantt_full_identity_stable_paths_parent_edges_and_impact(gantt_history):
     root = gantt_history
     original = load_snapshot(root)
     manifesto = next(n.id for n in original.nodes if n.type == "manifesto")
     parent = next(n.id for n in original.nodes if n.type == "requirement")
-    _, child = add_node(
-        root, "requirement", [parent], "# Current-scheme regression\n", "regression"
-    )
+    _, child = add_node(root, "requirement", [parent], "# Current-scheme regression\n")
     git(root, "add", "_specspec")
     git(root, "commit", "-m", "Add current-schema regression branch")
     base = git_snapshot(root, "HEAD")
     changed = update_node(root, child, parents=[manifesto])
     node = changed.graph.nodes[child]
-    renamed = root / f"_specspec/{child}renamed-regression.md"
-    (root / node.path).rename(renamed)
+    assert node.path == f"_specspec/{child}.md"
     diff = semantic_diff(base, load_snapshot(root))
     assert diff["impact_complete"]
     assert [parent, child] in diff["removed_edges"]
     assert [manifesto, child] in diff["added_edges"]
     assert child in diff["affected"]
-    assert next(c for c in diff["changes"] if c["id"] == child)["fields"] == ["parents", "path"]
+    assert next(c for c in diff["changes"] if c["id"] == child)["fields"] == ["parents"]
     git(root, "add", "_specspec")
     assert git_snapshot(root, staged=True).valid
-    git(root, "commit", "-m", "Reparent and rename without changing full identity")
+    git(root, "commit", "-m", "Reparent without changing full identity or path")
     committed = git_snapshot(root, "HEAD")
     assert semantic_diff(base, committed)["changes"] == diff["changes"]
-    (root / committed.graph.nodes[child].path).rename(root / f"_specspec/{child}summary-only.md")
-    rename = semantic_diff(committed, load_snapshot(root))
-    assert rename["changes"] == [{"id": child, "kind": "renamed", "fields": ["path"]}]
-    assert not rename["affected"]
+    update_node(root, child, body="# Different heading\n")
+    current = load_snapshot(root)
+    assert current.graph.nodes[child].path == node.path
+    assert semantic_diff(committed, current)["changes"] == [
+        {"id": child, "kind": "changed", "fields": ["body"]}
+    ]
 
 
 def test_gantt_worktree_linked_source_changes_reach_requirement_ancestors(gantt_history):

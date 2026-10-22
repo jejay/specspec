@@ -1,6 +1,6 @@
 # Native node-file editors and portable graph views
 
-Opening `**/_specspec/???????=*.md` defaults to **SpecSpec Graph** in VS Code's main
+Opening `**/_specspec/???????=.md` defaults to **SpecSpec Graph** in VS Code's main
 editor area. The filename glob is discovery only: Python resolves/validates the
 actual node. **Reopen Editor With → Text Editor** remains available, and user
 editor associations can override the default. There is no Activity Bar container.
@@ -82,9 +82,9 @@ The hidden `specspec api` integration adapter consumes bounded API-6 JSON on std
 {
   "api_version": 6,
   "op": "plan",
-  "documents": {"_specspec/Zm9vYmE=summary.md": "---\n..."},
+  "documents": {"_specspec/Zm9vYmE=.md": "---\n..."},
   "edit": {
-    "path": "_specspec/Zm9vYmE=summary.md",
+    "path": "_specspec/Zm9vYmE=.md",
     "id": "Zm9vYmE=",
     "body": "# Updated binding text\n",
     "parents": ["ZnJlc2g="],
@@ -110,7 +110,7 @@ count and uncommitted affected-node warnings (staged is not committed), then
 rechecks the reviewed scope under the writer lock. Dirty descendant documents
 remain protected by the project-wide save/revert guard. Reads skip overlays for already deleted files, so retained open
 buffers do not resurrect nodes. The planner never writes files or recreates a
-deleted node. The current application protocol is API 6 with shortcut-free node format 6;
+deleted node. The current application protocol is API 6 with shortcut-free node format 7;
 upgrade the CLI and both host builds together. See [compact commands](cli.md).
 
 ## Verification

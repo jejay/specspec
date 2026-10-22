@@ -141,7 +141,7 @@ def test_ancestor_completion_is_iterative_and_never_calls_per_node_closure(monke
             node(i, [] if not i else [i - 1], kind="manifesto" if not i else "requirement"),
             id=key,
             parents=[] if not i else [ids[i - 1]],
-            path=f"_specspec/{key}chain.md",
+            path=f"_specspec/{key}.md",
         )
         for i, key in enumerate(ids)
     ]
@@ -224,7 +224,7 @@ def test_deleted_context_uses_selected_record_parents_and_explicit_history_uses_
     )
     text = render_query(q)
     assert "Current parent binding" in text and "Body 3." not in text
-    assert f"{identity(4)}node-4" in text and "[deleted]" in text
+    assert f"{identity(4)}" in text and "[deleted]" in text
     old = read_query(
         root, "HEAD", "HEAD", node_id=identity(4), max_distance="0", with_ancestors=True
     )
@@ -252,7 +252,7 @@ def test_unfiltered_completion_is_noop_even_with_distinct_manifesto_roots(query_
     root = query_project
     g = load_snapshot(root).graph
     old = g.nodes[identity(0)]
-    new = replace(old, id=identity(99), path=f"_specspec/{identity(99)}new.md")
+    new = replace(old, id=identity(99), path=f"_specspec/{identity(99)}.md")
     (root / old.path).unlink()
     (root / new.path).write_bytes(serialize(new))
     for index in (1, 2):
@@ -295,13 +295,12 @@ def test_added_ancestors_keep_global_source_evidence_and_deduplicated_reader_wor
     project, monkeypatch
 ):
     root, manifesto, requirement, implementation, _ = project
-    _, other = add_node(root, "requirement", [manifesto], "SECRET OTHER REQUIREMENT\n", "other")
+    _, other = add_node(root, "requirement", [manifesto], "SECRET OTHER REQUIREMENT\n")
     _, other_impl = add_node(
         root,
         "implementation",
         [other],
         "SECRET OTHER IMPLEMENTATION\n",
-        "other-impl",
         [{"path": "other.py"}],
     )
     (root / "other.py").write_bytes(b"Other source\n")
@@ -391,7 +390,7 @@ def test_budget_measures_complete_chosen_encoding_envelope_controls_and_final_ne
         body="# Full ancestor 🐕\r\n\r\nUnicode äöü, tabs\tand ESC \x1b[2J\r\n"
         + "Full binding.\n" * 100,
     )
-    _, child = add_node(root, "requirement", [manifesto], "Selected\n", "selected")
+    _, child = add_node(root, "requirement", [manifesto], "Selected\n")
     args = [
         child,
         "--max-distance",

@@ -137,10 +137,9 @@ the same safeguard; query never silently shortens required context.
 
 Two-column rails (`│ │`, `├─requirement`, `└─↪`) continue through metadata and the
 body line. Root metadata/body align at column zero, without an extra tree indent.
-Headers give the lowercase type word, filename stem and all direct parents in
+Headers give the lowercase type word, full node ID and all direct parents in
 ascending full-ID order after ` @ `, separated by `, ` in both default and human
-output, including the display parent. The stem names
-`_specspec/<stem>.md`. Shared nodes, including deleted ones, have one full record at
+output, including the display parent. The ID names `_specspec/<id>.md`. Shared nodes, including deleted ones, have one full record at
 their last conceptual unfolded occurrence; earlier occurrences are short `↪ ID ↓`
 pointers. Iterative walks avoid recursion and exponential unfolding. The preamble
 contains selected versions and applicable notes, with no abbreviation or `@` legend.
@@ -149,12 +148,12 @@ Unchanged headers have **no badge**. Changed headers use:
 
 | Hint | Meaning |
 | --- | --- |
-| `added`, `modified`, `deleted`, `renamed` | Semantic/path node change; renamed is filename-only |
+| `added`, `modified`, `deleted` | Semantic node change |
 | `source-changed` | Known source-contract change, including ancestors in both revisions |
 | `file-only` | Literal-only node-file change, such as comments or EOL spelling |
 
 `modified` can reflect body, parent or metadata changes. `file-only` is omitted when
-a semantic/path hint already identifies a node change; `[source-changed file-only]`
+a semantic hint already identifies a node change; `[source-changed file-only]`
 can report both independent effects. Source-only changes never become fake node
 modifications. Missing comparison evidence stays explicit in source rows, rather
 than being mislabeled as a known `source-changed` change.

@@ -41,7 +41,7 @@ material uncertainty and conflicts rather than manufacturing agreement.
 
 - Use `add`, `update`, and `delete` for ordinary canonical graph changes
   in this checkout. The product permits manual Markdown edits, but CLI/UI editing
-  remains recommended. Node format 6 / API 6 has no node hashes, fingerprints, or `--expect`; source blob IDs
+  remains recommended. Node format 7 / API 6 has no node hashes, fingerprints, or `--expect`; source blob IDs
   are Git content addresses, not node edit gates.
   The authorized compact-ID conversion is a one-time tool-managed migration,
   not a permanent compatibility command.
@@ -82,11 +82,11 @@ stage the complete intended graph change and run
 `python -m specspec check --staged --sources --warnings-as-errors` against that exact
 index; working-tree validation cannot substitute for staged validation.
 
-Maintain only the current schema: node format 6 requires a shortcut-free rooted DAG.
+Maintain only the current schema: node format 7 requires a shortcut-free rooted DAG.
 No direct parent may already be an indirect parent. Review ripple effects against
 both old and new graphs; related Markdown changes remain deliberate. See
 `docs/graph-structure.md`. Use padded Base64url IDs over five random bytes,
-including the final `=`, and `<id><slug>.md` filenames. Do not retain overwritten
+including the final `=`, and `<id>.md` filenames. Do not retain overwritten
 schemas, UUID readers, old metadata normalization or permanent migration commands.
 
 This repository's own graph is self-referencing design documentation. Validate

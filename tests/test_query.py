@@ -37,13 +37,13 @@ def identity(index):
     return base64.urlsafe_b64encode(index.to_bytes(5, "big")).decode("ascii")
 
 
-def node(index, parents=(), *, body=None, slug=None, kind="requirement"):
+def node(index, parents=(), *, body=None, kind="requirement"):
     return SpecNode(
         identity(index),
         kind,
         [identity(p) for p in parents],
         body if body is not None else f"Body {index}.\n",
-        f"_specspec/{identity(index)}{slug or f'node-{index}'}.md",
+        f"_specspec/{identity(index)}.md",
         FORMAT_VERSION if kind == "manifesto" else None,
     )
 
@@ -57,12 +57,12 @@ def graph(nodes):
 def example():
     return graph(
         [
-            node(0, kind="manifesto", slug="root", body="Root.\n"),
-            node(1, [0], slug="left", body="Left first.\n\nLeft last.\n"),
-            node(2, [1], slug="deep", body="Deep.\n"),
-            node(3, [0], slug="right", body="Right.\n"),
-            node(4, [2, 3], slug="shared", body="Shared.\n"),
-            node(5, [4], kind="implementation", slug="code", body="Implementation.\n"),
+            node(0, kind="manifesto", body="Root.\n"),
+            node(1, [0], body="Left first.\n\nLeft last.\n"),
+            node(2, [1], body="Deep.\n"),
+            node(3, [0], body="Right.\n"),
+            node(4, [2, 3], body="Shared.\n"),
+            node(5, [4], kind="implementation", body="Implementation.\n"),
         ]
     )
 
@@ -85,9 +85,9 @@ def call(root, *args):
 def entries(text):
     pattern = re.compile(
         r"^((?:│ |  )*)(?:(├─|└─))?"
-        r"(?:(?:manifesto|requirement|implementation) ([A-Za-z0-9_-]{7}=)[a-z0-9-]+"
+        r"(?:(?:manifesto|requirement|implementation) ([A-Za-z0-9_-]{7}=)"
         r"(?: @ [A-Za-z0-9_-]{7}=(?:, [A-Za-z0-9_-]{7}=)*)?"
-        r"(?: \[(?:(?:added|modified|deleted|renamed)(?: source-changed)?"
+        r"(?: \[(?:(?:added|modified|deleted)(?: source-changed)?"
         r"|source-changed(?: file-only)?|file-only)\])?"
         r"|↪ ([A-Za-z0-9_-]{7}=) ↓)$"
     )
@@ -125,20 +125,20 @@ def test_last_occurrence_not_deepest_parent_and_compact_golden_read():
     assert text == "\n".join(
         [
             "HEAD → workspace",
-            f"manifesto {identity(0)}root",
-            "format_version: 6",
+            f"manifesto {identity(0)}",
+            "format_version: 7",
             "",
             "Root. ",
-            f"├─requirement {identity(1)}left @ {identity(0)}",
+            f"├─requirement {identity(1)} @ {identity(0)}",
             "│ Left first. ¶ Left last. ",
-            f"│ └─requirement {identity(2)}deep @ {identity(1)}",
+            f"│ └─requirement {identity(2)} @ {identity(1)}",
             "│   Deep. ",
             f"│   └─↪ {identity(4)} ↓",
-            f"└─requirement {identity(3)}right @ {identity(0)}",
+            f"└─requirement {identity(3)} @ {identity(0)}",
             "  Right. ",
-            f"  └─requirement {identity(4)}shared @ {identity(2)}, {identity(3)}",
+            f"  └─requirement {identity(4)} @ {identity(2)}, {identity(3)}",
             "    Shared. ",
-            f"    └─implementation {identity(5)}code @ {identity(4)}",
+            f"    └─implementation {identity(5)} @ {identity(4)}",
             "      Implementation. ",
         ]
     )
@@ -151,27 +151,27 @@ def test_human_golden_read_preserves_lines_and_uses_the_same_parent_commas():
     assert text == "\n".join(
         [
             "HEAD → workspace",
-            f"manifesto {identity(0)}root",
-            "format_version: 6",
+            f"manifesto {identity(0)}",
+            "format_version: 7",
             "",
             "Root.",
             "",
-            f"├─requirement {identity(1)}left @ {identity(0)}",
+            f"├─requirement {identity(1)} @ {identity(0)}",
             "│ Left first.",
             "│ ",
             "│ Left last.",
             "│ ",
-            f"│ └─requirement {identity(2)}deep @ {identity(1)}",
+            f"│ └─requirement {identity(2)} @ {identity(1)}",
             "│   Deep.",
             "│   ",
             f"│   └─↪ {identity(4)} ↓",
-            f"└─requirement {identity(3)}right @ {identity(0)}",
+            f"└─requirement {identity(3)} @ {identity(0)}",
             "  Right.",
             "  ",
-            f"  └─requirement {identity(4)}shared @ {identity(2)}, {identity(3)}",
+            f"  └─requirement {identity(4)} @ {identity(2)}, {identity(3)}",
             "    Shared.",
             "    ",
-            f"    └─implementation {identity(5)}code @ {identity(4)}",
+            f"    └─implementation {identity(5)} @ {identity(4)}",
             "      Implementation.",
             "      ",
         ]
@@ -196,11 +196,11 @@ def test_compact_nested_bars_and_every_sorted_direct_parent(human):
     )
     text = render_query(comparison(g), human=human)
     assert "│ │ └─requirement" in text and "│  │" not in text
-    full = next(line for line in text.split("\n") if f"requirement {identity(64)}node-64" in line)
+    full = next(line for line in text.split("\n") if f"requirement {identity(64)}" in line)
     assert full.endswith(f" @ {identity(3)}, {identity(63)}, {identity(51)}")
     assert " · " not in full
     assert last_occurrence_parents(g)[identity(64)] in full
-    assert f"manifesto {identity(0)}node-0\n" in text
+    assert f"manifesto {identity(0)}\n" in text
 
 
 def test_parent_order_and_input_order_do_not_choose_placement():
@@ -301,7 +301,7 @@ def test_union_cycles_and_reparenting_keep_deleted_nodes_in_the_overlay_once():
     assert any(p == identity(4) and c == identity(3) and not ref for p, c, ref in occurrences)
     assert result.result["added_edges"] == [[identity(0), identity(2)], [identity(2), identity(1)]]
     assert [identity(1), identity(2)] in result.result["removed_edges"]
-    assert f"requirement {identity(3)}node-3 @ {identity(1)}, {identity(4)} [deleted]" in text
+    assert f"requirement {identity(3)} @ {identity(1)}, {identity(4)} [deleted]" in text
     assert "@@" not in text and "frontmatter" not in text
 
 
@@ -386,8 +386,8 @@ def test_deleted_children_remain_visible_under_a_parent_whose_current_type_is_im
     result = comparison(target, base)
     text = render_query(result)
     assert (identity(1), identity(2), False) in entries(text)
-    assert f"implementation {identity(1)}node-1 @ {identity(3)} [modified]" in text
-    assert f"requirement {identity(2)}node-2 @ {identity(1)} [deleted]" in text
+    assert f"implementation {identity(1)} @ {identity(3)} [modified]" in text
+    assert f"requirement {identity(2)} @ {identity(1)} [deleted]" in text
 
 
 def test_deleted_node_does_not_reintroduce_its_old_parent_link_to_a_surviving_child():
@@ -411,8 +411,8 @@ def test_comparison_with_distinct_manifestos_keeps_both_roots_without_a_deleted_
         (None, identity(2), False),
         (identity(2), identity(3), False),
     ]
-    assert f"manifesto {identity(0)}node-0 [deleted]" in text
-    assert f"manifesto {identity(2)}node-2 [added]" in text
+    assert f"manifesto {identity(0)} [deleted]" in text
+    assert f"manifesto {identity(2)} [added]" in text
     assert "\nBody 0. \n" in text and "\nBody 2. \n" in text
 
 
@@ -424,7 +424,7 @@ def test_deep_overlay_remains_iterative():
             node(i, kind="requirement" if i else "manifesto"),
             id=f"A{i:05d}A=",
             parents=[f"A{i - 1:05d}A="] if i else [],
-            path=f"_specspec/A{i:05d}A=node-{i}.md",
+            path=f"_specspec/A{i:05d}A=.md",
         )
         for i in range(1250)
     ]
@@ -464,8 +464,8 @@ def test_body_presentation_flattens_only_the_default_and_preserves_human_lines(
     body_rows = body.replace("\r\n", "\n").split("\n") if human else [expected]
     assert text.split("\n") == [
         "HEAD → workspace",
-        f"manifesto {identity(0)}node-0",
-        "format_version: 6",
+        f"manifesto {identity(0)}",
+        "format_version: 7",
         "",
         *body_rows,
     ]
@@ -481,7 +481,7 @@ def test_full_word_hints_need_no_legend_and_keep_independent_source_and_literal_
     text = render_query(query)
     assert text.split("\n")[:2] == [
         "HEAD → workspace",
-        f"manifesto {identity(0)}root [source-changed file-only]",
+        f"manifesto {identity(0)} [source-changed file-only]",
     ]
     assert "=parents" not in text and "=manifesto" not in text and "=below" not in text
     assert body_line("") == ""
@@ -492,7 +492,7 @@ def test_modified_node_shows_only_current_body_with_a_hint(human):
     old = graph([node(0, kind="manifesto", body="Old wording\n")])
     new = graph([node(0, kind="manifesto", body="# Current wording\n\n  nested\n")])
     text = render_query(comparison(new, old), human=human)
-    assert f"manifesto {identity(0)}node-0 [modified]" in text
+    assert f"manifesto {identity(0)} [modified]" in text
     assert "Old wording" not in text
     expected = "\n# Current wording\n\n  nested\n" if human else "\n# Current wording ¶   nested "
     assert expected in text
@@ -510,7 +510,7 @@ def test_deleted_node_keeps_base_body_but_survivors_keep_target_text(human):
     new = graph([node(0, kind="manifesto", body="Current root\n")])
     text = render_query(comparison(new, old), human=human)
     assert "Old root" not in text and "Current root" in text
-    assert f"requirement {identity(1)}node-1 @ {identity(0)} [deleted]" in text
+    assert f"requirement {identity(1)} @ {identity(0)} [deleted]" in text
     expected = (
         "  Deleted first\n  \n  Deleted last\n  wrapped\n  "
         if human
@@ -542,7 +542,7 @@ def test_query_does_not_compute_patch_payloads(monkeypatch):
     assert "@@" not in render_query(result)
 
 
-def test_comment_only_eol_changes_and_renames_have_literal_not_fake_semantic_status(workspace):
+def test_comment_only_eol_changes_have_literal_not_fake_semantic_status(workspace):
     root, parent = workspace
     setup_repository(root)
     n = load_snapshot(root).graph.nodes[parent]
@@ -552,10 +552,10 @@ def test_comment_only_eol_changes_and_renames_have_literal_not_fake_semantic_sta
     assert result.result["changes"] == []
     text = render_query(result)
     assert "[file-only]" in text and "frontmatter" not in text and "# comment" not in text
-    path.rename(root / f"_specspec/{parent}renamed.md")
+    path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
     result = read_query(root)
-    assert result.result["changes"] == [{"id": parent, "kind": "renamed", "fields": ["path"]}]
-    assert "- file: " not in render_query(result) and "[renamed]" in render_query(result)
+    assert result.result["changes"] == []
+    assert "[file-only]" in render_query(result)
 
 
 def test_cr_only_frontmatter_stays_hidden_behind_a_literal_change_hint(workspace):
@@ -574,15 +574,13 @@ def test_cr_only_frontmatter_stays_hidden_behind_a_literal_change_hint(workspace
 def test_cli_comparison_json_round_trip_and_read_only_git_state(workspace, human):
     root, parent = workspace
     setup_repository(root)
-    _, child = add_node(
-        root, "requirement", [parent], "No heading\n\nComplete last line.\n", "child"
-    )
+    _, child = add_node(root, "requirement", [parent], "No heading\n\nComplete last line.\n")
     before = load_snapshot(root)
     index, refs = git(root, "ls-files", "--stage"), git(root, "show-ref")
     objects = git(root, "count-objects", "-v")
     args = ["--human"] if human else []
     result = call(root, *args)
-    assert result.exit_code == 0 and f"{child}child @ {parent} [added]" in result.stdout
+    assert result.exit_code == 0 and f"{child} @ {parent} [added]" in result.stdout
     expected_body = (
         "\n  No heading\n  \n  Complete last line.\n"
         if human

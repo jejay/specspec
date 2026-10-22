@@ -11,9 +11,9 @@ from specspec.workspace import add_node, load_snapshot, update_node
 
 def test_manual_parent_body_and_deletion_changes_are_readable(workspace):
     root, manifesto = workspace
-    _, left = add_node(root, "requirement", [manifesto], "Left\n", "left")
-    _, right = add_node(root, "requirement", [manifesto], "Right\n", "right")
-    before, leaf = add_node(root, "requirement", [left], "Child\n", "child")
+    _, left = add_node(root, "requirement", [manifesto], "Left\n")
+    _, right = add_node(root, "requirement", [manifesto], "Right\n")
+    before, leaf = add_node(root, "requirement", [left], "Child\n")
     node = before.graph.nodes[leaf]
     path = root / node.path
     raw = path.read_bytes().replace(left.encode(), right.encode()) + b"\nManually added text.\n"

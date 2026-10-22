@@ -42,8 +42,8 @@ before code changes. Query's optional ancestor completion follows every parent p
 after selection; added bindings consume no metric quota. `specspec diff` supplies
 canonical-file hunks; ordinary `git diff` supplies code patches. Read untracked
 files explicitly and coordinate with unsaved native documents.
-Canonical node format 6 and application API 6 use
-canonical padded Base64url IDs over five bytes, including `=`, and `<id><slug>.md`
+Canonical node format 7 and application API 6 use
+canonical padded Base64url IDs over five bytes, including `=`, and `<id>.md`
 files. Each direct parent adds ancestry: a direct parent cannot already be an
 indirect parent. Review ripple effects using both old and new graphs, including
 ancestry lost by reparenting. Implementation leaves contribute bounded realization.

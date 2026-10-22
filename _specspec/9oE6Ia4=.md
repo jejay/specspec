@@ -15,13 +15,14 @@ sources:
 `git_snapshot` reads NUL-delimited exact index/commit entries and their object bytes
 without changing checkout. `unborn_head` distinguishes a genuine empty HEAD baseline
 from unavailable revisions. `semantic_diff` compares full IDs, body/parent/metadata
-records, file paths and edges, deriving old/new potential impact. Source impact
+records and edges, deriving old/new potential impact. Source impact
 uses both snapshots' file references and requirement ancestry.
 
 Owner-managed hooks/CI invoke check --staged against exact index bytes.
 Hook files, existing commands and environment selection remain owner-controlled.
 Disposable current-schema and maintained Gantt tests cover partial staging,
-corruption masked by repaired worktrees, renames/edges, sources, baselines and hooks.
+corruption masked by repaired worktrees, canonical path rejection, edges, sources,
+baselines and hooks.
 
 Canonical object reads use bounded metadata/content batches with verified blob bytes.
 Derived baseline hints retain fresh ref/tree/object checks and exact index semantics.

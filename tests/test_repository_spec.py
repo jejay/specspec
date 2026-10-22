@@ -20,7 +20,7 @@ def test_repository_spec_is_valid_and_has_no_missing_sources():
     assert not snapshot.diagnostics
     assert {node.type for node in snapshot.nodes} == {"manifesto", "requirement", "implementation"}
     for node in snapshot.nodes:
-        assert Path(node.path).parent.as_posix() == "_specspec"
+        assert node.path == f"_specspec/{node.id}.md"
         if node.type == "implementation":
             assert node.sources, f"Implementation {node.id} needs real code or verification links."
     result = CliRunner().invoke(

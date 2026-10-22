@@ -148,17 +148,14 @@ def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
                 for key in old_semantic.keys() | new_semantic.keys()
                 if old_semantic.get(key) != new_semantic.get(key)
             )
-            if old.path != new.path:
-                fields.append("path")
             if not fields:
                 continue
-            kind = "renamed" if fields == ["path"] else "changed"
+            kind = "changed"
         changes.append({"id": node_id, "kind": kind, "fields": fields})
-        if kind != "renamed":
-            affected.add(node_id)
-            for snapshot in (base, target):
-                if snapshot.graph and node_id in snapshot.graph.nodes:
-                    affected.update(snapshot.graph.closure(node_id))
+        affected.add(node_id)
+        for snapshot in (base, target):
+            if snapshot.graph and node_id in snapshot.graph.nodes:
+                affected.update(snapshot.graph.closure(node_id))
     old_edges = {tuple(edge) for edge in base.graph.edges()} if base.graph else set()
     new_edges = {tuple(edge) for edge in target.graph.edges()} if target.graph else set()
     file_changes = [

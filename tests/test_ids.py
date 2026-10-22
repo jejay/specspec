@@ -25,12 +25,37 @@ def test_canonical_five_byte_vectors_and_equals_filename(monkeypatch, raw, expec
         return raw
 
     monkeypatch.setattr(module.secrets, "token_bytes", random_bytes)
-    node = new_node("manifesto", [], "# Root\n", "Friendly summary")
+    node = new_node("manifesto", [], "# Root\n")
     assert node.id == expected and len(node.id) == 8
-    assert node.path == f"_specspec/{expected}friendly-summary.md"
+    assert node.path == f"_specspec/{expected}.md"
     assert base64.urlsafe_b64decode(node.id) == raw
     data, body = read_document(serialize(node), node.path)
     assert parse_node(data, body, node.path).id == expected
+
+
+@pytest.mark.parametrize("body", ["# Heading\n", "Headless binding\n", "# 日本語 🐕\n", "# !!!\n"])
+def test_creation_paths_depend_only_on_ids_and_edits_keep_them(tmp_path, monkeypatch, body):
+    values = iter([b"rooot", b"child"])
+    monkeypatch.setattr(module.secrets, "token_bytes", lambda _: next(values))
+    runner = CliRunner()
+    prefix = ["--root", str(tmp_path)]
+    result = runner.invoke(main, [*prefix, "init", "-", "--json"], input=body)
+    assert result.exit_code == 0, result.output
+    parent = json.loads(result.stdout)["result"]["changed_ids"][0]
+    result = runner.invoke(
+        main, [*prefix, "add", "--parent", parent, "--body", "-", "--json"], input=body
+    )
+    assert result.exit_code == 0, result.output
+    child = json.loads(result.stdout)["result"]["changed_ids"][0]
+    snapshot = load_snapshot(tmp_path)
+    assert {n.path for n in snapshot.nodes} == {f"_specspec/{i}.md" for i in [parent, child]}
+    result = runner.invoke(
+        main, [*prefix, "update", child, "--body", "-", "--json"], input="# Different heading\n"
+    )
+    assert result.exit_code == 0, result.output
+    current = load_snapshot(tmp_path)
+    assert current.graph.nodes[child].path == snapshot.graph.nodes[child].path
+    assert current.graph.nodes[child].body == "# Different heading\n"
 
 
 def test_every_last_octet_uses_zero_pad_bits(monkeypatch):
@@ -38,7 +63,7 @@ def test_every_last_octet_uses_zero_pad_bits(monkeypatch):
         monkeypatch.setattr(
             module.secrets, "token_bytes", lambda _, last=last: bytes([0, 0, 0, 0, last])
         )
-        node = new_node("manifesto", [], "# Root\n", "root")
+        node = new_node("manifesto", [], "# Root\n")
         assert ID_RE.fullmatch(node.id)
         assert node.id[-2] in "AEIMQUYcgkosw048"
         assert base64.urlsafe_b64encode(base64.urlsafe_b64decode(node.id)).decode() == node.id
@@ -57,17 +82,25 @@ def test_every_last_octet_uses_zero_pad_bits(monkeypatch):
     ],
 )
 def test_invalid_ids_and_parent_ids_are_rejected(invalid):
-    node = new_node("manifesto", [], "# Root\n", "root")
+    node = new_node("manifesto", [], "# Root\n")
     with pytest.raises(SpecError, match="canonical padded Base64url"):
-        serialize(replace(node, id=invalid, path=f"_specspec/{invalid}root.md"))
+        serialize(replace(node, id=invalid, path=f"_specspec/{invalid}.md"))
     with pytest.raises(SpecError, match="parents"):
         serialize(replace(node, parents=[invalid]))
 
 
-def test_double_hyphen_is_not_a_second_filename_separator():
-    node = new_node("manifesto", [], "# Root\n", "root")
-    with pytest.raises(SpecError, match="slug"):
-        serialize(replace(node, path=f"_specspec/{node.id}--root.md"))
+@pytest.mark.parametrize("suffix", ["extra.md", "--root.md", ".MD", "=.md", ""])
+def test_only_exact_id_followed_by_markdown_extension_is_valid(suffix):
+    node = new_node("manifesto", [], "# Root\n")
+    with pytest.raises(SpecError, match="Filename must equal"):
+        serialize(replace(node, path=f"_specspec/{node.id}{suffix}"))
+
+
+def test_filename_must_match_id_case_exactly():
+    node = new_node("manifesto", [], "# Root\n")
+    node.id = "Zm9vYmE="
+    with pytest.raises(SpecError, match="Filename must equal"):
+        serialize(replace(node, path="_specspec/zm9vYmE=.md"))
 
 
 def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monkeypatch):
@@ -75,8 +108,8 @@ def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monk
     # Keep this deterministic independently of the randomly generated root.
     values = iter([b"fooba", b"other"])
     monkeypatch.setattr(module.secrets, "token_bytes", lambda _: next(values))
-    _, live = add_node(root, "requirement", [manifesto], "Live\n", "live")
-    _, second = add_node(root, "requirement", [manifesto], "Second\n", "second")
+    _, live = add_node(root, "requirement", [manifesto], "Live\n")
+    _, second = add_node(root, "requirement", [manifesto], "Second\n")
     before = load_snapshot(root)
     alias = live[0].swapcase() + live[1:]
     assert ID_RE.fullmatch(alias), alias
@@ -97,7 +130,7 @@ def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monk
         return next(candidates)
 
     monkeypatch.setattr(module.secrets, "token_bytes", random_bytes)
-    after, fresh = add_node(root, "requirement", [manifesto], "Fresh\n", "different-summary")
+    after, fresh = add_node(root, "requirement", [manifesto], "Fresh\n")
     assert fresh == "ZnJlc2g=" and len(calls) == 4
     assert all(after.files[p] == raw for p, raw in before.files.items())
     assert len(after.nodes) == len(before.nodes) + 1
@@ -114,11 +147,11 @@ def test_init_generates_inside_lock(tmp_path, monkeypatch):
 
 def test_case_only_duplicate_graph_ids_are_invalid(workspace):
     root, manifesto = workspace
-    node = new_node("requirement", [manifesto], "Child\n", "one")
+    node = new_node("requirement", [manifesto], "Child\n")
     node.id = "Zm9vYmE="
-    node.path = f"_specspec/{node.id}one.md"
+    node.path = f"_specspec/{node.id}.md"
     alias_id = node.id[0].swapcase() + node.id[1:]
-    alias = replace(node, id=alias_id, path=f"_specspec/{alias_id}two.md")
+    alias = replace(node, id=alias_id, path=f"_specspec/{alias_id}.md")
     files = {**load_snapshot(root).files, node.path: serialize(node), alias.path: serialize(alias)}
     snapshot = module.snapshot_from_files(root, files)
     assert not snapshot.valid
@@ -133,13 +166,13 @@ def test_removed_withdrawal_field_is_rejected_even_when_false(workspace, retired
         parse_node({**node.frontmatter(), "retired": retired}, node.body, node.path)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 4, 5, True])
+@pytest.mark.parametrize("version", [1, 2, 3, 4, 5, 6, True])
 def test_only_current_schema_is_readable_and_never_converted(workspace, version):
     root, _ = workspace
     before = load_snapshot(root)
     node = before.nodes[0]
     raw = before.files[node.path].replace(
-        b"format_version: 6", f"format_version: {str(version).lower()}".encode()
+        b"format_version: 7", f"format_version: {str(version).lower()}".encode()
     )
     (root / node.path).write_bytes(raw)
     assert not load_snapshot(root).valid
@@ -150,7 +183,7 @@ def test_only_current_schema_is_readable_and_never_converted(workspace, version)
 
 def test_full_id_round_trips_cli_native_plan_context_and_dependents(workspace):
     root, manifesto = workspace
-    snapshot, child = add_node(root, "requirement", [manifesto], "# Child\n", "child")
+    snapshot, child = add_node(root, "requirement", [manifesto], "# Child\n")
     runner = CliRunner()
     for command in [
         ["show"],
@@ -196,7 +229,7 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     prefix = ["--root", str(root)]
     added = runner.invoke(
         main,
-        [*prefix, "add", "--parent", manifesto, "--slug", "hyphens", "--body", "-", "--json"],
+        [*prefix, "add", "--parent", manifesto, "--body", "-", "--json"],
         input="# Hyphen identity\n",
     )
     assert added.exit_code == 0, added.output

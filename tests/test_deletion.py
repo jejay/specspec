@@ -17,7 +17,7 @@ from specspec.workspace import add_node, delete_nodes, load_snapshot, recover
 
 def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(workspace):
     root, manifesto = workspace
-    snapshot, child = add_node(root, "requirement", [manifesto], "# Earlier rationale\n", "child")
+    snapshot, child = add_node(root, "requirement", [manifesto], "# Earlier rationale\n")
     git(root, "init")
     git(root, "config", "core.autocrlf", "false")
     git(root, "add", "_specspec")
@@ -61,14 +61,14 @@ def test_uncommitted_created_then_deleted_node_has_no_head_ghost(workspace):
     git(root, "init")
     git(root, "add", "_specspec")
     git(root, "commit", "-m", "Root")
-    _, child = add_node(root, "requirement", [manifesto], "# Trial\n", "trial")
+    _, child = add_node(root, "requirement", [manifesto], "# Trial\n")
     delete_nodes(root, [child], allow_uncommitted=True)
     assert semantic_diff(git_snapshot(root, "HEAD"), load_snapshot(root))["changes"] == []
 
 
 def test_deleted_open_buffer_does_not_resurrect_a_file_or_poison_other_documents(workspace):
     root, manifesto = workspace
-    snapshot, child = add_node(root, "requirement", [manifesto], "# Original\n", "child")
+    snapshot, child = add_node(root, "requirement", [manifesto], "# Original\n")
     node = snapshot.graph.nodes[child]
     text = (root / node.path).read_text(encoding="utf-8")
     delete_nodes(root, [child], allow_uncommitted=True)
@@ -88,8 +88,8 @@ def test_deleted_open_buffer_does_not_resurrect_a_file_or_poison_other_documents
 
 def test_partial_delete_recovery_refuses_a_new_external_file(workspace, monkeypatch):
     root, manifesto = workspace
-    _, one = add_node(root, "requirement", [manifesto], "# One\n", "one")
-    before, two = add_node(root, "requirement", [manifesto], "# Two\n", "two")
+    _, one = add_node(root, "requirement", [manifesto], "# One\n")
+    before, two = add_node(root, "requirement", [manifesto], "# Two\n")
     original = Path.unlink
     removed = []
 

@@ -118,7 +118,7 @@ history. CI runs the final model/browser app in an independent clone. Focused un
 fixtures may be smaller independently generated current-schema projects. No test
 requires obsolete SpecSpec development revisions or a full root-history fetch.
 
-The current receipts use application API 6 and shortcut-free node format 6 throughout
+The current receipts use application API 6 and shortcut-free node format 7 throughout
 the maintained history. Command/protocol cutovers refresh actual receipts, teaching
 text, ledgers, refs, source retention, bundle and snapshot together; runnable
 application code and historical node identities remain stable. Old manual clones

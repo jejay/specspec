@@ -14,7 +14,7 @@ from specspec.workspace import add_node, load_snapshot, update_node
 def test_git_batches_and_verified_cache_hints_preserve_exact_results(workspace, monkeypatch):
     root, manifesto = workspace
     for i in range(12):
-        add_node(root, "requirement", [manifesto], f"# Child {i}\n", f"child-{i}")
+        add_node(root, "requirement", [manifesto], f"# Child {i}\n")
     setup_repository(root)
     calls = []
     request = git_objects.batch_request
@@ -47,7 +47,7 @@ def test_git_batches_and_verified_cache_hints_preserve_exact_results(workspace, 
 
 def test_batches_chunk_without_changing_staged_or_nested_graphs(workspace, monkeypatch):
     root, manifesto = workspace
-    add_node(root, "requirement", [manifesto], "# Child\n", "child")
+    add_node(root, "requirement", [manifesto], "# Child\n")
     setup_repository(root)
     expected = git_snapshot(root, "HEAD").to_dict()
     monkeypatch.setattr(git_objects, "BATCH_COUNT", 1)

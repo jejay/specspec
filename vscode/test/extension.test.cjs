@@ -6,7 +6,7 @@ const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
 const extensionPath = require.resolve('../out/extension.js');
-const snapshot = { format_version: 6, nodes: [], edges: [], valid: true };
+const snapshot = { format_version: 7, nodes: [], edges: [], valid: true };
 const noopDisposable = { dispose() {} };
 const lastSnapshot = panel => panel.messages.filter(m => m.type === 'snapshot').at(-1);
 
@@ -199,7 +199,7 @@ test('native fallback attachment completes while its error notification awaits o
 test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
   const { calls } = fixture(t, { snapshot: { ...snapshot, format_version: 999 }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
-  calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
+  calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /Unsupported/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
@@ -228,7 +228,7 @@ test('losing trust prevents a previously loaded graph from executing writes', as
   const { calls, workspace } = fixture(t, { confirm: true });
   await calls.commands.get('specspec.openGraph')();
   workspace.isTrusted = false;
-  calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', slug: 'new' });
+  calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
   assert.match(calls.panels[0].messages.at(-1).message, /trust/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
@@ -239,7 +239,7 @@ test('empty development windows use a filesystem folder picker and load the grap
   const result = await calls.commands.get('specspec.openGraph')();
   assert.equal(calls.dialogs, 1);
   assert.equal(calls.picks, 0);
-  assert.equal(result.format_version, 6);
+  assert.equal(result.format_version, 7);
   assert.equal('fingerprint' in result, false);
   assert.equal(calls.cli[0].root, root);
   assert.equal(lastSnapshot(calls.panels[0]).type, 'snapshot');
@@ -425,7 +425,7 @@ test('remote workspace placement uses host-file resources, remote executable set
 });
 
 test('native spotlight creation includes actual dirty buffers without invoking Save or managed node writes', async t => {
-  const node={id:'Zm9vYmE=',type:'requirement',parents:[],body:'# Original',sources:[],path:'_specspec/Zm9vYmE=node.md'};
+  const node={id:'Zm9vYmE=',type:'requirement',parents:[],body:'# Original',sources:[],path:'_specspec/Zm9vYmE=.md'};
   const f=fixture(t,{snapshot:{...snapshot,nodes:[node]}}), {doc,panel}=await f.openDocument(node);
   doc.text=doc.text.replace('# Original','# Unsaved intent'); doc.version++; doc.isDirty=true;
   f.calls.textListeners.forEach(fn=>fn({document:doc}));
@@ -455,7 +455,7 @@ test('external annotation shots notify all project views without reloading their
   assert.ok(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations').every(c => c.root === f.root));
 });
 
-const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '_specspec/node--summary.md' };
+const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '_specspec/node.md' };
 test('native bootstrap supplies the first working render with one no-baseline read', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { panel } = await f.openDocument(fileNode);
@@ -496,7 +496,7 @@ test('native Delete is bound, confirmed and managed, never a retired buffer edit
   assert.equal(doc.isDirty, false);
 });
 test('native cascade confirmation warns about a saved staged descendant, and dirty descendant tabs block deletion', async t => {
-  const child={...fileNode,id:'child',parents:['node'],path:'_specspec/child--summary.md'};
+  const child={...fileNode,id:'child',parents:['node'],path:'_specspec/child.md'};
   const plan={requested_ids:['node'],deleted_ids:['child','node'],nodes:[{id:'child',path:child.path},{id:'node',path:fileNode.path}],uncommitted:[{id:'child',path:child.path,status:'A '}],git_available:true,git_note:''};
   const f=fixture(t,{snapshot:{...snapshot,nodes:[fileNode,child]},deletePlan:plan,deleteWarnings:[{severity:'warning',message:'Node child has uncommitted staged changes; staging is not committing.'}]});
   const root=await f.openDocument(fileNode),leaf=await f.openDocument(child);
@@ -513,7 +513,7 @@ test('native cascade confirmation warns about a saved staged descendant, and dir
   assert.equal(root.doc.isDirty,false);assert.equal(leaf.doc.isDirty,true);
 });
 test('split node views share native contents but preserve independent panels and open other node files', async t => {
-  const other = { ...fileNode, id: 'other', path: '_specspec/other--summary.md', body: '# Other' };
+  const other = { ...fileNode, id: 'other', path: '_specspec/other.md', body: '# Other' };
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode, other] } });
   const { doc, panel } = await f.openDocument(fileNode);
   const split = await f.openDocument(other);
@@ -533,7 +533,7 @@ test('native undo/raw edits update graph views and project commands protect dirt
   await waitFor(() => panel.messages.some(m => m.snapshot?.nodes[0]?.body === '# Raw edit'));
   await f.calls.commands.get('specspec.openGraph')();
   const projectPanel = f.calls.panels.at(-1);
-  projectPanel.send({ type: 'add', nodeType: 'requirement', slug: 'new', body: '# New', parents: [], sources: '[]' });
+  projectPanel.send({ type: 'add', nodeType: 'requirement', body: '# New', parents: [], sources: '[]' });
   await waitFor(() => projectPanel.messages.at(-1).type === 'error');
   assert.match(projectPanel.messages.at(-1).message, /dirty SpecSpec/);
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'add'));
@@ -548,7 +548,7 @@ test('node-file comparisons open an independent panel instead of rebinding the w
 });
 test('the manifest selects only canonical node patterns and has no Activity Bar container', () => {
   const manifest = require('../package.json');
-  assert.deepEqual(manifest.contributes.customEditors[0].selector, [{ filenamePattern: '**/_specspec/???????=*.md' }]);
+  assert.deepEqual(manifest.contributes.customEditors[0].selector, [{ filenamePattern: '**/_specspec/???????=.md' }]);
   assert.equal(manifest.contributes.customEditors[0].priority, 'default');
   assert.equal(manifest.contributes.viewsContainers, undefined);
 });

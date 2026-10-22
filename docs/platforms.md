@@ -32,7 +32,7 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   security certification in the initial slice.
 - Branding: exact original SVG copy, a separate monochrome 24x24 puppy-face icon;
   command-line `resvg` miniature and enlarged light/dark renders are inspected.
-- Git: title + bottom-right A/M/D (and R for pure rename), relative to chosen base.
+- Git: title + bottom-right A/M/D, relative to chosen base.
   Added/deleted use `gitDecoration` theme foregrounds; M uses the theme's blue
   `editorGutter.modifiedBackground`, because VS Code modified-file foreground is
   often amber. Standalone uses VS Code dark defaults. Source-only changes do not
@@ -41,7 +41,7 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
 
 ## Preceding shared-host/sidebar slice (historical evidence)
 
-The shared extraction, Activity Bar view, minimal/full branding, themed A/M/D/R
+The shared extraction, Activity Bar view, minimal/full branding, themed A/M/D
 cues and initial Electron adapter are implemented. The real Windows hosts passed
 on disposable CLI-managed/Git fixtures; screenshots and miniature resvg renders
 were inspected. Tests cover 72 shared cases, 27 editor-adapter cases, six desktop

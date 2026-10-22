@@ -47,7 +47,7 @@ sources:
 ---
 # Adapt VS Code documents and panels to the shared graph
 
-`GraphEditors` contributes `**/_specspec/???????=*.md`; `GraphProject` coordinates
+`GraphEditors` contributes `**/_specspec/???????=.md`; `GraphProject` coordinates
 backend/document planning and watchers; `GraphView` owns independent focus/cameras/
 comparisons. Node tabs stay bound to their resource, neighbors open their files,
 project/revision panels remain independent and raw text is directly accessible.

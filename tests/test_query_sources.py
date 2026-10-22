@@ -27,8 +27,8 @@ def commit(root, message):
 @pytest.fixture
 def project(workspace):
     root, manifesto = workspace
-    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n", "behavior")
-    _, implementation = add_node(root, "implementation", [requirement], "Mapping\n", "mapping")
+    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n")
+    _, implementation = add_node(root, "implementation", [requirement], "Mapping\n")
     (root / "code.py").write_bytes(BASE.encode("utf8"))
     setup_repository(root)
     commit(root, "Code baseline")
@@ -267,9 +267,9 @@ def test_exact_historical_code_not_dirty_workspace_code_is_compared(project):
 
 def test_empty_and_non_git_base_sources_are_distinguished(workspace):
     root, parent = workspace
-    _, requirement = add_node(root, "requirement", [parent], "Behavior\n", "req")
+    _, requirement = add_node(root, "requirement", [parent], "Behavior\n")
     (root / "code.py").write_text("one\n", encoding="utf8")
-    add_node(root, "implementation", [requirement], "Code\n", "code", [{"path": "code.py"}])
+    add_node(root, "implementation", [requirement], "Code\n", [{"path": "code.py"}])
     first = read_query(root).result["source_resolutions"][0]
     assert first["base"]["outcome"] == "unavailable" and first["bytes"] == "unavailable"
     git(root, "init")
@@ -282,7 +282,7 @@ def test_source_reads_are_cached_across_nodes_but_declaration_rows_remain_separa
     project, monkeypatch
 ):
     root, _, requirement, _, source = project
-    add_node(root, "implementation", [requirement], "Another mapping\n", "other", [source])
+    add_node(root, "implementation", [requirement], "Another mapping\n", [source])
     calls = Counter()
     original = SourceReader.read_data
 
@@ -442,7 +442,7 @@ def test_removed_and_deleted_sources_keep_base_locations_and_target_issues(proje
     assert sum("code.py:2-3" in item for item in expected) == 2
     assert any("code.py:1-5" in item for item in expected)
     if removed == "node":
-        assert f"{implementation}mapping @" in text and "[deleted source-changed]" in text
+        assert f"{implementation} @" in text and "[deleted source-changed]" in text
 
 
 def test_source_line_keeps_reference_changes_and_uncertainty_independent():
@@ -653,9 +653,7 @@ def test_two_reference_classes_on_one_file_have_independent_semantics(project):
 
 def test_contract_change_ancestors_use_both_original_graphs(project):
     root, manifesto, old_requirement, implementation, _ = project
-    _, new_requirement = add_node(
-        root, "requirement", [manifesto], "New behavior\n", "new-behavior"
-    )
+    _, new_requirement = add_node(root, "requirement", [manifesto], "New behavior\n")
     update_node(root, implementation, parents=[new_requirement])
     (root / "code.py").write_text(BASE.replace("alpha", "edited"), encoding="utf8")
     query, values = rows(project)

@@ -32,8 +32,8 @@ async function run() {
   const nativeRoot = join(project.root, 'native-documents'); mkdirSync(nativeRoot);
   const nativeCli = (args, input) => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', nativeRoot, ...args], { input, encoding: 'utf8' })).result;
   const manifesto = nativeCli(['init', '-', '--json'], '# Native document fixture\n').changed_ids[0];
-  const nativeNode = nativeCli(['add', '--parent', manifesto, '--slug', 'native-node', '--body', '-', '--json'], '# Native node\n').changed_ids[0];
-  const nativeOther = nativeCli(['add', '--parent', nativeNode, '--slug', 'other-node', '--body', '-', '--json'], '# Other node\n').changed_ids[0];
+  const nativeNode = nativeCli(['add', '--parent', manifesto, '--body', '-', '--json'], '# Native node\n').changed_ids[0];
+  const nativeOther = nativeCli(['add', '--parent', nativeNode, '--body', '-', '--json'], '# Other node\n').changed_ids[0];
   const nativeSnapshot = nativeCli(['show', '--json']);
   const otherPath = join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path);
   writeFileSync(otherPath, readFileSync(otherPath, 'utf8').replace(/\n/g, '\r\n'));

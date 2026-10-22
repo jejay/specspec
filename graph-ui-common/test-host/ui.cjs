@@ -116,6 +116,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
     assert.ok(total > 0);
     assert.equal(await evaluate(`document.getElementById('accept')`), null);
+    assert.ok(await evaluate(`!document.getElementById('slug')&&!document.getElementById('slug-label')`), 'Creation uses generated ID-only filenames with binding fields only.');
     assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.value)`), ['distance', 'max-distance', 'absolute-influence', 'relative-influence', 'log-absolute-influence', 'log-relative-influence', 'type', 'git-revision']);
     assert.deepEqual(await evaluate(`[...document.getElementById('color-mode').options].map(o=>o.textContent)`), ['Min. Distance to Manifesto', 'Max. Distance to Manifesto', 'Absolute influence', 'Relative influence', 'Log Absolute Influence', 'Log Relative Influence', 'Node type', 'Git/Revision Status']);
     assert.equal(await evaluate(`document.querySelector('.distance-badge')`), null);
@@ -366,7 +367,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
           p.remove();h.remove();
         }
         for(const accent of ['#e5be32',...window.SpecSpecGraph.RAINBOW_COLORS,...Object.values(window.SpecSpecGraph.TYPE_COLORS).filter(c=>c!=='#d3d3d3')]) {
-          for(const kind of ['normal','changed','removed','added','renamed','source-changed']) for(const expanded of [false,true]) for(const type of ['requirement','implementation','manifesto revision-colored']) {
+          for(const kind of ['normal','changed','removed','added','source-changed']) for(const expanded of [false,true]) for(const type of ['requirement','implementation','manifesto revision-colored']) {
             const c=document.createElement('div');c.className='card '+type+' '+kind+(expanded?' expanded':'');
             c.style.setProperty('--node-accent',accent);document.getElementById('cards').append(c);
             const resting=getComputedStyle(c).borderTopColor;c.classList.add('node-hovered');
@@ -591,13 +592,13 @@ exports.checkUI = async function checkUI(port, options = {}) {
           return root.style.getPropertyValue('--node-accent')===model.REVISION_COLORS.changed
             &&root.classList.contains('revision-colored')
             &&[...document.querySelectorAll('#cards .card')].every(c=>{
-              const kind=['added','changed','removed','renamed','source-changed'].find(k=>c.classList.contains(k))||'unchanged';
+              const kind=['added','changed','removed','source-changed'].find(k=>c.classList.contains(k))||'unchanged';
               const accent=model.REVISION_COLORS[kind];
               const probe=document.createElement('span');probe.style.background=${JSON.stringify(theme.includes('contrast')?'var(--vscode-editor-background)':'color-mix(in srgb, var(--accent) 15%, var(--vscode-editor-background))')};
               probe.style.setProperty('--accent',accent);document.body.append(probe);
               const matches=c.style.getPropertyValue('--node-accent')===accent&&(${sameColor})(getComputedStyle(c).backgroundColor,getComputedStyle(probe).backgroundColor);probe.remove();return matches;
             })&&legend.includes('A · Added')&&legend.includes('M · Modified')&&legend.includes('D · Deleted')
-            &&legend.includes('R · Renamed')&&!legend.includes('Manifesto · 0 hops');
+            &&!legend.includes('R · Renamed')&&!legend.includes('Manifesto · 0 hops');
         })()`),'Revision fills/legend match comparison kinds, including the modified manifesto.');
         await evaluate(`document.getElementById('frame-all').click()`);
         await checkHover(rootId,undefined,theme==='vscode-dark'?'hover-revision-manifesto':undefined);

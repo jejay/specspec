@@ -7,7 +7,7 @@ conclusions and actual implementation mappings. Git records changed decisions. T
 [fictional story](STORY.md) is optional illustration, not required evidence or
 actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
 physically deleted during redirects and remain in the earlier Git commits.
-Every retained revision uses shortcut-free node format 6 and application API 6.
+Every retained revision uses shortcut-free node format 7 and application API 6.
 The final graph has 35 immediate justification edges; ancestry supplies inherited
 bindings and changes require downstream reconsideration.
 
@@ -107,7 +107,7 @@ npm run test:browser
 ```
 
 IDs are canonical padded Base64url over five random bytes, including `=`; filenames
-are `<id><slug>.md`. Manual Markdown is permitted and validated; CLI/UI editing is
+are `<id>.md`. Manual Markdown is permitted and validated; CLI/UI editing is
 recommended. Do not reinitialize the graph. Node 22+ is needed for the installed
 Chromium browser harness; no app dependencies or browser downloads are required.
 `GANTT_BROWSER` selects the installed browser; `GANTT_SCREENSHOT_DIR` saves screenshots.

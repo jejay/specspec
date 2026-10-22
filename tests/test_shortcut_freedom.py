@@ -19,16 +19,16 @@ from specspec.workspace import add_node, load_snapshot, mutate, new_node, update
 
 
 def nodes_for_chain():
-    root = new_node("manifesto", [], "# Root\n", "root")
-    first = new_node("requirement", [root.id], "# First\n", "first")
-    second = new_node("requirement", [first.id], "# Second\n", "second")
+    root = new_node("manifesto", [], "# Root\n")
+    first = new_node("requirement", [root.id], "# First\n")
+    second = new_node("requirement", [first.id], "# Second\n")
     return root, first, second
 
 
 @pytest.mark.parametrize("kind", ["requirement", "implementation"])
 def test_redundant_parent_has_a_real_deterministic_alternative_path(kind):
     root, first, second = nodes_for_chain()
-    leaf = new_node(kind, [first.id, second.id], "# Leaf\n", "leaf")
+    leaf = new_node(kind, [first.id, second.id], "# Leaf\n")
     expected = f"alternative path: {first.id} -> {second.id} -> {leaf.id}."
     for nodes in (
         [root, first, second, leaf],
@@ -45,7 +45,7 @@ def test_redundant_parent_has_a_real_deterministic_alternative_path(kind):
 
 def test_manifesto_shortcut_and_multiple_nested_shortcuts_are_reported():
     root, first, second = nodes_for_chain()
-    leaf = new_node("requirement", [root.id, first.id, second.id], "# Leaf\n", "leaf")
+    leaf = new_node("requirement", [root.id, first.id, second.id], "# Leaf\n")
     graph, diagnostics = build_graph([root, first, second, leaf])
     assert len(diagnostics) == 2
     for d in diagnostics:
@@ -61,8 +61,8 @@ def test_manifesto_shortcut_and_multiple_nested_shortcuts_are_reported():
 
 def test_unequal_depth_incomparable_parents_are_valid():
     root, first, second = nodes_for_chain()
-    other = new_node("requirement", [root.id], "# Other\n", "other")
-    leaf = new_node("implementation", [second.id, other.id], "# Leaf\n", "leaf")
+    other = new_node("requirement", [root.id], "# Other\n")
+    leaf = new_node("implementation", [second.id, other.id], "# Leaf\n")
     graph, diagnostics = build_graph([root, first, second, other, leaf])
     assert not diagnostics
     assert graph.closure(leaf.id, ancestors=True) == {root.id, first.id, second.id, other.id}
@@ -71,10 +71,10 @@ def test_unequal_depth_incomparable_parents_are_valid():
 def test_generated_dags_match_an_independent_closure_oracle():
     randomizer = random.Random(91)
     for _ in range(20):
-        nodes = [new_node("manifesto", [], "# Root\n", "root")]
+        nodes = [new_node("manifesto", [], "# Root\n")]
         for index in range(1, 65):
             parents = randomizer.sample([n.id for n in nodes], min(index, randomizer.randint(1, 5)))
-            nodes.append(new_node("requirement", parents, "# Body\n", f"n-{index}"))
+            nodes.append(new_node("requirement", parents, "# Body\n"))
         graph, diagnostics = build_graph(nodes)
         expected = {
             (p, n.id)
@@ -101,9 +101,9 @@ def test_generated_dags_match_an_independent_closure_oracle():
 def test_deep_shortcut_detection_is_iterative():
     root, first, second = nodes_for_chain()
     nodes = [root, first, second]
-    for index in range(1500):
-        nodes.append(new_node("requirement", [nodes[-1].id], "# Body\n", f"n-{index}"))
-    leaf = new_node("implementation", [first.id, nodes[-1].id], "# Leaf\n", "leaf")
+    for _ in range(1500):
+        nodes.append(new_node("requirement", [nodes[-1].id], "# Body\n"))
+    leaf = new_node("implementation", [first.id, nodes[-1].id], "# Leaf\n")
     _, diagnostics = build_graph([*nodes, leaf])
     assert len(diagnostics) == 1 and diagnostics[0].code == "REDUNDANT_PARENT"
     assert f"{first.id} -> {second.id}" in diagnostics[0].message
@@ -113,7 +113,7 @@ def test_deep_shortcut_detection_is_iterative():
 @pytest.mark.parametrize("broken", ["missing", "cycle", "type"])
 def test_basic_graph_errors_precede_shortcut_checks(broken):
     root, first, second = nodes_for_chain()
-    leaf = new_node("requirement", [root.id, first.id, second.id], "# Leaf\n", "leaf")
+    leaf = new_node("requirement", [root.id, first.id, second.id], "# Leaf\n")
     if broken == "missing":
         first = replace(first, parents=["bWlzc2k="])
     elif broken == "cycle":
@@ -126,18 +126,18 @@ def test_basic_graph_errors_precede_shortcut_checks(broken):
 
 def test_managed_add_rejects_shortcuts_before_writing(workspace):
     root, manifesto = workspace
-    before, parent = add_node(root, "requirement", [manifesto], "# Parent\n", "parent")
+    before, parent = add_node(root, "requirement", [manifesto], "# Parent\n")
     with pytest.raises(SpecError, match="alternative path"):
-        add_node(root, "requirement", [manifesto, parent], "# Child\n", "child")
+        add_node(root, "requirement", [manifesto, parent], "# Child\n")
     assert load_snapshot(root).files == before.files
     assert not (root / ".specspec-local/journal.json").exists()
 
 
 def independent_parents(workspace):
     root, manifesto = workspace
-    _, first = add_node(root, "requirement", [manifesto], "# First\n", "first")
-    _, second = add_node(root, "requirement", [manifesto], "# Second\n", "second")
-    before, leaf = add_node(root, "implementation", [first, second], "# Leaf\n", "leaf")
+    _, first = add_node(root, "requirement", [manifesto], "# First\n")
+    _, second = add_node(root, "requirement", [manifesto], "# Second\n")
+    before, leaf = add_node(root, "implementation", [first, second], "# Leaf\n")
     return root, before, first, second, leaf
 
 

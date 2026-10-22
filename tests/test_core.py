@@ -29,7 +29,7 @@ def test_flat_init(workspace):
     assert snapshot.graph.order == [manifesto]
     assert all(path.is_file() and path.suffix == ".md" for path in (root / "_specspec").iterdir())
     assert not (root / "_specspec" / "specspec.yaml").exists()
-    assert snapshot.nodes[0].format_version == 6
+    assert snapshot.nodes[0].format_version == 7
     assert "fingerprint" not in snapshot.to_dict()
     assert all("managed_hash" not in node.to_dict() for node in snapshot.nodes)
     assert all(b"managed_hash:" not in raw for raw in snapshot.files.values())
@@ -37,10 +37,10 @@ def test_flat_init(workspace):
 
 def test_diamond_and_implementation(workspace):
     root, manifesto = workspace
-    _, left = add_node(root, "requirement", [manifesto], "Left\n", "left")
-    _, right = add_node(root, "requirement", [manifesto], "Right\n", "right")
-    snapshot, leaf = add_node(root, "requirement", [left, right], "Both\n", "both")
-    snapshot, implementation = add_node(root, "implementation", [leaf], "Realization\n", "code")
+    _, left = add_node(root, "requirement", [manifesto], "Left\n")
+    _, right = add_node(root, "requirement", [manifesto], "Right\n")
+    snapshot, leaf = add_node(root, "requirement", [left, right], "Both\n")
+    snapshot, implementation = add_node(root, "implementation", [leaf], "Realization\n")
     assert snapshot.graph.closure(implementation, ancestors=True) == {manifesto, left, right, leaf}
     assert snapshot.graph.closure(left) == {leaf, implementation}
     assert snapshot.graph.order.index(left) < snapshot.graph.order.index(leaf)
@@ -48,8 +48,8 @@ def test_diamond_and_implementation(workspace):
 
 def test_deletion_cascades_are_physical_and_keep_the_remaining_dag_valid(workspace):
     root, manifesto = workspace
-    _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
-    snapshot, child = add_node(root, "requirement", [parent], "Child\n", "child")
+    _, parent = add_node(root, "requirement", [manifesto], "Parent\n")
+    snapshot, child = add_node(root, "requirement", [parent], "Child\n")
     assert all(
         "status" not in node.to_dict() and "retired" not in node.to_dict()
         for node in snapshot.nodes
@@ -71,17 +71,17 @@ def test_deletion_cascades_are_physical_and_keep_the_remaining_dag_valid(workspa
 
 def test_cycles_and_forbidden_parent_types_leave_files_unchanged(workspace):
     root, manifesto = workspace
-    _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
-    snapshot, child = add_node(root, "requirement", [parent], "Child\n", "child")
+    _, parent = add_node(root, "requirement", [manifesto], "Parent\n")
+    snapshot, child = add_node(root, "requirement", [parent], "Child\n")
     before = dict(snapshot.files)
     with pytest.raises(SpecError, match="Cycle"):
         update_node(root, parent, parents=[child])
     assert load_snapshot(root).files == before
     with pytest.raises(SpecError, match="requirement parents"):
-        add_node(root, "implementation", [manifesto], "No\n", "bad")
-    snapshot, implementation = add_node(root, "implementation", [child], "Code\n", "code")
+        add_node(root, "implementation", [manifesto], "No\n")
+    snapshot, implementation = add_node(root, "implementation", [child], "Code\n")
     with pytest.raises(SpecError, match="cannot have children"):
-        add_node(root, "requirement", [implementation], "No\n", "bad")
+        add_node(root, "requirement", [implementation], "No\n")
 
 
 def test_manual_body_edits_are_valid_and_reads_do_not_rewrite_files(workspace):
@@ -112,13 +112,16 @@ def test_unconditional_updates_round_trip_body_comments(workspace):
     assert load_snapshot(root).nodes[0].body == "Next edit\n"
 
 
-def test_slug_rename_preserves_semantics(workspace):
+def test_noncanonical_filename_is_diagnosed_without_rewriting_it(workspace):
     root, _ = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    (root / node.path).rename(root / "_specspec" / f"{node.id}renamed.md")
-    assert load_snapshot(root).nodes[0].semantic() == node.semantic()
-    assert load_snapshot(root).valid
+    destination = root / "_specspec" / f"{node.id}extra.md"
+    (root / node.path).rename(destination)
+    invalid = load_snapshot(root)
+    assert not invalid.valid
+    assert any("Filename must equal" in d.message for d in invalid.diagnostics)
+    assert destination.read_bytes() == snapshot.files[node.path]
 
 
 @pytest.mark.parametrize("extra", ["nested", "specspec.yaml", "notes.txt"])
@@ -146,8 +149,8 @@ def test_nearest_workspace_does_not_fall_back(workspace):
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\ntype: manifesto"),
         lambda raw: raw.replace(b"parents: []", b"parents: &alias []"),
         lambda raw: raw.replace(b"parents: []", b"parents: !!seq []"),
-        lambda raw: raw.replace(b"format_version: 6", b"format_version: true"),
-        lambda raw: raw.replace(b"format_version: 6", b"format_version: 999"),
+        lambda raw: raw.replace(b"format_version: 7", b"format_version: true"),
+        lambda raw: raw.replace(b"format_version: 7", b"format_version: 999"),
         lambda raw: raw.replace(b"parents: []", b"parents: []\nmanaged_hash: obsolete"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nretired: 42"),
         lambda raw: raw.replace(b"type: manifesto", b"type: manifesto\nstatus: accepted"),
@@ -171,29 +174,26 @@ def test_duplicate_ids_and_missing_parents(workspace):
     duplicates = {**snapshot.files, f"_specspec/{node.id}duplicate.md": snapshot.files[node.path]}
     assert not snapshot_from_files(root, duplicates).valid
     with pytest.raises(SpecError, match="Missing parent"):
-        add_node(root, "requirement", ["bWlzc2k="], "Missing\n", "missing")
+        add_node(root, "requirement", ["bWlzc2k="], "Missing\n")
     with pytest.raises(SpecError, match="duplicates"):
-        add_node(root, "requirement", [manifesto, manifesto], "Duplicate\n", "duplicate")
+        add_node(root, "requirement", [manifesto, manifesto], "Duplicate\n")
 
 
 def test_sources_paths_and_missing_warnings(workspace):
     root, manifesto = workspace
-    _, requirement = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
+    _, requirement = add_node(root, "requirement", [manifesto], "Parent\n")
     snapshot, _ = add_node(
         root,
         "implementation",
         [requirement],
         "Code\n",
-        "code",
         sources=[{"path": "src/missing.py", "symbol": "run"}],
     )
     assert snapshot.valid
     assert any(d.code == "SOURCE_MISSING" and d.severity == "warning" for d in snapshot.diagnostics)
     for path in ["../outside.py", "C:/outside.py", "/outside.py", "src\\file.py"]:
         with pytest.raises(SpecError):
-            add_node(
-                root, "implementation", [requirement], "Bad\n", "bad", sources=[{"path": path}]
-            )
+            add_node(root, "implementation", [requirement], "Bad\n", sources=[{"path": path}])
 
 
 def test_symlink_rejection(workspace, tmp_path):
@@ -216,7 +216,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     manifesto = json.loads(result.output)["result"]["changed_ids"][0]
     result = runner.invoke(
         main,
-        [*prefix, "add", "--parent", manifesto, "--slug", "child", "--body", "-", "--json"],
+        [*prefix, "add", "--parent", manifesto, "--body", "-", "--json"],
         input="# Child\n",
     )
     assert result.exit_code == 0, result.output
@@ -245,7 +245,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
 def test_generated_dags_and_injected_cycle():
     randomizer = random.Random(42)
     for count in [2, 10, 60]:
-        nodes = [new_node("manifesto", [], "Root\n", "root")]
+        nodes = [new_node("manifesto", [], "Root\n")]
         for index in range(1, count):
             parents = randomizer.sample(
                 [n.id for n in nodes], k=min(index, randomizer.randint(1, 4))
@@ -257,7 +257,7 @@ def test_generated_dags_and_injected_cycle():
                 for p in parents
                 if not any(p in existing.closure(q, ancestors=True) for q in parents if p != q)
             ]
-            nodes.append(new_node("requirement", parents, "Body\n", f"node-{index}"))
+            nodes.append(new_node("requirement", parents, "Body\n"))
         graph, errors = build_graph(nodes)
         assert not errors
         assert graph.order.index(nodes[0].id) == 0
@@ -277,9 +277,9 @@ def test_generated_dags_and_injected_cycle():
 
 
 def test_long_chain_has_no_recursion_limit():
-    nodes = [new_node("manifesto", [], "Root\n", "root")]
-    for index in range(1200):
-        nodes.append(new_node("requirement", [nodes[-1].id], "Body\n", f"n-{index}"))
+    nodes = [new_node("manifesto", [], "Root\n")]
+    for _ in range(1200):
+        nodes.append(new_node("requirement", [nodes[-1].id], "Body\n"))
     graph, errors = build_graph(nodes)
     assert not errors
     assert len(graph.closure(nodes[-1].id, ancestors=True)) == 1200
@@ -291,9 +291,9 @@ def test_long_chain_has_no_recursion_limit():
 
 def test_serialization_and_parent_order_semantics(workspace):
     root, manifesto = workspace
-    _, one = add_node(root, "requirement", [manifesto], "One\n", "one")
-    _, two = add_node(root, "requirement", [manifesto], "Two\n", "two")
-    snapshot, child = add_node(root, "requirement", [one, two], "Child\n", "child")
+    _, one = add_node(root, "requirement", [manifesto], "One\n")
+    _, two = add_node(root, "requirement", [manifesto], "Two\n")
+    snapshot, child = add_node(root, "requirement", [one, two], "Child\n")
     node = snapshot.graph.nodes[child]
     reordered = replace(node, parents=list(reversed(node.parents)))
     assert node.semantic() == reordered.semantic()

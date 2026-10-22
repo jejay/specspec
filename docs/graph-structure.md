@@ -1,6 +1,6 @@
 # Immediate justification and shortcut freedom
 
-Canonical **node format 6** records a rooted, shortcut-free DAG. A direct parent
+Canonical **node format 7** records a rooted, shortcut-free DAG. A direct parent
 adds ancestry beyond the other direct parents: none of a node's direct parents
 may already be an indirect parent. Parent depth can differ; the graph is not a tree.
 
@@ -40,7 +40,7 @@ them. There is no automatic repair, separate approval status or extra hook polic
 
 ## Current-only contract and history
 
-The current node format is **6**, with application API **6**. Fields, five-byte padded
+The current node format is **7**, with application API **6**. Fields, five-byte padded
 Base64url IDs and source-region grammar retain their contracts. Older node formats
 receive version diagnostics; there is no legacy reader or permanent migration command.
 The upgrade requires deliberate, complete graph cleanup rather than silent read-time
@@ -54,8 +54,8 @@ history remain untouched. See [the history procedure](../example/gantt/history/W
 
 ## Verification
 
-The maintained graphs contain 187 nodes/331 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The 823 tests comprise 528 Python, 240 shared UI,
+The maintained graphs contain 190 nodes/337 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. The 858 tests comprise 563 Python, 240 shared UI,
 46 VS Code adapter and 9 Electron cases. Backend, renderer and host-adapter suites
 cover independent closure/last-occurrence/selected-parent query oracles, default
 compact/human bodies and source lists, comma-separated parents, worded hints/root

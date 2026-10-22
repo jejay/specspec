@@ -22,8 +22,8 @@ def invoke(root, *args):
 @pytest.fixture
 def project(workspace):
     root, manifesto = workspace
-    _, requirement = add_node(root, "requirement", [manifesto], "# Intent\n", "intent")
-    _, implementation = add_node(root, "implementation", [requirement], "# Code\n", "code")
+    _, requirement = add_node(root, "requirement", [manifesto], "# Intent\n")
+    _, implementation = add_node(root, "implementation", [requirement], "# Code\n")
     (root / "code.py").write_text("before\nalpha\nbeta\nafter\n", encoding="utf-8")
     git(root, "init")
     git(root, "config", "user.name", "Source tests")

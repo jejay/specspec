@@ -123,7 +123,7 @@ function platformChecks(fixture, host) {
       const deeperOutside = committedRootSibling(current,base,manifesto.id,outside.id);
       assert.ok(deeperOutside,'The maintained HEAD needs a second committed manifesto-child requirement.');
       const deeperOutsideBytes = readFileSync(join(fixture.root,deeperOutside.path));
-      const add = (parents,slug) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--slug',slug,'--body','-','--json'],`# ${slug}\n\nDisposable cascade regression.\n`).changed_ids[0];
+      const add = (parents,heading) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--body','-','--json'],`# ${heading}\n\nDisposable cascade regression.\n`).changed_ids[0];
       const branch = add([manifesto.id],'cascade-root');
       const full = add([branch],'cascade-full-child');
       const partial = add([branch,outside.id],'cascade-partial-child');

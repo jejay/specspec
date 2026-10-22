@@ -26,6 +26,7 @@ from .output import (
     render_plan,
     render_receipt,
     safe_text,
+    title,
 )
 from .query import read_query, render_query
 from .source_commands import register as register_sources
@@ -40,7 +41,6 @@ from .workspace import (
     load_snapshot,
     recover,
     require_node,
-    slugify,
     update_node,
 )
 
@@ -155,14 +155,6 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
     )
 
 
-def summary_slug(body):
-    heading = next((s.lstrip("# ").strip() for s in body.splitlines() if s.startswith("#")), "node")
-    try:
-        return slugify(heading)
-    except SpecError:
-        return "node"
-
-
 @click.group(cls=Commands)
 @click.option(
     "--root", type=click.Path(path_type=Path, file_okay=False), help="Explicit project root."
@@ -176,16 +168,13 @@ def main(context, root):
 
 @main.command()
 @click.argument("manifesto")
-@click.option("--slug", hidden=True)
 @json_option
 @click.pass_obj
 @guarded
-def init(root, manifesto, slug, as_json):
+def init(root, manifesto, as_json):
     """Create a graph from manifesto body FILE (or - for stdin)."""
     body = read_body(manifesto)
-    snapshot = initialize(
-        root.absolute() if root is not None else Path.cwd(), body, slug or summary_slug(body)
-    )
+    snapshot = initialize(root.absolute() if root is not None else Path.cwd(), body)
     mutation_output(snapshot, [snapshot.nodes[0].id], as_json)
 
 
@@ -204,13 +193,12 @@ def init(root, manifesto, slug, as_json):
     required=True,
     help="Full parent ID; repeat for multiple parents.",
 )
-@click.option("--slug", hidden=True)
 @click.option("--body", required=True, help="Body FILE, or - for stdin.")
 @click.option("--sources", hidden=True)
 @json_option
 @click.pass_obj
 @guarded
-def add(root, node_type, parents, slug, body, sources, as_json):
+def add(root, node_type, parents, body, sources, as_json):
     """Create a node with validated relationships."""
     text = read_body(body)
     snapshot, node_id = add_node(
@@ -218,7 +206,6 @@ def add(root, node_type, parents, slug, body, sources, as_json):
         node_type,
         list(parents),
         text,
-        slug or summary_slug(text),
         source_input(sources),
     )
     mutation_output(snapshot, [node_id], as_json)
@@ -375,7 +362,7 @@ def show(root, node_id, dependents, as_json):
             as_json=as_json,
             text=lambda r: (
                 f"Dependents of {r['id']} (potential structural scope):\n"
-                + "\n".join(f"  {i}  {summary_slug(graph.nodes[i].body)}" for i in ids)
+                + "\n".join(f"  {i}  {title(graph.nodes[i].to_dict())}" for i in ids)
             ),
         )
     else:

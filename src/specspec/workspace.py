@@ -7,7 +7,6 @@ import json
 import os
 import secrets
 import shutil
-import unicodedata
 from collections.abc import Callable, Collection
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
@@ -206,21 +205,10 @@ def load_snapshot(root: Path, *, ignore_state: bool = False) -> Snapshot:
     return snapshot_from_files(root, files, diagnostics, check_sources=True)
 
 
-def slugify(value: str) -> str:
-    import re
-
-    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode().lower()
-    slug = re.sub(r"[^a-z0-9]+", "-", ascii_value).strip("-")[:80].rstrip("-")
-    if not slug:
-        raise SpecError([Diagnostic("SLUG", "Supply a summary containing letters or digits.")])
-    return slug
-
-
 def new_node(
     node_type: str,
     parents: list[str],
     body: str,
-    slug: str,
     *,
     reserved_ids: Collection[str] = (),
 ) -> SpecNode:
@@ -234,7 +222,7 @@ def new_node(
         node_type,
         parents,
         body,
-        f"{SPEC_DIR}/{node_id}{slugify(slug)}.md",
+        f"{SPEC_DIR}/{node_id}.md",
         FORMAT_VERSION if node_type == "manifesto" else None,
     )
 
@@ -294,7 +282,7 @@ def cleanup(state: Path) -> None:
     (state / "journal.tmp").unlink(missing_ok=True)
 
 
-def initialize(root: Path, body: str, slug: str = "project-manifesto") -> Snapshot:
+def initialize(root: Path, body: str) -> Snapshot:
     root = root.absolute()
     if not root.is_dir():
         raise SpecError([Diagnostic("WORKSPACE", "Project root must already exist.")], 2)
@@ -304,7 +292,7 @@ def initialize(root: Path, body: str, slug: str = "project-manifesto") -> Snapsh
             [Diagnostic("EXISTS", "Refusing to overwrite an existing _specspec workspace.")]
         )
     with workspace_lock(root) as state:
-        node = new_node("manifesto", [], body, slug)
+        node = new_node("manifesto", [], body)
         raw = serialize(node)
         candidate = snapshot_from_files(root, {node.path: raw})
         candidate.require_valid()
@@ -398,14 +386,13 @@ def add_node(
     node_type: str,
     parents: list[str],
     body: str,
-    slug: str,
     sources: list[dict[str, Any]] | None = None,
 ) -> tuple[Snapshot, str]:
     node_id = ""
 
     def operation(before: Snapshot) -> dict[str, bytes]:
         nonlocal node_id
-        node = new_node(node_type, parents, body, slug, reserved_ids=before.require_valid().nodes)
+        node = new_node(node_type, parents, body, reserved_ids=before.require_valid().nodes)
         node.sources = sources or []
         node_id = node.id
         return {node.path: serialize(node)}

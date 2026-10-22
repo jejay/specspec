@@ -4,8 +4,8 @@ const {comparison,expandResult}=require('../host/wire.cjs');
 const {ProjectReads}=require('../host/reads.cjs');
 const root={id:'root',type:'manifesto',parents:[],body:'# Root',path:'_specspec/root.md'};
 const old={id:'child',type:'requirement',parents:['root'],body:'# Earlier',sources:[],path:'_specspec/child.md'};
-const current={format_version:6,valid:true,nodes:[root]};
-const compact={base:{format_version:6,valid:true},before:[old],changes:[{id:'child',kind:'removed',fields:[]}],added_edges:[],removed_edges:[['root','child']],impact_complete:true};
+const current={format_version:7,valid:true,nodes:[root]};
+const compact={base:{format_version:7,valid:true},before:[old],changes:[{id:'child',kind:'removed',fields:[]}],added_edges:[],removed_edges:[['root','child']],impact_complete:true};
 
 test('compact ghost records reconstruct full revision-local membership and edges without mutating input',()=>{
  const input=structuredClone(compact),result=comparison(input,current);

@@ -1,7 +1,7 @@
 # Removing nodes and the default workspace graph
 
 **Withdraw by deleting node files.** There is no retired flag, retire/restore
-command, live/retired filter or withdrawal badge in current node format **6** / API **6**.
+command, live/retired filter or withdrawal badge in current node format **7** / API **6**.
 Earlier text and relationships remain in Git history. Explain your reason in the
 normal Git commit, rather than maintaining a separate lifecycle state.
 
@@ -68,7 +68,7 @@ source files or installs hooks for this operation.
 
 | Situation | Default workspace view |
 | --- | --- |
-| Node exists in HEAD and workspace | Normal node, with any M/R changes |
+| Node exists in HEAD and workspace | Normal node, with any M changes |
 | HEAD node's file deleted | Base node remains as **D**, with earlier links/text |
 | Deletion staged | Still **D**: HEAD has not changed |
 | Deletion committed | Node disappears from the default view |
@@ -105,11 +105,11 @@ file, but cannot re-overlay or recreate it in the graph. Attempted graph edits/
 saves report the missing file rather than silently resurrecting it.
 
 The physical-deletion/HEAD intention and amended conclusion are
-[`xu6W0c4=`](../_specspec/xu6W0c4=withdraw-by-file-deletion-and-show-workspace-against-head.md)
-and [`5d5oDCM=`](../_specspec/5d5oDCM=physical-deletion-and-head-relative-ghost-views.md).
+[`xu6W0c4=`](../_specspec/xu6W0c4=.md)
+and [`5d5oDCM=`](../_specspec/5d5oDCM=.md).
 The follow-up cascade/warning intention and separate detailed conclusion are
-[`fuyy0Lk=`](../_specspec/fuyy0Lk=cascade-delete-all-children-and-warn-if-uncommitted.md)
-and [`AuhoBoU=`](../_specspec/AuhoBoU=downstream-deletion-plans-and-uncommitted-warnings.md).
+[`fuyy0Lk=`](../_specspec/fuyy0Lk=.md)
+and [`AuhoBoU=`](../_specspec/AuhoBoU=.md).
 Previous explanations remain in Git. This extension does not change node schema;
 the complete independent Gantt current-schema history/receipts remain the regression
 corpus. Existing manual clones and local experiments are never reset automatically.

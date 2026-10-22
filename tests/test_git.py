@@ -44,11 +44,29 @@ def test_index_validation_checks_partial_staging(workspace):
     assert any(d.code == "SCHEMA" for d in staged.diagnostics)
 
 
-def test_commit_diffs_removed_edges_and_renames(workspace):
+def test_index_and_revision_reject_noncanonical_paths_despite_working_repair(workspace):
     root, manifesto = workspace
-    _, left = add_node(root, "requirement", [manifesto], "Left\n", "left")
-    _, right = add_node(root, "requirement", [manifesto], "Right\n", "right")
-    _, child = add_node(root, "requirement", [left, right], "Child\n", "child")
+    setup_repository(root)
+    snapshot = load_snapshot(root)
+    node = snapshot.graph.nodes[manifesto]
+    wrong = root / "_specspec" / f"{manifesto}extra.md"
+    (root / node.path).rename(wrong)
+    git(root, "add", "-A", "_specspec")
+    wrong.rename(root / node.path)
+    assert load_snapshot(root).valid
+    staged = git_snapshot(root, staged=True)
+    assert not staged.valid
+    assert any("Filename must equal" in d.message for d in staged.diagnostics)
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Invalid path fixture")
+    assert not git_snapshot(root, "HEAD").valid
+    assert git_snapshot(root, "HEAD~1").valid
+
+
+def test_commit_diffs_removed_edges_and_changed_bodies(workspace):
+    root, manifesto = workspace
+    _, left = add_node(root, "requirement", [manifesto], "Left\n")
+    _, right = add_node(root, "requirement", [manifesto], "Right\n")
+    _, child = add_node(root, "requirement", [left, right], "Child\n")
     setup_repository(root)
     base = git_snapshot(root, "HEAD")
     update_node(root, child, parents=[right])
@@ -57,9 +75,10 @@ def test_commit_diffs_removed_edges_and_renames(workspace):
     assert child in result["affected"]
     assert result["impact_complete"]
     node = load_snapshot(root).graph.nodes[left]
-    (root / node.path).rename(root / "_specspec" / f"{left}renamed.md")
+    update_node(root, left, body="# Changed heading\n")
     result = semantic_diff(base, load_snapshot(root))
-    assert {"id": left, "kind": "renamed", "fields": ["path"]} in result["changes"]
+    assert {"id": left, "kind": "changed", "fields": ["body"]} in result["changes"]
+    assert load_snapshot(root).graph.nodes[left].path == node.path
     git(root, "add", "_specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Changed graph")
     assert (
@@ -70,8 +89,8 @@ def test_commit_diffs_removed_edges_and_renames(workspace):
 
 def test_ancestor_changes_include_old_and_new_descendants(workspace):
     root, manifesto = workspace
-    _, parent = add_node(root, "requirement", [manifesto], "Parent\n", "parent")
-    _, child = add_node(root, "requirement", [parent], "Child\n", "child")
+    _, parent = add_node(root, "requirement", [manifesto], "Parent\n")
+    _, child = add_node(root, "requirement", [parent], "Child\n")
     setup_repository(root)
     base = git_snapshot(root, "HEAD")
     update_node(root, parent, body="Updated\n")

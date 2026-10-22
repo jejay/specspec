@@ -17,7 +17,7 @@ from specspec.git import git_snapshot, run_git, semantic_diff, source_change_imp
 from specspec.graph import build_graph
 from specspec.model import API_VERSION, FORMAT_VERSION, ID_RE, SpecNode
 from specspec.sources import check_results, resolve_nodes
-from specspec.workspace import load_snapshot, slugify
+from specspec.workspace import load_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_PATHS = (
@@ -84,7 +84,10 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     current = load_snapshot(root)
     current.require_valid()
     assert not current.diagnostics, current.diagnostics
-    assert all(ID_RE.fullmatch(node.id) for node in current.nodes)
+    assert all(
+        ID_RE.fullmatch(node.id) and node.path == f"_specspec/{node.id}.md"
+        for node in current.nodes
+    )
     assert_current_bindings(current.nodes)
     for node in current.nodes:
         if node.type == "implementation":
@@ -118,13 +121,12 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 if action == "init"
                 else (argv[argv.index("--type") + 1] if "--type" in argv else "requirement")
             )
-            summary = argv[argv.index("--slug") + 1] if "--slug" in argv else "project-manifesto"
             records[node_id] = SpecNode(
                 node_id,
                 node_type,
                 [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"],
                 receipt["stdin"],
-                f"_specspec/{node_id}{slugify(summary)}.md",
+                f"_specspec/{node_id}.md",
                 FORMAT_VERSION if node_type == "manifesto" else None,
                 json.loads(argv[argv.index("--sources") + 1]) if "--sources" in argv else [],
             )

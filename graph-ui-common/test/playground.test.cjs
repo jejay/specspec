@@ -22,7 +22,7 @@ test('standalone generator defaults exactly match the production rainbow and map
   assert.deepEqual(result.colors,model.RAINBOW_COLORS);
   assert.deepEqual(result.parameters,{count:7,lightness:0.69,chroma:0.12,startHue:320,endHue:20});
   assert.deepEqual(result.colors,['#bc82c9','#7e97e6','#1facce','#37b390','#92a64b','#ca8d3e','#dc7b7c']);
-  assert.deepEqual(result.mappings,{requirement:4,implementation:0,added:3,changed:1,removed:6,renamed:1,'source-changed':5});
+  assert.deepEqual(result.mappings,{requirement:4,implementation:0,added:3,changed:1,removed:6,'source-changed':5});
   assert.deepEqual(result.gamutReducedIndices,[]);
   assert.equal(palette.css(result),`:root {
   --rainbow-1: #bc82c9;
@@ -37,7 +37,6 @@ test('standalone generator defaults exactly match the production rainbow and map
   --palette-added: var(--rainbow-4);
   --palette-changed: var(--rainbow-2);
   --palette-removed: var(--rainbow-7);
-  --palette-renamed: var(--rainbow-2);
   --palette-source-changed: var(--rainbow-6);
 }\n`);
   for(const [kind,index] of Object.entries(result.mappings)) {
@@ -57,7 +56,6 @@ test('Added keeps the text-green priority and Requirement uses an available left
       const candidates=free.length?free:result.samples.map((s,i)=>i);
       assert.ok(candidates.includes(requirement));
       assert.equal(distance(result.samples[requirement].hue,165),Math.min(...candidates.map(i=>distance(result.samples[i].hue,165))));
-      assert.equal(result.mappings.renamed,result.mappings.changed);
       assert.ok(Object.values(result.mappings).every(i=>Number.isInteger(i)&&i>=0&&i<count));
     }
   }
