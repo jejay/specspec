@@ -27,8 +27,8 @@ working files, --staged exact-index files and optional --sources mapping/retenti
 defaulting to freshly resolved HEAD versus working files. Root selection stays --root.
 
 Init takes a manifesto body file or stdin; add/update use --body FILE|- and explicit
-repeated --parent full IDs. Add defaults to requirement, supports --type implementation,
-and derives an optional summary from its heading with an advanced --slug override.
+repeated --parent full IDs. Add defaults to requirement and supports --type implementation. Init and add
+create <id>.md paths independently of body text.
 Updates replace the supplied parent list; valid manifesto parents stay empty.
 Delete retains --dry-run and --yes with its complete descendant and warning contract.
 

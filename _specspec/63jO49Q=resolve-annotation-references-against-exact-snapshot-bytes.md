@@ -9,8 +9,8 @@ parents:
 
 Use the spotlight's pinned explicit revisions or live default workspace/HEAD view
 to derive node status and current title/path. Resolve selected full IDs in the
-target first, then deleted base nodes. Filename changes preserve identity. Report
-added, deleted, changed, renamed, unchanged, absent and unavailable members.
+target first, then deleted base nodes. Report added, deleted, changed, unchanged,
+absent and unavailable members.
 
 Workspace drift warnings describe a changed capture context without vetoing
 identity-based rings or frame actions. A missing historical object or unsupported

@@ -17,8 +17,8 @@ Last occurrence follows traversal independently of maximum graph depth.
 Apply this ordering to the selected-record display projection of a comparison. Retain
 every selected node from either side and its complete parents in reconstructible
 side records; the ordinary unfiltered query selects the entire comparison.
-Unicode continuation rails prefix displayed data. Full headers give type, filename
-stem and all direct parents. Retain all current/deleted binding content in a compact reading with sparse
+Unicode continuation rails prefix displayed data. Full headers give type, full node
+ID and all direct parents. Retain all current/deleted binding content in a compact reading with sparse
 revision hints and safe terminal presentation. Structured comparison records
 retain both original bodies and their whitespace. Canonical comments, spelling and literal
 line endings remain available through node files and the dedicated diff command.
@@ -26,4 +26,4 @@ line endings remain available through node files and the dedicated diff command.
 Query validates the selected saved graphs and reads code from those versions.
 --json uses reconstructible API-6 records for the selected scope; explicit
 subgraphs identify their population, boundary parents and induced edges. Node format
-6 and existing application operations retain their definitions.
+7 and existing application operations retain their definitions.

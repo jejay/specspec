@@ -44,4 +44,4 @@ newline, including terminal escaping or the JSON envelope. Format once and fail
 before emitting a partial result when the chosen representation exceeds the budget.
 The sole ancestor-reading interface is query; everyday verbs are init, show, query,
 add, update, delete, check and diff. Guides, checks and actual retained example
-receipts use that current interface. Node format and application API remain 6.
+receipts use that current interface. Node format is 7 and application API remains 6.

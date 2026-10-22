@@ -10,7 +10,7 @@ parents:
 Default diff output is a full review diff, preceded by a concise summary. Group by
 stable full node ID, type, readable heading and old/new paths. Show all changed binding
 text hunks with context; show added/deleted records completely. Expose exact parent,
-type, source-reference, extension and filename changes and an intelligible added/
+type, source-reference and extension changes and an intelligible added/
 removed relationship overview labelled with IDs and revision-appropriate headings.
 
 Represent every canonical file change, including frontmatter comments, whitespace,

@@ -8,7 +8,7 @@ parents:
 ---
 # Bind native node-file editors and independent graph views
 
-Contribute the default custom text editor for `**/_specspec/???????=*.md`, resolving
+Contribute the default custom text editor for `**/_specspec/???????=.md`, resolving
 the actual node/project through Python. Each file tab edits its bound resource and
 shows graph context. Neighbors open their own files. Raw Markdown is accessible
 through Reopen Editor With. Split views share TextDocument contents and keep their

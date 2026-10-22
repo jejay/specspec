@@ -20,7 +20,7 @@ the last valid preview and disable automatic copy. Exports are deliberately appl
 by the owner/assistant through an authorized change.
 
 Prioritize Added at hue 149.5°, based on the fixed default added text `#81b88b`.
-Retain other hue targets and changed/renamed reuse. Assign Requirement last to the
+Retain other hue targets and changed-color reuse. Assign Requirement last to the
 unused entry nearest hue 165°, or the nearest full-table entry when all are used.
 Equal distances choose the earlier entry. Explain the fixed-reference priority and
 reuse; host themes and actual display perception have their own conditions.

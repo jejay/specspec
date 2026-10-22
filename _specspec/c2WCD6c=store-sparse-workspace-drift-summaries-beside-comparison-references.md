@@ -18,7 +18,7 @@ changes. Clean committed nodes use their commit context. This captures drift wit
 Compare the live workspace summary with the captured one when displaying a record.
 Warn separately about HEAD movement, changed workspace nodes and unavailable
 context. Treat these as advisory: highlight any selected IDs in the displayed
-target or deleted base, report missing IDs and derive A/M/D/R/unchanged from that
+target or deleted base, report missing IDs and derive A/M/D/unchanged from that
 comparison. Native overlays participate in UI capture and warning calculation;
 managed form drafts retain their separate save owner. Checksums are local drift
 hints, independent of canonical node schema and mutation protection.

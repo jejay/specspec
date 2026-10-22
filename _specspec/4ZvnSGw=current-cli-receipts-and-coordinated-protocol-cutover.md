@@ -18,5 +18,5 @@ snapshot together when protocol/command changes affect that evidence. Preserve a
 historical node identities, substantive redirects, spec-before-code ordering and
 runnable application bytes. Validate every maintained revision with current tools.
 Use new external clones, preserving existing experiments and diagnostics. Protocol
-revision alone does not change canonical node format 6 or rewrite SpecSpec development
+revision alone does not change canonical node format 7 or rewrite SpecSpec development
 history. Verification reports measured backend/whole-host scope honestly.

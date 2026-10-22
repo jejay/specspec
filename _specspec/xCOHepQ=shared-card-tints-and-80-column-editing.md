@@ -20,6 +20,6 @@ previews share host editor monospace font/size with monospace/13px fallback. Kee
 soft wrapping for longer text and verify typical 80 ASCII columns at 13/14/16px.
 
 Git corners use 20px / 800 weight with absolute bottom-right anchoring and 26px
-badge-row clearance, including R. Verify headings, badges and letters fit ordinary
+badge-row clearance. Verify headings, badges and letters fit ordinary
 264×112 cards and that circular markers fit their arc. Layout stays intrinsic and
 native controls/caret remain the same during hover and resizing.

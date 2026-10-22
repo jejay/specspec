@@ -4,9 +4,9 @@ type: requirement
 parents:
 - uAjln2M=
 ---
-# Validate shortcut freedom centrally under current node format six
+# Validate shortcut freedom centrally under the current node format
 
-Node format 6 requires a rooted, transitively reduced intention-conclusion DAG.
+Node format 7 requires a rooted, transitively reduced intention-conclusion DAG.
 Five-byte padded Base64url identities, node fields and source grammar retain their
 contracts. Application API 6 retains its protocol. Current-only readers diagnose
 other node versions explicitly. Maintained Gantt revisions and actual receipts use

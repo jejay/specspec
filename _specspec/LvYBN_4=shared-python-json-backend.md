@@ -18,6 +18,6 @@ supports UTF-8 files and `-` stdin; updates replace an explicitly supplied paren
 list. Native editor operations return non-writing overlays/plans; host documents
 own their persistence. Managed project/Electron saves use the transaction writer.
 
-Canonical node format remains 6. Compact structured presentation and shared host
+Canonical node format is 7. Compact structured presentation and shared host
 read operations follow the compact-interface conclusions; native planning and
 managed persistence retain their separate owners.

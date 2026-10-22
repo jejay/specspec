@@ -9,6 +9,6 @@ parents:
 Use seven Base64url payload symbols followed by one standard padding equals sign,
 for eight characters total. Generate from random bytes and retry project-local
 collisions. The full identity includes `=` in frontmatter, parents, commands,
-API messages and the UI. That equals sign also separates identity from the English
-filename summary. The canonical byte encoding and portable collision policy are
+API messages, filenames and the UI. A canonical filename ends with =.md.
+The canonical byte encoding and portable collision policy are
 specified by the encoding conclusion.

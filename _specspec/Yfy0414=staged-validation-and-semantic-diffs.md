@@ -13,7 +13,7 @@ under ordinary Git tooling and preserve existing hook policy.
 
 Read worktree, index and historical snapshots with their current schema. Compare
 full IDs to return added/removed nodes, semantic body/parent/metadata changes,
-filename-only renames, base/target records and changed edges. Compute potential
+base/target records and changed edges. Compute potential
 impact from both ancestor/descendant contexts so removed links remain represented.
 Source-file changes reach linked implementation nodes and their requirement ancestors
 using references in both snapshots, with conservative file-level impact.
