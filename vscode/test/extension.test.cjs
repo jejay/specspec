@@ -99,6 +99,7 @@ function fixture(t, options = {}) {
             set html(value) {
               if (value.includes('SpecSpec graph unavailable')) { calls.fallbackHtml = value; return; }
               assert.match(value, /Loading specification graph/);
+              assert.doesNotMatch(value, /id="project"/, 'VS Code uses its existing Select Project command instead of header chrome.');
               assert.ok(listener, 'message listener must be registered before HTML');
               listener({ type: 'ready' });
             },

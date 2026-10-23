@@ -24,6 +24,20 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 
 ## Canvas controls
 
+The header shows the SpecSpec symbol followed by the current revision comparison.
+The circular-arrow icon refreshes the graph. VS Code's **SpecSpec: Select Project**
+command chooses another project; Electron also offers **Open project** and its
+Project menu (**Ctrl/Command+O**). The area below the toolbar holds color legends
+and diagnostics. Source-change totals and file lists remain available through
+`specspec diff`; node-level source cues and source previews remain in the graph.
+
+In focused node editing, **Ctrl+S** (**Command+S** on macOS) performs the same action
+as **Save node** or **Save file**, including from binding text and source settings.
+New-node forms use the same shortcut. Pending, invalid, provisional and historical
+forms retain their Save restrictions; modal dialogs and overview drafts are separate.
+Native file tabs still use VS Code's document save; project panels and Electron
+use the managed backend writer. Errors retain the form for repair or retry.
+
 The full canvas holds a compact rounded navigation control at its bottom center.
 Use − / + for zoom and the percentage for actual size. The framing icons are
 **Frame graph**, contextual **Frame node**, and **Frame rectangle**. The color legend

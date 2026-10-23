@@ -4,8 +4,8 @@
 
 The user wants the same SpecSpec graph experience in VS Code and a standalone
 Linux/Windows window, later usable in Claude Code or Codex workflows; a large
-main-editor workspace with independent node/commit tabs; a dachshund brand/minimal
-icon; and clearer themed Git titles
+main-editor workspace with independent node/commit tabs; the selected Spectrum flow
+brand symbol; and clearer themed Git titles
 and A/M/D corner cues. Keep native editing, managed writes, revision context,
 drafts/original node contents, and viewport-independent geometry. These are outcomes, not
 an instruction to adopt React, expose a web server, or embed agent credentials.
@@ -30,8 +30,12 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   bounded process/render checks, no remote navigation/popups/renderer filesystem.
   No bundled Python, installer/signing/updater, secret integration or production
   security certification in the initial slice.
-- Branding: exact original SVG copy, a separate monochrome 24x24 puppy-face icon;
-  command-line `resvg` miniature and enlarged light/dark renders are inspected.
+- Branding: exact imports of the selected optical 24px symbol and 512px launcher
+  tile from the final branding delivery, with local provenance digests. The symbol
+  uses host foreground as a theme-compatible mask. The header groups symbol and
+  revision context, uses an accessible Refresh icon and delegates VS Code project
+  selection to the existing command. Electron retains its visible project picker.
+  Focused forms support Ctrl/Command+S through their existing Save path.
 - Git: title + bottom-right A/M/D, relative to chosen base.
   Added/deleted use `gitDecoration` theme foregrounds; M uses the theme's blue
   `editorGutter.modifiedBackground`, because VS Code modified-file foreground is

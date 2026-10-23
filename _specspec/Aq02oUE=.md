@@ -7,19 +7,23 @@ sources:
 - path: branding/README.md
 - path: branding/activity-icon.svg
 - path: branding/app-icon.png
+- path: branding/identity.sha256.json
 - path: branding/dachshund.svg
 - path: Monochrome_Dachshund_Puppy_Emblem.svg
 - path: Monochrome_Dachshund_Puppy_Emblem.png
 - path: .gitattributes
 - path: tests/test_repository_docs.py
+- path: vscode/scripts/build-webview.cjs
+- path: electron/scripts/build.cjs
 ---
-# Supply original and derivative dachshund assets
+# Package the selected identity and preserve original owner artwork
 
-The versioned supplied PNG/SVG retain their input bytes. `branding/dachshund.svg`
-is an exact SVG copy, protected by non-text Git attributes. `activity-icon.svg`
-is a distinct 24×24 monochrome face contour mask. `app-icon.png` is a 256px render
-of the full supplied artwork. Host/package chrome shares these assets.
+branding/activity-icon.svg imports final/icons/specspec-icon-24.svg exactly, and
+branding/app-icon.png imports final/png/specspec-app-icon-512.png. The local digest
+manifest records source paths and exact import bytes. Host builds copy these
+assets to their own offline outputs. The shared header applies the optical
+symbol as a host-foreground mask; the launcher retains its supplied spectrum tile.
 
-Artifact tests check exact SVG import, PNG signature, attributes and local guide
-links. Offline render commands in the branding guide support miniature contrasting
-inspection, scoped to the actual raster/display conditions.
+The loose supplied dachshund PNG/SVG and byte-identical SVG archival import remain
+preserved with non-text attributes. Artifact tests check archival preservation,
+current import digests, optical geometry, launcher dimensions and built host copies.

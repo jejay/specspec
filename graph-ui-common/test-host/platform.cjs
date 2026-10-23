@@ -12,7 +12,28 @@ function platformChecks(fixture, host) {
     readSpotlights: () => fixture.cli(['spotlight', 'show', '--json']).shots,
     submitSpotlights: id => Array.from({length:6},(_,index) =>
       fixture.cli(['spotlight', 'add', id, `Answer ${index+1} for ${id}`, '--json']).shots[0]),
-    before: async ({ evaluate, screenshot, delay }) => {
+    before: async ({ evaluate, screenshot, delay, key }) => {
+      const chrome = await evaluate(`(() => {const brand=document.querySelector('.brand-icon'),refresh=document.getElementById('refresh');return {
+        name:brand.getAttribute('aria-label'),revision:brand.nextElementSibling.id,
+        wordmark:Boolean(document.querySelector('.toolbar strong')),project:Boolean(document.getElementById('project')),
+        refreshText:refresh.textContent,refreshLabel:refresh.getAttribute('aria-label'),mask:getComputedStyle(brand).maskImage};})()`);
+      assert.equal(chrome.name,'SpecSpec');assert.equal(chrome.revision,'revision');assert.equal(chrome.wordmark,false);
+      assert.equal(chrome.project,host==='electron');assert.equal(chrome.refreshText,'');assert.equal(chrome.refreshLabel,'Refresh graph');
+      assert.match(chrome.mask,/specspec.svg/);
+      const original=fixture.cli(['show',modified,'--json']).node.body;
+      const keyboardBody=original+'\nKeyboard save probe.\n';
+      await evaluate(`document.querySelector('[data-node-id="${modified}"]').click();const body=document.getElementById('body');body.value=${JSON.stringify(keyboardBody)};body.dispatchEvent(new Event('input'));body.focus()`);
+      await key({type:'rawKeyDown',key:'s',code:'KeyS',windowsVirtualKeyCode:83,modifiers:2});
+      await key({type:'keyUp',key:'s',code:'KeyS',windowsVirtualKeyCode:83,modifiers:2});
+      for(let i=0;i<300;i++) {if(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`))break;await delay(100);}
+      assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`),'Ctrl+S must finish the focused managed save in the real host.');
+      assert.equal(fixture.cli(['show',modified,'--json']).node.body,keyboardBody);
+      await screenshot(`${host}-brand-header-keyboard-save`);
+      fixture.cli(['update',modified,'--body','-','--json'],original);
+      for(let i=0;i<300;i++) {if(await evaluate(`document.getElementById('body').value===${JSON.stringify(original)}`))break;await delay(100);}
+      assert.equal(await evaluate(`document.getElementById('body').value`),original);
+      await evaluate(`document.getElementById('back').click()`);
+      console.log(`${host}: compact branded header and real Ctrl+S managed node save passed.`);
       // Working-first is intentionally a usable graph without Git classification.
       // Git-paint assertions need the completed comparison, not the first cards.
       const compared = () => evaluate(`${JSON.stringify([[added,'A'],[modified,'M'],[removed,'D']])}.every(([id,letter])=>document.querySelector('[data-node-id="'+id+'"] .git-corner')?.textContent===letter)`);

@@ -550,7 +550,7 @@
     $('sources-label').hidden = nodeType !== 'implementation'; dirty = true; updateButtons(); saveDraft(); draw();
   });
   $('editor').addEventListener('submit', event => {
-    event.preventDefault(); if (!editable() || pending) return;
+    event.preventDefault(); if ($('save').disabled) return;
     pending = true; updateButtons();
     send({ type: creating ? 'add' : 'save', id: selected, originalNode,
       body: $('body').value, parents: [...formParents], sources: $('sources').value, nodeType: $('node-type').value,
@@ -567,15 +567,10 @@
     else { originalNode = currentNode(); loadForm(); draw(); saveDraft(); }
   });
   for (const action of ['refresh', 'compare', 'workspace']) $(action).addEventListener('click', () => send({ type: action }));
-  $('project').addEventListener('click', () => send({ type: 'select-project' }));
+  $('project')?.addEventListener('click', () => send({ type: 'select-project' }));
 
   function showSnapshotNotes() {
     setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`)].filter(Boolean).join('\n'));
-    const sources = state.diff?.source_changes || [];
-    $('linked-sources').hidden = !sources.length;
-    $('source-summary').textContent = `${sources.length} changed linked source file${sources.length === 1 ? '' : 's'} — potential review context`;
-    $('source-files').replaceChildren();
-    for (const source of sources) { const item = document.createElement('li'); item.textContent = source.path; $('source-files').append(item); }
   }
 
   host.onMessage(message => {
@@ -658,6 +653,14 @@
     }
     draw(); saveDraft();
   });
+  // Capture before editor keymaps and VS Code's webview shortcut forwarding.
+  // The same submit path retains native-document or managed-writer ownership.
+  window.addEventListener('keydown', event => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.isComposing ||
+        event.key.toLowerCase() !== 's' || view !== 'focus' || $('editor').hidden || document.querySelector('dialog[open]')) return;
+    event.preventDefault(); event.stopPropagation();
+    if (!event.repeat && !$('save').disabled) $('editor').requestSubmit($('save'));
+  }, true);
   window.addEventListener('keydown', event => {
     if (state?.document && (event.ctrlKey || event.metaKey) && ['z', 'y'].includes(event.key.toLowerCase())) {
       event.preventDefault(); send({ type: event.key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo' });

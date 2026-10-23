@@ -4,10 +4,11 @@ type: requirement
 parents:
 - 4PzVJho=
 ---
-# Derive a minimal themed dachshund face icon
+# Use the supplied optical symbol and launcher artwork
 
-Keep `branding/dachshund.svg` byte-identical to the supplied SVG. Use a distinct
-24×24 monochrome mask with floppy ears, head/muzzle, nose/eyes, roughly 1.5-unit
-strokes and generous negative space. Share this derivative across hosts. Package
-icons may use a raster of the full artwork. Offline light/dark miniature renders
-provide bounded legibility evidence.
+Import the selected 24-unit optical circle-to-S-to-square icon unchanged for the
+shared header. Use its alpha mask with host foreground for theme-compatible
+single-ink chrome. Import the supplied 512px spectrum launcher
+tile for Electron and extension package icons. Keep source paths and SHA-256 import
+digests locally so builds and artifact checks are independent of the sibling
+branding workspace. Brand colors and graph/Git/diagnostic semantics stay separate.

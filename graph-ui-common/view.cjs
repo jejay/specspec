@@ -8,20 +8,19 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; img-src ${cspSource}; script-src 'nonce-${nonce}';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="${resource('graph.css')}" rel="stylesheet"><link href="${resource('host.css')}" rel="stylesheet"><title>SpecSpec Graph</title></head>
-    <body><header class="toolbar"><span class="brand-icon" aria-hidden="true" style="mask-image:url('${attr(resource('specspec.svg'))}')"></span><strong>SpecSpec</strong>
-    <button id="project" title="Choose a local SpecSpec project">Open project</button>
-    <button id="back" hidden>← Total graph</button><button id="refresh">Refresh</button>
+    <body><header class="toolbar"><span class="brand-context"><span class="brand-icon" role="img" aria-label="SpecSpec" style="mask-image:url('${attr(resource('specspec.svg'))}')"></span><span id="revision"></span></span>
+    ${options.showProject === false ? '' : '<button id="project" title="Choose a local SpecSpec project">Open project</button>'}
+    <button id="back" hidden>← Total graph</button><button id="refresh" title="Refresh graph" aria-label="Refresh graph">${icon('<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 6.1A8 8 0 0 1 19.5 10M4.5 14a8 8 0 0 0 13.4 3.9"/>')}</button>
     <button id="compare">Compare revisions</button><button id="workspace">HEAD / workspace</button>
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
     <button id="annotations-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="annotations-panel" aria-label="Spotlights"><span>Spotlights</span><span id="spotlights-count" class="spotlights-count" aria-hidden="true" hidden></span></button>
     <label class="color-control" for="color-mode">Color by <select id="color-mode">
     <option value="distance">Min. Distance to Manifesto</option><option value="max-distance">Max. Distance to Manifesto</option><option value="absolute-influence">Absolute influence</option><option value="relative-influence">Relative influence</option><option value="log-absolute-influence">Log Absolute Influence</option><option value="log-relative-influence">Log Relative Influence</option><option value="type">Node type</option><option value="git-revision">Git/Revision Status</option></select></label>
-    <span id="revision"></span></header>
+    </header>
     <div id="legend" aria-label="Node color legend"></div>
     <p id="message" role="status">Loading specification graph…</p>
     <p id="annotation-warning" role="status" hidden></p>
     <p id="sync-notice" role="status" hidden>Last valid graph · Repair Markdown and refresh to resume editing.</p>
-    <details id="linked-sources" hidden><summary id="source-summary"></summary><ul id="source-files"></ul></details>
     <p id="annotation-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     <div class="canvas-shell">
     <aside id="annotations-panel" hidden role="menu" aria-labelledby="annotations-heading">

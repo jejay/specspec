@@ -278,7 +278,7 @@ class GraphView implements vscode.Disposable {
     configure(); this.disposables.push(project.documents.subscribe(() => { configure(); this.session.scheduleRefresh(); }),
       project.subscribeAnnotations(error => error ? this.session.annotationWarning(error) : this.session.scheduleAnnotationsRefresh()));
     const resource = (name: string) => panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', name)).toString();
-    panel.webview.html = graphHtml(resource, panel.webview.cspSource, randomBytes(16).toString('hex'), { scope: project.root.fsPath });
+    panel.webview.html = graphHtml(resource, panel.webview.cspSource, randomBytes(16).toString('hex'), { scope: project.root.fsPath, showProject: false });
   }
   private async openNode(id: unknown): Promise<void> {
     if (typeof id !== 'string') throw new Error('Invalid node identity.');

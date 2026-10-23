@@ -1,0 +1,10 @@
+{
+  "activity-icon.svg": {
+    "source": "final/icons/specspec-icon-24.svg",
+    "sha256": "86f5065a4ce630a4f1c74fe201a4932e1df66c09d7d9d77991a9f38911eea791"
+  },
+  "app-icon.png": {
+    "source": "final/png/specspec-app-icon-512.png",
+    "sha256": "a9007d1a10d1ed2f2cec696756fd35ba8985aca0a6e2f41712cbbd26b157cb50"
+  }
+}

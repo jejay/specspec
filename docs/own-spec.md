@@ -222,6 +222,23 @@ same query pipeline supplies complete agent context; the current everyday surfac
 has eight verbs. Current-command receipts, source anchors and all retained Gantt
 refs are reconstructed together. Node format is 7; API remains 6.
 
+## Header identity and keyboard saving
+
+[Selected identity](../_specspec/4PzVJho=.md), the
+[optical-asset choice](../_specspec/ALlkmT0=.md) and
+[asset realization](../_specspec/Aq02oUE=.md) import the final Spectrum flow symbol
+and launcher tile locally. [Compact header context](../_specspec/EXGxivM=.md)
+groups the accessible symbol with the live revision label, uses an icon-only
+Refresh action and keeps project picking in VS Code's existing command while
+Electron retains its visible picker/menu. Below it, legends and diagnostics retain
+their space; linked source-file totals/list remain in CLI reports, with graph-node
+source cues preserved by the [Git-cue choice](../_specspec/fdB9ZLM=.md).
+[Keyboard saving](../_specspec/-DClehg=.md)
+submits focused forms with Ctrl/Command+S through their existing Save owner and
+restrictions. [Realization](../_specspec/tyygZV8=.md) maps shell, renderer, typed
+adapter and verification. [Branding provenance](../branding/README.md) preserves
+original owner artwork and records the selected imports independently of graph colors.
+
 ## Neighborhood UI revision
 
 [Focused editing](../_specspec/t8RQMdE=.md) expands the same native

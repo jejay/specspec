@@ -293,8 +293,11 @@ colors, relative to the selected base. A/D use VS Code Git resource foregrounds;
 the theme's modified-gutter blue, since modified-resource foreground is often amber.
 Electron uses Dark Modern/default Git colors. Larger, heavier corner letters fit within unchanged compact cards. Semantic fills, source-only impact and
 deletion stay separate: source changes don't invent M, and D is physical deletion relative to the comparison base.
-The [full dachshund SVG and minimal icon](branding/README.md) are preserved/derived
-separately; resvg miniature light/dark renders and real-host screenshots were inspected.
+The [selected Spectrum flow identity](branding/README.md) supplies the optical header
+symbol and launcher tile. The symbol sits directly before revision context; Refresh
+is an icon. VS Code project selection remains in its command palette, while Electron
+also keeps Open project in its header and Project menu. **Ctrl+S** (**Command+S** on
+macOS) saves the focused node form through its existing native or managed save path.
 
 ## Current scope
 

@@ -1,34 +1,33 @@
-# SpecSpec dachshund
+# SpecSpec identity
 
-`dachshund.svg` is an exact, byte-preserving import of the project owner's provided
-[`Monochrome_Dachshund_Puppy_Emblem.svg`](../Monochrome_Dachshund_Puppy_Emblem.svg).
-That original SVG and the supplied [PNG](../Monochrome_Dachshund_Puppy_Emblem.png)
-are versioned unchanged at their original paths. Git attributes disable line-ending
-conversion for both the original SVG and its byte-identical branding import.
-The full white puppy emblem on black is the brand artwork. `app-icon.png` is its
-256-pixel `resvg` rendering for Electron/extension package icons.
+The application uses the owner's selected **W / Spectrum flow + Q / Shorter runs
++ M / Mirrored Prism** identity from `../specspec-branding/final/` (Identity 1.0).
+The sibling workspace is the design source; builds use only this repository's
+local copies and need no sibling checkout or network access.
 
-`activity-icon.svg` is a separate minimal 24×24 monochrome face: long floppy ears,
-head/muzzle, eyes and nose. It uses 1.5-unit strokes, rounded joins and negative space,
-no black background, embedded bitmap, text, external reference, or script. VS Code
-uses its alpha mask and applies the current Activity Bar foreground. The shared
-header also uses a current-color CSS mask. The original detailed puppy is not squeezed
-into the tiny mask.
+- [`activity-icon.svg`](activity-icon.svg) is a byte-identical copy of
+  `final/icons/specspec-icon-24.svg`: the optical 24×24 circle → S → square symbol.
+  The shared 24px header uses its alpha mask, colored by the host foreground.
+  This single-ink treatment follows native theme and contrast
+  conventions. The symbol has the accessible name “SpecSpec”; the header shows
+  only the symbol followed by the live revision label.
+- [`app-icon.png`](app-icon.png) is a byte-identical copy of
+  `final/png/specspec-app-icon-512.png`, the supplied spectrum launcher tile for
+  Electron windows and extension packaging. The small icon is its own optical
+  drawing, not a scaled launcher or detailed mark.
+- [`identity.sha256.json`](identity.sha256.json) records original source paths and
+  SHA-256 digests for these imports. The optical SVG is a non-text Git asset to
+  preserve its exact bytes on every checkout. Artifact tests verify the local copies.
 
-The command-line `resvg` tool rendered 24px light/dark and 240px enlarged previews,
-which were visually inspected, as were the real Activity Bar and Electron header.
-These are platform-specific legibility checks, not universal raster guarantees.
+The selected source geometry remains intact. Brand colors identify the product;
+existing graph, Git, influence and diagnostic palettes retain their own semantics.
+No font is needed for these vector/raster assets. The header omits the wordmark
+and optional tagline.
 
-```sh
-resvg -w 256 branding/dachshund.svg branding/app-icon.png
-resvg --background '#ffffff' -w 24 branding/activity-icon.svg /tmp/icon-light.png
-# For a dark preview, supply a stylesheet with: svg { color: #cccccc; }
-resvg --stylesheet /tmp/icon-dark.css --background '#1f1f1f' -w 24 \
-  branding/activity-icon.svg /tmp/icon-dark.png
-```
+## Preserved owner inputs
 
-The SVG is provided project artwork; the simplified derivative is project code/art
-under the repository license. No third-party icon/font or Electron trademark is used
-as the SpecSpec brand. Raster previews are ignored diagnostics, not canonical graph
-metadata. VS Code assigns new containers after built-ins; drag the dachshund below
-Run and Debug if desired rather than relying on unsupported manifest ordering.
+The supplied [`Monochrome_Dachshund_Puppy_Emblem.svg`](../Monochrome_Dachshund_Puppy_Emblem.svg)
+and [PNG](../Monochrome_Dachshund_Puppy_Emblem.png) remain preserved at their original
+paths. [`dachshund.svg`](dachshund.svg) is still a byte-identical archival import,
+protected alongside the original SVG by non-text Git attributes. These owner
+inputs are retained as artifacts; application builds use the identity above.

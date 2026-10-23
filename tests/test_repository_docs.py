@@ -1,5 +1,6 @@
 """Versioned engineering docs/input artifacts remain usable without remote assets."""
 
+import hashlib
 import json
 import re
 import subprocess
@@ -141,6 +142,38 @@ def test_original_brand_inputs_are_preserved_and_svg_import_is_exact():
         text=True,
     ).splitlines()
     assert len(attributes) == 2 and all(line.endswith(": text: unset") for line in attributes)
+
+
+def test_selected_identity_imports_and_built_host_assets_match():
+    manifest = json.loads((ROOT / "branding/identity.sha256.json").read_text(encoding="utf8"))
+    assert manifest["activity-icon.svg"]["source"] == "final/icons/specspec-icon-24.svg"
+    assert manifest["app-icon.png"]["source"] == "final/png/specspec-app-icon-512.png"
+    for name, record in manifest.items():
+        data = (ROOT / "branding" / name).read_bytes()
+        assert hashlib.sha256(data).hexdigest() == record["sha256"]
+        for output, target in [
+            ("vscode/media", "specspec.svg" if name.endswith(".svg") else name),
+            (
+                "electron/build/media" if name.endswith(".svg") else "electron/build",
+                "specspec.svg" if name.endswith(".svg") else name,
+            ),
+        ]:
+            built = ROOT / output / target
+            if built.exists():
+                assert built.read_bytes() == data, built
+    attributes = subprocess.check_output(
+        ["git", "check-attr", "text", "--", "branding/activity-icon.svg"],
+        cwd=ROOT,
+        text=True,
+    )
+    assert attributes.strip().endswith(": text: unset")
+    svg = ElementTree.parse(ROOT / "branding/activity-icon.svg").getroot()
+    assert svg.attrib["viewBox"] == "0 0 24 24"
+    assert "currentColor" in (ROOT / "branding/activity-icon.svg").read_text(encoding="utf8")
+    png = (ROOT / "branding/app-icon.png").read_bytes()
+    assert png.startswith(b"\x89PNG\r\n\x1a\n")
+    assert int.from_bytes(png[16:20], "big") == 512
+    assert int.from_bytes(png[20:24], "big") == 512
 
 
 def test_only_root_generated_settings_are_ignored_not_shared_launch_configuration():

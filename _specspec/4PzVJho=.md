@@ -4,9 +4,10 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Recognize SpecSpec through its dachshund brand
+# Recognize SpecSpec through the selected Spectrum flow identity
 
-Use the owner's supplied dachshund SVG as the SpecSpec brand. Provide a recognizable
-minimal monochrome icon legible at small editor-chrome sizes and compatible with
-host theme conventions. Preserve the original artwork and inspect contrasting
-miniature and enlarged offline renders.
+Use the owner's selected identity from the authoritative final delivery in the
+sibling specspec-branding workspace. Application chrome identifies SpecSpec with
+the brand symbol, with theme-compatible legible icons and local packaged assets.
+The UI headline contains the symbol alone, followed directly by revision context.
+Preserve supplied original artwork as owner artifacts.

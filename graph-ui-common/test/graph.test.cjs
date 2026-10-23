@@ -10,7 +10,7 @@ const root = { id: 'root', type: 'manifesto', parents: [], body: '# Purpose\n', 
 const child = { id: 'child', type: 'requirement', parents: ['root'], body: '# Child\n', path: '_specspec/child.md', sources: [] };
 
 function fixture(t, options = {}) {
-  const dom = new JSDOM(graphHtml(name => name, 'local', 'test'), { runScripts: 'outside-only', pretendToBeVisual: true });
+  const dom = new JSDOM(graphHtml(name => name, 'local', 'test', options.html), { runScripts: 'outside-only', pretendToBeVisual: true });
   const messages = [];
   const viewport = dom.window.document.getElementById('viewport');
   let viewportWidth = options.width || 1000;
@@ -38,6 +38,111 @@ function fixture(t, options = {}) {
     viewportWidth = width; dom.window.dispatchEvent(new dom.window.Event('resize'));
   } };
 }
+
+test('header uses only the optical brand symbol, adjacent revision and accessible refresh icon', t => {
+  const { dom, $, send, snapshot, messages } = fixture(t, { html: { showProject: false } });
+  const brand = dom.window.document.querySelector('.brand-icon');
+  assert.equal(brand.getAttribute('aria-label'), 'SpecSpec');
+  assert.equal(brand.getAttribute('role'), 'img');
+  assert.equal(brand.nextElementSibling, $('revision'));
+  assert.equal(dom.window.document.querySelector('.toolbar strong'), null);
+  assert.equal($('project'), null);
+  assert.equal($('refresh').textContent, '');
+  assert.equal($('refresh').getAttribute('aria-label'), 'Refresh graph');
+  assert.equal($('refresh').title, 'Refresh graph');
+  assert.ok($('refresh').querySelector('svg[aria-hidden="true"]'));
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false,
+    diff: { base: snapshot, base_ref: 'HEAD', target_ref: 'workspace', nodes: [], edges: [] } });
+  assert.equal($('revision').textContent, 'HEAD → workspace');
+  $('refresh').click(); assert.equal(messages.at(-1).type, 'refresh');
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  assert.equal($('editor').hidden, false, 'Omitting project chrome must not interrupt renderer setup.');
+  const desktop = fixture(t);
+  desktop.$('project').click(); assert.equal(desktop.messages.at(-1).type, 'select-project');
+});
+
+test('source-file changes leave the header area quiet while retaining diagnostics and node source cues', t => {
+  for (const showProject of [false, true]) {
+    const { dom, $, send, snapshot } = fixture(t, { html: { showProject } });
+    for (const count of [0, 1, 19, 100]) {
+      const sourceChanges = Array.from({ length: count }, (_, i) => ({ path: `src/changed-${i}.js` }));
+      send({ type: 'snapshot', snapshot, note: 'Comparison ready', diagnostics: [{ code: 'INFO', message: 'Literal diagnostic' }], readonly: false,
+        diff: { base: snapshot, base_ref: 'HEAD', target_ref: 'workspace', nodes: [], edges: [], source_changes: sourceChanges,
+          source_affected: count ? ['child'] : [] } });
+      assert.equal($('linked-sources'), null); assert.equal($('source-summary'), null); assert.equal($('source-files'), null);
+      assert.doesNotMatch(dom.window.document.body.textContent, /changed linked source file|potential review context|src\/changed-/i);
+      assert.equal($('revision').textContent, 'HEAD → workspace');
+      assert.equal($('message').textContent, 'Comparison ready\nINFO: Literal diagnostic');
+      const card = dom.window.document.querySelector('[data-node-id="child"]');
+      assert.equal(card.classList.contains('source-changed'), count > 0);
+      if (count) assert.match(card.querySelector('.git-badge').textContent, /source changed/);
+    }
+    dom.window.document.querySelector('[data-node-id="child"]').click();
+    assert.equal($('editor').hidden, false);
+  }
+});
+
+function saveKey(f, target, flags = {}) {
+  const event = new f.dom.window.KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true, ...flags });
+  target.dispatchEvent(event); return event;
+}
+
+test('Ctrl/Command+S submits the focused managed form, preserves draft/caret and suppresses pending/repeat saves', t => {
+  const f = fixture(t), { dom, $, messages, send } = f;
+  assert.equal(saveKey(f, $('viewport')).defaultPrevented, false);
+  dom.window.document.querySelector('[data-node-id="child"]').click();
+  $('body').value = '# Keyboard draft'; $('body').dispatchEvent(new dom.window.Event('input'));
+  $('body').focus(); $('body').setSelectionRange(2, 8);
+  assert.equal(saveKey(f, dom.window.document.activeElement).defaultPrevented, true);
+  assert.equal(messages.at(-1).type, 'save'); assert.equal(messages.at(-1).body, '# Keyboard draft');
+  const count = messages.filter(m => m.type === 'save').length;
+  saveKey(f, $('sources')); assert.equal(messages.filter(m => m.type === 'save').length, count);
+  send({ type: 'error', message: 'Save failed' });
+  assert.equal($('body').value, '# Keyboard draft'); assert.equal(f.saved().dirty, true);
+  assert.deepEqual([$('body').selectionStart, $('body').selectionEnd], [2, 8]);
+  saveKey(f, $('sources'), { repeat: true });
+  assert.equal(messages.filter(m => m.type === 'save').length, count);
+  assert.equal(saveKey(f, $('sources'), { altKey: true }).defaultPrevented, false);
+  assert.equal(saveKey(f, $('sources'), { shiftKey: true }).defaultPrevented, false);
+  $('source-preview').setAttribute('open', '');
+  assert.equal(saveKey(f, $('source-preview-code')).defaultPrevented, false);
+  $('source-preview').removeAttribute('open');
+  saveKey(f, $('sources'), { ctrlKey: false, metaKey: true, key: 'S' });
+  assert.equal(messages.filter(m => m.type === 'save').length, count + 1);
+  send({ type: 'cancelled' }); $('back').click();
+  assert.equal(saveKey(f, $('viewport')).defaultPrevented, false);
+});
+
+test('save shortcut reuses native document version/sequence and creates new nodes through the managed add path', t => {
+  const f = fixture(t), { dom, $, snapshot, send, messages } = f;
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false, selectedId: 'child',
+    document: { nodeId: 'child', version: 4, dirty: false } });
+  $('body').value = '# Native keyboard edit'; $('body').dispatchEvent(new dom.window.Event('input'));
+  const edit = messages.at(-1); assert.equal(edit.type, 'edit');
+  saveKey(f, dom.window.document.querySelector('.cm-content'));
+  const save = messages.at(-1); assert.equal(save.type, 'save');
+  assert.equal(save.documentVersion, 4); assert.equal(save.editSequence, edit.editSequence);
+  assert.equal(save.body, edit.body); assert.equal(save.id, 'child');
+  const n = fixture(t); n.$('new').click(); n.$('body').value = '# New keyboard node';
+  saveKey(n, n.$('node-type'));
+  assert.equal(n.messages.at(-1).type, 'add'); assert.equal(n.messages.at(-1).body, '# New keyboard node');
+});
+
+test('save shortcut and direct submits honor provisional, historical, invalid and deleted-node restrictions', t => {
+  for (const kind of ['provisional', 'readonly', 'invalid', 'deleted']) {
+    const f = fixture(t), { dom, $, snapshot, send, messages } = f;
+    dom.window.document.querySelector('[data-node-id="child"]').click();
+    $('body').value = '# Retained'; $('body').dispatchEvent(new dom.window.Event('input'));
+    if (kind === 'invalid') send({ type: 'sync-error', message: 'Invalid graph' });
+    else send({ type: 'snapshot', snapshot: kind === 'deleted' ? { ...snapshot, nodes: [root], edges: [] } : snapshot,
+      diagnostics: [], readonly: kind === 'readonly', provisional: kind === 'provisional' });
+    assert.equal($('save').disabled, true, kind);
+    const before = messages.length;
+    saveKey(f, $('sources'));
+    $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
+    assert.equal(messages.length, before, kind); assert.equal($('body').value, '# Retained');
+  }
+});
 
 test('canvas chrome floats with contextual framing icons and color-only legends', t => {
   const {dom,$}=fixture(t);

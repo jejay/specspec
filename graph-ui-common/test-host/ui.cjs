@@ -103,6 +103,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     }
     assert.ok(active, 'Could not find the real graph webview context.');
     const evaluate = expression => active.evaluate(context, expression);
+    const key = params => active.send('Input.dispatchKeyEvent', params, context.session);
     await foreground(active); await delay(400);
     // Geometry/gesture checks use a deterministic supported accessibility profile.
     // Normal-motion behavior remains covered by camera tests; do not rely on
@@ -112,7 +113,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await require('./canvas.cjs').checkCanvas({ evaluate, screenshot,
       input: params => active.send('Input.dispatchMouseEvent', params, context.session) });
     phase('Git/theme setup');
-    await options.before?.({ evaluate, screenshot, delay });
+    await options.before?.({ evaluate, screenshot, delay, key });
     phase('inline binding editor');
     await require('./inline.cjs').checkInline({ evaluate, screenshot, delay });
     const total = await evaluate(`document.querySelectorAll('#cards .card').length`);
@@ -811,7 +812,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await delay(300); await screenshot('origin-root-neighborhood');
     assert.ok(await arrowJoins());
     phase('Git lifecycle and watcher recovery');
-    await options.after?.({ evaluate, screenshot, delay });
+    await options.after?.({ evaluate, screenshot, delay, key });
     console.log(`SPECSPEC_REAL_UI_OK: ${total} nodes; minimum/maximum revision-local distance, no hop badges, sharp implementation/rounder requirement cards and true compact/expanded manifesto circles with fitting native content and arc ports, shorter ordinary cards/wider gaps, unhinted 250% native headlines, shared gray manifesto tint/root-only white hover border, stronger semantic borders and hue-preserving brighter/chromatic Git/draft connections, 80-column expanded text and larger Git corners, one-hop hover darkening with unchanged geometry and dark/light/contrast CSS probes, approval/retirement-free controls, HEAD deletion ghosts, exact user-selected seven-color spectrum, immutable CLI-spotlight arrivals integrated into the retained list, session-only round red batch-count badges, white identity-based inset rings and zoom-dependent quiet neutral arrows with unchanged editing/geometry, and eight fill modes with linear/log absolute/cohort-relative influence probes and revision-colored manifesto, earliest manifesto ranks, minimum screen stroke/head strength, circle-free tangent joins, LR layout, viewport invariance, pan/zoom, draft cameras, native gestures and resized curves (${Date.now() - started}ms).`);
   } catch (error) {
     try { await screenshot('origin-failure'); } catch { /* Keep the original failure. */ }
