@@ -177,9 +177,11 @@ Current format-version/extensions remain compact metadata. Selected bodies have 
 quotation wrappers.
 
 The display selects **current parents for current nodes and former parents for deleted
-nodes**. It is acyclic: a current node cannot have a deleted parent. Lost old links
-among surviving nodes remain in comparison JSON and `diff`. Each original graph is
-validated independently; the derived display may have new shortcuts, changed parent
+nodes**. Valid original graphs yield an acyclic projection. Invalid working
+references can connect missing/deleted parents to survivors; cycle-safe walks show
+all components with explicit missing endpoints. Lost old links among surviving
+nodes remain in comparison JSON and `diff`. Each original graph is diagnosed
+independently; the derived display may have new shortcuts, changed parent
 types or distinct roots without becoming a new canonical graph or changing any files.
 
 ## Source contracts decide what counts as change
@@ -237,7 +239,11 @@ retain their contextual outcomes and conservative file-impact behavior.
 are pinned without checkout. Workspace means saved files, not unsaved buffers/forms.
 A missing base specification or genuinely unborn HEAD has an explicit empty base.
 A non-Git workspace identifies its synthetic empty graph and unavailable base code.
-Invalid refs/schemas fail before output. Node format and application API remain **6**.
+Unavailable refs fail explicitly. Diagnosable graph-invalid inputs remain readable;
+partial parsed content retains available evidence with a nonzero result rather than
+fabricated complete scope. Unsupported schemas remain unsupported. Node format and
+application API are **7**. See [invalid-state inspection](invalid-graphs.md) for
+`query --issues --with-ancestors`, contextual diffs and metric availability.
 
 `query --json` retains target/before records, original edge deltas, file-change
 summaries, refs/commits and full derived source facts for the selected scope. `--human --json` produces the

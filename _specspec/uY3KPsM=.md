@@ -8,7 +8,7 @@ parents:
 # Execute through VS Code's workspace host and authenticated transport
 
 Declare the Node extension a workspace extension and describe real-filesystem
-capability accurately. Install its VSIX and Python 3.11+/matching API-6 application
+capability accurately. Install its VSIX and Python 3.11+/matching API-7 application
 on the executing workspace host; use remote machine settings for its executable.
 VS Code owns SSH/tunnel authentication, resource routing and connection lifecycle.
 Bundled webview assets use asWebviewUri and dynamic content uses message passing.

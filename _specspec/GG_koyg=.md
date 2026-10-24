@@ -43,7 +43,7 @@ locking/original-byte/recovery rules and unknown-outcome reporting without repla
 Shared tests cover compact reconstruction, stale/coalesced reads, saved-only Electron
 reads and hints, late bootstrap results, provisional/historical delivery and complete
 membership acknowledgements. Both real-host suites exercise graph/source/watch/form/
-geometry and cascade ghost lifecycles; Git-paint probes wait for the completed
+geometry and exact-deletion/missing-reference lifecycles; Git-paint probes wait for the completed
 comparison rather than misclassifying provisional cards. Native Save/undo and managed
 writer lifecycles remain separate. Presentation and polling/deadline contracts retain
 their established owners.

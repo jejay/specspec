@@ -36,30 +36,18 @@ sources:
 - path: docs/own-spec.md
 - path: graph-ui-common/test/host-ui.test.cjs
 ---
-# Execute a reviewed descendant cascade with pre-write warnings
+# Execute reviewed exact-file deletion and report retained dependency faults
 
-`deletion_plan` traverses saved directed children iteratively and deduplicates all
-requested/full/shared/deeper descendants. It assesses every canonical path with
-bounded NUL-delimited Git status and emits explicit uncommitted/unavailable warnings.
-CLI `delete --dry-run` returns the plan; consent retains warnings before unlinking.
-`delete_nodes` replans inside `mutate` and compares reviewed scope/paths/status records.
-Changed plans fail before canonical writes. Successful output names the entire closure.
+The shared deletion planner selects only requested identifiable IDs, assesses selected
+paths with ordinary Git semantics, and computes surviving broken references and
+potential descendants without selecting them for removal. CLI and hosts share the
+preview, warning, consent and under-lock reviewed-plan checks. The journaled writer
+removes only selected files and reports the resulting graph independently of applied
+operation success. Recovery restores recognized bytes, including invalid originals.
 
-The writer validates the surviving DAG, byte-checks originals and journals each
-null replacement for recovery. Outside parents and linked source files remain
-unchanged. Shared hosts preview the same backend, confirm scope/warnings and supply
-bounded reviewed-plan stdin. ProjectDocuments protects dirty native resources.
-
-Regression cases cover sole/shared/deeper/overlapping roots, staged/new/ignored/
-comment/renamed/unmerged nodes, cancellation/noninteractive consent, changed plans,
-byte races and recovery. Maintained-history real-host checks cover all cascade D
-records through staging until commit and empty base membership for uncommitted nodes.
-
-The real-host cascade fixture selects live manifesto siblings present in its HEAD,
-excluding uncommitted setup additions. Its Git wrapper validates the exact staged
-graph before every fixture commit. Deterministic helper coverage places an
-uncommitted root child first and checks that a retained outside parent is chosen.
-
-The Electron reload/revision probe polls for the asynchronously requested comparison
-dialog's actual open state within its existing reload readiness allowance before
-applying stage refs. Its substantive revision and workspace assertions remain intact.
+Regression coverage includes shared/exclusive/deep descendants, overlapping explicit
+selections, unchanged survivor bytes/parents, staged/new/ignored/comment/mode/rename/
+unmerged warnings, cancellation, changed plans, byte races and recovery. Historical
+D context remains distinct from current missing endpoints through stage/commit.
+Native dirty resources and linked code are protected. Shared host probes use the
+independent maintained current-schema Gantt history and exact fixture indexes.

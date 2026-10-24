@@ -23,7 +23,7 @@ that same CLI contract, or imports the library into its own Python process.
 - **Canonical data is a Markdown DAG, not a database.** Each direct
   `_specspec/<id>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only shortcut-free node format 7, API 6
+  potentially multiple parents, and terminal implementations. Only shortcut-free node format 7, API 7
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
@@ -88,7 +88,7 @@ coordinates with open documents; Python still enforces domain and managed-writer
 
 The bridge spawns the trusted executable with argument arrays, `--root`, and
 `shell: false`. Bodies or editor requests go through UTF-8 stdin. JSON stdout has
-`{api_version: 6, ok, result, diagnostics}`; process time and output are bounded.
+`{api_version: 7, ok, result, diagnostics}`; process time and output are bounded.
 Ordinary CLI exits are 0 for success, 1 for invalid/rejected operations, and 2 for invocation
 or I/O failures. Invocation failures can lack JSON; the host also handles stderr,
 malformed stdout, timeouts and output limits. Bridge defaults are 120 seconds and
@@ -98,8 +98,9 @@ per frame. Each project has a main API channel and an independent warmed source
 channel. Requests retain fresh validation; channel failure rejects pending work and
 a later request can start a new process. Mutations are never automatically replayed.
 Closing/switching projects or changing executable configuration disposes channels.
-An editor plan can succeed while reporting `snapshot.valid: false`: it preserves
-repairable intermediate text, not a valid graph claim.
+Reads and explicit edits can succeed while reporting `snapshot.valid: false`.
+Operation success, graph validity and analysis completeness have separate meanings.
+`--require-valid` adds a pre-write whole-candidate boundary; `check` remains strict.
 
 The CLI and library run in the **same Python process**. `cli.py` parses inputs,
 calls module functions, converts results to dictionaries and emits the envelope.
@@ -111,15 +112,15 @@ child processes with bounded pipes.
 
 `show`, `query`, `show ID --dependents` and `diff` are the compact read-side
 entry points for engineers/agents. Text/Markdown is default; explicit `--json` selects
-compact API 6. Query's `--with-ancestors` completes selected bindings through every
+compact API 7. Query's `--with-ancestors` completes selected bindings through every
 parent path and identifies omitted surrounding child/sibling IDs without their
 bodies. The shared emitter formats once and applies an optional `--max-bytes` to
 the actual UTF-8 result plus final newline, including envelopes/control escaping;
 it fails rather than truncating. [`query`](query.md) reads complete revision comparisons
 with spotlight-style HEAD/workspace defaults. Ordered iterative last-occurrence walks
 print one selected-record overlay with current records/parents plus base-only deleted
-records/former parents. No current node has a deleted parent, so this display is
-acyclic even if the complete edge union is cyclic. It retains compact rails, full
+records/former parents. Valid inputs yield an acyclic selected-record display;
+invalid references retain missing endpoints and finite cycle-safe component reads. It retains compact rails, full
 parent headers, complete one-line body projections and deleted ghosts without
 canonical revalidation. Single newlines become spaces; longer runs become ` ¶ `.
 Types/statuses use lowercase words without a legend; root content aligns at column
@@ -131,7 +132,7 @@ with --json. Original bodies remain exact in JSON and diff.
 reverse self-inclusive influence bitsets. Last-consumer release avoids retaining
 closure rows on chains and leaf fans. Inclusive thresholds or exact ceil-percentage
 quotas select each metric independently and union the resulting IDs. Full parent
-metadata stays intact; the induced display and scoped API-6 comparison identify
+metadata stays intact; the induced display and scoped API-7 comparison identify
 boundary IDs. Optional ancestor completion uses one multi-source parent walk after
 selection and before the final induced view/source work. JSON distinguishes matches
 from additional ancestors, without changing the original quotas/population. Neighbor
@@ -139,7 +140,7 @@ IDs come only from matches, with each shared parent's children scanned once.
 Complete unfiltered reads need no extra view. Original snapshots remain validated.
 `query_sources.py` reuses one cached SourceReader per distinct code version and interprets strict/expanding/
 path-only contracts: permitted changes stay quiet; known transitions drive source-changed and
-ancestors in both original graphs. Broken/unknown mappings stay explicit. API-6 JSON
+ancestors in both original graphs. Broken/unknown mappings stay explicit. API-7 JSON
 retains complete selected revision records, required raw source facts and separate
 contract classifications. Source evidence includes old/new descendants of selected
 nodes, keeping badges stable when an excluded owner affects a visible ancestor;
@@ -172,12 +173,13 @@ IPC API. VS Code requires workspace trust before invoking the tool.
    normal comparison refresh uses one request with bounded verified baseline hints.
    Historical targets use Git trees and ignore working buffers. A valid workspace
    remains usable with a **diff-unavailable** note when its baseline cannot be read.
-   API 6 sends one target plus previous records only for differing/deleted nodes;
+   API 7 sends one target plus previous records only for differing/deleted nodes;
    the shared adapter reconstructs both complete revision graphs for rendering.
-3. Identical automatic-refresh payloads do not redraw. Invalid reads preserve the
-   last valid graph, explicitly mark it out of date, retain input and disable
-   managed mutations. Bound native forms remain available for repair. No invalid
-   external file is automatically rewritten.
+3. Identical automatic-refresh payloads do not redraw. Graph-invalid reads publish
+   fresh relationships and diagnostics while retaining safe current-form editing.
+   Missing endpoints and historical records remain distinct. Unavailable loads keep
+   marked last-usable context; unreadable targets retain raw repair access. No
+   external file is automatically repaired. See [invalid-state authoring](invalid-graphs.md).
 4. The renderer combines base/target records and added/removed relationships for
    display. That union can contain cycles, so path metrics use each **complete
    individual revision**, never the union or focused subset. Dagre's placement
@@ -203,8 +205,8 @@ specific CLI commands; renderers cannot supply arbitrary commands or file paths.
 Direct CLI calls do not run the UI workflow; warned CLI deletion asks one terminal
 confirmation or requires explicit `--yes` for JSON/noninteractive calls.
 
-[`deletion.py`](../src/specspec/deletion.py) plans the full directed descendant
-closure, including shared children, and derives per-node Git warnings without
+[`deletion.py`](../src/specspec/deletion.py) plans exactly the selected files,
+retained dependency faults and selected-file Git warnings without
 optional index writes. Both hosts use `delete --dry-run --json`, show the total
 scope/warnings, then pass a reviewed plan to the managed command. It recomputes
 scope/paths/warnings under the lock and refuses changed scope rather than silently
@@ -212,16 +214,18 @@ deleting more nodes. This is destructive-action consent, not node review approva
 See [deletion](deletion.md) for warning, native-document and Git-status limitations.
 
 `workspace.mutate()` acquires the managed-writer lock, reads/validates the current
-snapshot, constructs and validates a candidate, stages replacements and journals
+snapshot, constructs and diagnoses a candidate, stages explicit replacements and journals
 old/new bytes in **`.specspec-local/`**, outside the canonical directory. It compares
 original bytes before replacement, calls `os.replace()` for replacement bytes or
-unlinks files with `new: null` for the complete deletion closure, validates the
-result and cleans transaction state on success. The UI then reloads the graph.
+unlinks exactly selected files with `new: null`, verifies the resulting bytes and
+cleans transaction state even for a graph-invalid intermediate result. Local schema,
+identity/path safeguards remain strict; --require-valid checks the whole candidate. The UI then reloads the graph.
 `init` instead stages an entire new node directory and refuses an existing graph.
 
 An interrupted batch leaves explicit recovery state. `recover` only restores files
 whose current bytes match known original/replacement states; it refuses intervening
-external edits. Retain journals, and remove a stale lock only after confirming no
+external edits. It can restore invalid original graphs without leaving completed
+recovery pending. Retain journals, and remove a stale lock only after confirming no
 writer runs. These are process-interruption protections, not atomic multi-file
 replacement, full power-loss durability or adversarial filesystem guarantees.
 

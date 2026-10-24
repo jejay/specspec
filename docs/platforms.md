@@ -26,7 +26,7 @@ an instruction to adopt React, expose a web server, or embed agent credentials.
   narrow sidebar, not the large workspace the user intended. Earlier supported-API
   ordering evidence remains history, not a current instruction to drag an icon.
 - Electron: isolated/sandboxed renderer, fixed narrow preload API, sender-checked
-  main-process IPC, explicit local project authorization, shell-free Python API 6,
+  main-process IPC, explicit local project authorization, shell-free Python API 7,
   bounded process/render checks, no remote navigation/popups/renderer filesystem.
   No bundled Python, installer/signing/updater, secret integration or production
   security certification in the initial slice.
@@ -69,7 +69,7 @@ sidebar, while checking geometry/metrics for every displayed node/edge.
 
 The user's later correction permits manual changes, removes fingerprint/managed_hash
 gates, and asks for file-watcher synchronization with configurable default-off
-polling. Both hosts use API 6 and shared graph reads, and watch HEAD/current refs/packed refs for commits. VS Code watches canonical-directory/file changes;
+polling. Both hosts use API 7 and shared graph reads, and watch HEAD/current refs/packed refs for commits. VS Code watches canonical-directory/file changes;
 Electron watches the parent and canonical directory and reattaches on replacement.
 `specspec.pollIntervalMs` / `--poll-interval-ms` (or `SPECSPEC_POLL_INTERVAL_MS`) use
 milliseconds with zero as default. The shared session coalesces events, retries

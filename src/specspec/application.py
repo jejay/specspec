@@ -2,19 +2,41 @@
 
 from __future__ import annotations
 
-from .annotations import flush, load_shots, submit
+from .annotations import flush, head_snapshot, load_shots, submit
 from .editor import editor_request
-from .git import git_snapshot, semantic_diff, source_change_impact
+from .git import git_snapshot, repository_paths, semantic_diff, source_change_impact
 from .model import API_VERSION, Diagnostic, SpecError
 from .output import file_patches
 from .workspace import load_snapshot
 
 
-def compare(root, base="HEAD", target=None, *, patches=False):
-    old = git_snapshot(root, base, allow_empty=True)
+def compare(root, base="HEAD", target=None, *, patches=False, with_context=False, node_ids=()):
+    old = head_snapshot(root) if base == "HEAD" else git_snapshot(root, base, allow_empty=True)
     new = git_snapshot(root, target) if target else load_snapshot(root)
     result = semantic_diff(old, new)
-    if old.valid and new.valid:
+    no_git = False
+    if old.commit is None and not old.files:
+        try:
+            repository_paths(root)
+        except SpecError:
+            no_git = True
+    if no_git:
+        result["impact_complete"] = False
+        result["notes"] = [
+            "No Git baseline: current files and empty-inventory patches are available, "
+            "not observed owner-edit evidence."
+        ]
+        result["changes"] = [
+            {
+                "id": n.id,
+                "kind": "unavailable",
+                "fields": [],
+                "base_available": False,
+                "target_available": True,
+            }
+            for n in (new.graph.nodes.values() if new.graph else [])
+        ]
+    if old.complete and new.complete and not no_git:
         result.update(source_change_impact(root, old.commit or base, target, old, new))
         result["affected"] = sorted(set(result["affected"]) | set(result["source_affected"]))
     else:
@@ -27,7 +49,22 @@ def compare(root, base="HEAD", target=None, *, patches=False):
     )
     if patches:
         result["file_changes"] = file_patches(old, new)
-    return result, old.diagnostics + new.diagnostics
+    if with_context:
+        from .inspection import repair_context
+
+        result["context"] = repair_context(old, new, result["changes"], node_ids)
+        result["context"]["comparison_available"] = not no_git
+        result["context"]["complete"] &= not no_git
+    diagnostics = old.diagnostics + new.diagnostics
+    if no_git:
+        diagnostics.append(
+            Diagnostic(
+                "GIT_CONTEXT",
+                "No Git baseline; retained current evidence is not an observed edit comparison.",
+                severity="warning",
+            )
+        )
+    return result, diagnostics
 
 
 def request(root, value):
@@ -91,8 +128,6 @@ def request(root, value):
                     2,
                 )
             result, diagnostics = compare(root, base or "HEAD", target)
-            if not result["impact_complete"]:
-                raise SpecError(diagnostics)
             return loaded(
                 {
                     "snapshot": result["target"],

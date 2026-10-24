@@ -19,7 +19,7 @@ phase and 160 seconds for native lifecycle. Reserve 40 seconds for host startup 
 shutdown, and 60 seconds for Electron's persisted-reload/revision phase. Electron's
 aggregate guard is 400 seconds; VS Code's is 500 seconds. Test their relationships
 and both runners' use of them. These bounded aggregate allowances account for all
-backchannel contexts, actual CLI/Git cascades, recovery, reload and revision checks.
+backchannel contexts, actual CLI/Git exact deletion and repair, recovery, reload and revision checks.
 They do not redefine production responsiveness or individual operation deadlines.
 
 Report aggregate guard expiry explicitly. Closed CDP transports fail pending calls
@@ -27,8 +27,8 @@ promptly instead of manufacturing an unrelated evaluation timeout. Record full-r
 elapsed measurements and actual passed/failed phases with platform scope; individual
 operations continue to fail under their existing deadlines.
 
-Test-created HEAD snapshots contain every referenced parent. When staging only a
-cascade branch, choose shared outside parents already present in HEAD, and validate
+Test-created HEAD snapshots contain every referenced parent. When staging a
+coherent deletion/repair slice, choose shared outside parents already present in HEAD, and validate
 the complete exact index before each fixture commit. This is fixture construction
 discipline; owners retain ordinary coherent multi-file staging and commit control.
 

@@ -46,7 +46,7 @@ def test_diamond_and_implementation(workspace):
     assert snapshot.graph.order.index(left) < snapshot.graph.order.index(leaf)
 
 
-def test_deletion_cascades_are_physical_and_keep_the_remaining_dag_valid(workspace):
+def test_exact_deletion_is_physical_and_retains_dangling_child_references(workspace):
     root, manifesto = workspace
     _, parent = add_node(root, "requirement", [manifesto], "Parent\n")
     snapshot, child = add_node(root, "requirement", [parent], "Child\n")
@@ -64,9 +64,12 @@ def test_deletion_cascades_are_physical_and_keep_the_remaining_dag_valid(workspa
             delete_nodes(root, ids)
         assert load_snapshot(root).files == snapshot.files
     remaining = delete_nodes(root, [parent], allow_uncommitted=True)
-    assert remaining.valid and set(remaining.graph.nodes) == {manifesto}
-    for node_id in [parent, child]:
-        assert not (root / snapshot.graph.nodes[node_id].path).exists()
+    assert not remaining.valid and set(remaining.graph.nodes) == {manifesto, child}
+    assert not (root / snapshot.graph.nodes[parent].path).exists()
+    assert (
+        remaining.files[snapshot.graph.nodes[child].path]
+        == snapshot.files[snapshot.graph.nodes[child].path]
+    )
 
 
 def test_cycles_and_forbidden_parent_types_leave_files_unchanged(workspace):
@@ -75,13 +78,13 @@ def test_cycles_and_forbidden_parent_types_leave_files_unchanged(workspace):
     snapshot, child = add_node(root, "requirement", [parent], "Child\n")
     before = dict(snapshot.files)
     with pytest.raises(SpecError, match="Cycle"):
-        update_node(root, parent, parents=[child])
+        update_node(root, parent, parents=[child], require_valid=True)
     assert load_snapshot(root).files == before
     with pytest.raises(SpecError, match="requirement parents"):
-        add_node(root, "implementation", [manifesto], "No\n")
+        add_node(root, "implementation", [manifesto], "No\n", require_valid=True)
     snapshot, implementation = add_node(root, "implementation", [child], "Code\n")
     with pytest.raises(SpecError, match="cannot have children"):
-        add_node(root, "requirement", [implementation], "No\n")
+        add_node(root, "requirement", [implementation], "No\n", require_valid=True)
 
 
 def test_manual_body_edits_are_valid_and_reads_do_not_rewrite_files(workspace):
@@ -174,7 +177,7 @@ def test_duplicate_ids_and_missing_parents(workspace):
     duplicates = {**snapshot.files, f"_specspec/{node.id}duplicate.md": snapshot.files[node.path]}
     assert not snapshot_from_files(root, duplicates).valid
     with pytest.raises(SpecError, match="Missing parent"):
-        add_node(root, "requirement", ["bWlzc2k="], "Missing\n")
+        add_node(root, "requirement", ["bWlzc2k="], "Missing\n", require_valid=True)
     with pytest.raises(SpecError, match="duplicates"):
         add_node(root, "requirement", [manifesto, manifesto], "Duplicate\n")
 
@@ -222,7 +225,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     assert result.exit_code == 0, result.output
     node_id = json.loads(result.output)["result"]["changed_ids"][0]
     assert runner.invoke(main, [*prefix, "accept", node_id, "--json"]).exit_code == 2
-    assert json.loads(result.output)["api_version"] == 6
+    assert json.loads(result.output)["api_version"] == 7
     assert (
         runner.invoke(
             main,

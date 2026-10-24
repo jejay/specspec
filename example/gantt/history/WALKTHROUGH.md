@@ -50,7 +50,10 @@ against this clone's worktree. Do not reuse hashes from the old development hist
 `revisions.json` records actual predecessor/spec/code commit IDs and receipt ordinals.
 The tags are readable stage names, not node approval states.
 
-The first redirect deletes 13/17 nodes; the second deletes 9/16. Their files are
+The first redirect explicitly selects 13/17 nodes for deletion; the second selects
+9/16. Exact deletion retains any unselected dependent files and declarations for
+inspection/repair; these maintained redirects explicitly name their complete removal
+sets and finish with valid graphs. Their files are
 physically absent after each redirect and their original IDs, bodies, parents and
 sources remain in the predecessor commits. Each redirect commit explains why.
 Default workspace always compares to HEAD: D ghosts survive staging, then vanish
@@ -118,7 +121,7 @@ history. CI runs the final model/browser app in an independent clone. Focused un
 fixtures may be smaller independently generated current-schema projects. No test
 requires obsolete SpecSpec development revisions or a full root-history fetch.
 
-The current receipts use application API 6 and shortcut-free node format 7 throughout
+The current receipts use application API 7 and shortcut-free node format 7 throughout
 the maintained history. Command/protocol cutovers refresh actual receipts, teaching
 text, ledgers, refs, source retention, bundle and snapshot together; runnable
 application code and historical node identities remain stable. Old manual clones

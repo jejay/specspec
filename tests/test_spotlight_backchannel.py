@@ -19,7 +19,7 @@ def create(root, nodes, message="Please reconsider these nodes", **options):
     return request(
         root,
         {
-            "api_version": 6,
+            "api_version": 7,
             "op": "annotation-create",
             "message": message,
             "nodes": nodes,
@@ -53,7 +53,7 @@ def test_native_unsaved_overlay_has_only_a_checksum_not_retained_text(workspace)
     node = saved.graph.nodes[parent]
     text = saved.files[node.path].decode().replace("# Project", "# Native unsaved 🐕")
     loaded, _ = request(
-        root, {"api_version": 6, "op": "read", "base": "HEAD", "documents": {node.path: text}}
+        root, {"api_version": 7, "op": "read", "base": "HEAD", "documents": {node.path: text}}
     )
     checksum = hashlib.sha256(text.encode()).hexdigest()
     assert loaded["workspace_state"]["changes"] == {parent: checksum}
@@ -79,7 +79,7 @@ def test_historical_backchannel_selects_target_and_deleted_base_nodes(gantt_hist
     with pytest.raises(SpecError, match="Historical"):
         create(root, [added], target="stage/03-spec", documents={"_specspec/forged.md": "text"})
     loaded, _ = request(
-        root, {"api_version": 6, "op": "read", "base": base.commit, "target": target.commit}
+        root, {"api_version": 7, "op": "read", "base": base.commit, "target": target.commit}
     )
     assert "node_blobs" not in loaded and "workspace_state" not in loaded
 
@@ -106,7 +106,7 @@ def test_identity_capture_uses_current_version_and_rejects_unknown_ids_atomicall
 def test_creation_rejects_invalid_payloads_without_partial_publication(workspace, case):
     root, parent = workspace
     value = {
-        "api_version": 6,
+        "api_version": 7,
         "op": "annotation-create",
         "message": "Please review",
         "nodes": [parent],
@@ -133,8 +133,8 @@ def test_local_list_read_is_independent_of_graph_validity_and_preview_is_removed
     shot = create(root, [parent])
     node = load_snapshot(root).graph.nodes[parent]
     (root / node.path).write_bytes(b"Unfinished invalid document")
-    result, _ = request(root, {"api_version": 6, "op": "annotations"})
+    result, _ = request(root, {"api_version": 7, "op": "annotations"})
     assert result == {"shots": [shot]}
     assert annotations.listing(root)["shots"][0]["members"][0]["kind"] == "unavailable"
     with pytest.raises(SpecError, match="Unknown application operation"):
-        request(root, {"api_version": 6, "op": "annotation-view", "shot": shot["id"]})
+        request(root, {"api_version": 7, "op": "annotation-view", "shot": shot["id"]})

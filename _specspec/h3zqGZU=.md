@@ -7,7 +7,7 @@ parents:
 # Read current records with sparse revision hints
 
 Query always compares revisions, using fresh HEAD versus saved workspace by default
-and spotlight-style --base/--target selection. Validate both graphs and retain explicit
+and spotlight-style --base/--target selection. Diagnose both graphs and retain explicit
 empty/unavailable context. Present complete current and deleted records together
 in relationship context, ordered by last occurrence. Full headers retain all parents.
 
@@ -35,4 +35,4 @@ mode, description, both locations and diagnostics stay in comparison JSON.
 Query builds semantic/literal change summaries and complete source facts. Exact
 text modifications and canonical patches belong to specspec diff with the matching
 revisions. This division keeps query a current-state reading rather than a patch
-viewer while preserving reconstructible API-6 comparisons and canonical schema 7.
+viewer while preserving reconstructible API-7 comparisons and canonical schema 7.

@@ -56,8 +56,8 @@ class Channel {
       let value;
       try {
         value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(this.parts, this.bytes)));
-        if (value?.api_version !== 6 || typeof value.ok !== 'boolean' || !Array.isArray(value.diagnostics))
-          throw new Error('Unsupported SpecSpec JSON API. This graph UI requires the matching API 6 CLI.');
+        if (value?.api_version !== 7 || typeof value.ok !== 'boolean' || !Array.isArray(value.diagnostics))
+          throw new Error('Unsupported SpecSpec JSON API. This graph UI requires the matching API 7 CLI.');
         if (value.ok) value = { ...value, result: expandResult(value.result) };
       } catch (error) { this.fail(new Error(`Invalid SpecSpec API response: ${error.message}`)); return; }
       this.parts = []; this.bytes = 0;

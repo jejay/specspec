@@ -28,13 +28,15 @@ sources:
 ---
 # Render complete selected-record query reads with contract-aware source hints
 
-query.py reuses spotlight snapshot selection and semantic comparison, validating
+query.py reuses spotlight snapshot selection and semantic comparison, diagnosing
 both selected revisions. A non-writing display projection chooses target records
 for current nodes and base records for deleted nodes, each with that record's own
 parents. Iterative reverse/forward walks render one overlay with full sorted parent
 headers, compact rails, last-occurrence ownership and complete default one-line body readings. The
 projection preserves chosen edges without canonical reduction or type/root checks;
-its construction is acyclic even when a full revision-edge union would be cyclic.
+for valid revisions its construction
+is acyclic even when a full edge union would be cyclic. Invalid projections use
+finite cycle-safe component roots and explicit missing endpoints.
 
 Lowercase added/modified/deleted identify node changes. File-only marks
 literal-only changes. Source-changed identifies known contract changes and

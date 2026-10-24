@@ -29,10 +29,39 @@ class Snapshot:
     diagnostics: list[Diagnostic]
     graph: Graph | None
     commit: str | None = None
+    declared_version: int | None = None
 
     @property
     def valid(self) -> bool:
         return not any(d.severity == "error" for d in self.diagnostics)
+
+    @property
+    def complete(self) -> bool:
+        return (not self.files and self.valid) or (
+            self.graph is not None
+            and len(self.graph.nodes) == len(self.files)
+            and not any(
+                d.code in {"DIRECTORY", "ENTRY", "IO", "VERSION", "STATE", "LOCKED", "RECOVERY"}
+                for d in self.diagnostics
+            )
+        )
+
+    def require_current(self) -> None:
+        """Author identifiable documents, not unsupported formats or unsafe filesystems."""
+        hard = [
+            d
+            for d in self.diagnostics
+            if d.code in {"DIRECTORY", "ENTRY", "IO", "VERSION", "STATE", "LOCKED", "RECOVERY"}
+        ]
+        if hard or self.format_version != FORMAT_VERSION:
+            raise SpecError(
+                hard
+                or [
+                    Diagnostic(
+                        "ROOT", "Repair the current-format manifesto before managed editing."
+                    )
+                ]
+            )
 
     def require_valid(self) -> Graph:
         if not self.valid or self.graph is None:
@@ -43,14 +72,35 @@ class Snapshot:
 
     @property
     def format_version(self) -> int | None:
-        return next((node.format_version for node in self.nodes if node.type == "manifesto"), None)
+        return (
+            self.declared_version
+            if self.declared_version is not None
+            else next(
+                (node.format_version for node in self.nodes if node.type == "manifesto"), None
+            )
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "format_version": self.format_version,
-            "nodes": [node.to_dict() for node in sorted(self.nodes, key=lambda n: n.id)],
-            "edges": self.graph.edges() if self.graph else [],
+            "nodes": [
+                node.to_dict()
+                for node in sorted(
+                    self.graph.nodes.values() if self.graph else [], key=lambda n: n.id
+                )
+            ],
+            "edges": sorted(
+                [p, n.id]
+                for n in (self.graph.nodes.values() if self.graph else [])
+                for p in n.parents
+            ),
             "valid": self.valid,
+            "complete": self.complete,
+            "inventory": sorted(self.files),
+            "unreadable_paths": sorted(
+                set(self.files)
+                - {n.path for n in (self.graph.nodes.values() if self.graph else [])}
+            ),
         }
 
 
@@ -168,9 +218,18 @@ def snapshot_from_files(
         except SpecError as error:
             errors.extend(error.diagnostics)
     graph = None
-    if not duplicates and len(nodes) == len(files):
-        graph, graph_errors = build_graph(nodes)
-        errors.extend(graph_errors)
+    ambiguous = (
+        {
+            n.id.casefold()
+            for n in nodes
+            if sum(other.id.casefold() == n.id.casefold() for other in nodes) > 1
+        }
+        if duplicates
+        else set()
+    )
+    identified = [n for n in nodes if n.id.casefold() not in ambiguous]
+    graph, graph_errors = build_graph(identified)
+    errors.extend(graph_errors)
     if check_sources:
         resolved_root = root.resolve()
         for node in nodes:
@@ -195,7 +254,7 @@ def snapshot_from_files(
                             "warning",
                         )
                     )
-    return Snapshot(root, files, nodes, errors, graph)
+    return Snapshot(root, files, nodes, errors, graph, declared_version=version)
 
 
 def load_snapshot(root: Path, *, ignore_state: bool = False) -> Snapshot:
@@ -317,18 +376,51 @@ def initialize(root: Path, body: str) -> Snapshot:
     return result
 
 
-def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes | None]]) -> Snapshot:
+def mutate(
+    root: Path,
+    operation: Callable[[Snapshot], dict[str, bytes | None]],
+    *,
+    require_valid: bool = False,
+    dry_run: bool = False,
+) -> Snapshot:
     with workspace_lock(root) as state:
         before = load_snapshot(root, ignore_state=True)
-        before.require_valid()
+        before.require_current()
         changes = operation(before)
         if not changes:
+            if require_valid:
+                before.require_valid()
             return before
+        for path, raw in changes.items():
+            pure = PurePosixPath(path)
+            if (
+                len(pure.parts) != 2
+                or pure.parent.as_posix() != SPEC_DIR
+                or "\\" in path
+                or pure.as_posix() != path
+            ):
+                raise SpecError(
+                    [Diagnostic("PATH", "Mutations require direct canonical node paths.")]
+                )
+            if raw is not None:
+                data, body = read_document(raw, path)
+                node = parse_node(data, body, path)
+                if node.type == "manifesto" and node.parents:
+                    raise SpecError([Diagnostic("PARENTS", "The manifesto cannot be reparented.")])
+            elif any(n.path == path and n.type == "manifesto" for n in before.nodes):
+                raise SpecError([Diagnostic("DELETE", "The manifesto cannot be deleted.")])
         proposed_files = {
             path: raw for path, raw in {**before.files, **changes}.items() if raw is not None
         }
         candidate = snapshot_from_files(root, proposed_files, check_sources=True)
-        candidate.require_valid()
+        candidate.require_current()
+        for path, raw in changes.items():
+            if raw is not None:
+                require_node(candidate, PurePosixPath(path).stem)
+        if require_valid:
+            candidate.require_valid()
+        if dry_run:
+            return candidate
         if state.stat().st_dev != (root / SPEC_DIR).stat().st_dev:
             raise SpecError(
                 [Diagnostic("FILESYSTEM", "Staging and workspace must share a filesystem.")]
@@ -376,7 +468,14 @@ def mutate(root: Path, operation: Callable[[Snapshot], dict[str, bytes | None]])
             else:
                 os.replace(staged[path], target)
         result = load_snapshot(root, ignore_state=True)
-        result.require_valid()
+        if result.files != candidate.files:
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "CONCURRENT", "Files changed after replacement; recover before retrying."
+                    )
+                ]
+            )
         cleanup(state)
     return result
 
@@ -387,25 +486,36 @@ def add_node(
     parents: list[str],
     body: str,
     sources: list[dict[str, Any]] | None = None,
+    *,
+    require_valid: bool = False,
 ) -> tuple[Snapshot, str]:
     node_id = ""
 
     def operation(before: Snapshot) -> dict[str, bytes]:
         nonlocal node_id
-        node = new_node(node_type, parents, body, reserved_ids=before.require_valid().nodes)
+        reserved = (
+            {n.id for n in before.nodes}
+            | {PurePosixPath(path).stem for path in before.files}
+            | {p for n in before.nodes for p in n.parents}
+        )
+        node = new_node(node_type, parents, body, reserved_ids=reserved)
         node.sources = sources or []
         node_id = node.id
         return {node.path: serialize(node)}
 
-    result = mutate(root, operation)
+    result = mutate(root, operation, require_valid=require_valid)
     return result, node_id
 
 
 def require_node(snapshot: Snapshot, node_id: str) -> SpecNode:
-    graph = snapshot.require_valid()
-    if node_id not in graph.nodes:
-        raise SpecError([Diagnostic("NODE", f"Unknown node {node_id}.")])
-    return graph.nodes[node_id]
+    matches = [n for n in snapshot.nodes if n.id.casefold() == node_id.casefold()]
+    if len(matches) > 1:
+        raise SpecError(
+            [Diagnostic("DUPLICATE", f"Ambiguous node {node_id}; repair its identity first.")]
+        )
+    if not matches or matches[0].id != node_id:
+        raise SpecError([Diagnostic("NODE", f"Unknown node {node_id}, or its file is unreadable.")])
+    return matches[0]
 
 
 def update_node(
@@ -415,9 +525,12 @@ def update_node(
     body: str | None = None,
     parents: list[str] | None = None,
     sources: list[dict[str, Any]] | None = None,
+    require_valid: bool = False,
 ) -> Snapshot:
     def operation(before: Snapshot) -> dict[str, bytes]:
         old = require_node(before, node_id)
+        if old.type == "manifesto" and parents:
+            raise SpecError([Diagnostic("PARENTS", "The manifesto cannot be reparented.")])
         node = replace(
             old,
             body=old.body if body is None else body,
@@ -426,7 +539,7 @@ def update_node(
         )
         return {node.path: serialize(node, before.files[node.path])}
 
-    return mutate(root, operation)
+    return mutate(root, operation, require_valid=require_valid)
 
 
 def delete_nodes(
@@ -436,8 +549,9 @@ def delete_nodes(
     allow_uncommitted: bool = False,
     confirm: Callable[[dict[str, Any]], bool] | None = None,
     reviewed_plan: dict[str, Any] | None = None,
+    require_valid: bool = False,
 ) -> Snapshot:
-    """Delete the full descendant closure in one recoverable, warned transaction."""
+    """Delete exactly the requested files in one recoverable, warned transaction."""
     # Local import avoids the Git/snapshot module cycle; plans never perform writes.
     from .deletion import deletion_plan, deletion_warnings
 
@@ -474,7 +588,7 @@ def delete_nodes(
             )
         return {node["path"]: None for node in plan["nodes"]}
 
-    result = mutate(root, operation)
+    result = mutate(root, operation, require_valid=require_valid)
     result.diagnostics.extend(warnings)
     return result
 
@@ -536,7 +650,12 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
                 os.replace(staging, target)
         if journal["kind"] == "init" and (root / SPEC_DIR).exists():
             (root / SPEC_DIR).rmdir()
-        elif journal["kind"] == "edit":
-            load_snapshot(root, ignore_state=True).require_valid()
+        diagnostics = (
+            load_snapshot(root, ignore_state=True).diagnostics if journal["kind"] == "edit" else []
+        )
         cleanup(state)
-        return {"restored": sorted(originals)}
+        return {
+            "restored": sorted(originals),
+            "graph_valid": not any(d.severity == "error" for d in diagnostics),
+            "diagnostics": [d.to_dict() for d in diagnostics],
+        }

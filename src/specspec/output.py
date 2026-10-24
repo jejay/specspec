@@ -73,7 +73,8 @@ def render_node(node):
 def render_listing(snapshot):
     return "\n".join(
         [
-            f"{len(snapshot['nodes'])} nodes",
+            f"{len(snapshot['nodes'])} nodes"
+            + (" · graph INVALID" if not snapshot.get("valid", True) else ""),
             *[
                 f"{n['id']}  {n['type']:14}  {title(n)}  ({len(n['parents'])} parents)"
                 for n in snapshot["nodes"]
@@ -89,12 +90,33 @@ def render_receipt(result, verb="Changed"):
         f"Affected: {len(result.get('affected', []))} nodes "
         "(potential scope, not proof of invalidity)"
     )
+    if result.get("graph_valid") is False:
+        label = "Saved" if result.get("applied", True) else "Proposed"
+        lines.append(f"{label} graph is INVALID. Surviving conclusions need reconsideration.")
+        for ref in result.get("broken_references", []):
+            lines.append(f"  Unresolved: {ref['parent']} -> {ref['child']} ({ref['reason']})")
+    if result.get("analysis_complete") is False:
+        lines.append("Analysis incomplete; unreadable material remains explicit.")
     return "\n".join(lines)
 
 
 def render_plan(plan):
-    lines = [f"Delete {len(plan['deleted_ids'])} nodes, including all shared descendants:"]
+    lines = [
+        f"Delete exactly {len(plan['deleted_ids'])} selected nodes; "
+        "keep descendants and their declarations:"
+    ]
     lines += [f"  {n['id']}  {n['path']}" for n in plan["nodes"]]
+    for ref in plan.get("broken_references", []):
+        lines.append(
+            f"  Retained unresolved reference: {ref['parent']} -> {ref['child']} ({ref['reason']})"
+        )
+    lines.append(
+        "Potential surviving downstream scope: "
+        + (", ".join(plan.get("potentially_affected", [])) or "none")
+    )
+    lines.append("Resulting graph: " + ("valid" if plan.get("graph_valid") else "INVALID"))
+    if plan.get("analysis_complete") is False:
+        lines.append("Analysis incomplete; see diagnostics.")
     return "\n".join(lines)
 
 
@@ -147,13 +169,14 @@ def file_patches(base, target):
 
 
 def render_diff(result, summary=False):
-    codes = {"added": "A", "changed": "M", "removed": "D"}
+    codes = {"added": "A", "changed": "M", "removed": "D", "unavailable": "?"}
     counts = {kind: sum(c["kind"] == kind for c in result["changes"]) for kind in codes}
     lines = [
         f"{result.get('base_ref', 'base')} → {result.get('target_ref', 'workspace')}",
         "Nodes: " + " · ".join(f"{counts[k]} {k}" for k in codes),
         f"Relationships: +{len(result['added_edges'])} -{len(result['removed_edges'])}",
     ]
+    lines.extend("NOTE: " + note for note in result.get("notes", []))
     old = {n["id"]: n for n in result["base"]["nodes"]}
     new = {n["id"]: n for n in result["target"]["nodes"]}
     changes = {c["id"]: c for c in result["changes"]}
@@ -194,6 +217,42 @@ def render_diff(result, summary=False):
         for source in result["source_changes"]:
             lines.append(
                 f"  {source['path']} · implementations: {', '.join(source['implementation_ids'])}"
+            )
+    if result.get("graph_valid") is False:
+        lines.append(
+            "Target graph INVALID; observed edits are not a semantic-justification verdict."
+        )
+    unresolved = result.get("unresolved_references", {}).get("target", [])
+    if unresolved:
+        lines += ["", "Unresolved current declarations (not implicitly removed parent links):"]
+        lines += [f"  {r['parent']} -> {r['child']}" for r in unresolved]
+    if context := result.get("context"):
+        lines += ["", "Justification context:", context["interpretation"]]
+        for record in context["records"]:
+            lines += [
+                "",
+                f"Context {record['id']}" + (" · unchanged" if record["unchanged"] else ""),
+            ]
+            if not record["unchanged"]:
+                lines.append("Before:")
+                lines.append(
+                    render_node(record["before"])
+                    if record.get("before")
+                    else "Earlier binding unavailable."
+                )
+            lines.append("Current:")
+            lines.append(
+                render_node(record["current"])
+                if record.get("current")
+                else "No identifiable current binding; inspect inventory/history."
+            )
+        for witness in context["cause_paths"]:
+            lines.append(witness["basis"] + " potential path: " + " -> ".join(witness["path"]))
+        if context["unavailable_ids"]:
+            lines.append("Bindings unavailable: " + ", ".join(context["unavailable_ids"]))
+        if not context["complete"]:
+            lines.append(
+                "Context incomplete; unavailable documents/history are not empty evidence."
             )
     if not result["impact_complete"]:
         lines.append("Comparison/impact incomplete; see diagnostics.")

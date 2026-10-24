@@ -10,7 +10,7 @@ import secrets
 import subprocess
 from copy import deepcopy
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .git import git_snapshot, repository_paths, run_git, semantic_diff
 from .git_objects import OBJECT_ID
@@ -83,10 +83,12 @@ def head_snapshot(root):
 def workspace_state(snapshot, head=None):
     """Sparse literal-byte drift hints, never stored hashes of clean Git nodes."""
     head = head if head is not None else head_snapshot(snapshot.root)
-    if head.files or not head.valid:
-        head.require_valid()
-    old = head.graph.nodes if head.graph else {}
-    new = snapshot.graph.nodes if snapshot.graph else {}
+    # Drift follows actual canonical-path bytes, not successful node parsing.
+    # An unreadable existing file is not a null deletion marker.
+    old, new = (
+        {PurePosixPath(p).stem: p for p in s.files if ID_RE.fullmatch(PurePosixPath(p).stem)}
+        for s in (head, snapshot)
+    )
     # Git decides which saved files are uncommitted, including staged changes.
     # This avoids checksumming every clean CRLF checkout or clean-filter output.
     dirty_paths = set()
@@ -109,14 +111,14 @@ def workspace_state(snapshot, head=None):
         }
     changes = {}
     for node_id in sorted(old.keys() | new.keys()):
-        before = head.files[old[node_id].path] if node_id in old else None
-        after = snapshot.files[new[node_id].path] if node_id in new else None
+        before = head.files[old[node_id]] if node_id in old else None
+        after = snapshot.files[new[node_id]] if node_id in new else None
         if before == after:
             continue
-        if before is not None and after is not None and new[node_id].path not in dirty_paths:
+        if before is not None and after is not None and new[node_id] not in dirty_paths:
             # Trusted native overlays can differ from clean saved bytes too.
             try:
-                with (snapshot.root / new[node_id].path).open("rb") as stream:
+                with (snapshot.root / new[node_id]).open("rb") as stream:
                     saved = stream.read(MAX_FILE_BYTES + 1)
             except FileNotFoundError:
                 saved = None
@@ -321,9 +323,6 @@ def snapshots(root, base, target, documents=None):
         if documents:
             fail("Historical spotlight capture does not consume native overlays.")
         new = git_snapshot(root, target)
-    if old.files or not old.valid:
-        old.require_valid()
-    new.require_valid()
     return old, new
 
 
@@ -338,7 +337,17 @@ def submit(root, value, *, base=None, target=None, documents=None):
         fail("documents must map canonical paths to UTF-8 text.")
     target = target or "workspace"
     old, new = snapshots(root, base or "HEAD", target, documents)
-    available = {n.id for n in old.nodes} | {n.id for n in new.nodes}
+    available = (
+        {n.id for n in old.nodes}
+        | {n.id for n in new.nodes}
+        | {p for n in [*old.nodes, *new.nodes] for p in n.parents}
+        | {
+            PurePosixPath(path).stem
+            for s in (old, new)
+            for path in s.files
+            if ID_RE.fullmatch(PurePosixPath(path).stem)
+        }
+    )
     for node_id in ids:
         if node_id not in available:
             fail(f"Node {node_id} does not exist in either side of the comparison.")
@@ -454,14 +463,21 @@ def listing(root, shot_id=None):
         for node_id in shot["nodes"]:
             node = (
                 (
-                    new.graph.nodes.get(node_id)
+                    (new.graph.nodes.get(node_id) if new.graph else None)
                     or (old.graph.nodes.get(node_id) if old.graph else None)
                 )
                 if new
                 else None
             )
+            unreadable = not node and any(
+                f"_specspec/{node_id}.md" in s.files for s in (old, new) if s
+            )
             kind = (
-                "unavailable" if error else changes.get(node_id, "unchanged") if node else "absent"
+                "unavailable"
+                if error or unreadable
+                else changes.get(node_id, "unchanged")
+                if node
+                else "absent"
             )
             title = (
                 next(

@@ -10,10 +10,11 @@ from pathlib import Path
 
 from .annotations import snapshots
 from .git import repository_paths, semantic_diff, source_change_impact
-from .graph import Graph
-from .model import Diagnostic, SpecError
+from .graph import Graph, build_graph
+from .inspection import findings
+from .model import Diagnostic, SpecError, SpecNode
 from .output import json_text
-from .query_select import Limit, reachable, scope_result, select_graph
+from .query_select import Limit, reachable, scope_result, select_graph, select_issues
 from .query_sources import contract_state, source_comparisons, source_contract_impact
 from .sources import BAD_OUTCOMES
 from .workspace import Snapshot
@@ -34,9 +35,6 @@ class QueryComparison:
 
 
 def compare_snapshots(base: Snapshot, target: Snapshot) -> QueryComparison:
-    if base.files or not base.valid:
-        base.require_valid()
-    target.require_valid()
     result = semantic_diff(base, target)
     result.update(
         base_ref=base.commit or "HEAD",
@@ -64,6 +62,7 @@ def read_query(
     max_distance=None,
     influence=None,
     with_ancestors: bool = False,
+    issues: bool = False,
 ) -> QueryComparison:
     limits = {
         name: Limit.parse(value, name)
@@ -84,15 +83,46 @@ def read_query(
     result = comparison.result
     result.update(base_ref=base or "HEAD", target_ref=target or "workspace")
     source_ids = None
-    if node_id is not None or limits:
+    if issues and limits:
+        raise SpecError(
+            [
+                Diagnostic(
+                    "QUERY", "--issues is a structural selector; use it without metric criteria."
+                )
+            ],
+            2,
+        )
+    if node_id is not None or limits or issues:
         start = (
             node_id
             if node_id is not None
-            else next(n.id for n in new.nodes if n.type == "manifesto")
+            else next((n.id for n in new.nodes if n.type == "manifesto"), None)
         )
-        comparison.display, result["selection"] = select_graph(
-            comparison_graph(old, new), start, limits, with_ancestors=with_ancestors
-        )
+        projection = comparison_graph(old, new)
+        if issues:
+            problem = findings(new)
+            selected = set(problem["potentially_affected"]) | {
+                r["parent"] for r in problem["broken_references"]
+            }
+            if node_id is not None:
+                selected &= reachable(projection, [node_id])
+            comparison.display, result["selection"] = select_issues(
+                projection, selected, with_ancestors=with_ancestors
+            )
+        else:
+            if not old.complete or not new.complete:
+                raise SpecError(
+                    [
+                        Diagnostic(
+                            "QUERY",
+                            "Metric/rooted scope is incomplete; inspect --issues, "
+                            "show --raw or an unfiltered query.",
+                        )
+                    ]
+                )
+            comparison.display, result["selection"] = select_graph(
+                projection, start, limits, with_ancestors=with_ancestors
+            )
         included = set(comparison.display.nodes)
         source_ids = set()
         for snapshot in (old, new):
@@ -138,25 +168,37 @@ def read_query(
 def comparison_graph(base: Snapshot, target: Snapshot) -> Graph:
     """Target records plus base-only ghosts, each retaining its own parents.
 
-    No current record has a deleted parent, so paths entering ghosts cannot return
-    to current nodes. This is acyclic, unlike the full old/new edge union. It is a
-    display projection: new shortcuts, changed types and distinct roots are valid.
+    Valid revisions yield an acyclic projection, unlike a full edge union.
+    Invalid references keep missing endpoints; cycle-safe readers retain all
+    components. Historical bodies remain context rather than current justification.
     """
-    current = {n.id: n for n in target.nodes}
-    nodes = {n.id: n for n in base.nodes} | current
+    current = dict(target.graph.nodes) if target.graph else {}
+    nodes = (dict(base.graph.nodes) if base.graph else {}) | current
+    for parent in sorted({p for n in nodes.values() for p in n.parents} - nodes.keys()):
+        path = f"_specspec/{parent}.md"
+        reason = "Unreadable parent file" if path in target.files else "Missing parent file"
+        nodes[parent] = SpecNode(parent, "missing", [], reason + ": " + parent, path)
     parents = {i: set(n.parents) for i, n in nodes.items()}
     children = {i: set() for i in nodes}
     for child, incoming in parents.items():
         for parent in incoming:
             children[parent].add(child)
-    order = list(target.graph.order) if target.graph else []
-    if base.graph:
-        order.extend(i for i in base.graph.order if i not in current)
+    order = build_graph(list(nodes.values()))[0].order
     return Graph(nodes, parents, children, order)
 
 
 def _roots(graph: Graph, included: set[str]) -> list[str]:
-    return sorted(i for i in included if not any(p in included for p in graph.parents[i]))
+    roots = sorted(i for i in included if not any(p in included for p in graph.parents[i]))
+    if len(graph.order) == len(graph.nodes):
+        return roots
+    seen = reachable(graph, roots)
+    for component in graph.components():
+        remaining = set(component) & included - seen
+        if remaining:
+            root = min(remaining)
+            roots.append(root)
+            seen.update(reachable(graph, [root]))
+    return roots
 
 
 def last_occurrence_parents(graph: Graph, included: set[str] | None = None) -> dict[str, str]:
@@ -274,6 +316,9 @@ def body_line(body: str) -> str:
 
 def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator[str]:
     old, new, result = comparison.base, comparison.target, comparison.result
+    projection = (
+        comparison.display if comparison.display is not None else comparison_graph(old, new)
+    )
     before = {n.id: n for n in old.nodes}
     after = {n.id: n for n in new.nodes}
     changes = {c["id"]: c["kind"] for c in result["changes"]}
@@ -286,6 +331,15 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
     if not old.nodes and result["base_commit"] is None:
         base_label += " (empty)"
     yield f"{base_label} → {result['target_ref']}"
+    if not new.valid:
+        yield (
+            "Target graph INVALID; references and dependency scope "
+            "do not determine semantic justification."
+        )
+        for reference in findings(new)["broken_references"]:
+            yield (
+                f"Unresolved: {reference['parent']} -> {reference['child']} ({reference['reason']})"
+            )
     if selection := result.get("selection"):
         if selection.get("with_ancestors"):
             yield (
@@ -304,9 +358,9 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
 
     def record(node_id):
         a, b = before.get(node_id), after.get(node_id)
-        node = b or a
+        node = b or a or projection.nodes[node_id]
         kind = changes.get(node_id)
-        hints = [STATUS[kind]] if kind else []
+        hints = [STATUS.get(kind, kind)] if kind else []
         if node_id in affected:
             hints.append("source-changed")
         if not kind and any(n and n.path in file_changed for n in (a, b)):
@@ -317,7 +371,7 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
         return header + (" [" + " ".join(hints) + "]" if hints else "")
 
     def contents(node_id):
-        node = after.get(node_id) or before[node_id]
+        node = after.get(node_id) or before.get(node_id) or projection.nodes[node_id]
         metadata = []
         if node.format_version is not None:
             metadata.append(f"format_version: {node.format_version}")
@@ -347,9 +401,7 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
                 for line in contents(node_id):
                     yield continuation + line
 
-    yield from tree(
-        comparison.display if comparison.display is not None else comparison_graph(old, new)
-    )
+    yield from tree(projection)
 
 
 def render_query(comparison: QueryComparison, *, human: bool = False) -> str:

@@ -29,7 +29,9 @@ when it starts with an ID. Dash-leading canonical IDs work. There are **no color
 arguments**: color names after the IDs are ordinary message text. Duplicate IDs,
 missing members and blank/over-500-character messages reject the entire addition.
 The selected IDs may come from **either side**, including deleted base nodes and
-unchanged nodes; they need not all share one change status.
+unchanged nodes; they need not all share one change status. Invalid comparisons
+also accept declared missing identities and inventoried canonical filenames, while
+unreadable bindings remain explicitly unavailable rather than invented nodes.
 
 `--base REV` and `--target REV|workspace` select the comparison. Explicit Git refs,
 including branch names and `HEAD`, resolve to full immutable commit IDs at capture.
@@ -134,7 +136,9 @@ changes**, including unselected nodes so context drift is noticeable:
   including comments and line endings. Git determines whether saved tracked files
   are dirty, so a clean CRLF/clean-filter checkout does not hash every node.
   Native overlays participate when they differ from saved contents.
-- Deleted nodes use `null`, a deletion marker, not a checksum.
+- Absent files use `null`, a deletion marker, not a checksum. Existing unreadable
+  files retain literal-byte checksums by canonical filename; parse failure alone
+  never fabricates a deletion or hides subsequent raw-file drift.
 - IDs determine canonical paths; binding and heading edits keep those paths stable.
 
 On display, compare the capture HEAD and sparse changes with current workspace
@@ -144,7 +148,7 @@ history, an edit lock or a correctness guarantee. New commits can warn even when
 node text remains the same. Staging alone does not change the workspace snapshot.
 No node bytes, committed-node hashes, per-color groups, blob archive or captured-
 text preview are stored. Local drift checks leave canonical schema/edit protection
-unchanged. Node format is 7; API remains 6; the separate local spotlight format is 2.
+unchanged. Node format and API are 7; the separate local spotlight format is 2.
 
 ## Storage and lifetime
 

@@ -1,31 +1,32 @@
-"""Non-writing descendant-deletion plans and HEAD/index/worktree warnings."""
+"""Exact-file deletion plans, retained dependency findings and Git warnings."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from .git import repository_paths, run_git
+from .inspection import findings, walks
 from .model import Diagnostic, SpecError
-from .workspace import SPEC_DIR, Snapshot, require_node
+from .workspace import SPEC_DIR, Snapshot, require_node, snapshot_from_files
 
 
 def deletion_plan(snapshot: Snapshot, ids: list[str]) -> dict[str, Any]:
-    """Select every descendant, including shared children, once and without recursion."""
+    """Select only named files; diagnose the retained declarations without repairing."""
     if not ids or any(not isinstance(key, str) for key in ids) or len(ids) != len(set(ids)):
         raise SpecError([Diagnostic("DELETE", "Name a nonempty batch of distinct node IDs.")], 2)
+    snapshot.require_current()
     nodes = [require_node(snapshot, key) for key in ids]
     if any(node.type == "manifesto" for node in nodes):
         raise SpecError([Diagnostic("DELETE", "The manifesto cannot be deleted.")])
-    graph = snapshot.require_valid()
-    selected: set[str] = set()
-    pending = list(ids)
-    while pending:
-        key = pending.pop()
-        if key in selected:
-            continue
-        selected.add(key)
-        pending.extend(graph.children[key] - selected)
-    paths = {graph.nodes[key].path: key for key in sorted(selected)}
+    selected = set(ids)
+    paths = {node.path: node.id for node in sorted(nodes, key=lambda n: n.id)}
+    remaining = snapshot_from_files(
+        snapshot.root,
+        {path: raw for path, raw in snapshot.files.items() if path not in paths},
+        check_sources=True,
+    )
+    consequences = findings(remaining)
+    potential = walks(snapshot.graph, selected) - selected
     statuses: dict[str, str] = {}
     available, note = True, ""
     try:
@@ -73,6 +74,8 @@ def deletion_plan(snapshot: Snapshot, ids: list[str]) -> dict[str, Any]:
         ],
         "git_available": available,
         "git_note": note,
+        **consequences,
+        "potentially_affected": sorted(potential),
     }
 
 

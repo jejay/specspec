@@ -10,7 +10,7 @@ from specspec.workspace import add_node, load_snapshot
 
 
 def request(root, payload, *args):
-    value = {"api_version": 6, "op": "plan" if "edit" in payload else "read", **payload}
+    value = {"api_version": 7, "op": "plan" if "edit" in payload else "read", **payload}
     if args:
         value["base"] = args[1]
     result = CliRunner().invoke(main, ["--root", str(root), "api"], input=json.dumps(value))
@@ -237,6 +237,46 @@ def test_git_comparison_includes_unsaved_changes_without_writing(workspace):
     assert result["diff"]["changes"][0]["kind"] == "changed"
     assert result["diff"]["target_ref"] == "workspace + open documents"
     assert not subprocess.check_output(["git", "-C", str(root), "diff"])
+
+
+@pytest.mark.parametrize("manifesto_target", [False, True])
+def test_native_empty_body_is_repairable_without_claiming_canonical_membership(
+    workspace, manifesto_target
+):
+    root, manifesto = workspace
+    if manifesto_target:
+        id = manifesto
+    else:
+        _, id = add_node(root, "requirement", [manifesto], "# Form\n")
+    node = load_snapshot(root).graph.nodes[id]
+    planned = editor_request(root, {"edit": {"path": node.path, "id": id, "body": ""}})
+    assert not planned["snapshot"]["valid"]
+    assert planned["snapshot"]["format_version"] == 7
+    assert id not in {n["id"] for n in planned["snapshot"]["nodes"]}
+    assert planned["repair_forms"][0]["body"] == ""
+    current = planned["changes"][0]["after"]
+    read = editor_request(root, {"documents": {node.path: current}})
+    assert read["repair_forms"][0]["id"] == id and read["repair_forms"][0]["body"] == ""
+    repaired = editor_request(
+        root,
+        {
+            "documents": {node.path: current},
+            "edit": {"path": node.path, "id": id, "body": "# Repaired\n"},
+        },
+    )
+    assert repaired["snapshot"]["valid"] and repaired["repair_forms"] == []
+    assert load_snapshot(root).graph.nodes[id].body == node.body
+
+
+def test_native_partial_sources_keep_literal_form_input_separate_from_canonical_nodes(workspace):
+    root, manifesto = workspace
+    _, parent = add_node(root, "requirement", [manifesto], "# Parent\n")
+    snapshot, id = add_node(root, "implementation", [parent], "# Implementation\n")
+    node = snapshot.graph.nodes[id]
+    planned = editor_request(root, {"edit": {"path": node.path, "id": id, "sources": "[{"}})
+    read = editor_request(root, {"documents": {node.path: planned["changes"][0]["after"]}})
+    assert read["repair_forms"][0]["sources_text"] == "[{"
+    assert id not in {n["id"] for n in read["snapshot"]["nodes"]}
 
 
 def test_editor_has_bounded_structured_input_errors(workspace):

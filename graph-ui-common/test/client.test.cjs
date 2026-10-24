@@ -7,7 +7,7 @@ const {CliClient}=require('../host/client.cjs');
 function fixture(t){
   const root=mkdtempSync(join(tmpdir(),'specspec-channel-')),script=join(root,'worker.cjs'),client=new CliClient();
   writeFileSync(script,`const fs=require('node:fs'),rl=require('node:readline').createInterface({input:process.stdin});let count=0;
-  const answer=v=>({api_version:6,ok:!v.fail,diagnostics:v.fail?[{code:'TEST',message:'Rejected'}]:[],result:{pid:process.pid,count:++count,value:v,args:process.argv.slice(2)}});
+  const answer=v=>({api_version:7,ok:!v.fail,diagnostics:v.fail?[{code:'TEST',message:'Rejected'}]:[],result:{pid:process.pid,count:++count,value:v,args:process.argv.slice(2)}});
   if(!process.argv.includes('--stream')){let raw='';process.stdin.on('data',c=>raw+=c);process.stdin.on('end',()=>console.log(JSON.stringify(answer({raw}))));}
   else rl.on('line',async raw=>{const v=JSON.parse(raw);if(v.die)process.exit(7);if(v.gate)await new Promise(r=>{const timer=setInterval(()=>{if(fs.existsSync(v.gate)){clearInterval(timer);r();}},5);});
     if(v.bad){process.stdout.write(v.bad);return;}const data=Buffer.from(JSON.stringify(answer(v))+'\\n');
@@ -18,7 +18,7 @@ function fixture(t){
     const exits=children.filter(c=>c.exitCode===null&&c.signalCode===null).map(c=>new Promise(resolve=>c.once('close',resolve)));
     client.dispose();await Promise.all(exits);rmSync(root,{recursive:true,force:true,maxRetries:30,retryDelay:100});
   });
-  return {root,client,call:(value,timeout=5000,limit)=>client.invoke(process.execPath,[script],root,['api'],JSON.stringify({api_version:6,...value}),timeout,limit),script};
+  return {root,client,call:(value,timeout=5000,limit)=>client.invoke(process.execPath,[script],root,['api'],JSON.stringify({api_version:7,...value}),timeout,limit),script};
 }
 test('API channels reuse interpreter lifetime, preserve JSON bodies and warm an independent preview process',async t=>{
   const f=fixture(t),first=await f.call({op:'read',text:'Exact\nUTF-8 🦉'}),second=await f.call({op:'read'});
@@ -44,7 +44,7 @@ test('active mutation transport loss reports uncertainty, queued mutations are u
 });
 test('malformed, incompatible and unsolicited frames fail the channel rather than shifting reply ownership',async t=>{
   const f=fixture(t);
-  for(const bad of ['not json\n','{"api_version":5,"ok":true,"diagnostics":[]}\n',JSON.stringify({api_version:6,ok:true,diagnostics:[],result:{}})+'\n{}\n']){
+  for(const bad of ['not json\n','{"api_version":5,"ok":true,"diagnostics":[]}\n',JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{}})+'\n{}\n']){
     const p=f.call({op:'read',bad});
     if(bad.endsWith('{}\n')){await p;await new Promise(r=>setImmediate(r));assert.equal(f.client.channels.get('main').closed,true);}
     else await assert.rejects(p,/Invalid SpecSpec API response/);

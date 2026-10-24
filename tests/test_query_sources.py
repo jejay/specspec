@@ -10,7 +10,6 @@ from click.testing import CliRunner
 from test_git import git, setup_repository
 
 from specspec.cli import main
-from specspec.model import SpecError
 from specspec.query import read_query, render_query, source_line
 from specspec.query_sources import CodeVersion
 from specspec.sources import SourceReader
@@ -336,8 +335,14 @@ def test_query_source_symlink_escape_remains_unavailable(project):
         escape.symlink_to(outside)
     except OSError:
         pytest.skip("Symlinks are unavailable.")
-    with pytest.raises(SpecError, match="outside"):
-        read_query(root)  # Unsafe saved metadata still fails graph validation.
+    result = read_query(root)
+    assert not result.target.valid
+    assert any(d.code == "SOURCE_ESCAPE" for d in result.target.diagnostics)
+    unsafe = next(
+        r for r in result.result["source_resolutions"] if r["reference"]["path"] == "escape.py"
+    )
+    assert unsafe["target"]["outcome"] == "unavailable"
+    assert "not a permitted source" not in json.dumps(result.result)
     _, values = rows(project, target="HEAD")
     row = next(r for r in values if r["reference"]["path"] == "escape.py")
     assert row["bytes"] == row["region"] == "unavailable"

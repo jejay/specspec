@@ -38,6 +38,7 @@ and diagnostic evidence. Existing native/session/bridge/playground tests preserv
 their safety assertions while checking the current action/status labels. All four
 linear/log influence choices and independent Git/highlight cues remain available.
 
-Installed invalid-file probes check the concise repair status together with the
-visible last-valid notice and retained save restrictions. Poll coalescing tests
+Installed invalid-file probes check fresh structural findings and retained input.
+Unreadable managed targets stay unsavable; native repair-form fields preserve
+actual empty body and partial source input independently of canonical membership. Poll coalescing tests
 hold an explicit read barrier and verify one follow-up independently of throughput.

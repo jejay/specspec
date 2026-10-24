@@ -5,9 +5,9 @@ parents:
 - 0dvOn3A=
 - 5d5oDCM=
 ---
-# Use compact reconstructible API 6 data with node format 7
+# Use compact reconstructible API 7 data with node format 7
 
-The sole application/structured protocol is API 6; canonical Markdown remains node
+The sole application/structured protocol is API 7; canonical Markdown remains node
 format 7 with the same IDs, fields and source grammar. Negotiate/reject protocol
 versions explicitly and update host adapters together. Emit one compact UTF-8 JSON
 envelope with api_version, ok, result and diagnostics. Keep descriptive field names,

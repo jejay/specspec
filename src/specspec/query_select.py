@@ -63,6 +63,39 @@ def metric_values(
     """
     result: dict[str, dict[str, int]] = {}
     order = [node_id for node_id in graph.order if node_id in population]
+    if len(order) != len(population):
+        # A cycle outside this rooted scope must not invalidate its finite metrics.
+        remaining = {i: len(graph.parents[i] & population) for i in population}
+        order = sorted(i for i in population if not remaining[i])
+        for id in order:
+            for child in sorted(graph.children[id] & population):
+                remaining[child] -= 1
+                if remaining[child] == 0:
+                    order.append(child)
+    cyclic = len(order) != len(population)
+    if cyclic and "max-distance" in requested:
+        raise SpecError(
+            [
+                Diagnostic(
+                    "METRIC",
+                    "Maximum distance is unavailable in a cyclic rooted scope; "
+                    "inspect query --issues.",
+                )
+            ]
+        )
+    if cyclic:
+        result = {}
+        if "min-distance" in requested:
+            distances, queue = {root: 0}, [root]
+            for node_id in queue:
+                for child in sorted(graph.children[node_id]):
+                    if child in population and child not in distances:
+                        distances[child] = distances[node_id] + 1
+                        queue.append(child)
+            result["min-distance"] = distances
+        if "influence" in requested:
+            result["influence"] = {i: len(reachable(graph, [i])) for i in population}
+        return result
     if requested & {"min-distance", "max-distance"}:
         minimum = {root: 0} if "min-distance" in requested else {}
         maximum = {root: 0} if "max-distance" in requested else {}
@@ -177,8 +210,38 @@ def select_graph(
     }
 
 
+def select_issues(graph: Graph, seeds: set[str], *, with_ancestors=False):
+    matched = seeds & graph.nodes.keys()
+    included = reachable(graph, matched, ancestors=True) if with_ancestors else matched
+    parents = set().union(*(graph.parents[i] for i in matched)) if matched else set()
+    children = set().union(*(graph.children[i] for i in matched)) if matched else set()
+    siblings = set().union(*(graph.children[i] for i in parents)) if parents else set()
+    view = induced(graph, included)
+    selection = {
+        "root": "issues",
+        "population": len(graph.nodes),
+        "ids": sorted(included),
+        "edges": view.edges(),
+        "queries": [],
+        "partial": included != graph.nodes.keys(),
+        "matched_ids": sorted(matched),
+        "ancestor_ids": sorted(included - matched),
+        "issue_ids": sorted(matched),
+    }
+    if with_ancestors:
+        selection.update(
+            with_ancestors=True,
+            surrounding={
+                "child_ids": sorted(children - included),
+                "sibling_ids": sorted(siblings - included),
+                "omitted_ids": sorted((children | siblings) - included),
+            },
+        )
+    return view, selection
+
+
 def scope_result(result: dict, included: set[str]) -> dict:
-    """Keep selected bindings and complete boundary references/evidence in API 6."""
+    """Keep selected bindings and complete boundary references/evidence in API 7."""
     result = dict(result)
     paths, parents = set(), set()
     for side in ("base", "target"):

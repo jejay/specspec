@@ -32,15 +32,17 @@
   const setMessage = message => { $('message').textContent = message; };
   const currentNodeById = id => state?.snapshot.nodes.find(node => node.id === id);
   const currentNode = () => currentNodeById(selected);
-  const editable = () => state?.snapshot.valid && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 7 && !state.readonly &&
-    (state.document ? selected === state.document.nodeId && Boolean(currentNode()) : creating || Boolean(currentNode()));
-  const orphaned = () => !creating && dirty && !currentNode() && !state?.readonly;
+  const repairNode = id => state?.document?.nodeId === id ? state.repair_forms?.find(n => n.id === id) : undefined;
+  const formRecord = () => currentNode() || repairNode(selected);
+  const editable = () => state?.snapshot && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 7 && !state.readonly &&
+    (state.document ? selected === state.document.nodeId && Boolean(formRecord()) : creating || Boolean(currentNode()));
+  const orphaned = () => !creating && dirty && !formRecord() && !state?.readonly;
   const draftCard = () => creating || orphaned();
-  const description = node => `${node.type}${currentNodeById(node.id) ? '' : ' · deleted'}`;
+  const description = node => node.repairForm ? 'invalid current document · native repair' : node.missing ? 'unresolved parent' : node.unavailable ? `unreadable document${node.earlierContext ? ' · earlier context' : ''}` : `${node.type}${currentNodeById(node.id) ? '' : ' · deleted (earlier context)'}`;
   const formNodeType = () => creating ? $('node-type').value : originalNode?.type || graph.nodes.get(selected)?.type;
   const parentsEditable = () => editable() && !pending && formNodeType() !== 'manifesto';
-  const contextFor = id => currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
-  const snapshotName = id => currentNodeById(id) ? 'target' : 'base';
+  const contextFor = id => graph.nodes.get(id)?.repairForm || graph.nodes.get(id)?.type === 'missing' ? undefined : currentNodeById(id) ? targetMetrics : baseMetrics || targetMetrics;
+  const snapshotName = id => graph.nodes.get(id)?.repairForm ? 'native document repair' : currentNodeById(id) ? 'target' : 'base';
   const colorValueFor = id => model.INFLUENCE_MODES.includes(colorMode)
     ? contextFor(id)?.influenceRatio(id, colorMode)
     : (colorMode === 'max-distance' ? contextFor(id)?.maxDistances : contextFor(id)?.minDistances)?.get(id);
@@ -71,13 +73,13 @@
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
     $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot.valid || sourceInvalid || state.snapshot.format_version !== 7 || state.readonly || state.provisional || pending || Boolean(state.document);
+    $('new').disabled = !state?.snapshot || sourceInvalid || state.snapshot.format_version !== 7 || state.readonly || state.provisional || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
-    $('delete').title = 'Delete this node and all descendants';
+    $('delete').title = 'Delete only this node; keep descendants and their references';
     $('save').disabled = !editable() || pending || Boolean(state?.provisional && !state.document);
-    $('delete').disabled = !editable() || state?.provisional || creating || dirty || Boolean(state?.document?.dirty) || pending || currentNode()?.type === 'manifesto';
+    $('delete').disabled = !editable() || state?.provisional || creating || dirty || Boolean(state?.document?.dirty) || pending || !currentNode() || currentNode()?.type === 'manifesto';
     for (const id of elements) $(id).disabled = !editable() || pending;
     for (const id of ['body', 'sources']) {
       // Keep retained text selectable/copyable when files are invalid or deleted.
@@ -400,7 +402,7 @@
       const appearance = model.edgeAppearance(route, scale);
       path.setAttribute('d', appearance.d); head.setAttribute('d', appearance.head);
       path.style.strokeWidth = appearance.strokeWidth;
-      const dash = route.kind === 'removed' ? [6, 5] : route.kind === 'draft' ? [3, 4] : undefined;
+      const dash = route.kind === 'removed' ? [6, 5] : ['draft', 'unresolved'].includes(route.kind) ? [3, 4] : undefined;
       if (dash) path.style.strokeDasharray = dash.map(value => value * appearance.dashScale).join(' ');
     }
   }
@@ -458,12 +460,13 @@
     $('editor').hidden = false; $('title').textContent = title(node);
     $('identity').textContent = `${node.id}\n${description(node)}\n${node.path}`;
     const context = contextFor(node.id);
-    $('focus-context').textContent = `${context.descendantCount(node.id)} downstream nodes (all depths) · ${snapshotName(node.id)} revision`;
+    $('focus-context').textContent = `${context?.descendantCount(node.id) ?? 'Unknown'} downstream nodes (known relationships) · ${snapshotName(node.id)} revision`;
     $('type-label').hidden = true;
     if ($('body').value !== node.body) $('body').value = node.body;
     let sameSources = false;
     try { sameSources = JSON.stringify(JSON.parse($('sources').value)) === JSON.stringify(node.sources); } catch { /* Intermediate JSON typing. */ }
-    if (!sameSources) $('sources').value = JSON.stringify(node.sources, null, 2);
+    if (node.repairForm) $('sources').value = node.sources_text;
+    else if (!sameSources) $('sources').value = JSON.stringify(node.sources, null, 2);
     $('sources-label').hidden = node.type !== 'implementation'; sourceLinks(); populateParents(node.parents, node.type);
   }
 
@@ -478,7 +481,7 @@
     }
     if (dirty && !force && !confirm('Discard unsaved form changes before opening another node?')) return;
     cancelSourcePreview(); rememberCamera();
-    creating = false; dirty = false; selected = id; originalNode = currentNodeById(id);
+    creating = false; dirty = false; selected = id; originalNode = currentNodeById(id) || repairNode(id);
     view = graph.nodes.has(id) ? 'focus' : 'overview'; loadForm(); draw(); saveDraft();
   }
 
@@ -564,13 +567,13 @@
     if (state?.document) send({ type: 'discard-form' });
     dirty = false;
     if (creating) { rememberCamera(); creating = false; selected = undefined; view = 'overview'; draw(); saveDraft(); }
-    else { originalNode = currentNode(); loadForm(); draw(); saveDraft(); }
+    else { originalNode = formRecord(); loadForm(); draw(); saveDraft(); }
   });
   for (const action of ['refresh', 'compare', 'workspace']) $(action).addEventListener('click', () => send({ type: action }));
   $('project')?.addEventListener('click', () => send({ type: 'select-project' }));
 
-  function showSnapshotNotes() {
-    setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`)].filter(Boolean).join('\n'));
+  function showSnapshotNotes(extra) {
+    setMessage([state.note, !state.snapshot.valid ? 'Graph INVALID · current files shown. Dependency scope is not a semantic-justification verdict.' : '', ...state.diagnostics.map(d => `${d.code}: ${d.message}`), extra].filter(Boolean).join('\n'));
   }
 
   host.onMessage(message => {
@@ -607,7 +610,7 @@
       if (message.editSequence === editSequence) {
         dirty = false;
         if (state?.document) delete state.document.recoveredForm;
-        if (newerSnapshot) { originalNode = currentNode(); loadForm(); draw(); }
+        if (newerSnapshot) { originalNode = formRecord(); loadForm(); draw(); }
         saveDraft();
       }
       updateButtons(); return;
@@ -642,14 +645,15 @@
       $('sources-label').hidden = formNodeType() !== 'implementation';
     } else if (!dirty && !creating) {
       if (selected && !graph.nodes.has(selected)) { rememberCamera(); selected = undefined; view = 'overview'; }
-      originalNode = currentNode(); loadForm();
+      originalNode = formRecord(); loadForm();
     }
     if (dirty || creating) {
-      const warning = orphaned() ? 'Deleted node draft · Available for copying or discard.'
+      const absentTitle = state.snapshot.unreadable_paths?.includes(originalNode?.path || `_specspec/${selected}.md`) ? 'Unreadable node draft' : 'Deleted node draft';
+      const warning = orphaned() ? `${absentTitle} · Available for copying or discard.`
         : !creating && !model.sameNode(originalNode, currentNode()) ? 'This node changed outside your draft. Draft retained; saving will ask before overwriting current contents.'
           : 'Graph refreshed. Unsaved draft retained.';
-      setMessage([state.note, ...state.diagnostics.map(d => `${d.code}: ${d.message}`), warning].filter(Boolean).join('\n'));
-      if (orphaned()) { $('editor').hidden = false; $('title').textContent = 'Deleted node draft'; $('identity').textContent = selected || ''; }
+      showSnapshotNotes(warning);
+      if (orphaned()) { $('editor').hidden = false; $('title').textContent = absentTitle; $('identity').textContent = selected || ''; }
     }
     draw(); saveDraft();
   });

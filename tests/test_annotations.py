@@ -230,7 +230,7 @@ def test_clean_crlf_checkout_is_not_hashed_but_native_overlay_and_dirty_files_ar
     created, _ = request(
         root,
         {
-            "api_version": 6,
+            "api_version": 7,
             "op": "annotation-create",
             "message": "Native",
             "nodes": [parent],
@@ -331,14 +331,14 @@ def test_reviewed_flush_races_consent_and_obsolete_copy_cleanup(workspace):
     assert call(root, "flush", "--json").exit_code == 1
     assert len(annotations.load_shots(root)) == 2
     result, _ = request(
-        root, {"api_version": 6, "op": "annotation-flush", "expected": [first["id"], second["id"]]}
+        root, {"api_version": 7, "op": "annotation-flush", "expected": [first["id"], second["id"]]}
     )
     assert result == {"flushed": 2} and annotations.load_shots(root) == []
     assert not list(path.iterdir()) and notes.read_text() == "Keep"
     assert load_snapshot(root).valid
     assert call(root, "flush", "--yes", "--json").exit_code == 0
     with pytest.raises(SpecError, match="reviewed"):
-        request(root, {"api_version": 6, "op": "annotation-flush"})
+        request(root, {"api_version": 7, "op": "annotation-flush"})
 
 
 def test_old_or_malformed_local_records_are_protected_and_explicitly_flushable(workspace):

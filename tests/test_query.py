@@ -590,7 +590,7 @@ def test_cli_comparison_json_round_trip_and_read_only_git_state(workspace, human
     structured = call(root, *args, "--json")
     assert structured.exit_code == 0, structured.output
     value = json.loads(structured.stdout)
-    assert value["api_version"] == 6 and value["ok"]
+    assert value["api_version"] == 7 and value["ok"]
     assert value == json.loads(call(root, "--json").stdout)
     expanded = expand_comparison(value["result"])
     assert expanded["base"]["nodes"] == read_query(root).base.to_dict()["nodes"]
@@ -655,13 +655,18 @@ def test_removed_or_unimplemented_arguments_reject(workspace, args):
     assert call(workspace[0], *args).exit_code == 2
 
 
-def test_cli_validates_both_sides_before_any_tree(workspace):
+def test_cli_retains_available_context_when_a_document_is_unreadable(workspace):
     root, parent = workspace
     setup_repository(root)
     path = root / load_snapshot(root).graph.nodes[parent].path
     path.write_bytes(b"invalid")
     result = call(root)
-    assert result.exit_code == 1 and result.stdout == "" and "FORMAT" in result.stderr
+    assert (
+        result.exit_code == 1
+        and "Target graph INVALID" in result.stdout
+        and "FORMAT" in result.stderr
+    )
+    assert "unavailable" in result.stdout
     assert not json.loads(call(root, "--json").stdout)["ok"]
     assert call(root, "--base", "nonexistent").exit_code == 2
     assert call(root, "--base", "").exit_code == 2

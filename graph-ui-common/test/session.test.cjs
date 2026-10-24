@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { GraphSession, pollInterval } = require('../host/session.cjs');
-const { renderMatches, sameNode } = require('../media/graph-model.js');
+const { renderMatches, sameNode, displayGraph } = require('../media/graph-model.js');
 const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
 const snapshot = { valid: true, format_version: 7, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
@@ -20,30 +20,30 @@ function fixture(t, options = {}) {
       const value = args[0] === 'api' ? JSON.parse(input) : undefined;
       if (value?.op === 'annotations') {
         if (annotationFailure) throw new Error('Malformed local shot');
-        return { api_version: 6, ok: true, diagnostics: [], result: { shots } };
+        return { api_version: 7, ok: true, diagnostics: [], result: { shots } };
       }
       if (value?.op === 'annotation-create') {
         if (options.creationFailure) throw new Error('Highlighted version changed.');
-        return { api_version: 6, ok: true, result: { shots: [] } };
+        return { api_version: 7, ok: true, result: { shots: [] } };
       }
-      if (value?.op === 'annotation-flush') { shots = []; return { api_version: 6, ok: true, result: { flushed: 1 } }; }
+      if (value?.op === 'annotation-flush') { shots = []; return { api_version: 7, ok: true, result: { flushed: 1 } }; }
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
       if (args[0] === 'delete') {
-        if (args.includes('--dry-run')) return { api_version: 6, ok: true, diagnostics: options.deleteWarnings || [], result: options.deletePlan || { requested_ids: [args[1]], deleted_ids: [args[1]], nodes: [{ id: args[1], path: node.path }], uncommitted: [], git_available: true, git_note: '' } };
+        if (args.includes('--dry-run')) return { api_version: 7, ok: true, diagnostics: options.deleteWarnings || [], result: options.deletePlan || { requested_ids: [args[1]], deleted_ids: [args[1]], nodes: [{ id: args[1], path: node.path }], uncommitted: [], git_available: true, git_note: '' } };
         if (options.deleteError) throw new Error(options.deleteError);
         const plan = JSON.parse(input);
         current = { ...current, nodes: current.nodes.filter(n => !plan.deleted_ids.includes(n.id)), changed_ids: plan.deleted_ids };
       }
-      return { api_version: 6, ok: true, diagnostics: [], result: value ? { snapshot: current, changes: [], note: '', ...(value.base ? {diff: {
+      return { api_version: 7, ok: true, diagnostics: [], result: value ? { snapshot: current, changes: [], note: '', ...(value.base ? {diff: {
         base: current, target: current, changes: [], added_edges: [], removed_edges: [],
         base_ref: value.base, target_ref: value.target || 'workspace', source_changes: [], source_affected: [],
       }} : {}) } : current };
     },
     post: async value => { messages.push(value); if (value.type === 'snapshot' && !options.noRender) s.receive({ type: 'rendered',
       renderToken: value.renderToken, view: 'overview',
-      visibleIds: options.wrongMembership ? [] : value.snapshot.nodes.map(n => n.id), nodeCount: value.snapshot.nodes.length }); },
+      visibleIds: options.wrongMembership ? [] : [...displayGraph(value).nodes.keys()], nodeCount: displayGraph(value).nodes.size }); },
     confirm: async text => { confirmations.push(text); return options.confirm !== false; },
     revisions: async () => options.revisions,
   });
@@ -59,7 +59,7 @@ test('highlight creation uses the guarded local API with trusted overlays, not c
   const count = f.calls.length;
   await f.s.handle({ type: 'annotation-create', message, nodes, documents: { 'forged.md': 'ignored' }, target: 'forged' });
   const request = JSON.parse(f.calls.slice(count).find(c => JSON.parse(c.input).op === 'annotation-create').input);
-  assert.deepEqual(request, { api_version: 6, op: 'annotation-create', message, nodes, documents: { '_specspec/node.md': 'Native dirty text' } });
+  assert.deepEqual(request, { api_version: 7, op: 'annotation-create', message, nodes, documents: { '_specspec/node.md': 'Native dirty text' } });
   assert.equal(f.messages.at(-1).type, 'annotation-created');
   assert.ok(!f.calls.slice(count).some(c => ['add','update','delete'].includes(c.args[0])));
   f.revoke(); const before = f.calls.length;
@@ -75,7 +75,7 @@ test('historical highlight creation pins selected commits and excludes live docu
   const message='Old intent', nodes=['Zm9vYmE='];
   await f.s.handle({type:'annotation-create',message,nodes});
   const call=f.calls.find(c=>c.args[0]==='api'&&JSON.parse(c.input).op==='annotation-create');
-  assert.deepEqual(JSON.parse(call.input),{api_version:6,op:'annotation-create',message,nodes,base:'b'.repeat(40),target:'c'.repeat(40)});
+  assert.deepEqual(JSON.parse(call.input),{api_version:7,op:'annotation-create',message,nodes,base:'b'.repeat(40),target:'c'.repeat(40)});
   assert.equal(f.messages.at(-1).type,'annotation-created');
 });
 
@@ -94,7 +94,7 @@ test('creation errors return a retryable compose response and never publish a fa
 test('source capture invokes only a validated preview and never a writer or Git operation', async t => {
   const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]}});await f.s.open();
   await f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});
-  const c=f.calls.at(-1);assert.deepEqual(c.args,['api']);assert.deepEqual(JSON.parse(c.input),{api_version:6,op:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});
+  const c=f.calls.at(-1);assert.deepEqual(c.args,['api']);assert.deepEqual(JSON.parse(c.input),{api_version:7,op:'source-capture',id:'node',path:'code.js',ranges:['2:4','9:10'],mode:'strict',staged:true});
   assert.equal(f.calls.some(c=>['update','add'].includes(c.args[0])),false);
   await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['--bad'],mode:'strict'}),/Invalid/);
   f.revoke();await assert.rejects(f.s.handle({type:'source-view',id:'node',reference:'{}'}),/authorization/);
@@ -103,7 +103,7 @@ test('source capture invokes only a validated preview and never a writer or Git 
 test('source previews in historical views use selected code revisions but never permit capture', async t => {
   const impl={...node,type:'implementation'};const f=fixture(t,{snapshot:{...snapshot,nodes:[impl]},revisions:['older','newer']});await f.s.open();await f.s.chooseRevisions();
   await f.s.handle({type:'source-view',id:'node',requestId:1,renderToken:f.s.renderSequence,reference:JSON.stringify({path:'code.js'})});
-  assert.deepEqual(f.calls.at(-1).args,['api']);assert.deepEqual(JSON.parse(f.calls.at(-1).input),{api_version:6,op:'source-view',reference:{path:'code.js'},ref:'newer'});
+  assert.deepEqual(f.calls.at(-1).args,['api']);assert.deepEqual(JSON.parse(f.calls.at(-1).input),{api_version:7,op:'source-view',reference:{path:'code.js'},ref:'newer'});
   await assert.rejects(f.s.handle({type:'source-capture',id:'node',path:'code.js',ranges:['1:2'],mode:'strict'}),/editable/);
 });
 
@@ -191,10 +191,21 @@ test('concurrent explicit/event Spotlight reads share one flight and one coalesc
 const save = originalNode => ({ type: 'save', id: 'node', originalNode, parents: [], sources: '[]', body: '# Draft' });
 
 test('unsupported schema snapshots cannot invoke a writer', async t => {
-  const f = fixture(t, { snapshot: { ...snapshot, format_version: 999 } }); await f.s.open();
-  await assert.rejects(f.s.handle(save(node)), /Unsupported/);
+  const f = fixture(t, { snapshot: { ...snapshot, format_version: 999 } });
+  await assert.rejects(f.s.open(), /Current-format graph unavailable/);
+  await assert.rejects(f.s.handle(save(node)), /current-format graph/);
   assert.ok(!f.calls.some(c => c.args[0] === 'update'));
 });
+test('fresh graph-invalid context is published and safe current-node writes remain available', async t => {
+  const f=fixture(t);await f.s.open();
+  f.change({...snapshot,valid:false});await f.s.refresh();
+  assert.equal(f.s.snapshot.valid,false);assert.equal(f.s.sourceInvalid,false);
+  await f.s.handle(save(node));
+  const write=f.calls.find(c=>c.args[0]==='update');assert.ok(write);
+  assert.deepEqual(write.args.slice(0,4),['update','node','--parents-json','[]']);
+  assert.ok(!f.messages.some(m=>m.type==='sync-error'));
+});
+
 test('authorization loss and historical selection block writes', async t => {
   const f = fixture(t); await f.s.open(); f.revoke();
   await assert.rejects(f.s.handle(save(node)), /authorization/);
@@ -301,18 +312,19 @@ test('polls do not pile up behind slow reads or refresh immutable historical tar
   assert.equal(f.calls.filter(isComparison).length, count);
   assert.ok(f.calls.some(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations'));
 });
-test('Delete previews a backend descendant plan and warns about partial uncommitted children before one confirmation', async t => {
-  const plan = { requested_ids: ['node'], deleted_ids: ['child', 'node'], nodes: [{id:'child',path:'_specspec/child.md'},{id:'node',path:node.path}], uncommitted:[{id:'child',path:'_specspec/child.md',status:'A '}], git_available:true,git_note:'' };
-  const warnings = [{ severity:'warning',node_id:'child',message:'Node child has uncommitted Git changes (A ); staging is not committing.' }];
+test('Delete previews exactly the selected file, retained dependency faults and selected-file warnings', async t => {
+  const plan = { requested_ids: ['node'], deleted_ids: ['node'], nodes: [{id:'node',path:node.path}], uncommitted:[{id:'node',path:node.path,status:'A '}], git_available:true,git_note:'', broken_references:[{parent:'node',child:'child'}], potentially_affected:['child'], graph_valid:false };
+  const warnings = [{ severity:'warning',node_id:'node',message:'Node node has uncommitted Git changes (A ); staging is not committing.' }];
   const f = fixture(t,{deletePlan:plan,deleteWarnings:warnings});await f.s.open();
   await f.s.handle({type:'delete',id:'node'});
   const calls=f.calls.filter(c=>c.args[0]==='delete');
   assert.deepEqual(calls.map(c=>c.args),[['delete','node','--dry-run','--json'],['delete','node','--yes','--reviewed-plan','-','--json']]);
   assert.deepEqual(JSON.parse(calls[1].input),plan);
-  assert.equal(f.confirmations.length,1);assert.match(f.confirmations[0],/ALL.*descendants.*2 Markdown/);
-  assert.match(f.confirmations[0],/shared with surviving parents/);assert.match(f.confirmations[0],/uncommitted.*child.*staging is not committing/s);
+  assert.equal(f.confirmations.length,1);assert.match(f.confirmations[0],/only this node.*1 Markdown/);
+  assert.match(f.confirmations[0],/Descendants and their parent declarations remain/);assert.match(f.confirmations[0],/uncommitted.*node.*staging is not committing/s);
+  assert.match(f.confirmations[0],/1 unresolved references.*1 potentially affected/);
 });
-test('Delete cancellation and a changed plan retain input and never silently retry an enlarged cascade', async t => {
+test('Delete cancellation and a changed plan retain input and never silently retry changed consequences', async t => {
   const no=fixture(t,{confirm:false});await no.s.open();await no.s.handle({type:'delete',id:'node'});
   assert.equal(no.messages.at(-1).type,'cancelled');
   assert.ok(no.calls.filter(c=>c.args[0]==='delete').every(c=>c.args.includes('--dry-run')));
@@ -424,7 +436,7 @@ test('spotlight selection validates known identity and flush confirms a reviewed
   await f.s.handle({ type: 'annotation-flush' });
   assert.match(f.confirmations[0], /both UIs.*Specification files, Git and recovery/s);
   const flush = f.calls.find(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotation-flush');
-  assert.deepEqual(JSON.parse(flush.input), { api_version: 6, op: 'annotation-flush', expected: [annotationShot.id] });
+  assert.deepEqual(JSON.parse(flush.input), { api_version: 7, op: 'annotation-flush', expected: [annotationShot.id] });
   assert.deepEqual(f.messages.at(-1), { type: 'annotations', shots: [] });
   assert.ok(!f.calls.some(c => ['update','delete','add'].includes(c.args[0])));
   const no = fixture(t, { shots: [annotationShot], confirm: false }); await no.s.open(); await no.s.handle({ type: 'annotation-flush' });

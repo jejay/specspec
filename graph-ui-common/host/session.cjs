@@ -68,7 +68,7 @@ class GraphSession {
         if (!this.hasOpened && !this.target && (this.host.initialGraph || this.reads)) {
           let initial;
           try { initial = await (this.host.initialGraph ? this.host.initialGraph() : this.reads.initial()); } catch (error) { this.log(error); }
-          if (initial?.snapshot?.valid) {
+          if (initial?.snapshot?.format_version === 7) {
             await this.display(initial, false, undefined, false, true);
             this.host.trace?.('first-working-render', Date.now() - start, initial.snapshot.nodes.length);
           }
@@ -149,7 +149,7 @@ class GraphSession {
     try {
       // Editors can truncate files or replace a whole directory while saving.
       for (let attempt = 0; ; attempt++) {
-        try { loaded = await this.readGraph(); if (!loaded.snapshot?.valid) throw new Error('Invalid specification graph.'); break; }
+        try { loaded = await this.readGraph(); if (loaded.snapshot?.format_version !== 7) throw new Error('Current-format graph unavailable; repair the manifesto in Markdown.'); break; }
         catch (error) {
           if (attempt >= 2 || this.disposed || !this.host.authorized()) throw error;
           await new Promise(resolve => { this.retryResolve = resolve; this.retryTimer = setTimeout(resolve, this.host.retryMs ?? (attempt + 1) * 200); });
@@ -185,7 +185,7 @@ class GraphSession {
   }
   async readAnnotations() {
     try {
-      const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotations' }));
+      const response = await this.cli(['api'], JSON.stringify({ api_version: 7, op: 'annotations' }));
       const shots = response.result?.shots;
       if (!Array.isArray(shots)) throw new Error('Spotlight response needs a valid list.');
       if (this.annotationInitial || !isDeepStrictEqual(shots, this.annotationShots) || this.annotationError) {
@@ -238,7 +238,7 @@ class GraphSession {
         isDeepStrictEqual(request.context, this.sourceContext(request.id));
       try {
         if (current()) {
-          const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'source-view', reference: request.reference,
+          const response = await this.cli(['api'], JSON.stringify({ api_version: 7, op: 'source-view', reference: request.reference,
             ...(request.context.ref ? { ref: request.context.ref } : {}) }));
           if (current()) await this.post({ type: 'source-preview', requestId: request.requestId, ...response.result });
         }
@@ -255,7 +255,8 @@ class GraphSession {
     if (automatic && !this.sourceInvalid && isDeepStrictEqual(payload, this.lastPayload)) return;
     this.sourceInvalid = false; this.lastPayload = payload; this.snapshot = loaded.snapshot;
     this.renderError = undefined; this.renderState = loaded;
-    this.expectedCount = new Set([...(loaded.diff?.base.nodes || []), ...loaded.snapshot.nodes].map(n => n.id)).size;
+    const records = [...(loaded.diff?.base.nodes || []), ...loaded.snapshot.nodes, ...(loaded.repair_forms || [])];
+    this.expectedCount = new Set(records.flatMap(n => [n.id, ...n.parents])).size;
     const renderToken = ++this.renderSequence;
     const initialId = this.host.document ? document.nodeId : undefined;
     this.hasOpened = true;
@@ -323,7 +324,7 @@ class GraphSession {
         if (!Array.isArray(message.nodes) || !message.nodes.length || message.nodes.length > 512 || message.nodes.some(id => typeof id !== 'string') || typeof message.message !== 'string' || !message.message.trim() || [...message.message].length > 500 || Buffer.byteLength(JSON.stringify(message.nodes), 'utf8') > 512 * 1024) throw new Error('Invalid or oversized highlight set/message.');
         await this.flushDocument();
         const documents = this.target ? {} : await this.host.annotationDocuments?.() || {};
-        await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-create', message: message.message, nodes: message.nodes,
+        await this.cli(['api'], JSON.stringify({ api_version: 7, op: 'annotation-create', message: message.message, nodes: message.nodes,
           ...(this.base !== 'HEAD' || this.target ? { base: this.lastPayload?.diff?.base_commit || this.base } : {}),
           ...(this.target ? { target: this.lastPayload?.diff?.target_commit || this.target } : { documents }) }));
         await this.refreshAnnotations();
@@ -337,7 +338,7 @@ class GraphSession {
       if (!expected.length) return;
       if (!await this.host.confirm(`Flush all ${expected.length} local spotlights? This affects both UIs for this checkout. Specification files, Git and recovery data are kept.`)) return;
       try {
-        await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'annotation-flush', expected }));
+        await this.cli(['api'], JSON.stringify({ api_version: 7, op: 'annotation-flush', expected }));
       } finally { await this.refreshAnnotations(); }
       return;
     }
@@ -350,7 +351,7 @@ class GraphSession {
       if (this.target || !this.snapshot.nodes.some(n => n.id === message.id) || this.sourceInvalid) throw new Error('Capture requires a live editable implementation.');
       if (this.host.document && message.id !== this.host.document.state().nodeId) throw new Error('Capture belongs to the bound node.');
       if (typeof message.path !== 'string' || message.path.length > 4096 || !Array.isArray(message.ranges) || message.ranges.length > 64 || message.ranges.some(r => typeof r !== 'string' || !/^\d+:\d+$/.test(r)) || !['strict', 'expanding'].includes(message.mode)) throw new Error('Invalid source capture parameters.');
-      const response = await this.cli(['api'], JSON.stringify({ api_version: 6, op: 'source-capture', id: message.id, path: message.path, ranges: message.ranges, mode: message.mode, staged: message.staged === true }));
+      const response = await this.cli(['api'], JSON.stringify({ api_version: 7, op: 'source-capture', id: message.id, path: message.path, ranges: message.ranges, mode: message.mode, staged: message.staged === true }));
       await this.post({ type: 'source-captured', id: message.id, reference: response.result.reference }); return;
     }
     if (this.host.document && message.type === 'delete') {
@@ -376,12 +377,12 @@ class GraphSession {
       case 'workspace': this.base = 'HEAD'; this.target = undefined; this.activeSpotlight = undefined; await this.post({ type: 'annotation-context' }); await this.refresh(); return;
     }
     if (this.target) throw new Error('Historical comparisons are read-only.');
-    if (!this.snapshot?.valid) throw new Error('Load a valid graph before editing.');
+    if (!this.snapshot || this.snapshot.format_version !== 7) throw new Error('Load current-format graph context before editing.');
     // Always validate actual current files, including changes whose watcher event was missed.
     let current;
     try {
       current = (await this.cli(['show', '--json'])).result;
-      if (!current?.valid) throw new Error('Invalid specification graph.');
+      if (current?.format_version !== 7) throw new Error('Current-format graph unavailable.');
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;
     const common = ['--json'];
@@ -391,8 +392,8 @@ class GraphSession {
     let args, input;
     if (message.type === 'save' || message.type === 'add') {
       if (typeof message.body !== 'string' || Buffer.byteLength(message.body, 'utf8') > 1024 * 1024) throw new Error('Invalid or oversized body.');
-      if (!Array.isArray(message.parents) || message.parents.some(p => typeof p !== 'string' || !nodes.has(p))) throw new Error('Invalid parent IDs.');
-      const parents = message.parents.flatMap(p => ['--parent', p]);
+      if (!Array.isArray(message.parents) || message.parents.some(p => typeof p !== 'string' || (!nodes.has(p) && !/^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$/.test(p)))) throw new Error('Invalid parent IDs.');
+      const parents = ['--parents-json', JSON.stringify(message.parents)];
       if (message.type === 'add') {
         if (!['requirement', 'implementation'].includes(message.nodeType)) throw new Error('Invalid new-node form.');
         args = ['add', '--type', message.nodeType, ...parents, '--body', '-'];
@@ -408,9 +409,9 @@ class GraphSession {
       if (nodes.get(id).type === 'manifesto') throw new Error('Keep the manifesto as the graph root.');
       const preview = await this.cli(['delete', id, '--dry-run', '--json']);
       const plan = preview.result;
-      if (!Array.isArray(plan?.deleted_ids) || !plan.deleted_ids.includes(id)) throw new Error('Deletion plan needs a complete descendant list.');
+      if (!Array.isArray(plan?.deleted_ids) || plan.deleted_ids.length !== 1 || plan.deleted_ids[0] !== id) throw new Error('Deletion plan must contain exactly the selected node.');
       const warnings = (preview.diagnostics || []).filter(d => d.severity === 'warning').map(d => d.message);
-      const text = `Delete this node and ALL its descendants (${plan.deleted_ids.length} Markdown files)? Children shared with surviving parents are also deleted. Outside parents/unrelated branches remain. The HEAD-relative workspace shows committed nodes as D until you commit; explain why in that commit.${warnings.length ? '\n\nWARNING — uncommitted nodes / unavailable Git assessment:\n' + warnings.join('\n') : ''}`;
+      const text = `Delete only this node (${plan.deleted_ids.length} Markdown file)? Descendants and their parent declarations remain. ${plan.broken_references?.length || 0} unresolved references; ${plan.potentially_affected?.length || 0} potentially affected surviving nodes. The result ${plan.graph_valid ? 'is structurally valid' : 'needs structural repair'}. HEAD shows committed deletions as D until commit; earlier text remains historical context.${warnings.length ? '\n\nWARNING — uncommitted selected files / unavailable Git assessment:\n' + warnings.join('\n') : ''}`;
       if (!await this.host.confirm(text)) { await this.post({ type: 'cancelled' }); return; }
       args = ['delete', id, '--yes', '--reviewed-plan', '-'];
       input = JSON.stringify(plan);

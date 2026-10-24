@@ -11,11 +11,11 @@ sources:
 - path: history/cli.jsonl
 - path: history/revisions.json
 - path: history/verify.py
-  blob: 1837eb9b2ddc9571e4451ac60a9437cb1b7a24b1
+  blob: 86e4e039e3cb8b617d6a858f440f2c18bc9f6919
   mode: expanding
   ranges:
   - - 1
-    - 351
+    - 350
 ---
 # Map the specification workflow to actual Git and CLI artifacts
 

@@ -16,8 +16,8 @@ project disposal and working-first startup followed by explicit comparison adopt
 Ongoing full refreshes use one comparison request rather than export plus diff.
 
 Keep the first working phase explicitly provisional; preserve later input, camera,
-focus, drafts and render membership acknowledgements. Current-file failures retain
-marked last-valid context; comparison failures leave usable current context with a
+focus, drafts and render membership acknowledgements. Graph-invalid files display fresh diagnosable context; unavailable current-file
+reads retain marked last-usable context; comparison failures leave usable current context with a
 clear unavailable note. Watch events remain hints and explicit refresh is current.
 Project switches dispose caches and reject stale generations/text versions.
 

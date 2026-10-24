@@ -33,7 +33,7 @@ test('saved-file Electron reads use the same optional-overlay coordinator, hints
  }});
  const first=await coordinator.readGraph('HEAD');
  assert.deepEqual(calls[0].args,['api']);assert.deepEqual(calls[0].value.documents,{});
- assert.equal(calls[0].value.api_version,6);assert.equal(calls[0].value.op,'read');
+ assert.equal(calls[0].value.api_version,7);assert.equal(calls[0].value.op,'read');
  assert.equal(first.base_cache,undefined);
  await coordinator.readGraph('HEAD');assert.equal(calls.length,2);assert.ok(calls[1].value.base_cache);
  coordinator.changed();await coordinator.readGraph('HEAD');assert.equal(calls.length,3);

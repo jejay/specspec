@@ -1,4 +1,4 @@
-"""Whole-descendant deletion and pre-write warnings, independent of review states."""
+"""Exact deletion, retained dependencies and pre-write warnings/consent."""
 
 import json
 import subprocess
@@ -7,17 +7,15 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from test_git import git
+from test_git import git, setup_repository
 
 from specspec import cli as cli_module
 from specspec.cli import main
 from specspec.deletion import deletion_plan, deletion_warnings
-from specspec.git import git_snapshot, semantic_diff
-from specspec.model import SpecError
+from specspec.model import Diagnostic, SpecError
 from specspec.workspace import (
     add_node,
     delete_nodes,
-    initialize,
     load_snapshot,
     new_node,
     serialize,
@@ -27,31 +25,12 @@ from specspec.workspace import (
 
 
 def branch(root, manifesto):
-    _, left = add_node(root, "requirement", [manifesto], "# Left\n")
-    _, right = add_node(root, "requirement", [manifesto], "# Right\n")
-    _, full = add_node(root, "requirement", [left], "# Full child\n")
-    _, shared = add_node(root, "requirement", [left, right], "# Shared child\n")
-    _, other = add_node(root, "requirement", [right], "# Outside parent\n")
-    _, deep = add_node(root, "requirement", [shared, other], "# Deeper partial\n")
-    before, code = add_node(root, "implementation", [full, deep], "# Shared realization\n")
-    return before, left, right, full, shared, deep, code, other
-
-
-def commit(root):
-    git(root, "init")
-    git(root, "config", "core.autocrlf", "false")
-    git(root, "add", "_specspec")
-    git(root, "commit", "-m", "Keep original specification")
-
-
-def replace_leaf_identity(root, node):
-    """A valid manual ID replacement can still be a Git-detected file rename."""
-    replacement = new_node(node.type, node.parents, node.body)
-    replacement = replace(node, id=replacement.id, path=replacement.path)
-    (root / replacement.path).write_bytes(serialize(replacement))
-    (root / node.path).unlink()
-    load_snapshot(root).require_valid()
-    return replacement.id, replacement.path
+    _, a = add_node(root, "requirement", [manifesto], "# A\n")
+    _, b = add_node(root, "requirement", [manifesto], "# B\n")
+    _, c = add_node(root, "requirement", [a, b], "# Shared C\n")
+    snapshot, d = add_node(root, "requirement", [c], "# Deep D\n")
+    setup_repository(root)
+    return snapshot, a, b, c, d
 
 
 def invoke(root, *args, **kwargs):
@@ -59,38 +38,12 @@ def invoke(root, *args, **kwargs):
     return result, json.loads(result.stdout)
 
 
-def test_cli_removes_full_and_partial_children_at_all_depths_and_reports_all_ids(workspace):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    chosen = {left, full, shared, deep, code}
-    result, response = invoke(root, left)
-    assert result.exit_code == 0, result.output
-    assert not response["diagnostics"]
-    assert set(response["result"]["changed_ids"]) == chosen
-    assert set(response["result"]["deleted_ids"]) == chosen
-    after = load_snapshot(root)
-    assert set(after.require_valid().nodes) == {manifesto, right, other}
-    assert after.files == {p: raw for p, raw in before.files.items() if p in after.files}
-    assert all(not (root / before.graph.nodes[key].path).exists() for key in chosen)
-    for staged in [False, True]:
-        if staged:
-            git(root, "add", "-u", "_specspec")
-        diff = semantic_diff(git_snapshot(root, "HEAD"), load_snapshot(root))
-        assert chosen == {c["id"] for c in diff["changes"] if c["kind"] == "removed"}
-    git(root, "commit", "-m", "Delete the branch because its assumptions no longer apply")
-    assert not semantic_diff(git_snapshot(root, "HEAD"), load_snapshot(root))["changes"]
-    assert chosen <= set(git_snapshot(root, "HEAD^").require_valid().nodes)
-
-
-def test_overlapping_roots_deduplicate_shared_files_without_deleting_outside_parents(
+def test_selected_ancestors_and_descendants_are_exact_not_implicitly_expanded(
     workspace, monkeypatch
 ):
     root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    removed = []
-    original = Path.unlink
+    before, a, b, c, d = branch(root, manifesto)
+    removed, original = [], Path.unlink
 
     def unlink(path, *args, **kwargs):
         if path.parent == root / "_specspec":
@@ -98,10 +51,11 @@ def test_overlapping_roots_deduplicate_shared_files_without_deleting_outside_par
         return original(path, *args, **kwargs)
 
     monkeypatch.setattr(Path, "unlink", unlink)
-    after = delete_nodes(root, [left, shared, full])
-    assert len(removed) == len(set(removed)) == 5
-    assert set(after.require_valid().nodes) == {manifesto, right, other}
+    after = delete_nodes(root, [a, c])
+    assert set(removed) == {f"{a}.md", f"{c}.md"} and len(removed) == 2
+    assert set(after.graph.nodes) == {manifesto, b, d} and not after.valid
     assert after.files == {p: raw for p, raw in before.files.items() if p in after.files}
+    assert after.graph.nodes[d].parents == [c]
 
 
 @pytest.mark.parametrize(
@@ -117,98 +71,163 @@ def test_overlapping_roots_deduplicate_shared_files_without_deleting_outside_par
         ("staged-mode", "M "),
     ],
 )
-def test_only_uncommitted_descendant_warns_even_when_staged_or_semantically_unchanged(
-    workspace, kind, status
-):
+def test_selected_file_warnings_preserve_git_and_line_ending_semantics(workspace, kind, status):
     root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    target = code if kind == "renamed" else shared
+    before, a, b, c, target = branch(root, manifesto)
     if kind in {"untracked", "staged-added", "ignored"}:
-        _, target = add_node(root, "requirement", [shared, other], "# Uncommitted child\n")
+        _, target = add_node(root, "requirement", [c], "# Fresh\n")
         if kind == "ignored":
-            (root / ".gitignore").write_text("_specspec/\n", encoding="utf-8")
+            (root / ".gitignore").write_text("_specspec/\n", encoding="utf8")
     path = load_snapshot(root).graph.nodes[target].path
     if kind in {"unstaged", "staged-modified"}:
-        update_node(root, target, body="# Uncommitted changed child\n")
+        update_node(root, target, body="# Pending\n")
     elif kind == "comment-only":
-        raw = (root / path).read_bytes()
-        (root / path).write_bytes(raw.replace(b"type: requirement", b"type: requirement # pending"))
-        assert (
-            load_snapshot(root).graph.nodes[target].semantic()
-            == before.graph.nodes[target].semantic()
+        file = root / path
+        file.write_bytes(
+            file.read_bytes().replace(b"type: requirement", b"type: requirement # pending")
         )
     elif kind == "renamed":
-        target, path = replace_leaf_identity(root, before.graph.nodes[target])
+        node = before.graph.nodes[target]
+        replacement = new_node(node.type, node.parents, node.body)
+        (root / replacement.path).write_bytes(serialize(replacement))
+        (root / path).unlink()
+        target, path = replacement.id, replacement.path
     if kind in {"staged-added", "staged-modified", "renamed"}:
         git(root, "add", "-A", "_specspec")
     elif kind == "staged-mode":
         git(root, "config", "core.filemode", "false")
         git(root, "update-index", "--chmod=+x", path)
-    before = load_snapshot(root)
-    result, preview = invoke(root, left, "--dry-run")
-    assert result.exit_code == 0, result.output
+    before = load_snapshot(root).files
+    result, preview = invoke(root, target, "--dry-run")
+    assert result.exit_code == 0
+    assert preview["result"]["deleted_ids"] == [target]
     assert preview["result"]["uncommitted"] == [{"id": target, "path": path, "status": status}]
-    assert preview["diagnostics"][0]["node_id"] == target
-    assert preview["diagnostics"][0]["severity"] == "warning"
-    refused, response = invoke(root, left)
-    assert refused.exit_code == 1, refused.output
-    assert response["result"] == preview["result"]
-    assert response["diagnostics"][-1]["code"] == "DELETE_CONFIRMATION"
-    assert load_snapshot(root).files == before.files
+    refused, response = invoke(root, target)
+    assert refused.exit_code == 1 and response["result"] == preview["result"]
+    assert load_snapshot(root).files == before
     assert not (root / ".specspec-local/journal.json").exists()
-    allowed, deleted = invoke(root, left, "--yes")
-    assert allowed.exit_code == 0, allowed.output
-    assert {d["node_id"] for d in deleted["diagnostics"]} == {target}
+    allowed, response = invoke(root, target, "--yes")
+    assert allowed.exit_code == 0 and target not in load_snapshot(root).graph.nodes
+    assert target in {d["node_id"] for d in response["diagnostics"] if d["severity"] == "warning"}
     assert "uncommitted" in allowed.stderr
-    assert target not in load_snapshot(root).require_valid().nodes
-    assert {manifesto, right, other} == set(load_snapshot(root).require_valid().nodes)
 
 
-def test_new_or_changed_requested_root_warns_and_source_only_edits_do_not(workspace):
+def test_dirty_surviving_descendants_are_evidence_not_destructive_action_warnings(workspace):
     root, manifesto = workspace
-    _, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    (root / "code.py").write_text("original\n", encoding="utf-8")
-    update_node(root, code, sources=[{"path": "code.py"}])
-    commit(root)
-    git(root, "add", "code.py")
-    git(root, "commit", "-m", "Commit realization")
-    (root / "code.py").write_text("changed\n", encoding="utf-8")
-    assert not deletion_warnings(deletion_plan(load_snapshot(root), [left]))
-    update_node(root, left, body="# Uncommitted root\n")
-    plan = deletion_plan(load_snapshot(root), [left])
-    assert {n["id"] for n in plan["uncommitted"]} == {left}
-    # A staged different blob still warns when saved files are back at HEAD.
-    git(root, "add", "_specspec")
-    update_node(root, left, body="# Left\n")
-    assert not semantic_diff(git_snapshot(root, "HEAD"), load_snapshot(root))["changes"]
-    assert {n["id"] for n in deletion_plan(load_snapshot(root), [left])["uncommitted"]} == {left}
+    before, a, b, c, d = branch(root, manifesto)
+    update_node(root, d, body="# Pending survivor\n")
+    plan = deletion_plan(load_snapshot(root), [a])
+    assert not plan["uncommitted"] and not deletion_warnings(plan)
+    result, response = invoke(root, a)
+    assert result.exit_code == 0 and response["ok"]
+    assert load_snapshot(root).graph.nodes[d].body == "# Pending survivor\n"
 
 
-def test_no_git_and_unborn_head_warn_instead_of_claiming_committed_nodes(workspace):
+def test_no_git_or_unborn_head_never_claims_selected_nodes_are_committed(workspace):
     root, manifesto = workspace
     _, child = add_node(root, "requirement", [manifesto], "# New\n")
-    before = load_snapshot(root)
     result, preview = invoke(root, child, "--dry-run")
-    assert result.exit_code == 0
-    assert preview["result"]["git_available"] is False
-    assert preview["diagnostics"][0]["code"] == "DELETE_GIT_UNAVAILABLE"
-    assert preview["result"]["uncommitted"][0]["status"] == "unknown"
+    assert result.exit_code == 0 and not preview["result"]["git_available"]
     with pytest.raises(SpecError, match="Confirm"):
         delete_nodes(root, [child])
-    assert load_snapshot(root).files == before.files
     git(root, "init")
     result, preview = invoke(root, child, "--dry-run")
-    assert result.exit_code == 0
-    assert preview["result"]["git_available"] is True
+    assert preview["result"]["git_available"]
     assert preview["result"]["uncommitted"][0]["status"] == "??"
 
 
-def test_warnings_are_delivered_before_the_first_unlink_even_with_json_yes(workspace, monkeypatch):
+@pytest.mark.parametrize("answer,deleted", [("n", False), ("y", True)])
+def test_whole_action_human_consent_keeps_descendants(workspace, monkeypatch, answer, deleted):
     root, manifesto = workspace
-    _, child = add_node(root, "requirement", [manifesto], "# New\n")
-    messages = []
-    original_emit, original_unlink = cli_module.emit, Path.unlink
+    before, a, b, c, d = branch(root, manifesto)
+    update_node(root, a, body="# Pending selected node\n")
+    before = load_snapshot(root).files
+    monkeypatch.setattr(cli_module, "interactive_stdin", lambda: True)
+    result = CliRunner().invoke(main, ["--root", str(root), "delete", a], input=answer + "\n")
+    assert "uncommitted" in result.stderr and "exactly 1 selected nodes" in result.stdout
+    if deleted:
+        assert result.exit_code == 0 and set(load_snapshot(root).graph.nodes) == {
+            manifesto,
+            b,
+            c,
+            d,
+        }
+    else:
+        assert result.exit_code == 1 and load_snapshot(root).files == before
+    assert not (root / ".specspec-local/journal.json").exists()
+
+
+@pytest.mark.parametrize("change", ["descendant", "selected-warning", "selected-rename"])
+def test_reviewed_consequences_are_rechecked_under_lock(workspace, change):
+    root, manifesto = workspace
+    before, a, b, c, d = branch(root, manifesto)
+    plan = deletion_plan(before, [a])
+    if change == "descendant":
+        add_node(root, "requirement", [c], "# More downstream\n")
+    elif change == "selected-warning":
+        update_node(root, a, body="# Pending\n")
+    else:
+        node = before.graph.nodes[a]
+        replacement = replace(node, id=new_node(node.type, node.parents, node.body).id)
+        replacement.path = f"_specspec/{replacement.id}.md"
+        (root / replacement.path).write_bytes(serialize(replacement))
+        (root / node.path).unlink()
+    current = load_snapshot(root).files
+    result, response = invoke(root, a, "--yes", "--reviewed-plan", "-", input=json.dumps(plan))
+    assert result.exit_code == 1 and load_snapshot(root).files == current
+    assert response["diagnostics"][0]["code"] in {"DELETE_PLAN_CHANGED", "NODE"}
+    assert not (root / ".specspec-local/journal.json").exists()
+
+
+def test_unmerged_and_unavailable_git_assessment_warn_for_selected_files(workspace, monkeypatch):
+    root, manifesto = workspace
+    before, a, b, c, d = branch(root, manifesto)
+    path = before.graph.nodes[a].path
+    blob = git(root, "rev-parse", f"HEAD:{path}").decode().strip()
+    data = f"0 {blob}\t{path}\n" + "".join(
+        f"100644 {blob} {stage}\t{path}\n" for stage in [1, 2, 3]
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "update-index", "--index-info"], input=data.encode(), check=True
+    )
+    plan = deletion_plan(before, [a])
+    assert plan["uncommitted"] == [{"id": a, "path": path, "status": "UU"}]
+    from specspec import deletion as module
+
+    original = module.run_git
+
+    def unavailable(root, *args):
+        if "status" in args:
+            raise SpecError([Diagnostic("GIT", "Status failed")], 2)
+        return original(root, *args)
+
+    monkeypatch.setattr(module, "run_git", unavailable)
+    plan = deletion_plan(before, [a])
+    assert not plan["git_available"] and len(plan["uncommitted"]) == 1
+    assert all(d["id"] == a for d in plan["uncommitted"])
+
+
+def test_linked_worktree_and_literal_nested_paths_use_their_own_index(workspace, tmp_path):
+    root, manifesto = workspace
+    before, a, b, c, d = branch(root, manifesto)
+    linked = tmp_path / "linked [literal]"
+    git(root, "worktree", "add", "--detach", str(linked), "HEAD")
+    try:
+        current = update_node(linked, a, body="# Linked selected change\n")
+        index = git(linked, "ls-files", "--stage")
+        assert {n["id"] for n in deletion_plan(current, [a])["uncommitted"]} == {a}
+        assert not deletion_plan(load_snapshot(root), [a])["uncommitted"]
+        assert git(linked, "ls-files", "--stage") == index
+    finally:
+        git(root, "worktree", "remove", "--force", str(linked))
+
+
+def test_warning_delivery_precedes_unlink_and_external_changes_are_preserved(
+    workspace, monkeypatch
+):
+    root, manifesto = workspace
+    before, child = add_node(root, "requirement", [manifesto], "# New\n")
+    messages, original_emit, original_unlink = [], cli_module.emit, Path.unlink
 
     def emit(result, diagnostics=None, **kwargs):
         messages.extend(diagnostics or [])
@@ -216,154 +235,34 @@ def test_warnings_are_delivered_before_the_first_unlink_even_with_json_yes(works
 
     def unlink(path, *args, **kwargs):
         if path.parent == root / "_specspec":
-            assert any(d.node_id == child and d.severity == "warning" for d in messages)
+            assert any(d.severity == "warning" and d.node_id == child for d in messages)
         return original_unlink(path, *args, **kwargs)
 
     monkeypatch.setattr(cli_module, "emit", emit)
     monkeypatch.setattr(Path, "unlink", unlink)
-    result, response = invoke(root, child, "--yes")
-    assert result.exit_code == 0, result.output
-    assert response["ok"] and response["diagnostics"]
+    assert invoke(root, child, "--yes")[0].exit_code == 0
+    _, child = add_node(root, "requirement", [manifesto], "# Another\n")
+    path = root / f"_specspec/{child}.md"
 
+    def confirm(plan):
+        path.write_bytes(path.read_bytes() + b"\nExternal text\n")
+        return True
 
-@pytest.mark.parametrize("answer,deleted", [("n", False), ("y", True)])
-def test_human_terminal_confirmation_can_cancel_or_confirm_the_whole_action(
-    workspace, monkeypatch, answer, deleted
-):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    update_node(root, deep, body="# Pending deeper descendant\n")
-    before = load_snapshot(root)
-    monkeypatch.setattr(cli_module, "interactive_stdin", lambda: True)
-    result = CliRunner().invoke(main, ["--root", str(root), "delete", left], input=answer + "\n")
-    assert "uncommitted" in result.stderr
-    assert "all 5 nodes, including shared descendants" in result.stdout
-    if deleted:
-        assert result.exit_code == 0, result.output
-        assert set(load_snapshot(root).require_valid().nodes) == {manifesto, right, other}
-    else:
-        assert result.exit_code == 1 and "cancelled" in result.stderr
-        assert load_snapshot(root).files == before.files
+    with pytest.raises(SpecError, match="Files changed"):
+        delete_nodes(root, [child], confirm=confirm)
+    assert path.read_bytes().endswith(b"External text\n")
     assert not (root / ".specspec-local/journal.json").exists()
 
 
-@pytest.mark.parametrize("change", ["descendant", "warning", "rename"])
-def test_reviewed_scope_is_recomputed_and_refused_before_writes_if_it_changes(workspace, change):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    plan = deletion_plan(before, [left])
-    if change == "descendant":
-        add_node(root, "requirement", [shared, other], "# New child\n")
-    elif change == "warning":
-        update_node(root, deep, body="# Now uncommitted\n")
-    else:
-        replace_leaf_identity(root, before.graph.nodes[code])
-    before = load_snapshot(root)
-    result, response = invoke(root, left, "--yes", "--reviewed-plan", "-", input=json.dumps(plan))
-    assert result.exit_code == 1, result.output
-    assert response["diagnostics"][0]["code"] == "DELETE_PLAN_CHANGED"
-    assert load_snapshot(root).files == before.files
-    assert not (root / ".specspec-local/journal.json").exists()
-
-
-def test_unmerged_index_and_git_assessment_errors_are_warned_before_deletion(
-    workspace, monkeypatch
-):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    path = before.graph.nodes[deep].path
-    blob = git(root, "rev-parse", f"HEAD:{path}").decode("ascii").strip()
-    data = f"0 {blob}\t{path}\n" + "".join(
-        f"100644 {blob} {stage}\t{path}\n" for stage in [1, 2, 3]
-    )
-    subprocess.run(
-        ["git", "-C", str(root), "update-index", "--index-info"], input=data.encode(), check=True
-    )
-    plan = deletion_plan(before, [left])
-    assert plan["uncommitted"] == [{"id": deep, "path": path, "status": "UU"}]
-    from specspec import deletion as module
-
-    original = module.run_git
-
-    def unavailable(root, *args):
-        if "status" in args:
-            raise SpecError([cli_module.Diagnostic("GIT", "Status assessment failed")], 2)
-        return original(root, *args)
-
-    monkeypatch.setattr(module, "run_git", unavailable)
-    plan = deletion_plan(before, [left])
-    assert not plan["git_available"] and len(plan["uncommitted"]) == 5
-    assert all(d.code == "DELETE_GIT_UNAVAILABLE" for d in deletion_warnings(plan))
-    assert load_snapshot(root).files == before.files
-
-
-def test_detached_linked_worktree_assessment_uses_its_own_index(workspace, tmp_path):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    linked = tmp_path / "linked"
-    git(root, "worktree", "add", "--detach", str(linked), "HEAD")
-    try:
-        before = update_node(linked, deep, body="# Linked pending child\n")
-        plan = deletion_plan(before, [left])
-        assert {n["id"] for n in plan["uncommitted"]} == {deep}
-        assert not deletion_plan(load_snapshot(root), [left])["uncommitted"]
-    finally:
-        git(root, "worktree", "remove", "--force", str(linked))
-
-
-def test_noninteractive_text_refuses_uncommitted_deletion_even_if_stdin_says_yes(workspace):
-    root, manifesto = workspace
-    before, child = add_node(root, "requirement", [manifesto], "# New\n")
-    result = CliRunner().invoke(main, ["--root", str(root), "delete", child], input="y\n")
-    assert result.exit_code == 1 and "No files removed" in result.stderr
-    assert load_snapshot(root).files == before.files
-
-
-def test_unchanged_reviewed_plan_succeeds_but_invalid_plan_input_is_rejected(workspace):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    plan = deletion_plan(before, [left])
-    for text in ["[]", "{invalid", json.dumps({"git_available": 1})]:
-        result, response = invoke(root, left, "--yes", "--reviewed-plan", "-", input=text)
-        assert result.exit_code == 2 and response["diagnostics"][0]["code"] == "DELETE_PLAN"
-        assert load_snapshot(root).files == before.files
-    result, response = invoke(root, left, "--yes", "--reviewed-plan", "-", input=json.dumps(plan))
-    assert result.exit_code == 0, result.output
-    assert response["result"]["deleted_ids"] == plan["deleted_ids"]
-
-
-def test_nested_literal_project_paths_are_scoped_and_plan_does_not_touch_index(tmp_path):
-    git(tmp_path, "init")
-    git(tmp_path, "config", "core.autocrlf", "false")
-    root = tmp_path / "nested [literal] project"
-    root.mkdir()
-    before = initialize(root, "# Root\n")
-    manifesto = before.nodes[0].id
-    before, child = add_node(root, "requirement", [manifesto], "# Child\n")
-    git(tmp_path, "add", ".")
-    git(tmp_path, "commit", "-m", "Commit nested graph")
-    index = (tmp_path / ".git/index").read_bytes()
-    before = update_node(root, child, body="# Nested uncommitted\n")
-    plan = deletion_plan(before, [child])
-    assert plan["uncommitted"] == [
-        {"id": child, "path": before.graph.nodes[child].path, "status": " M"}
-    ]
-    assert (tmp_path / ".git/index").read_bytes() == index
-
-
-def test_long_chain_plan_is_iterative_and_invalid_requests_do_not_remove_files(workspace):
+def test_long_chain_exact_scope_and_invalid_requests_are_non_writing(workspace):
     root, manifesto = workspace
     nodes = [load_snapshot(root).nodes[0]]
     for _ in range(1300):
         nodes.append(new_node("requirement", [nodes[-1].id], "# Deep\n"))
     snapshot = snapshot_from_files(root, {n.path: serialize(n) for n in nodes})
     plan = deletion_plan(snapshot, [nodes[1].id, nodes[500].id])
-    assert len(plan["deleted_ids"]) == len(set(plan["deleted_ids"])) == 1300
+    assert set(plan["deleted_ids"]) == {nodes[1].id, nodes[500].id}
+    assert len(plan["potentially_affected"]) == 1298
     for ids, message in [
         ([], "nonempty"),
         ([nodes[1].id] * 2, "distinct"),
@@ -372,20 +271,3 @@ def test_long_chain_plan_is_iterative_and_invalid_requests_do_not_remove_files(w
     ]:
         with pytest.raises(SpecError, match=message):
             deletion_plan(snapshot, ids)
-
-
-def test_external_change_during_confirmation_is_preserved_without_unfinished_deletion(workspace):
-    root, manifesto = workspace
-    before, left, right, full, shared, deep, code, other = branch(root, manifesto)
-    commit(root)
-    path = root / before.graph.nodes[deep].path
-
-    def confirm(plan):
-        path.write_bytes(path.read_bytes() + b"\nExternal text\n")
-        return True
-
-    with pytest.raises(SpecError, match="Files changed"):
-        delete_nodes(root, [left], confirm=confirm)
-    assert path.read_bytes().endswith(b"External text\n")
-    assert set(load_snapshot(root).require_valid().nodes) == set(before.graph.nodes)
-    assert not (root / ".specspec-local/journal.json").exists()

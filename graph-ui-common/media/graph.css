@@ -69,6 +69,8 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.requirement { border-radius: 24px; }
 .card.implementation { border-radius: 0px; }
 .card.removed { border-style: dashed; }
+.card.missing { border-style: dashed; border-radius: 7px; }
+path.unresolved { stroke-dasharray: 3 4; }
 .card.source-changed { border-bottom-style: dotted; }
 /* Change this one ink to experiment with spotlight/highlight colors in both hosts. */
 :root { --spotlight-color: #ffffff; }

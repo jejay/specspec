@@ -1,6 +1,6 @@
 # Graph loading, derived caches and diagnostics
 
-Both hosts first display a validated working graph with **HEAD comparison loading**
+Both hosts first display a current diagnosable working graph with **HEAD comparison loading**
 explicitly marked, then adopt the fresh HEAD/source comparison. VS Code native bootstrap
 supplies that first snapshot when its actual document/generation stamp still matches.
 Historical panels load their selected comparison directly. Provisional project
@@ -8,8 +8,8 @@ mutations/deletion/source capture stay disabled in the form; native input retain
 its normal planner and save owner. Camera/focus/caret and drafts remain view-local.
 
 A comparison failure becomes an explicit unavailable note on the current working
-context. A current-file/overlay failure retains marked last-valid context and its
-existing repair/mutation restrictions. Ready/render sequence and full-membership
+context. A graph-invalid read publishes fresh broken relationships and diagnostics;
+unavailable current-file/schema/transport loads retain marked last-usable context. Ready/render sequence and full-membership
 acknowledgements still apply. This is useful context before comparison completion,
 not permission to treat provisional Git information as complete.
 
@@ -46,11 +46,11 @@ watch notification arrived. Failed/changed/closed reads are not adopted as curre
 `SupersededReadError` distinguishes generation/text races from invalid files and
 closed projects. Each refresh makes bounded attempts; exhausted automatic attempts
 coalesce a fresh event-driven refresh while retaining presentation/action state.
-Explicit working reads report retry and schedule a follow-up. Actual invalid reads
-still enter the marked last-valid repair state. Disposal cancels pending work;
+Explicit working reads report retry and schedule a follow-up. Graph-invalid current
+reads remain inspectable/editable; unavailable loads enter the marked stale state. Disposal cancels pending work;
 this retry path introduces neither recurring polling nor longer operation deadlines.
 
-An optional API-6 application `read` with `cache: true` returns bounded `base_cache` byte hints, held
+An optional API-7 application `read` with `cache: true` returns bounded `base_cache` byte hints, held
 only in project memory and removed before sending display data to the renderer.
 They contain a resolved commit and at most 2 MiB of canonical Git file text. A later
 read may send those hints; Python freshly resolves the ref and lists current entries,
@@ -66,7 +66,7 @@ lock, replan reviewed deletion scope/warnings and compare original bytes. Exact-
 checks still assess exact staged objects. Caches do not authorize mutations. Polling
 remains default-off; notifications are hints, with explicit Refresh available.
 
-API 6 transports a single target snapshot plus previous records only for changed/
+API 7 transports a single target snapshot plus previous records only for changed/
 deleted nodes. The shared adapter reconstructs complete revision structures for the
 renderer; normal refreshes no longer run export followed by diff. Historical reads
 bypass workspace buffers. Native plans and managed writes retain separate owners.
@@ -76,7 +76,7 @@ See [command/protocol details](cli.md).
 
 The hosts reuse two bounded Python processes per project/executable configuration:
 one for application requests and one for read-only source previews. Both warm on
-the first authorized API call. `api --stream` accepts newline-delimited API-6 JSON
+the first authorized API call. `api --stream` accepts newline-delimited API-7 JSON
 and returns one ordinary envelope per frame. The one-shot CLI remains available.
 Each frame still validates current files, locks/journals, native text and Git state.
 Only interpreter lifetime and bounded derived caches persist between requests.

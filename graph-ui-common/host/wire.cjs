@@ -1,4 +1,4 @@
-/* API 6 normalization. Complete revision graphs remain separate from display unions. */
+/* API 7 normalization. Complete revision graphs remain separate from display unions. */
 function snapshot(value) {
   if (!value || !Array.isArray(value.nodes) || typeof value.valid !== 'boolean') throw new Error('Malformed graph snapshot.');
   return { ...value, edges: value.nodes.flatMap(n => {
@@ -9,7 +9,7 @@ function snapshot(value) {
 function comparison(value, current) {
   const target = snapshot(current || value.target);
   if (!Array.isArray(value.before) || !Array.isArray(value.changes)) throw new Error('Malformed compact comparison.');
-  const added = new Set(value.changes.filter(c => c.kind === 'added').map(c => c.id));
+  const added = new Set(value.changes.filter(c => c.kind === 'added' || c.base_available === false).map(c => c.id));
   const previous = new Map(value.before.map(n => [n.id, n]));
   const base = new Map(target.nodes.filter(n => !added.has(n.id)).map(n => [n.id, n]));
   for (const [id, node] of previous) base.set(id, node);

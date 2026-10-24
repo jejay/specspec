@@ -17,7 +17,7 @@ reading. A root without criteria still selects its whole reachable subgraph befo
 completion. The unfiltered complete comparison already includes every ancestor.
 Empty matches acquire no ancestors or surrounding identities.
 
-Complete the same selected-record DAG that query reads: target records/parents for
+Complete the same selected-record projection that query reads: target records/parents for
 current nodes and base records/parents for deleted nodes. This supplies every chosen
 record's displayed parent path. Historical justification at a particular revision
 uses explicit version selection; current readings retain target text for surviving
@@ -44,4 +44,4 @@ newline, including terminal escaping or the JSON envelope. Format once and fail
 before emitting a partial result when the chosen representation exceeds the budget.
 The sole ancestor-reading interface is query; everyday verbs are init, show, query,
 add, update, delete, check and diff. Guides, checks and actual retained example
-receipts use that current interface. Node format is 7 and application API remains 6.
+receipts use that current interface. Node format is 7 and application API is 7.

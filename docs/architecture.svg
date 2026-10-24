@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1930" viewBox="0 0 1840 1930" role="img" aria-labelledby="architecture-title architecture-description">
   <title id="architecture-title">SpecSpec architecture: one graph, human and agent workflows</title>
-  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the SpecSpec CLI. Their conversation takes place outside SpecSpec; built-in agent connectors are future work. The unprivileged renderer sends SpecSpecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and API 6 JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in _specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
-  <metadata>Current shortcut-free node format 7 / API 6 implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: _specspec/ and docs/own-spec.md.</metadata>
+  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the SpecSpec CLI. Their conversation takes place outside SpecSpec; built-in agent connectors are future work. The unprivileged renderer sends SpecSpecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and API 7 JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in _specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
+  <metadata>Current shortcut-free node format 7 / API 7 implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: _specspec/ and docs/own-spec.md.</metadata>
   <defs>
     <style>
       text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
@@ -38,7 +38,7 @@
     <text x="64" y="132" class="title">One graph, two ways in.</text>
     <text x="64" y="176" class="subtitle">A visual workspace for the owner. A CLI for the coding agent. Shared rules beneath both.</text>
     <rect x="1496" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
-    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · FORMAT 7 / API 6</text>
+    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · FORMAT 7 / API 7</text>
     <path d="M1572 140H1618" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
     <path d="M1644 140H1690" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
     <path d="M1716 140H1762" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
@@ -117,11 +117,11 @@
       <text x="340" y="848" class="small">show · diff · sources · add · update · delete · check</text>
     </g>
 
-    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; API 6 JSON, records and diagnostics come back">
+    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; API 7 JSON, records and diagnostics come back">
       <path d="M940 610H1104" class="request"/>
       <text x="1022" y="589" text-anchor="middle" class="label purple">argv + stdin</text>
       <path d="M1104 646H940" class="response"/>
-      <text x="1022" y="674" text-anchor="middle" class="label teal">API 6 JSON</text>
+      <text x="1022" y="674" text-anchor="middle" class="label teal">API 7 JSON</text>
       <text x="1022" y="702" text-anchor="middle" class="caption">shell: false</text>
       <path d="M940 782H1104" class="request"/>
       <text x="1022" y="760" text-anchor="middle" class="label purple">read / change</text>
@@ -197,7 +197,7 @@
     <text x="1071" y="954" class="body" style="font-size:18px">Canvas</text>
     <path d="M1170 948H1212" class="response"/>
     <text x="1234" y="954" class="body" style="font-size:18px">Render ack: token + visible IDs</text>
-    <text x="320" y="986" class="caption">Invalid: marked last-valid view; drafts stay. Watchers are hints · polling off by default · explicit Refresh available.</text>
+    <text x="320" y="986" class="caption">Invalid: fresh relationships + diagnostics; safe forms and drafts stay. Watchers are hints · polling off by default · explicit Refresh available.</text>
   </g>
 
   <!-- Save ownership is expanded once, separately from the main access map. -->
@@ -218,18 +218,18 @@
       <text x="352" y="1234" class="code" style="font-size:16px">specspec … --json</text>
       <path d="M590 1178H653" class="request"/>
       <text x="684" y="1169" class="heading">Python owns the write</text>
-      <text x="684" y="1205" class="small">Lock → validate current + candidate</text>
+      <text x="684" y="1205" class="small">Lock → diagnose explicit candidate</text>
       <text x="684" y="1234" class="small">Stage + journal → byte checks → replace / unlink</text>
       <text x="684" y="1267" class="code" style="font-size:16px">workspace.py · .specspec-local/</text>
       <path d="M1187 1178H1482" class="write"/>
-      <text x="1334" y="1158" text-anchor="middle" class="label gold">persist → revalidate</text>
+      <text x="1334" y="1158" text-anchor="middle" class="label gold">persist → verify bytes</text>
       <text x="1217" y="1215" class="caption">Interrupted? retain journal</text>
       <text x="1217" y="1242" class="caption">and use recover.</text>
       <path d="M1514 1149H1538L1550 1161V1196H1514ZM1538 1149V1161H1550" fill="#fff" stroke="#b86e35" stroke-width="1.7"/>
       <text x="1570" y="1169" class="heading" style="font-size:22px">Saved nodes</text>
       <text x="1570" y="1205" class="code" style="font-size:16px">_specspec/*.md</text>
       <text x="1570" y="1234" class="caption">Valid result → reload</text>
-      <text x="352" y="1298" class="caption">Delete previews all descendants (even shared children) + uncommitted warnings; reviewed scope is rechecked under lock.</text>
+      <text x="352" y="1298" class="caption">Delete previews exact selected files, retained reference faults and warnings; reviewed consequences are rechecked under lock.</text>
     </g>
 
     <g id="native-save" aria-label="VS Code node-file forms use non-writing Python plans, WorkspaceEdit, native TextDocuments and native Save; raw edits go straight to the buffer">

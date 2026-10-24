@@ -17,8 +17,8 @@ independent main-editor panels.
 
 Python overlays validated open-document text onto existing files and returns one
 Markdown edit plan with diagnostics. VS Code applies WorkspaceEdit and owns native
-save/autosave/undo/redo/dirty recovery. Invalid text remains repairable with a marked
-last valid graph. Managed project actions require clean SpecSpec documents. Missing
+save/autosave/undo/redo/dirty recovery. Graph-invalid text displays fresh diagnosable relationships and remains editable;
+unreadable targets retain raw Markdown repair access. Managed project actions require clean SpecSpec documents. Missing
 files reject edits and overlays skip absent buffers after validating their inputs.
 
 Electron uses the shared renderer/session and managed Python save adapter. Native

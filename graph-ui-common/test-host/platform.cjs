@@ -135,8 +135,8 @@ function platformChecks(fixture, host) {
       await waitFor(`document.querySelector('[data-node-id="${removed}"]')===null&&document.getElementById('revision').textContent.startsWith('HEAD → ')`);
       assert.equal(existsSync(join(fixture.root,deletedPath)),false);
       console.log(`${host}: physical deletion D survives staging and vanishes after commit through Git watching without Refresh/polling.`);
-      // A whole descendant cascade with two levels shared with independent outside
-      // parents, over maintained history (not an invented one-commit baseline).
+      // Exact deletion leaves real exclusive/shared/deep conclusions available
+      // for deliberate UI repair over the complete independent maintained history.
       const current = fixture.cli(['show','--json']);
       const manifesto = current.nodes.find(n=>n.type==='manifesto');
       const outside = current.nodes.find(n=>n.id===fixture.modified);
@@ -144,37 +144,49 @@ function platformChecks(fixture, host) {
       const deeperOutside = committedRootSibling(current,base,manifesto.id,outside.id);
       assert.ok(deeperOutside,'The maintained HEAD needs a second committed manifesto-child requirement.');
       const deeperOutsideBytes = readFileSync(join(fixture.root,deeperOutside.path));
-      const add = (parents,heading) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--body','-','--json'],`# ${heading}\n\nDisposable cascade regression.\n`).changed_ids[0];
-      const branch = add([manifesto.id],'cascade-root');
-      const full = add([branch],'cascade-full-child');
-      const partial = add([branch,outside.id],'cascade-partial-child');
-      const deep = add([partial,deeperOutside.id],'cascade-deeper-partial-child');
+      const add = (parents,heading) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--body','-','--json'],`# ${heading}\n\nDisposable exact-deletion regression.\n`).changed_ids[0];
+      const branch = add([manifesto.id],'removed-justification');
+      const full = add([branch],'exclusive-conclusion');
+      const partial = add([branch,outside.id],'shared-conclusion');
+      const deep = add([partial,deeperOutside.id],'deeper-conclusion');
       const committed = [branch,full,partial,deep];
       const files = fixture.cli(['show','--json']).nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
       git('add','--',...files);
-      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable full and shared descendant branch');
-      const fresh = add([deep],'cascade-never-committed-child');
+      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable exclusive/shared justification branch');
+      const fresh = add([deep],'never-committed-surviving-conclusion');
       const deepPath = fixture.cli(['show','--json']).nodes.find(n=>n.id===deep).path;
-      fixture.cli(['update',deep,'--body','-','--json'],'# Staged but uncommitted descendant\n');
+      fixture.cli(['update',deep,'--body','-','--json'],'# Staged but surviving descendant\n');
       git('add','--',deepPath);
+      const survivors=fixture.cli(['show','--json']).nodes.filter(n=>[full,partial,deep,fresh].includes(n.id));
+      const survivorBytes=new Map(survivors.map(n=>[n.path,readFileSync(join(fixture.root,n.path))]));
       const plan = fixture.cli(['delete',branch,'--dry-run','--json']);
-      assert.deepEqual(new Set(plan.deleted_ids),new Set([...committed,fresh]));
-      assert.deepEqual(new Set(plan.uncommitted.map(n=>n.id)),new Set([deep,fresh]));
-      assert.equal(plan.uncommitted.find(n=>n.id===deep).status,'M ');
+      assert.deepEqual(plan.deleted_ids,[branch]);assert.deepEqual(plan.uncommitted,[]);
+      assert.deepEqual(new Set(plan.potentially_affected),new Set([full,partial,deep,fresh]));
+      assert.equal(plan.broken_references.length,2);assert.equal(plan.graph_valid,false);
       fixture.cli(['delete',branch,'--yes','--reviewed-plan','-','--json'],JSON.stringify(plan));
-      const ghostCheck = committed.map(id=>`document.querySelector('[data-node-id="${id}"].removed')!==null`).join('&&');
-      await waitFor(ghostCheck);
-      assert.ok(await evaluate(`document.querySelector('[data-node-id="${fresh}"]')===null`),'Never-committed descendant has no fabricated HEAD ghost.');
-      assert.deepEqual(readFileSync(join(fixture.root,outside.path)),outsideBytes,'Shared outside parent survives without reparenting/editing.');
-      assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes,'Independent deeper outside parent also survives.');
-      assert.ok(plan.nodes.every(n=>!existsSync(join(fixture.root,n.path))),'All full/partial descendant files are physically gone.');
-      git('add','-u','--',...files);await delay(500);
-      assert.ok(await evaluate(ghostCheck),'All committed cascade ghosts survive staging.');
-      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Delete all full and shared descendants because the disposable regression branch is no longer needed');
-      await waitFor(committed.map(id=>`document.querySelector('[data-node-id="${id}"]')===null`).join('&&'));
+      await waitFor(`document.querySelector('[data-node-id="${branch}"].removed')!==null&&/Graph INVALID/.test(document.getElementById('message').textContent)`);
+      for(const n of survivors) assert.deepEqual(readFileSync(join(fixture.root,n.path)),survivorBytes.get(n.path),'Every survivor retains its exact text and declarations.');
+      assert.ok(await evaluate(`${JSON.stringify([full,partial,deep,fresh])}.every(id=>document.querySelector('[data-node-id="'+id+'"]:not(.removed)'))`));
+      await screenshot(`${host}-fresh-invalid-justification`);
+      for(const id of [full,partial]) {
+        await evaluate(`document.querySelector('[data-node-id="${id}"]').click()`);
+        assert.ok(await evaluate(`!document.getElementById('save').disabled&&!document.getElementById('body').readOnly`),'Actual broken-graph forms remain editable.');
+        await evaluate(`document.querySelector('[data-parent-id="${branch}"] button').click()`);
+        if(id===full) await evaluate(`document.getElementById('parent-candidate').value='${outside.id}';document.getElementById('parent-candidate').dispatchEvent(new Event('change'));document.getElementById('add-parent').click()`);
+        await evaluate(`document.getElementById('body').value+=${JSON.stringify('\nDeliberately retained under surviving justification.\n')};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('save').click()`);
+        await waitFor(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`);
+        assert.deepEqual(fixture.cli(['show',id,'--json']).node.parents,[outside.id]);
+        await evaluate(`document.getElementById('back').click()`);
+      }
+      assert.equal(fixture.cli(['show','--json']).valid,true);
       assert.deepEqual(readFileSync(join(fixture.root,outside.path)),outsideBytes);
       assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes);
-      console.log(`${host}: real full/partial descendant cascade, staged/new-child warnings, outside-parent preservation and all HEAD/stage/commit ghosts passed without Refresh/polling.`);
+      git('add','-u','--',`_specspec/${branch}.md`,`_specspec/${full}.md`,`_specspec/${partial}.md`);
+      await delay(500);assert.ok(await evaluate(`document.querySelector('[data-node-id="${branch}"].removed')!==null`));
+      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Remove one justification and explicitly rewrite surviving conclusions under remaining intent');
+      await waitFor(`document.querySelector('[data-node-id="${branch}"]')===null`);
+      assert.ok(await evaluate(`${JSON.stringify([full,partial,deep,fresh])}.every(id=>document.querySelector('[data-node-id="'+id+'"]'))`));
+      console.log(`${host}: exact deletion preserves exclusive/shared/deep/staged/new survivors; fresh invalid graph, actual UI repairs and exact-index commit passed.`);
       // Real manual Markdown writes, with no Refresh click, CLI mutation or polling.
       await evaluate(`document.getElementById('discard').click();document.getElementById('back').click();document.querySelector('[data-node-id="${modified}"]').click()`);
       const node = fixture.cli(['show', modified, '--json']).node, path = join(fixture.root, node.path);
@@ -196,7 +208,7 @@ function platformChecks(fixture, host) {
       assert.deepEqual(await evaluate(`[document.getElementById('body').selectionStart,document.getElementById('body').selectionEnd]`), [2,8]);
       const invalid = Buffer.from(external.toString().replace('parents:', 'broken:'));
       writeFileSync(path, invalid);
-      await waitFor(`/Graph files need repair/.test(document.getElementById('message').textContent)&&!document.getElementById('sync-notice').hidden&&document.getElementById('save').disabled`);
+      await waitFor(`/Graph INVALID/.test(document.getElementById('message').textContent)&&document.getElementById('save').disabled`);
       assert.deepEqual(readFileSync(path), invalid, 'Invalid external files must not be rewritten.');
       assert.equal(await evaluate(`document.getElementById('body').value`), '# Retained external draft');
       writeFileSync(path, external);

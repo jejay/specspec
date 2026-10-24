@@ -131,13 +131,20 @@ def git_snapshot(
 
 
 def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
-    old_nodes = {node.id: node for node in base.nodes}
-    new_nodes = {node.id: node for node in target.nodes}
+    old_nodes = dict(base.graph.nodes) if base.graph else {}
+    new_nodes = dict(target.graph.nodes) if target.graph else {}
     changes = []
     affected: set[str] = set()
     for node_id in sorted(old_nodes.keys() | new_nodes.keys()):
         old, new = old_nodes.get(node_id), new_nodes.get(node_id)
-        if old is None:
+        unavailable = (
+            (old is None and new.path in base.files)
+            if new is not None
+            else (old.path in target.files)
+        )
+        if unavailable:
+            kind, fields = "unavailable", []
+        elif old is None:
             kind, fields = "added", []
         elif new is None:
             kind, fields = "removed", []
@@ -151,13 +158,24 @@ def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
             if not fields:
                 continue
             kind = "changed"
-        changes.append({"id": node_id, "kind": kind, "fields": fields})
+        changes.append(
+            {
+                "id": node_id,
+                "kind": kind,
+                "fields": fields,
+                **(
+                    {"base_available": old is not None, "target_available": new is not None}
+                    if unavailable
+                    else {}
+                ),
+            }
+        )
         affected.add(node_id)
         for snapshot in (base, target):
             if snapshot.graph and node_id in snapshot.graph.nodes:
                 affected.update(snapshot.graph.closure(node_id))
-    old_edges = {tuple(edge) for edge in base.graph.edges()} if base.graph else set()
-    new_edges = {tuple(edge) for edge in target.graph.edges()} if target.graph else set()
+    old_edges = {(p, n.id) for n in old_nodes.values() for p in n.parents}
+    new_edges = {(p, n.id) for n in new_nodes.values() for p in n.parents}
     file_changes = [
         {
             "path": path,
@@ -179,7 +197,22 @@ def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
         "removed_edges": sorted(map(list, old_edges - new_edges)),
         "affected": sorted(affected),
         "file_changes": file_changes,
-        "impact_complete": base.valid and target.valid,
+        "impact_complete": base.complete and target.complete,
+        "graph_valid": target.valid,
+        "unresolved_references": {
+            "base": [
+                {"parent": p, "child": n.id}
+                for n in base.nodes
+                for p in n.parents
+                if p not in old_nodes
+            ],
+            "target": [
+                {"parent": p, "child": n.id}
+                for n in target.nodes
+                for p in n.parents
+                if p not in new_nodes
+            ],
+        },
     }
 
 

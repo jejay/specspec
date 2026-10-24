@@ -7,7 +7,7 @@ conclusions and actual implementation mappings. Git records changed decisions. T
 [fictional story](STORY.md) is optional illustration, not required evidence or
 actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
 physically deleted during redirects and remain in the earlier Git commits.
-Every retained revision uses shortcut-free node format 7 and application API 6.
+Every retained revision uses shortcut-free node format 7 and application API 7.
 The final graph has 35 immediate justification edges; ancestry supplies inherited
 bindings and changes require downstream reconsideration.
 

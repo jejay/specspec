@@ -41,7 +41,9 @@ Host configuration and disposal manage their lifecycle.
 
 Renderer drafts retain original records with native DOM/caret/camera. Same-node
 changes require overwrite confirmation; unrelated changes preserve save eligibility.
-Invalid reads retain a marked last valid view and diagnostics. Missing-node forms
+Graph-invalid reads publish fresh diagnosable relationships. Unavailable loads
+retain marked last-usable context. Native intermediate form data stays separate
+from canonical membership so empty bindings and partial source JSON remain repairable. Missing-node forms
 remain copyable/unsavable. Sequence/full-membership acknowledgements check visible
 render completion. Unit and host fixtures exercise external saves, incomplete/invalid
 files, watcher errors, disposal, overlays and retained user input.

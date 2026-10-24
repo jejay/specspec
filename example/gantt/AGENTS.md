@@ -20,7 +20,8 @@ belong to requested agent planning; rounds may be skipped with sufficient contex
 On a request to change the specification, use saved graph/context/impact and owner
 understanding to plan a precise implementation-mature graph through `add`, `update`
 and `delete`. Keep positive current bindings and independently revisable choices.
-Inspect cascade scope and explicitly reconnect retained children during consolidation.
+Delete exactly selected files. Inspect retained faults with query --issues and diff
+--with-context; rewrite, split, relink or explicitly remove conclusions deliberately.
 Validate the exact intended index and commit `Agent specspec changes: <description>`.
 
 Implementation closes depth gaps under existing intentions with conclusions and
@@ -42,14 +43,15 @@ before code changes. Query's optional ancestor completion follows every parent p
 after selection; added bindings consume no metric quota. `specspec diff` supplies
 canonical-file hunks; ordinary `git diff` supplies code patches. Read untracked
 files explicitly and coordinate with unsaved native documents.
-Canonical node format 7 and application API 6 use
+Canonical node format 7 and application API 7 use
 canonical padded Base64url IDs over five bytes, including `=`, and `<id>.md`
 files. Each direct parent adds ancestry: a direct parent cannot already be an
 indirect parent. Review ripple effects using both old and new graphs, including
 ancestry lost by reparenting. Implementation leaves contribute bounded realization.
 Valid manual Markdown is usable; graph-aware CLI/UI edits are recommended.
-Delete removes the full descendant closure, including shared children, with warnings
-for affected uncommitted files. Explain reasons in Git. Default workspace compares
+Delete removes exactly selected files, preserving descendants and their parent
+references. Uncommitted selected files warn; --require-valid checks a complete final
+candidate. Invalid intermediate graphs remain inspectable/editable. Explain reasons in Git. Default workspace compares
 to HEAD, keeping committed D ghosts through staging until commit.
 
 `history/cli.jsonl` contains actual current CLI inputs/results. `revisions.json`

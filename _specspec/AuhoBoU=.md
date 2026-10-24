@@ -5,39 +5,25 @@ parents:
 - 5d5oDCM=
 - 6SyZ-BU=
 ---
-# Plan a descendant cascade and warn before losing uncommitted files
+# Preview exact deletion and retain destructive-action safeguards
 
-Union explicitly requested roots and all directed descendants of the current valid
-saved DAG, iteratively deduplicated by ID. A child with any deleted parent belongs,
-including shared/partial children and deeper descendants. Distinct overlapping
-roots are valid. Reject empty/duplicate/unknown/manifesto requests and invalid
-snapshots before canonical writes. Validate the remainder, preserving surviving
-outside parents and unrelated records byte-for-byte.
+Select exactly a nonempty distinct set of current identifiable node IDs. Protect
+the manifesto and reject unknown or ambiguous targets. Preserve all unselected
+files byte-for-byte, including their declarations of deleted parents. Plan from
+actual saved files even when the surrounding graph is invalid. Preview selected
+ID/path records, resulting missing references, potential surviving descendant scope,
+resulting validity and analysis completeness separately.
 
-Assess each affected canonical path using NUL-delimited ordinary Git status with
-literal nested-project paths, optional Git locks/index refresh disabled and fsmonitor
-disabled. Warn for untracked/ignored additions, staged additions/edits, unstaged
-changes, comment/format-only changes, renames, modes and unmerged entries. Assessment
-uses Git clean-filter/line-ending interpretation. Node warnings follow node-file
-changes; code-only source impact is separate. Unborn additions warn; missing/failed
-Git assessment warns explicitly for the entire scope. Git settings/flags bound this
-assessment's reliability.
+Assess only selected paths with NUL-delimited literal Git status, disabled optional
+index refresh/fsmonitor, and clean-filter/EOL semantics. Staged/new/ignored/comment/
+mode/rename/unmerged changes warn; unavailable assessment warns for every selected
+file. Dry runs write no canonical files. Warned interactive deletion asks one whole-
+action confirmation; warned noninteractive/JSON deletion requires --yes. Warnings
+remain visible before unlinking. Clean committed selections proceed directly.
 
-`delete --dry-run` returns requested_ids, deleted_ids, ID/path nodes, per-node
-uncommitted statuses, git_available and git_note. Emit warnings before unlinking.
-Human warned deletion asks one whole-action confirmation; warned JSON/noninteractive
-actions require `--yes`. Consent retains stderr and JSON warning diagnostics. Clean
-committed CLI batches proceed. Cancel/refusal retains canonical files and a completed
-transaction state. Success reports every actually removed ID.
-
-Both hosts show the backend scope/shared-child count and warnings in confirmation,
-then submit explicit consent and the reviewed plan through bounded integration input. Replan under the writer
-lock and compare requested/affected IDs, paths and assessment records directly;
-a changed plan fails `DELETE_PLAN_CHANGED` before unlinking. Original-byte checks
-protect the ensuing transaction. Native dirty documents remain project-wide protected.
-
-Journal each descendant with `new: null`, preserving originals for recovery. Reject
-intervening external text. Source files and Git staging/commits remain under owner
-control. Committed cascade D ghosts persist through staging until commit; uncommitted
-additions retain their actual empty HEAD membership. Manual deletions receive normal
-consistency diagnostics. Filesystem races retain the writer's stated limitations.
+Both hosts confirm exact scope and explain retained dangling references. Recompute
+the reviewed scope, paths, structural consequences and assessments under the writer
+lock and reject changed plans before writes. Journal selected null replacements,
+byte-check originals and retain interruption recovery. Native dirty-document guards,
+source files, Git staging/commits and physical race limitations retain their roles.
+--require-valid rejects an invalid complete candidate before canonical writes.

@@ -13,7 +13,9 @@ commit IDs at capture. The implicit default stores HEAD versus workspace, follow
 fresh HEAD on display. Workspace targets also store their capture HEAD and a sparse
 map of all uncommitted node changes: literal UTF-8 SHA-256 checksums for added or
 modified nodes and null markers for deletions. Git identifies dirty saved files and trusted native overlays contribute unsaved
-changes. Clean committed nodes use their commit context. This captures drift without copying canonical node text.
+changes. Clean committed nodes use their commit context. This captures drift without copying canonical node text. Canonical-path file bytes
+drive the summary independently of parsing: existing unreadable files retain checksums,
+and null markers describe actual absence.
 
 Compare the live workspace summary with the captured one when displaying a record.
 Warn separately about HEAD movement, changed workspace nodes and unavailable

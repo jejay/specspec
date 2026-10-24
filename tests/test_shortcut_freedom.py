@@ -128,7 +128,7 @@ def test_managed_add_rejects_shortcuts_before_writing(workspace):
     root, manifesto = workspace
     before, parent = add_node(root, "requirement", [manifesto], "# Parent\n")
     with pytest.raises(SpecError, match="alternative path"):
-        add_node(root, "requirement", [manifesto, parent], "# Child\n")
+        add_node(root, "requirement", [manifesto, parent], "# Child\n", require_valid=True)
     assert load_snapshot(root).files == before.files
     assert not (root / ".specspec-local/journal.json").exists()
 
@@ -144,7 +144,7 @@ def independent_parents(workspace):
 def test_update_checks_other_nodes_and_coherent_batch_can_resolve_them(workspace):
     root, before, first, second, leaf = independent_parents(workspace)
     with pytest.raises(SpecError) as error:
-        update_node(root, second, parents=[first])
+        update_node(root, second, parents=[first], require_valid=True)
     assert error.value.diagnostics[0].node_id == leaf
     assert error.value.diagnostics[0].code == "REDUNDANT_PARENT"
     assert load_snapshot(root).files == before.files

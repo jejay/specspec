@@ -87,10 +87,10 @@ exports.documentChecks = async function documentChecks(port, project, paths) {
     assert.notEqual(await evaluate(`document.getElementById('viewport').dataset.scale`), await splitEvaluate(`document.getElementById('viewport').dataset.scale`));
 
     await evaluate(`document.getElementById('body').value='';document.getElementById('body').dispatchEvent(new Event('input'))`);
-    await waitFor(() => evaluate(`!document.getElementById('sync-notice').hidden`), 'invalid native buffer diagnostics');
-    assert.equal(await evaluate(`document.getElementById('body').readOnly`), false);
+    await waitFor(() => evaluate(`/Graph INVALID/.test(document.getElementById('message').textContent)&&document.getElementById('body').value===''&&!document.getElementById('body').readOnly`), 'fresh invalid native buffer diagnostics and retained editable empty body');
+    assert.equal(await evaluate(`document.getElementById('sync-notice').hidden`), true, 'Repair uses the fresh graph, not a stale-view substitution.');
     await evaluate(`document.getElementById('body').value='# Repaired native document\\n';document.getElementById('body').dispatchEvent(new Event('input'))`);
-    await waitFor(() => evaluate(`document.getElementById('sync-notice').hidden&&!window.SpecSpecHost.getState().dirty`), 'native repair');
+    await waitFor(() => evaluate(`!/Graph INVALID/.test(document.getElementById('message').textContent)&&!window.SpecSpecHost.getState().dirty`), 'native repair');
     await evaluate(`document.getElementById('save').click()`);
     await waitFor(async () => !(await request()).dirty && readFileSync(path, 'utf8').endsWith('# Repaired native document\n'), 'repaired file save');
     const other = await request('other');

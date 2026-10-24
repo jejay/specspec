@@ -15,7 +15,7 @@ from .annotations import workspace_state
 from .format import json_value, read_document, yaml_parser
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .git_objects import OBJECT_ID
-from .model import FORMAT_VERSION, MAX_FILE_BYTES, Diagnostic, SpecError
+from .model import FORMAT_VERSION, ID_RE, MAX_FILE_BYTES, NODE_TYPES, Diagnostic, SpecError
 from .workspace import SPEC_DIR, read_files, runtime_diagnostics, snapshot_from_files
 
 MAX_REQUEST_BYTES = 16 * 1024 * 1024
@@ -168,20 +168,63 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
         files[path] = after.encode("utf-8")
         changes.append({"path": path, "before": before, "after": after})
     snapshot = snapshot_from_files(root, files, check_sources=True)
+    # Repairable native form data is separate from parsed canonical membership.
+    # Empty bodies/intermediate source JSON must not freeze the existing native form.
+    repair_forms = []
+    parsed_paths = {n.path for n in snapshot.nodes}
+    if snapshot.format_version == FORMAT_VERSION:
+        for path in sorted(
+            (set(documents) | {c["path"] for c in changes}) & files.keys() - parsed_paths
+        ):
+            try:
+                data, body = read_document(files[path], path)
+                id, kind, parents = data.get("id"), data.get("type"), data.get("parents")
+                if (
+                    not isinstance(id, str)
+                    or not ID_RE.fullmatch(id)
+                    or path != f"{SPEC_DIR}/{id}.md"
+                    or not isinstance(kind, str)
+                    or kind not in NODE_TYPES
+                ):
+                    continue
+                if not isinstance(parents, list) or any(
+                    not isinstance(p, str) or not ID_RE.fullmatch(p) for p in parents
+                ):
+                    continue
+                sources = json_value(data.get("sources", []))
+                if not isinstance(sources, (list, str)):
+                    continue
+                repair_forms.append(
+                    {
+                        "id": id,
+                        "path": path,
+                        "type": kind,
+                        "parents": list(parents),
+                        "body": body,
+                        "sources": sources if isinstance(sources, list) else [],
+                        "sources_text": sources
+                        if isinstance(sources, str)
+                        else json.dumps(sources, ensure_ascii=False, indent=2),
+                        "repairForm": True,
+                    }
+                )
+            except (SpecError, ValueError):
+                continue
     result: dict[str, Any] = {
+        "repair_forms": repair_forms,
         "snapshot": snapshot.to_dict(),
         "diagnostics": [item.to_dict() for item in snapshot.diagnostics],
         "changes": changes,
         "note": "",
     }
     head = None
-    if base and snapshot.valid:
+    if base and snapshot.format_version == FORMAT_VERSION:
         try:
             old = git_snapshot(root, base, allow_empty=True, cache=cache)
             if base == "HEAD":
                 head = old
-            if old.files or not old.valid:
-                old.require_valid()
+            if not old.complete and old.graph is None:
+                raise SpecError(old.diagnostics)
             comparison = semantic_diff(old, snapshot)
             comparison.update(source_change_impact(root, old.commit or base, None, old, snapshot))
             comparison["affected"] = sorted(
@@ -209,7 +252,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
             result["note"] = "Diff unavailable: " + "; ".join(
                 item.message for item in error.diagnostics
             )
-    if snapshot.valid and base:
+    if snapshot.format_version == FORMAT_VERSION and base:
         try:
             result["workspace_state"] = workspace_state(snapshot, head)
         except SpecError:

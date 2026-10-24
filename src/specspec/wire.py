@@ -1,4 +1,4 @@
-"""API 6 comparison projection; domain Snapshot/Graph records stay unchanged."""
+"""API 7 projection; parsed bindings and file inventory retain independent availability."""
 
 from copy import deepcopy
 
@@ -35,7 +35,11 @@ def expand_comparison(value, current=None):
     result = deepcopy(value)
     result["target"] = deepcopy(current or value["target"])
     target = {n["id"]: n for n in result["target"]["nodes"]}
-    added = {c["id"] for c in result["changes"] if c["kind"] == "added"}
+    added = {
+        c["id"]
+        for c in result["changes"]
+        if c["kind"] == "added" or c.get("base_available") is False
+    }
     before = {n["id"]: n for n in result.pop("before")}
     base = {key: node for key, node in target.items() if key not in added}
     base.update(before)

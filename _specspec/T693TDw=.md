@@ -23,7 +23,8 @@ revision hints and safe terminal presentation. Structured comparison records
 retain both original bodies and their whitespace. Canonical comments, spelling and literal
 line endings remain available through node files and the dedicated diff command.
 
-Query validates the selected saved graphs and reads code from those versions.
---json uses reconstructible API-6 records for the selected scope; explicit
+Query diagnoses the selected graphs and reads code from those versions. Invalid
+components use finite deterministic cycle-safe presentation with complete bindings.
+--json uses reconstructible API-7 records for the selected scope; explicit
 subgraphs identify their population, boundary parents and induced edges. Node format
 7 and existing application operations retain their definitions.

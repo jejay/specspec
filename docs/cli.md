@@ -1,7 +1,7 @@
 # Compact command interface
 
 One CLI serves people and coding agents. Default output is readable text/Markdown;
-`--json` explicitly selects compact UTF-8 API **6**. Redirection does not change the
+`--json` explicitly selects compact UTF-8 API **7**. Redirection does not change the
 format. Canonical node format is **7**; upgrade the CLI and both host builds
 together. The CLI does not supply old command aliases or old protocol readers.
 
@@ -23,8 +23,11 @@ specspec query <full-id> --max-distance 0 --with-ancestors # Node + every ancest
 specspec query <full-id> --max-distance 2 --with-ancestors # Branch slice + ancestors
 specspec add --parent <id> --body node.md
 specspec update <id> --body revised.md
-specspec delete <id> --dry-run              # All descendants, including shared ones
-specspec delete <id> --yes                  # Explicit consent; warnings remain
+specspec delete <id> --dry-run              # Exact files, retained reference faults
+specspec delete <id> --yes                  # Warned selected-file consent
+specspec query --issues --with-ancestors    # Broken justification and downstream context
+specspec diff --with-context               # Earlier/current bindings and cause evidence
+specspec update <id> --parent <id> --require-valid # Require the whole final graph valid
 specspec check                             # Saved graph/schema and ordinary warnings
 specspec check --staged --sources           # Exact index plus source mapping/retention
 specspec diff                              # Full HEAD → workspace review
@@ -36,11 +39,14 @@ case-sensitive. Hyphen-leading IDs remain accepted as full node arguments.
 `add --type implementation` selects an implementation leaf. Repeated `--parent`
 values specify the complete replacement set on update. The manifesto keeps its
 empty parents; ordinary nodes require parents. Bodies are files or `-` stdin,
-not shell-interpolated inline program text. The complete candidate must be shortcut-free:
-no direct parent may already be an indirect parent. REDUNDANT_PARENT reports the
+not shell-interpolated inline program text. A completed valid graph is shortcut-free:
+no direct parent may already be an indirect parent. Graph-invalid intermediate edits
+are saved with explicit validity/completeness diagnostics; --require-valid checks the
+whole final candidate before any writes. The starting graph need not be valid. REDUNDANT_PARENT reports the
 affected edge and alternative path, including redundancies on other nodes after an
 update. Related multi-file Markdown changes must be made coherently and checked;
-managed writes never normalize them. See [graph structure](graph-structure.md).
+managed writes never normalize them. See [graph structure](graph-structure.md) and
+[invalid-state inspection/repair](invalid-graphs.md).
 Init and add create `_specspec/<id>.md`, including the ID's trailing `=`.
 Paths depend only on identity; headings and binding text remain inside the document.
 
@@ -58,7 +64,7 @@ Parent headers always separate full IDs with `, `. Default source items share on
 `sources: ` line with comma-space separators, preserving duplicates and individual
 broken/uncertain/restored hints. `--human` keeps logical body lines and lists source
 occurrences individually, without changing parents, source facts or revision selection.
-`query --json` retains reconstructible API-6 records and complete source facts, with
+`query --json` retains reconstructible API-7 records and complete source facts, with
 file-change summaries rather than patches. Use `diff` for exact text modifications.
 Original body layout remains in JSON and node files. `--human --json` is identical
 to `--json`. Optional `query [NODE_ID]` starts at that current/deleted node, otherwise
@@ -83,6 +89,15 @@ Human diagnostics go to stderr; JSON diagnostics are structured in its one envel
 Terminal control characters in project text are displayed visibly, not executed.
 Read-only exploration does not stage, commit, install hooks or fetch source objects.
 
+Current-format `show` and `query` remain usable with graph errors. `show --raw` (with
+an ID or direct `--path`) reads literal malformed documents; `--ref` and `--staged`
+select historical/index reads. `query --issues` selects structural findings and their
+potential descendants, optionally completed by `--with-ancestors`; use it without
+metric criteria. Cycles/disconnected components remain visible and finite. Undefined
+cyclic maximum-distance requests fail explicitly. Partial parsed scope is not a
+fabricated successful metric selection. Missing endpoints and historical bindings
+have distinct meanings.
+
 ## Full review diff
 
 Diff groups nodes by stable ID and readable heading, identifies type/parent/source/
@@ -91,13 +106,21 @@ body text, comments, whitespace, line endings and final newlines. Added/deleted 
 are shown completely. A relationship overview labels both ends with full IDs/titles.
 `diff --summary` is explicitly abridged; it is not the default. Git supplies directly
 applicable byte patches. Linked-code file impact is a separate informational section,
-not a fabricated node M and not a dump of implementation code. Invalid/unavailable
-comparisons receive diagnostics/incomplete impact rather than a false empty result.
+not a fabricated node M and not a dump of implementation code. Declared-reference
+changes remain distinct from references becoming unresolved. Graph validity and
+comparison completeness are independent. Unreadable files are unavailable, not
+fabricated node deletions. Incomplete comparisons retain evidence with nonzero status.
+
+`diff --with-context` adds deduplicated before/current bindings, surviving parent and
+ancestor context, potential descendants and finite cause paths from both graphs.
+Repeated `--node ID` focuses it; advanced `--max-bytes N` bounds the actual encoded
+result. Context supplies evidence, never a determination of owner motive or semantic
+justification. Full canonical patches remain present unless --summary is explicit.
 
 ## Structured results
 
 ```json
-{"api_version":6,"ok":true,"result":{"node_count":22},"diagnostics":[]}
+{"api_version":7,"ok":true,"result":{"node_count":22},"diagnostics":[]}
 ```
 
 Show without an ID returns complete normalized node records in JSON; parents encode
@@ -116,10 +139,21 @@ complete individual revisions for the renderer; a display union is not itself th
 HEAD is resolved afresh: D ghosts survive staging and disappear after commit.
 
 Exit status: 0 successful operation, 1 validation/rejected action, 2 invocation/I/O.
-Native read/plan operations may succeed while reporting an invalid repairable graph.
+Reads and mutations can succeed while reporting an invalid repairable graph.
+`ok`/exit zero means the requested operation was delivered, not structural validity.
+Mutation receipts include `applied`, `graph_valid` and `analysis_complete`; check
+remains strict. Error diagnostics can describe a saved intermediate graph without
+meaning its transaction failed. See [invalid-graph examples](invalid-graphs.md).
 There is no automatic human/JSON choice based on TTY, and no LLM/UI JSON dialect flag.
 
 ## Advanced tools and integration
+
+`apply PLAN.json` (or `apply -`) applies explicit add/update/delete edits through one
+recoverable transaction. `--dry-run` writes no canonical files; `--require-valid`
+requires the complete final candidate valid. Uncommitted selected deletion retains
+normal `--yes` consent. Body files resolve from the plan directory (stdin uses launch
+directory). Batch-local new-node aliases never enter canonical metadata; conflicting
+edits and malformed plans fail before writes. See the [plan grammar](invalid-graphs.md#apply-one-coherent-multi-node-change).
 
 `sources show [ID]` inspects mappings; `--source N` opens the Nth literal preview.
 `sources capture` and `sources reanchor` retain deliberate strict/expanding decisions,
@@ -142,8 +176,8 @@ mixed metadata `--graph-ref` and `delete --reviewed-plan FILE|-` remain availabl
 without bloating everyday help. Reviewed deletion plans are rechecked under lock;
 plan transport does not waive warnings, native dirty guards or original-byte checks.
 
-The hidden `api` operation consumes bounded JSON stdin and returns one API-6 envelope.
-Requests require integer `api_version: 6` and `op` from `read`, `plan`, `source-view`,
+The hidden `api` operation consumes bounded JSON stdin and returns one API-7 envelope.
+Requests require integer `api_version: 7` and `op` from `read`, `plan`, `source-view`,
 `source-capture`, `annotations`, `annotation-create`, `annotation-flush`. Both hosts use `read` with optional `base`/historical `target`;
 VS Code additionally supplies `documents`. `plan` requires an `edit` and never writes
 files. Source operations inspect/capture into forms without persisting them.

@@ -127,7 +127,6 @@ def register(main, root_path, emit, guarded, json_option):
     def show(root, node_id, number, ref, staged, graph_ref, as_json):
         project = root_path(root)
         snapshot = target_graph(project, ref, staged, graph_ref)
-        snapshot.require_valid()
         nodes = [require_node(snapshot, node_id)] if node_id else snapshot.nodes
         if number:
             if not node_id or number > len(nodes[0].sources):

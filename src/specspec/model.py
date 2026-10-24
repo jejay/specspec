@@ -12,7 +12,7 @@ from typing import Any
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$")
 NODE_TYPES = {"manifesto", "requirement", "implementation"}
 FORMAT_VERSION = 7
-API_VERSION = 6
+API_VERSION = 7
 MAX_FILE_BYTES = 1024 * 1024
 
 
@@ -24,6 +24,8 @@ class Diagnostic:
     node_id: str | None = None
     severity: str = "error"
     line: int | None = None
+    parent_id: str | None = None
+    details: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {key: value for key, value in vars(self).items() if value is not None}

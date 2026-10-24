@@ -39,12 +39,27 @@
 
   function displayGraph(state) {
     const nodes = new Map([...(state.diff?.base.nodes || []), ...state.snapshot.nodes].map(node => [node.id, node]));
+    for (const node of state.repair_forms || []) nodes.set(node.id, node);
+    const live = new Set(state.snapshot.nodes.map(n => n.id));
+    const unreadable = new Set(state.snapshot.unreadable_paths || []);
+    for (const [id, node] of nodes) if (!live.has(id) && unreadable.has(node.path) && !node.repairForm) nodes.set(id, { ...node, unavailable: true, earlierContext: true });
+    const declared = [...state.snapshot.edges, ...(state.repair_forms || []).flatMap(n => n.parents.map(p => [p,n.id]))];
+    for (const [parent] of declared) if (!nodes.has(parent)) {
+      const path = `_specspec/${parent}.md`, unavailable = unreadable.has(path);
+      nodes.set(parent, { id:parent, type:'missing', parents:[], sources:[], path,
+        body:`# ${unavailable ? 'Unreadable parent' : 'Missing parent'}\n${parent}\n${unavailable ? 'Current file cannot be parsed; use raw Markdown repair.' : 'Earlier binding unavailable in this comparison.'}`,
+        missing:!unavailable, unavailable });
+    }
     const added = new Set((state.diff?.added_edges || []).map(edge => JSON.stringify(edge)));
-    const edges = state.snapshot.edges.map(edge => ({ edge, kind: added.has(JSON.stringify(edge)) ? 'added' : '' }));
+    const edges = declared.map(edge => ({ edge, kind: !live.has(edge[0]) || !live.has(edge[1]) ? 'unresolved' : added.has(JSON.stringify(edge)) ? 'added' : '' }));
     const present = new Set(edges.map(item => JSON.stringify(item.edge)));
     for (const edge of state.diff?.removed_edges || []) {
       if (!present.has(JSON.stringify(edge))) edges.push({ edge, kind: 'removed' });
     }
+    for (const {edge:[parent]} of edges) if (!nodes.has(parent)) nodes.set(parent, {
+      id:parent,type:'missing',body:`# Unresolved earlier parent\n${parent}\nNo binding available in the selected comparison.`,
+      path:`_specspec/${parent}.md`,parents:[],sources:[],missing:true,
+    });
     return { nodes, edges };
   }
 

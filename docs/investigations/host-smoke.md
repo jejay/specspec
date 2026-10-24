@@ -26,7 +26,9 @@ concurrently. Each includes its final native or reload/revision phase. Core
 verification passes **570 tests**: 277 Python, 240 shared UI, 44 VS Code adapter
 and 9 Electron. Ruff and working source checks pass. Maintained Gantt history and
 receipts retain current-schema validation; the local spotlight format change does
-not change canonical node format 7 / API 6.
+not change canonical node format 7 / API 6 at that checkpoint. Current API-7
+invalid-state authoring and host evidence is recorded in
+[the follow-up verification note](invalid-graph-authoring.md).
 
 ## End-to-end coverage
 

@@ -10,7 +10,7 @@ managed/Electron forms use CodeMirror history. See [inline editing](../docs/nati
 
 One host-neutral implementation of the native DOM/SVG canvas. `media/` contains
 the renderer, camera and presentation model; `view.cjs` supplies the safe local
-HTML shell; `host/session.cjs` serializes API-6 operations/render handshakes;
+HTML shell; `host/session.cjs` serializes API-7 operations/render handshakes;
 `host/cli.cjs` bounds shell-free Python processes. Python still validates and mutates
 canonical data. No host SDK is imported by these files. `host/documents.cjs`
 provides portable project-level document coordination and minimal text edits;
@@ -23,11 +23,13 @@ and `sameNode` contracts. Watchers call `scheduleRefresh`; `configurePolling(ms)
 sets an optional interval (0/default disables polling). Disposal releases timers,
 retries and render waits. `host/watch.cjs` supplies non-recursive Electron directory
 watching with parent-directory reattachment; VS Code uses its filesystem API.
-Events are reload hints, not an exact change log. Invalid reloads retain the last
-valid view marked out of date; valid data is compared directly, without hashes.
+Events are reload hints, not an exact change log. Graph-invalid reloads publish
+fresh broken relationships and safe local editing. Unavailable loads retain marked
+last-usable context; records are compared directly, without node hashes.
 Superseded generation/text reads retry through the coalesced event queue without
 classifying the files as invalid. Each refresh has bounded attempts; disposal
-cancels follow-up work, and actual invalid reads retain their repair restrictions.
+cancels follow-up work. Native intermediate form fields remain distinct from
+canonical nodes, retaining actual empty/source-JSON input for repair.
 `host/annotations.cjs` watches the checkout-local immutable spotlight store independently,
 including while a revision graph is open. `media/graph-annotations.js` owns the retained
 dropdown, round red arrival-count badge and editable camera-scaled white rings.

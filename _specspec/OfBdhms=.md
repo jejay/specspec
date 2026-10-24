@@ -37,7 +37,7 @@ sources:
 ---
 # Enforce ID-only node paths across the backend, hosts and fixtures
 
-model.py selects current node format 7 while API_VERSION remains 6. format.py
+model.py selects current node format 7 while API_VERSION is 7. format.py
 requires exact filename equality with <id>.md. workspace.py generates that path
 inside the existing lock/collision/transaction boundary independently of body text.
 CLI init/add and the library take binding fields directly. Human dependent labels

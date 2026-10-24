@@ -17,8 +17,9 @@ available; polling defaults to 0/off and is disposed on switch/close.
 Refresh clean forms. Dirty forms retain original records, text, caret and camera;
 unrelated changes refresh context while preserving save eligibility. Same-node
 changes require overwrite confirmation. Deleted drafts stay copyable and unsavable.
-Invalid reloads retain a clearly out-of-date last valid graph and diagnostics and
-restrict managed mutations until repair. Historical views retain their selected
+Graph-invalid reloads display actual current relationships and diagnostics while
+permitting safe local edits. Unreadable targets retain raw repair access; unavailable
+loads retain clearly marked last-usable context without enabling stale writes. Historical views retain their selected
 revision. Rendering acknowledgements use sequence tokens and full visible membership.
 Watchers are filesystem-dependent notification hints; byte-checked transactions
 supply a separate persistence boundary.

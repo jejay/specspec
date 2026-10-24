@@ -25,7 +25,7 @@ requests. UTF-8 files/stdin carry binding bodies; full IDs remain canonical.
 
 query.py/query_select.py supply complete selected bindings and optional ancestor
 completion through one pipeline. output.py renders readable node summaries and canonical
-file review patches with relationship and separate linked-source impact. Compact API 6
+file review patches with relationship and separate linked-source impact. Compact API 7
 emits one UTF-8 envelope, small mutation receipts and reconstructible comparisons.
 Node format is 7. Byte budgets cover the actual chosen representation and required
 ancestors are never silently truncated. Terminal controls are rendered visibly.

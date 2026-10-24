@@ -54,6 +54,7 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
         "sources",
         "spotlight",
         "recover",
+        "apply",
     }
     assert set(main.commands["sources"].commands) == {"show", "capture", "reanchor"}
     assert set(main.commands["spotlight"].commands) == {"add", "show", "flush"}
@@ -81,8 +82,8 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     result = call(root, "init", "-", "--json", input="# Manifesto 🐕\n")
     assert result.exit_code == 0, result.output
     first = json.loads(result.stdout)
-    assert API_VERSION == 6 and FORMAT_VERSION == 7
-    assert first["api_version"] == 6 and "snapshot" not in first["result"]
+    assert API_VERSION == 7 and FORMAT_VERSION == 7
+    assert first["api_version"] == 7 and "snapshot" not in first["result"]
     parent = first["result"]["changed_ids"][0]
     result = call(
         root, "add", "--parent", parent, "--body", "-", "--json", input="# Useful heading\n"
@@ -230,7 +231,7 @@ def test_historical_application_read_ignores_invalid_saved_workspace_and_rejects
         "api",
         input=json_text(
             {
-                "api_version": 6,
+                "api_version": 7,
                 "op": "read",
                 "base": "HEAD",
                 "target": "HEAD",
@@ -246,11 +247,11 @@ def test_historical_application_read_ignores_invalid_saved_workspace_and_rejects
     [
         "{}",
         '{"api_version":5,"op":"read"}',
-        '{"api_version":6,"op":"execute"}',
-        '{"api_version":6,"op":"read","extra":true}',
+        '{"api_version":7,"op":"execute"}',
+        '{"api_version":7,"op":"read","extra":true}',
     ],
 )
 def test_application_protocol_is_bounded_explicit_and_current_only(workspace, raw):
     root, _ = workspace
     result = call(root, "api", input=raw)
-    assert result.exit_code == 2 and json.loads(result.stdout)["api_version"] == 6
+    assert result.exit_code == 2 and json.loads(result.stdout)["api_version"] == 7

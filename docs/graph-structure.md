@@ -25,8 +25,9 @@ The backend graph validator checks the complete graph after references, parent
 types, root rules and acyclicity are sound. `REDUNDANT_PARENT` identifies the affected
 node, direct edge and a deterministic alternative path. It never edits relationships.
 
-- Managed `add`, `update` and other writes check the whole candidate before writing.
-  An edit can make another node's edge redundant; rejected changes preserve files.
+- Managed edits diagnose the whole candidate and permit graph-invalid intermediate
+  results. `--require-valid` requires the complete result to pass before any writes.
+  An edit can make another node's edge redundant; strict rejection preserves files.
 - `check` examines saved files. Native overlays and historical reads use the same
   graph rule. Native text can remain temporarily invalid and repairable.
 - Owner-configured hooks and CI run `specspec check --staged` (optionally `--sources`)
@@ -35,12 +36,14 @@ node, direct edge and a deterministic alternative path. It never edits relations
 `update --parent` still replaces one node's complete parent set. For a relationship
 change involving several files, prepare the coherent Markdown changes together and
 validate the full result before staging the complete intended graph. Managed writes
-require a valid starting graph; repair invalid saved Markdown directly before using
-them. There is no automatic repair, separate approval status or extra hook policy.
+work from invalid starting graphs and retain safe document/identity/transaction
+checks. Advanced `apply` handles one explicit multi-node batch; raw Markdown remains
+available for malformed targets. See [invalid-state authoring](invalid-graphs.md).
+There is no automatic repair, separate approval status or extra hook policy.
 
 ## Current-only contract and history
 
-The current node format is **7**, with application API **6**. Fields, five-byte padded
+The current node format is **7**, with application API **7**. Fields, five-byte padded
 Base64url IDs and source-region grammar retain their contracts. Older node formats
 receive version diagnostics; there is no legacy reader or permanent migration command.
 The upgrade requires deliberate, complete graph cleanup rather than silent read-time
@@ -54,9 +57,10 @@ history remain untouched. See [the history procedure](../example/gantt/history/W
 
 ## Verification
 
-The maintained graphs contain 190 nodes/337 edges (SpecSpec) and 22 nodes/35 edges
-(Gantt), with zero shortcuts. The 858 tests comprise 563 Python, 240 shared UI,
-46 VS Code adapter and 9 Electron cases. Backend, renderer and host-adapter suites
+The maintained graphs contain 201 nodes/354 edges (SpecSpec) and 22 nodes/35 edges
+(Gantt), with zero shortcuts. Verification includes the full Python/shared/adapter
+suites, exact indexes and all retained Gantt refs; see the
+[invalid-state verification note](investigations/invalid-graph-authoring.md). Backend, renderer and host-adapter suites
 cover independent closure/last-occurrence/selected-parent query oracles, default
 compact/human bodies and source lists, comma-separated parents, worded hints/root
 alignment, rooted metric frontier/path/closure oracles, union quotas and source
@@ -73,7 +77,8 @@ while preserving every stage's runnable artifacts and historical identities.
 
 The [complete installed-host suites](investigations/host-smoke.md) exercise real
 historical source previews, all eight color modes, three Spotlight backchannel
-contexts, cascade HEAD/stage/commit ghosts and watcher-only invalid-file recovery.
+contexts, exact-deletion HEAD/stage/commit ghosts, retained missing references,
+explicit UI repairs and watcher-only invalid-file recovery.
 Both complete Windows suites pass twice in succession.
 Electron checks actual save, persisted draft/complete-list reload and revision
 switching. VS Code checks native documents, split views, repair and CRLF/Unicode.

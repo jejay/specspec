@@ -42,11 +42,16 @@ def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(wo
     assert child not in git_snapshot(root, "HEAD").require_valid().nodes
 
 
-def test_unborn_head_is_empty_but_arbitrary_bad_refs_and_non_git_are_not(workspace):
+def test_unborn_head_is_known_empty_non_git_is_incomplete_and_bad_refs_fail(workspace):
     root, manifesto = workspace
     runner = CliRunner()
     args = ["--root", str(root), "diff", "HEAD", "--json"]
-    assert runner.invoke(main, args).exit_code == 2
+    unavailable = runner.invoke(main, args)
+    assert unavailable.exit_code == 1
+    evidence = json.loads(unavailable.stdout)
+    assert not evidence["ok"] and evidence["result"]["target"]["valid"]
+    assert not evidence["result"]["impact_complete"]
+    assert evidence["result"]["changes"][0]["kind"] == "unavailable"
     git(root, "init")
     result = runner.invoke(main, args)
     assert result.exit_code == 0, result.output

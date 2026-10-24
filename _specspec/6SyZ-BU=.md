@@ -4,20 +4,22 @@ type: requirement
 parents:
 - tvic3PQ=
 ---
-# Validate and journal managed workspace mutations
+# Journal safe explicit edits independently of graph validity
 
-Under a project workspace lock, load and validate the saved graph, construct the
-candidate and validate it before canonical replacement. Stage replacement bytes
-on the same filesystem and journal original/replacement states in `.specspec-local`.
-Compare each target's original bytes immediately before replacement and validate
-again afterward. A null replacement records physical deletion.
+Under a project workspace lock, inventory actual canonical files, construct the
+explicit candidate and diagnose its complete graph. Managed edits target uniquely
+identified current-format documents and retain schema, bounded-input and physical
+path safeguards. Invalid surrounding graphs and intermediate graph-invalid results
+remain editable; --require-valid additionally requires a valid complete candidate
+before any canonical write. The manifesto stays protected from deletion/reparenting.
 
-Interrupted batches block managed writes until recovery. Recovery restores known
-original states only while current files match a known original/replacement/absence
-state; intervening external text requires explicit user resolution. Preserve the
-journal and staged data until completed recovery. Remove a stale lock after confirming
-its writer absent. Initialize an entire staged directory from supplied manifesto
-text and expose it at `_specspec` once valid. Existing projects use ordinary edits.
+Stage bytes on the same filesystem, journal original/replacement/absence states,
+compare original bytes before replacement and verify resulting files. A successful
+graph-invalid edit completes and cleans its transaction normally. Original byte
+checks, not node fingerprints or approval tokens, protect cooperating writers.
 
-These safeguards address cooperating writers and process interruption. Filesystem
-races and full power-loss durability require their own assessment.
+Interrupted batches block writes until recover. Recovery restores recognized original
+bytes even when the original graph was invalid, reports its diagnostics and cleans
+completed transaction state. Preserve intervening external text and unfinished data.
+Clear stale locks only after confirming the writer absent. Init publishes an entire
+valid staged directory. Filesystem races and power-loss durability remain bounded.

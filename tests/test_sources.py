@@ -327,7 +327,7 @@ def test_view_is_literal_and_nonwriting(project):
     response = CliRunner().invoke(
         main,
         ["--root", str(root), "api"],
-        input=json.dumps({"api_version": 6, "op": "source-view", "reference": source}),
+        input=json.dumps({"api_version": 7, "op": "source-view", "reference": source}),
     )
     result = json.loads(response.output)
     assert response.exit_code == 0 and result["result"]["chunks"][0]["selected"] == [2, 3]

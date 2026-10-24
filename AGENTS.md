@@ -41,7 +41,7 @@ material uncertainty and conflicts rather than manufacturing agreement.
 
 - Use `add`, `update`, and `delete` for ordinary canonical graph changes
   in this checkout. The product permits manual Markdown edits, but CLI/UI editing
-  remains recommended. Node format 7 / API 6 has no node hashes, fingerprints, or `--expect`; source blob IDs
+  remains recommended. Node format 7 / API 7 has no node hashes, fingerprints, or `--expect`; source blob IDs
   are Git content addresses, not node edit gates.
   The authorized compact-ID conversion is a one-time tool-managed migration,
   not a permanent compatibility command.
@@ -50,10 +50,13 @@ material uncertainty and conflicts rather than manufacturing agreement.
 - Do not introduce approval statuses, acceptance scores, or parent-review gates.
   Git differences communicate newness and change relative to the selected base.
 - Withdraw by physically deleting node files; explain why in the Git commit.
-  No retired flag or retire/restore workflow. Managed `delete` removes the whole
-  descendant closure, including children shared with surviving parents, and warns
-  about uncommitted affected nodes before unlinking. Never reparent or delete the
-  manifesto. Default workspace compares to HEAD; D remains visible through staging
+  No retired flag or retire/restore workflow. Managed `delete` removes exactly the
+  selected files and warns about uncommitted selected nodes before unlinking.
+  Survivors retain missing-parent declarations. Inspect with `query --issues
+  --with-ancestors` and `diff --with-context`; resolve deliberately with ordinary
+  edits or `apply`. Edits can save graph-invalid intermediates; `--require-valid`
+  checks the whole final candidate before writes. `check` stays strict. Never
+  reparent or delete the manifesto. Default workspace compares to HEAD; D remains visible through staging
   and vanishes after commit. See `docs/deletion.md`.
 - Keep implementation explanations and `sources` references current when code
   or verification changes. Source symbols remain descriptive. Blob/range locations are resolved through

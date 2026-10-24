@@ -12,7 +12,9 @@ Encode `secrets.token_bytes(5)` with padded RFC 4648 Base64url: seven payload
 symbols plus `=`, 40 random bits and canonical zero pad bits. Paths are
 `_specspec/<id>.md`. References are full and case-sensitive. Generate
 inside the writer lock and retry exact or ASCII-casefold collisions against every
-current node. Validate casefold aliases for portable
+current node, inventoried filename and parsed parent declaration. Dangling identities
+remain occupied references, so random creation does not silently supply unrelated
+reasoning under a missing parent identity. Validate casefold aliases for portable
 filename safety. Random IDs are project references; branch-merge collision checking
 remains part of graph validation.
 

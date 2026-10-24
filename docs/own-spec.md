@@ -50,7 +50,7 @@ The [ID-only path choice](../_specspec/ezHjLDs=.md) keeps filenames independent 
 binding text across CLI creation, native editors and every maintained example revision.
 Its [realization](../_specspec/OfBdhms=.md) maps exact path validation, creation forms,
 editor discovery and the reconstructed history to code and regression checks.
-Current **node format 7** defines the sole supported node scheme; **API 6** defines the compact application protocol. Schema errors and
+Current **node format 7** defines the sole supported node scheme; **API 7** defines the compact application protocol. Schema errors and
 unsupported historical formats receive diagnostics. Source blob IDs address code
 contents; transaction protection compares original bytes.
 
@@ -63,29 +63,39 @@ bindings carry justification; implementations contribute bounded realizations.
 Review ripple effects using both old and new graphs. See [graph structure](graph-structure.md).
 
 [Managed transactions](../_specspec/6SyZ-BU=.md)
-validate saved/candidate graphs and journal bytes/null deletions under a lock in
+diagnose saved/candidate graphs and journal explicit bytes/null deletions under a lock in
 `.specspec-local`. Recovery recognizes known original/replacement/absence states
 and preserves intervening external text. Retain interruption state and use
 `recover`; clear stale locks only after confirming the writer absent.
 
-## Physical cascade deletion and HEAD views
+## Exact deletion, invalid working graphs and HEAD views
 
 [Deletion/HEAD intention](../_specspec/xu6W0c4=.md),
 [descendant intention](../_specspec/fuyy0Lk=.md),
 [ghost conclusion](../_specspec/5d5oDCM=.md)
 and [plan/warning conclusion](../_specspec/AuhoBoU=.md)
-separate outcomes from the mechanism. Managed deletion includes every descendant,
-including shared children. Outside parents survive unchanged. A preview reports
-scope and all uncommitted affected files, including staged ones. Warned noninteractive
-deletion requires `--yes`; hosts confirm and supply the reviewed plan for locked
-rechecking. See [deletion commands and boundaries](deletion.md).
+separate explicit deletion from potential reasoning effects. Managed deletion removes
+exactly selected files; surviving conclusions retain all declarations, including missing
+parents. Preview reports selected uncommitted files, retained faults and potential
+scope. Warned noninteractive deletion requires `--yes`; hosts confirm the reviewed
+plan under lock. See [deletion commands](deletion.md) and [invalid-state repair](invalid-graphs.md).
+
+[Invalid-state intention](../_specspec/-RQn7Ug=.md) separates operation success,
+structural validity and potential semantic effects. [Inspection/context](../_specspec/L5Xamn4=.md)
+provides raw/working/historical reads, issue selection and contextual diffs.
+[Explicit authoring](../_specspec/0piRXe0=.md) permits intermediate edits and batch
+apply with optional complete `--require-valid`. [Fresh host context](../_specspec/PAkzXxk=.md)
+keeps broken relationships visible and safe current forms editable.
+[Native repair fields](../_specspec/qSK7qA0=.md) preserve actual empty/source-JSON
+input separately from canonical membership.
+[Realization](../_specspec/U3s4seg=.md) links shared backend/host code and verification.
 
 Default workspace views reread HEAD. Committed deleted nodes remain copyable,
 read-only D ghosts through staging and disappear after commit. Historical comparisons
 retain independent views. File/Git watchers provide bounded event hints, with explicit
 Refresh/optional polling (default off). Native Delete requires clean project documents.
 [Ghost implementation](../_specspec/JqNzSPg=.md)
-and [cascade implementation](../_specspec/huB7hcg=.md)
+and [exact-deletion implementation](../_specspec/huB7hcg=.md)
 map the current code and regression seams.
 
 ## Source regions and Git consistency
@@ -118,7 +128,8 @@ open equals-delimited node files in the main editor with raw-text access, split
 TextDocument synchronization and independent view cameras. Python plans; native
 Save/autosave/undo/recovery persist documents. Invalid text remains repairable.
 Electron/project actions use the managed writer. [Watch reconciliation](../_specspec/tvic3PQ=.md)
-retains drafts/caret/cameras and marked last-valid views during external changes.
+retains drafts/caret/cameras while publishing fresh diagnosable graphs; unavailable
+loads retain marked last-usable views.
 
 [Electron isolation](../_specspec/3SfTeOo=.md)
 constrains preload/IPC/assets and authorizes local projects with trusted launch
@@ -164,7 +175,7 @@ initial-discovery race and verifies shutdown/disposal with controlled clocks.
 leads the [everyday command vocabulary](../_specspec/7tMgRa8=.md),
 [readable defaults](../_specspec/sJ5dyh4=.md),
 [full review diffs](../_specspec/7kYVG_E=.md)
-and [compact API 6](../_specspec/cpFRqIM=.md).
+and [compact API 7](../_specspec/cpFRqIM=.md).
 Canonical node format is **7**. The [shared read path](../_specspec/-UedVEw=.md)
 serves both hosts with optional native overlays; [safeguards](../_specspec/nIj9fmE=.md)
 and [coordinated examples/cutover](../_specspec/4ZvnSGw=.md)
@@ -190,8 +201,9 @@ body lines and lists sources individually. Parent IDs always use comma-space
 separators. Both modes retain the same facts and JSON. Lowercase type/status words
 make the legend unnecessary, and root content aligns with its header. The [selected-record overlay](../_specspec/B71bAFk=.md)
 keeps deleted records among current records, selecting former parents only for
-deleted nodes. This projection is acyclic while original revision graphs remain
-reconstructible. Normal records stay unmarked; exact text changes belong to `diff`.
+deleted nodes. Valid revisions yield an acyclic projection; invalid current
+references use cycle-safe component readings and missing endpoints. Original
+revision graphs remain reconstructible. Normal records stay unmarked; exact text changes belong to `diff`.
 The [source comparison choice](../_specspec/jWl96h0=.md)
 separates reference-list changes, conservative linked-file impact, selected code
 text and actual per-version locations under shared strict/expanding resolution.
@@ -220,7 +232,7 @@ bindings from quota matches and lists omitted nearby IDs without their bodies.
 The query emitter formats once and supports an exact encoded byte budget. The
 same query pipeline supplies complete agent context; the current everyday surface
 has eight verbs. Current-command receipts, source anchors and all retained Gantt
-refs are reconstructed together. Node format is 7; API remains 6.
+refs are reconstructed together. Node format is 7; API is 7.
 
 ## Header identity and keyboard saving
 
@@ -330,7 +342,7 @@ including unselected ones; clean CRLF/filtered checkouts remain clean under Git'
 assessment. Committed node text stays in Git. [Local storage](../_specspec/P2i_png=.md)
 holds bounded metadata-only format-2 JSON in `.specspec-local/annotations`, shared
 by both hosts until explicit reviewed flush. Older local records are protected
-with a deliberate-flush diagnostic. Canonical node format is 7; API remains 6.
+with a deliberate-flush diagnostic. Canonical node format is 7; API is 7.
 [Identity resolution](../_specspec/63jO49Q=.md)
 derives current status/title/path and advisory drift/context warnings.
 

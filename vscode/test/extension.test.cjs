@@ -113,11 +113,11 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args, input) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args, input });
     if (options.cliError) throw new Error(options.cliErrorMessage || 'Cannot run Python backend');
-    if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:6,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
+    if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:7,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
     if (args[0] === 'api') {
       const request = JSON.parse(input);
-      if (request.op === 'annotations') return { api_version: 6, ok: true, diagnostics: [], result: { shots: options.shots || [] } };
-      if (request.op === 'annotation-create') return { api_version: 6, ok: true, diagnostics: [], result: { shots: [] } };
+      if (request.op === 'annotations') return { api_version: 7, ok: true, diagnostics: [], result: { shots: options.shots || [] } };
+      if (request.op === 'annotation-create') return { api_version: 7, ok: true, diagnostics: [], result: { shots: [] } };
       if (options.editError && request.edit) throw new Error('Planner temporarily unavailable');
       let overlaid = { ...current, valid: !request.target && options.invalidOverlay ? false : current.valid, nodes: current.nodes.map(n => ({ ...n, body: request.documents?.[n.path]?.split('\n---\n')[1] ?? n.body })) };
       const changes = [];
@@ -128,9 +128,9 @@ function fixture(t, options = {}) {
         changes.push({ path: n.path, before, after });
         overlaid = { ...overlaid, nodes: overlaid.nodes.map(item => item.id === n.id ? { ...item, body: request.edit.body } : item) };
       }
-      return { api_version: 6, ok: true, diagnostics: [], result: { snapshot: overlaid, changes, note: '', ...(request.base ? { diff: {base:overlaid,target:overlaid,changes:[],added_edges:[],removed_edges:[],base_ref:request.base,target_ref:request.target || 'workspace',source_changes:[],source_affected:[]} } : {}) } };
+      return { api_version: 7, ok: true, diagnostics: [], result: { snapshot: overlaid, changes, note: '', ...(request.base ? { diff: {base:overlaid,target:overlaid,changes:[],added_edges:[],removed_edges:[],base_ref:request.base,target_ref:request.target || 'workspace',source_changes:[],source_affected:[]} } : {}) } };
     }
-    return { api_version: 6, ok: true, diagnostics: [], result: current };
+    return { api_version: 7, ok: true, diagnostics: [], result: current };
   };
   // Exercise the actual command and panel lifecycle without requiring Electron.
   const originalLoad = Module._load;
@@ -202,7 +202,7 @@ test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
   await calls.commands.get('specspec.openGraph')();
   calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
-  assert.match(calls.panels[0].messages.at(-1).message, /Unsupported/);
+  assert.match(calls.panels[0].messages.at(-1).message, /Current-format graph unavailable/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
 });
 
@@ -215,7 +215,7 @@ test('physical deletion is confirmed and retired/restore/accept messages are rej
   await waitFor(() => calls.cli.some(call => call.args[0] === 'delete' && !call.args.includes('--dry-run')));
   await waitFor(() => calls.panels[0].messages.filter(message => message.type === 'snapshot').length > count);
   assert.deepEqual(calls.cli.filter(call => call.args[0] === 'delete').map(c=>c.args), [['delete','node','--dry-run','--json'],['delete','node','--yes','--reviewed-plan','-','--json']]);
-  assert.match(calls.warnings.at(-1), /ALL its descendants/);
+  assert.match(calls.warnings.at(-1), /Delete only this node/);
   for (const action of ['retire', 'restore', 'accept']) {
     const errors = calls.panels[0].messages.filter(m => m.type === 'error').length;
     calls.panels[0].send({ type: action, id: 'node' });
@@ -496,14 +496,15 @@ test('native Delete is bound, confirmed and managed, never a retired buffer edit
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'api' && JSON.parse(c.input).edit?.retired !== undefined));
   assert.equal(doc.isDirty, false);
 });
-test('native cascade confirmation warns about a saved staged descendant, and dirty descendant tabs block deletion', async t => {
+test('native exact deletion warns about the selected file and dirty descendant tabs remain protected', async t => {
   const child={...fileNode,id:'child',parents:['node'],path:'_specspec/child.md'};
-  const plan={requested_ids:['node'],deleted_ids:['child','node'],nodes:[{id:'child',path:child.path},{id:'node',path:fileNode.path}],uncommitted:[{id:'child',path:child.path,status:'A '}],git_available:true,git_note:''};
-  const f=fixture(t,{snapshot:{...snapshot,nodes:[fileNode,child]},deletePlan:plan,deleteWarnings:[{severity:'warning',message:'Node child has uncommitted staged changes; staging is not committing.'}]});
+  const plan={requested_ids:['node'],deleted_ids:['node'],nodes:[{id:'node',path:fileNode.path}],uncommitted:[{id:'node',path:fileNode.path,status:'M '}],git_available:true,git_note:'',broken_references:[{parent:'node',child:'child'}],potentially_affected:['child'],graph_valid:false};
+  const f=fixture(t,{snapshot:{...snapshot,nodes:[fileNode,child]},deletePlan:plan,deleteWarnings:[{severity:'warning',message:'Node node has uncommitted staged changes; staging is not committing.'}]});
   const root=await f.openDocument(fileNode),leaf=await f.openDocument(child);
   root.panel.send({type:'delete',id:'node'});
   await waitFor(()=>root.panel.messages.at(-1).type==='cancelled');
-  assert.match(f.calls.warnings.at(-1),/ALL.*descendants.*2 Markdown/);
+  assert.match(f.calls.warnings.at(-1),/only this node.*1 Markdown/);
+  assert.match(f.calls.warnings.at(-1),/Descendants and their parent declarations remain/);
   assert.match(f.calls.warnings.at(-1),/uncommitted staged.*staging is not committing/);
   assert.ok(f.calls.cli.filter(c=>c.args[0]==='delete').every(c=>c.args.includes('--dry-run')));
   const count=f.calls.cli.filter(c=>c.args[0]==='delete').length;

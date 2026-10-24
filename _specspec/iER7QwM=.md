@@ -67,7 +67,7 @@ phases with separate bounded aggregate guards. CDP failure/foregrounding regress
 and explicit-value Code launch arguments protect diagnostic meaning and workspace
 selection. Disposable profiles alone enable loading traces and background-throttling
 controls. Complete installed Windows suites exercise all backchannel,
-cascade/recovery and host-native checks. docs/investigations/host-smoke.md records
+exact-deletion/repair/recovery and host-native checks. docs/investigations/host-smoke.md records
 complete-suite coverage, measurements and causal read/transport regressions. Individual operation
 deadlines and production settings remain unchanged. Binding-text regression guards
 recognize retired-design sections while permitting current runtime read-supersession

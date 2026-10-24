@@ -1,4 +1,4 @@
-"""Bounded API-6 frames; requests retain the ordinary application authority."""
+"""Bounded API-7 frames; requests retain the ordinary application authority."""
 
 import json
 

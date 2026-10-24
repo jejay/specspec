@@ -19,21 +19,21 @@ def test_stream_keeps_normal_envelopes_and_continues_after_rejected_requests(wor
     root, _ = workspace
     output = io.BytesIO()
     values = [
-        {"api_version": 6, "op": "read"},
+        {"api_version": 7, "op": "read"},
         {"api_version": 5, "op": "read"},
-        {"api_version": 6, "op": "execute"},
-        {"api_version": 6, "op": "annotations"},
+        {"api_version": 7, "op": "execute"},
+        {"api_version": 7, "op": "annotations"},
     ]
     assert api_transport.serve(root, frames(*values), output) == 0
     results = [json.loads(line) for line in output.getvalue().splitlines()]
-    assert [r["api_version"] for r in results] == [6] * 4
+    assert [r["api_version"] for r in results] == [7] * 4
     assert [r["ok"] for r in results] == [True, False, False, True]
     assert results[-1]["result"] == {"shots": []}
 
 
 def test_each_stream_frame_reads_current_text_and_validation(workspace):
     root, manifesto = workspace
-    request = {"api_version": 6, "op": "read"}
+    request = {"api_version": 7, "op": "read"}
     source = frames(request, request, request)
     read = source.readline
     calls = 0
@@ -72,7 +72,7 @@ def test_framing_loss_ends_bounded_channel_without_guessing_a_request(raw, works
 
 def test_malformed_json_frame_is_an_error_and_next_valid_frame_still_runs(workspace):
     output = io.BytesIO()
-    valid = frames({"api_version": 6, "op": "annotations"}).getvalue()
+    valid = frames({"api_version": 7, "op": "annotations"}).getvalue()
     assert api_transport.serve(workspace[0], io.BytesIO(b"not json\n" + valid), output) == 0
     first, second = [json.loads(line) for line in output.getvalue().splitlines()]
     assert first["ok"] is False and second["ok"] is True
@@ -88,7 +88,7 @@ def test_real_api_channel_flushes_before_eof_and_observes_next_request(workspace
     )
     executor = ThreadPoolExecutor(max_workers=1)
     try:
-        raw = (json_text({"api_version": 6, "op": "read"}) + "\n").encode()
+        raw = (json_text({"api_version": 7, "op": "read"}) + "\n").encode()
         process.stdin.write(raw)
         process.stdin.flush()
         assert json.loads(executor.submit(process.stdout.readline).result(timeout=20))["ok"]

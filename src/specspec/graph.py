@@ -33,6 +33,39 @@ class Graph:
             [parent, child] for child, parents in self.parents.items() for parent in parents
         )
 
+    def components(self) -> list[list[str]]:
+        """Deterministic strongly-connected components, source-first, without recursion."""
+        seen, finished = set(), []
+        for start in sorted(self.nodes):
+            if start in seen:
+                continue
+            seen.add(start)
+            stack = [(start, iter(sorted(self.children[start])))]
+            while stack:
+                current, edges = stack[-1]
+                child = next(edges, None)
+                if child is None:
+                    finished.append(current)
+                    stack.pop()
+                elif child not in seen:
+                    seen.add(child)
+                    stack.append((child, iter(sorted(self.children[child]))))
+        seen, result = set(), []
+        for start in reversed(finished):
+            if start in seen:
+                continue
+            component, pending = [], [start]
+            seen.add(start)
+            while pending:
+                current = pending.pop()
+                component.append(current)
+                for parent in sorted(self.parents[current], reverse=True):
+                    if parent not in seen:
+                        seen.add(parent)
+                        pending.append(parent)
+            result.append(sorted(component))
+        return result
+
     def cycle(self) -> list[str]:
         # Iterative DFS avoids recursion limits on long specification chains.
         color: dict[str, int] = {}
@@ -81,10 +114,15 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
         for parent_id in node.parents:
             parent = by_id.get(parent_id)
             if parent is None:
-                error(
-                    node,
-                    "REFERENCE",
-                    f"Missing parent {parent_id}; recover the file or change the reference.",
+                diagnostics.append(
+                    Diagnostic(
+                        "REFERENCE",
+                        f"Missing parent {parent_id} (absent or unreadable); "
+                        "recover the file or change the reference.",
+                        node.path,
+                        node.id,
+                        parent_id=parent_id,
+                    )
                 )
                 continue
             parents[node.id].add(parent_id)
@@ -108,7 +146,22 @@ def build_graph(nodes: list[SpecNode]) -> tuple[Graph, list[Diagnostic]]:
                 heapq.heappush(ready, child)
     if len(graph.order) != len(nodes):
         witness = graph.cycle()
-        diagnostics.append(Diagnostic("CYCLE", "Cycle: " + " -> ".join(witness)))
+        for component in graph.components():
+            if len(component) > 1 or component[0] in graph.children[component[0]]:
+                diagnostics.append(
+                    Diagnostic(
+                        "CYCLE",
+                        "Cycle component: "
+                        + ", ".join(component)
+                        + (
+                            "; witness: " + " -> ".join(witness)
+                            if set(witness) <= set(component)
+                            else ""
+                        ),
+                        node_id=component[0],
+                        details={"members": component},
+                    )
+                )
     if len(manifestos) == 1:
         root_id = manifestos[0].id
         reachable = graph.closure(root_id) | {root_id}

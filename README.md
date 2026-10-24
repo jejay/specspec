@@ -3,7 +3,7 @@
 Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
 [Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
 [Graph structure](docs/graph-structure.md): immediate justifications form a shortcut-free DAG;
-node format 7 and API 6 are the current contracts.
+node format 7 and API 7 are the current contracts.
 
 New engineers: [architecture guide](docs/architecture.md) and
 [owner/agent workflow SVG](docs/architecture.svg).
@@ -123,7 +123,15 @@ specspec update <requirement-id> --body revised-requirement.md
 specspec query <requirement-id> --max-distance 0 --with-ancestors
 ```
 
-`--root <project>` precedes the command when selecting a workspace explicitly. Body input accepts `-` for stdin. `update --parent` replaces the entire parent list. `delete` takes one or more root IDs and physically removes them AND all descendants, including children shared with surviving parents. It warns before removing any affected uncommitted node, even if staged; preview with `--dry-run`, and use `--yes` for noninteractive warned deletion. The remaining DAG must be valid; no reparenting or manifesto deletion. There is no approval status or `accept` command. Mutations support `--json`; there are no fingerprints or `--expect` options.
+`--root <project>` precedes the command when selecting a workspace explicitly. Body
+input accepts `-` for stdin. `update --parent` replaces the entire parent list.
+`delete` removes exactly the named files; surviving conclusions retain their parent
+references. Preview with `--dry-run`; use `--yes` for warned noninteractive deletion
+of uncommitted selected files. Graph-invalid intermediate edits are saved with
+explicit diagnostics. `--require-valid` requires the whole final candidate valid
+before writes, and `check` remains strict. The manifesto is protected. There are no
+approval statuses, node fingerprints or `--expect` options. See [invalid-state reads,
+contextual diffs and batch repair](docs/invalid-graphs.md).
 
 The CLI and graph editor are recommended, but manual `_specspec` Markdown edits are allowed. Validation checks actual schema and graph consistency, not how the files were edited. There are no stored `managed_hash` markers or graph fingerprints. Valid manual changes need no repair or provenance acknowledgement.
 
@@ -141,10 +149,11 @@ The flat `_specspec` directory contains nodes only. Global `format_version` meta
 Canonical node format **7** has no `managed_hash`, `status` or `retired` field. Withdraw a node
 by deleting its Markdown file (`specspec delete <id>...` or a valid manual deletion).
 Explain why in your normal Git commit. Earlier content stays in Git history, not
-flagged files. Managed deletion cascades through every full/partial child at every
-depth, deduplicating shared descendants while preserving outside parents/unrelated
-branches. It warns about uncommitted affected nodes before unlinking, including
-staged edits/additions. The manifesto cannot be deleted; survivors are not reparented. See [the deletion guide](docs/deletion.md).
+flagged files. Managed deletion removes only explicitly selected nodes and warns
+about uncommitted selected files before unlinking, including staged changes.
+Survivors retain dangling declarations for deliberate reconsideration and repair.
+Use `query --issues --with-ancestors` and `diff --with-context` to discover structural
+faults and previous/current justification. See [the deletion guide](docs/deletion.md).
 
 The default workspace always compares against **HEAD**, not the index. A deleted
 HEAD node remains visible as **D**, with read-only, copyable earlier content and
@@ -154,7 +163,7 @@ nodes. Unborn Git has an empty baseline; non-Git/invalid baselines show a clear
 comparison-unavailable note. No default polling, staging, commits or status-restore
 workflow is introduced. Native-document Delete requires saved project documents.
 
-Only the current compact-ID node format **7** schema and structured API **6** are supported. Obsolete
+Only the current compact-ID node format **7** schema and structured API **7** are supported. Obsolete
 node formats, UUID IDs and unknown fields are rejected, not silently normalized.
 There is no permanent migration command or editor conversion control. Both working
 graphs use exact ID-only filenames. Old root-history
@@ -258,7 +267,7 @@ The webview supports node creation, binding-text/parent/source editing, confirme
 
 **Markdown synchronization:** both hosts reload on file-watcher notifications, coalescing bursts and briefly retrying incomplete saves. Polling is **off by default**. Enable it in VS Code with `"specspec.pollIntervalMs": 5000`, or in Electron with `--poll-interval-ms 5000` / `SPECSPEC_POLL_INTERVAL_MS=5000`; `0` disables it. Watchers remain enabled. Explicit Refresh is always available; watcher-only delivery depends on the OS/filesystem and is not guaranteed on every network/mounted drive.
 
-Native VS Code documents, including unsaved raw Markdown, overlay saved project files for graph and Git context. Split views share document contents, not cameras. Invalid buffers keep the last valid graph marked out of date while the bound form remains editable for repair; native Save can persist invalid text, so validate before committing. Unapplied form input has a separate recovery backup, not a second silently diverging document. Project CLI actions refuse dirty open SpecSpec documents. Managed project/Electron forms retain drafts, caret, camera and original records; same-node external changes ask before overwriting, and deleted drafts remain copyable. Invalid external files are never repaired automatically. Native text saves are **not** Python-journaled transactions; CLI/Electron writes still use locks, original-byte checks and recovery.
+Native VS Code documents, including unsaved raw Markdown, overlay saved project files for graph and Git context. Split views share document contents, not cameras. Graph-invalid buffers display fresh broken relationships while safe forms remain editable; unreadable targets retain raw repair access and unavailable loads retain marked last-usable context. Native Save can persist invalid text, so validate before committing. Unapplied form input has a separate recovery backup, not a second silently diverging document. Project CLI actions refuse dirty open SpecSpec documents. Managed project/Electron forms retain drafts, caret, camera and original records; same-node external changes ask before overwriting, and deleted drafts remain copyable. Invalid external files are never repaired automatically. Native text saves are **not** Python-journaled transactions; CLI/Electron writes still use locks, original-byte checks and recovery.
 
 Layout and navigation reuse locally bundled Dagre and D3 libraries, not a Blender engine port or a remote renderer. `npm run compile` builds the offline browser bundle and its license notices. See [the library rationale](docs/node-canvas.md).
 

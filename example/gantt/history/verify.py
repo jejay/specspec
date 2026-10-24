@@ -142,10 +142,9 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             requested = [arg for arg in argv[3:-1] if arg != "--yes"]
             prior_graph, errors = build_graph(list(records.values()))
             assert not errors
-            expected = set(requested)
-            for node_id in requested:
-                expected.update(prior_graph.closure(node_id))
-            assert set(changed) == expected
+            assert set(changed) == set(requested), (
+                "Deletion expanded beyond explicit file selection."
+            )
             for node_id in changed:
                 del records[node_id]
         graph, diagnostics = build_graph(list(records.values()))

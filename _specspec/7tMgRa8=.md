@@ -30,10 +30,15 @@ Init takes a manifesto body file or stdin; add/update use --body FILE|- and expl
 repeated --parent full IDs. Add defaults to requirement and supports --type implementation. Init and add
 create <id>.md paths independently of body text.
 Updates replace the supplied parent list; valid manifesto parents stay empty.
-Delete retains --dry-run and --yes with its complete descendant and warning contract.
+Delete retains --dry-run and --yes for exact selected-file deletion, retained
+reference faults and selected-file warnings. show supports raw/staged/historical
+reads; query --issues selects faults and potential descendants; diff --with-context
+adds before/current justification and finite cause evidence. --require-valid checks
+the complete final candidate, independently of a successful intermediate edit.
 
-Advanced sources show/capture/reanchor and recover retain source and recovery
-controls. Spotlight add/show/flush provides immutable checkout-local spotlights.
+Advanced apply performs one bounded explicit multi-node add/update/delete batch
+with optional final validity and normal deletion consent. Sources show/capture/
+reanchor and recover retain source and transaction recovery controls. Spotlight add/show/flush provides immutable checkout-local spotlights.
 Add takes full node IDs and one message with optional --base/--target comparison;
 show resolves each record's own context with statuses and advisory workspace drift;
 flush requires explicit consent. The application adapter supplies independent

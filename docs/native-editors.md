@@ -80,8 +80,8 @@ restoration of arbitrary project/history panels after a workbench restart is not
 implemented in this slice.
 
 Unsaved native buffers may be invalid, just like raw Markdown. Diagnostics keep
-the last valid graph marked out of date while the bound form remains editable for
-repair. Incomplete sources JSON is retained as an invalid frontmatter value until
+the fresh diagnosable graph visible with structural findings while the bound form
+remains editable for repair; unavailable loads retain marked last-usable context. Incomplete sources JSON is retained as an invalid frontmatter value until
 completed. A wholly unparseable node can be repaired in Text Editor. Native Save
 can persist invalid text: validate before committing. Project-wide CLI writes
 refuse dirty open SpecSpec documents; they retain the existing validation, locks,
@@ -96,11 +96,11 @@ format metadata, hashes, approval stages, Git staging, or commits are introduced
 
 ## Non-writing Python API
 
-The hidden `specspec api` integration adapter consumes bounded API-6 JSON on stdin:
+The hidden `specspec api` integration adapter consumes bounded API-7 JSON on stdin:
 
 ```json
 {
-  "api_version": 6,
+  "api_version": 7,
   "op": "plan",
   "documents": {"_specspec/Zm9vYmE=.md": "---\n..."},
   "edit": {
@@ -122,15 +122,20 @@ field/edit exists. Delete is a confirmed managed project-file operation requirin
 clean SpecSpec documents, not a native metadata change pending Save. The result has `snapshot`, `changes` (`path`, exact `before`/`after` text), optional
 compact `diff`, and `note`; structured diagnostics are in the envelope.
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
-explicit diagnostics, not successful graph validation. Unsafe paths, edits to
+explicit diagnostics, not successful graph validation. Bounded `repair_forms` holds
+actual identifiable native overlay/candidate fields separately from canonical nodes,
+so an empty body or partial source JSON remains editable without stale text substitution.
+The recognized manifesto header supplies current version identity independently of
+body validity. Unusable YAML/identity retains raw-editor repair access.
+Unsafe paths, edits to
 missing files, identity changes, unsupported schemas, locks/recovery and oversized
-requests fail. Delete now removes every descendant, including shared children,
-through the same backend plan as the CLI. Its confirmation shows the total file
-count and uncommitted affected-node warnings (staged is not committed), then
+requests fail. Delete removes exactly the selected node through the same backend
+plan as the CLI. Its confirmation shows retained dependency faults and uncommitted
+selected-file warnings (staged is not committed), then
 rechecks the reviewed scope under the writer lock. Dirty descendant documents
 remain protected by the project-wide save/revert guard. Reads skip overlays for already deleted files, so retained open
 buffers do not resurrect nodes. The planner never writes files or recreates a
-deleted node. The current application protocol is API 6 with shortcut-free node format 7;
+deleted node. The current application protocol is API 7 with shortcut-free node format 7;
 upgrade the CLI and both host builds together. See [compact commands](cli.md).
 
 ## Verification

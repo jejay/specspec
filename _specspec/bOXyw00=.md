@@ -12,6 +12,6 @@ locally with strict CSP. The Python backend plans binding-text, parent and sourc
 changes and validates canonical mutations.
 
 Trusted working views enable applicable save/add/delete/source actions; historical
-views provide copyable read-only details. Invalid reloads retain input and a marked
-last valid view with diagnostics. Subscribe to canonical and Git notifications.
+views provide copyable read-only details. Graph-invalid reloads retain input while displaying fresh broken relationships
+and diagnostics. Unavailable loads retain marked last-usable context. Subscribe to canonical and Git notifications.
 The owner controls staging, commits and hook setup through normal Git workflows.

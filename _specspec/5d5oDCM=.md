@@ -9,7 +9,7 @@ parents:
 # Derive physical-deletion ghosts from freshly resolved HEAD
 
 Represent the saved graph with physically present format 7 node files. Managed
-deletion follows AuhoBoU='s descendant plan and writer guards. The user records
+deletion follows AuhoBoU='s exact-selection plan and writer guards. The user records
 reasons in ordinary Git commits; predecessor trees retain removed node reasoning.
 
 Default/new/reset workspace views compare current saved files and native overlays

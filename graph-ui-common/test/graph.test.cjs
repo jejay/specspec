@@ -82,6 +82,45 @@ test('source-file changes leave the header area quiet while retaining diagnostic
   }
 });
 
+test('fresh graph-invalid snapshots show missing endpoint stubs and keep current forms editable', t => {
+  const f=fixture(t); f.dom.window.document.querySelector('[data-node-id="child"]').click();
+  const broken={...f.snapshot,valid:false,nodes:[root,{...child,parents:['gone','root']}],edges:[['root','child'],['gone','child']]};
+  f.send({type:'snapshot',snapshot:broken,diagnostics:[{code:'REFERENCE',message:'Missing parent gone'}],readonly:false});
+  assert.match(f.$('message').textContent,/Graph INVALID/);
+  assert.equal(f.$('save').disabled,false);assert.equal(f.$('body').readOnly,false);
+  assert.equal(f.$('new').disabled,false);assert.equal(f.$('sync-notice').hidden,true);
+  assert.ok(f.dom.window.document.querySelector('[data-node-id="gone"].missing'));
+  assert.match(f.$('parent-links').textContent,/gone/);
+  f.$('body').value='# Deliberate repair';f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  f.$('save').click();assert.equal(f.messages.at(-1).type,'save');assert.deepEqual([...f.messages.at(-1).parents],['gone','root']);
+  f.send({type:'cancelled'});f.$('discard').click();f.$('back').click();
+  f.dom.window.document.querySelector('[data-node-id="gone"]').click();
+  assert.equal(f.$('save').disabled,true);assert.equal(f.$('delete').disabled,true);assert.equal(f.$('body').readOnly,true);
+  assert.equal(f.dom.window.document.querySelector('.git-corner'),null,'A missing never-committed identity is not a fabricated D.');
+  assert.match(f.$('focus-context').textContent,/Unknown/);
+  f.send({type:'snapshot',snapshot:{...broken,inventory:[root.path,child.path,'_specspec/gone.md'],unreadable_paths:['_specspec/gone.md']},diagnostics:[{code:'SCHEMA',message:'Unreadable current parent'}],readonly:false});
+  assert.equal(f.$('title').textContent,'Unreadable parent');
+  assert.match(f.$('identity').textContent,/unreadable document/);assert.doesNotMatch(f.$('identity').textContent,/deleted|earlier context/);
+  assert.equal(f.$('save').disabled,true);
+});
+
+test('dirty unreadable targets retain the invalid banner, honest identity and copyable unsavable text', t => {
+  const f=fixture(t);f.dom.window.document.querySelector('[data-node-id="child"]').click();
+  f.$('body').value='# Retained local draft';f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  f.send({type:'snapshot',snapshot:{...f.snapshot,valid:false,complete:false,nodes:[root],edges:[],inventory:[root.path,child.path],unreadable_paths:[child.path]},diff:{base:f.snapshot,base_ref:'HEAD',target_ref:'workspace',changes:[{id:'child',kind:'unavailable'}],added_edges:[],removed_edges:[]},diagnostics:[{code:'SCHEMA',message:'Unreadable current document'}],readonly:false});
+  assert.match(f.$('message').textContent,/Graph INVALID/);assert.match(f.$('message').textContent,/Unreadable node draft/);
+  assert.equal(f.$('title').textContent,'Unreadable node draft');assert.equal(f.$('body').value,'# Retained local draft');
+  assert.equal(f.$('save').disabled,true);assert.equal(f.$('body').readOnly,true);assert.equal(f.$('body').disabled,false);
+});
+
+test('cyclic and disconnected current records render completely without a last-valid substitution', t => {
+  const f=fixture(t), left={...child,id:'left',parents:['right']},right={...child,id:'right',parents:['left']};
+  f.send({type:'snapshot',snapshot:{...f.snapshot,valid:false,nodes:[root,left,right],edges:[['left','right'],['right','left']]},diagnostics:[{code:'CYCLE',message:'left/right'}],readonly:false});
+  assert.equal(f.dom.window.document.querySelectorAll('#cards .card').length,3);
+  f.dom.window.document.querySelector('[data-node-id="left"]').click();assert.equal(f.$('save').disabled,false);
+  assert.match(f.$('message').textContent,/CYCLE/);
+});
+
 function saveKey(f, target, flags = {}) {
   const event = new f.dom.window.KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true, ...flags });
   target.dispatchEvent(event); return event;
@@ -1842,6 +1881,18 @@ function nativeFixture(t) {
   f.send({ type: 'snapshot', snapshot: f.snapshot, document: f.document, selectedId: 'child', diagnostics: [], readonly: false });
   return f;
 }
+test('native intermediate form records preserve actual empty input and permit repair without canonical membership', t => {
+  const f=nativeFixture(t);f.$('body').value='';f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  f.send({type:'document-status',document:{...f.document,version:2,dirty:true},editSequence:1});
+  const partial={...child,body:'',sources_text:'[]',repairForm:true};
+  f.send({type:'snapshot',snapshot:{...f.snapshot,valid:false,complete:false,nodes:[root],edges:[],inventory:[root.path,child.path],unreadable_paths:[child.path]},repair_forms:[partial],document:{...f.document,version:2,dirty:true},diagnostics:[{code:'SCHEMA',message:'Body must be non-empty'}],readonly:false});
+  assert.equal(f.$('body').value,'');assert.equal(f.$('body').readOnly,false);assert.equal(f.$('save').disabled,false);
+  assert.equal(f.$('delete').disabled,true);assert.match(f.$('message').textContent,/Graph INVALID/);
+  assert.equal(f.$('sync-notice').hidden,true);
+  f.$('body').value='# Repaired';f.$('body').dispatchEvent(new f.dom.window.Event('input'));
+  assert.equal(f.messages.at(-1).type,'edit');assert.equal(f.messages.at(-1).body,'# Repaired');assert.equal(f.messages.at(-1).documentVersion,2);
+});
+
 test('native document forms send edits immediately; graph navigation opens the other node file', t => {
   const { dom, $, messages, saved } = nativeFixture(t);
   assert.equal($('title').textContent, 'Child'); assert.equal($('save').textContent, 'Save file');

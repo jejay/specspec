@@ -13,9 +13,10 @@ records with their complete old binding content. Shared deleted nodes use the sa
 references and last-occurrence placement as current nodes. Headers retain all of
 the chosen record's parents.
 
-The projection is acyclic: current nodes have current parents, so no deleted node
-can parent a current node; paths entering deleted nodes continue only through the
-acyclic base-only subgraph. Keep lost base relationships among surviving nodes in
+For valid input revisions the projection is acyclic. Invalid working references
+can connect missing/deleted parents to current conclusions, and cyclic inputs need
+cycle-safe explicit-component presentation. Earlier bindings stay historical context,
+not current justification. Keep lost base relationships among surviving nodes in
 the structured comparison and diff. Full old/new edge unions remain separate facts.
 
 Validate each canonical revision independently. A display projection can contain a
