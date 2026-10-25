@@ -181,6 +181,14 @@ serves both hosts with optional native overlays; [safeguards](../_specspec/nIj9f
 and [coordinated examples/cutover](../_specspec/4ZvnSGw=.md)
 retain their domain and verification boundaries. The [command guide](cli.md) gives
 current operational recipes; original owner source remains unchanged in AGENTS.md.
+[Direct authoring](../_specspec/rgGL5FY=.md) supplies bodies and batches through
+arguments. The [message/batch choice](../_specspec/BKekD_o=.md) exposes repeatable
+`-m/--message` and `apply --edits-json`, with explicit hidden bulk inputs separate
+from literal text. The [realization](../_specspec/Fy-_P9A=.md) maps parsing, unchanged
+UI transports, byte/argv regressions and reconstructed example receipts. Node format
+and API remain 7; OS argument limits are distinct from bulk input limits.
+[Verification and platform boundaries](investigations/argument-authoring.md) record
+the argument/bulk split, current-history reconstruction and evidence scope.
 [CLI/review implementation](../_specspec/SF12qpA=.md)
 and [shared host implementation](../_specspec/GG_koyg=.md)
 map the code and verification seams.
@@ -425,7 +433,7 @@ python -m specspec show
 python -m specspec query
 python -m specspec query <full-id> --max-distance 0 --with-ancestors
 python -m specspec show <full-id> --dependents
-python -m specspec update <full-id> --body <body-file>
+python -m specspec update <full-id> -m "# Revised conclusion" -m "Current reasoning."
 python -m specspec delete <full-id> --dry-run --json
 python -m specspec check --warnings-as-errors
 python -m specspec check --staged --sources

@@ -126,7 +126,7 @@ state, approval receipt or compulsory deletion explanation.
 ## Make explicit repairs
 
 ```sh
-specspec update <child-id> --parent <surviving-parent-id> --body revised.md
+specspec update <child-id> --parent <surviving-parent-id> -m "# Revised conclusion"
 specspec update <other-id> --parent <parent-id> --require-valid
 specspec check --warnings-as-errors
 ```
@@ -150,17 +150,19 @@ using ordinary Git tooling. The CLI never chooses those semantic outcomes for yo
 ## Apply one coherent multi-node change
 
 ```sh
-specspec apply repair.json --dry-run
-specspec apply repair.json --require-valid
+specspec apply --edits-json '{"edits":[{"op":"update","id":"<C-id>","parents":["<B-id>"],"body":"# Revised conclusion\n"}]}' --dry-run
+specspec apply --edits-json '{"edits":[{"op":"update","id":"<C-id>","parents":["<B-id>"],"body":"# Revised conclusion\n"}]}' --require-valid
 ```
 
-The plan is a bounded JSON object with 1–1024 explicit edits. For example, replacing
+The argument is a bounded JSON object with 1–1024 explicit edits. Pass the complete
+object as one quoted `--edits-json` value. The examples use Bash quoting;
+PowerShell/cmd.exe require version-appropriate native-argument quoting. Replace
 schematic IDs below with actual complete IDs:
 
 ```json
 {
   "edits": [
-    {"op": "update", "id": "<C-id>", "parents": ["<B-id>"], "body_file": "c.md"},
+    {"op": "update", "id": "<C-id>", "parents": ["<B-id>"], "body": "# B-derived conclusion\n"},
     {"op": "add", "as": "part", "parents": ["<B-id>"], "body": "# Independent part\n"},
     {"op": "update", "id": "<D-id>", "parents": ["$part"]},
     {"op": "delete", "ids": ["<E-id>"]}
@@ -172,15 +174,16 @@ schematic IDs below with actual complete IDs:
   a unique local `as` name. `$name` references any new node in the same batch.
 - `update` names an existing identifiable node and explicit replacement body,
   parents and/or sources. `delete` names exactly the files to remove.
-- Body input is inline `body` or `body_file`, not both. Relative files resolve from
-  the plan directory; `apply -` reads JSON stdin and uses the launch directory.
-  Nested stdin body files are not accepted.
+- Argument-mode bodies are literal inline `body` strings. `body_file` is rejected
+  before reads. [Integration-only `--plan FILE|-`](cli.md#integration-only-bulk-inputs)
+  retains file/stdin batches and relative body files for large inputs and automation.
 - Aliases never enter node files. Dry-run generated IDs are not reservations.
   Creation avoids existing names and declared parent identities, including dangling
   ones, so a random ID cannot accidentally supply a missing justification.
 - Conflicting edits, duplicate JSON fields, unknown fields and malformed targets
   fail without writes. Plans and aggregate bodies are bounded at 16 MiB; individual
-  node documents retain their 1 MiB limit.
+  node documents retain their 1 MiB limit. Shell/OS argv limits can be much smaller;
+  use the explicit integration input for large batches rather than splitting them.
 - `--dry-run` has no canonical writes. Applying re-reads actual current files; a dry
   run is evidence, not a frozen workspace or a promise about later random IDs.
 - Selected uncommitted deletions require normal consent (`--yes` noninteractively).

@@ -105,6 +105,9 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
         assert receipt["exit_code"] == 0 and receipt["api_version"] == API_VERSION
         assert not receipt["diagnostics"], receipt
         argv = receipt["argv"]
+        assert receipt["stdin"] is None, "Maintained authoring receipts use literal arguments."
+        assert "--body" not in argv
+        messages = [argv[i + 1] for i, arg in enumerate(argv) if arg == "-m"]
         assert argv[:2] == ["--root", "."] and argv[-1] == "--json"
         assert "--expect" not in argv and "fingerprint" not in receipt["result"]
         action, result = argv[2], receipt["result"]
@@ -125,15 +128,15 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 node_id,
                 node_type,
                 [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"],
-                receipt["stdin"],
+                "\n\n".join(messages),
                 f"_specspec/{node_id}.md",
                 FORMAT_VERSION if node_type == "manifesto" else None,
                 json.loads(argv[argv.index("--sources") + 1]) if "--sources" in argv else [],
             )
         elif action == "update":
             node = records[argv[3]]
-            if "--body" in argv:
-                node.body = receipt["stdin"]
+            if messages:
+                node.body = "\n\n".join(messages)
             if "--parent" in argv:
                 node.parents = [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"]
             if "--sources" in argv:

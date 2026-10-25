@@ -8,6 +8,8 @@ conclusions and actual implementation mappings. Git records changed decisions. T
 actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
 physically deleted during redirects and remain in the earlier Git commits.
 Every retained revision uses shortcut-free node format 7 and application API 7.
+Authoring receipts supply literal `-m` body arguments; the UI's private transports
+and explicit bulk integration inputs retain their separate roles.
 The final graph has 35 immediate justification edges; ancestry supplies inherited
 bindings and changes require downstream reconsideration.
 

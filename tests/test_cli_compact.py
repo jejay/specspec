@@ -28,7 +28,9 @@ def api(root, **value):
 
 
 @pytest.mark.parametrize("encoding", ["ascii", "cp1252"])
-@pytest.mark.parametrize("args", [[], ["diff"], ["query"]])
+@pytest.mark.parametrize(
+    "args", [[], ["diff"], ["query"], ["init"], ["add"], ["update"], ["apply"]]
+)
 def test_help_is_safe_through_legacy_windows_pipe_encodings(workspace, encoding, args):
     root, _ = workspace
     result = subprocess.run(
@@ -72,22 +74,20 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
         ("annotations",),
     ]:
         assert call(root, *args).exit_code == 2
-    for args in [("init", "-"), ("add", "--parent", node_id, "--body", "-")]:
+    for args in [("init", "-m", "# Body"), ("add", "--parent", node_id, "-m", "# Body")]:
         assert call(root, *args, "--slug", "unused", input="# Body\n").exit_code == 2
     assert "--clear-parents" not in call(root, "update", "--help").stdout
 
 
 def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     root = tmp_path
-    result = call(root, "init", "-", "--json", input="# Manifesto 🐕\n")
+    result = call(root, "init", "-m", "# Manifesto 🐕\n", "--json")
     assert result.exit_code == 0, result.output
     first = json.loads(result.stdout)
     assert API_VERSION == 7 and FORMAT_VERSION == 7
     assert first["api_version"] == 7 and "snapshot" not in first["result"]
     parent = first["result"]["changed_ids"][0]
-    result = call(
-        root, "add", "--parent", parent, "--body", "-", "--json", input="# Useful heading\n"
-    )
+    result = call(root, "add", "--parent", parent, "-m", "# Useful heading\n", "--json")
     assert result.exit_code == 0, result.output
     receipt = json.loads(result.stdout)["result"]
     child = receipt["changed_ids"][0]

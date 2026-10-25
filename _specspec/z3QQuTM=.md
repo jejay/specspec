@@ -21,7 +21,8 @@ sources:
 Hatchling packages src/specspec; Click exposes eight everyday commands: init, show,
 query, add, update, delete, check and diff. Advanced source/recovery tools retain
 explicit ownership and uncertainty. Hidden api accepts bounded versioned application
-requests. UTF-8 files/stdin carry binding bodies; full IDs remain canonical.
+requests. Ordinary binding text uses literal -m/--message arguments; integration
+UTF-8 files/stdin remain available and full IDs remain canonical.
 
 query.py/query_select.py supply complete selected bindings and optional ancestor
 completion through one pipeline. output.py renders readable node summaries and canonical

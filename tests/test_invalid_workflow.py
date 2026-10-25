@@ -90,7 +90,9 @@ def test_incremental_updates_and_optional_final_validity_are_separate(workspace)
     delete_nodes(root, [a])
     before = load_snapshot(root).files
     plan = json.dumps({"edits": [{"op": "update", "id": b, "body": "# Proposed only\n"}]})
-    preview = CliRunner().invoke(main, ["--root", str(root), "apply", "-", "--dry-run"], input=plan)
+    preview = CliRunner().invoke(
+        main, ["--root", str(root), "apply", "--edits-json", plan, "--dry-run"]
+    )
     assert preview.exit_code == 0 and "Proposed graph is INVALID" in preview.stdout
     assert load_snapshot(root).files == before
     refused, data = call(root, "update", c, "--parent", b, "--require-valid")
@@ -123,10 +125,10 @@ def test_batch_candidate_is_coherent_bounded_explicit_and_aliases_are_ephemeral(
     }
     path = plan_dir / "repair.json"
     path.write_text(json.dumps(plan), encoding="utf8")
-    result, preview = call(root, "apply", str(path), "--dry-run", "--require-valid")
+    result, preview = call(root, "apply", "--plan", str(path), "--dry-run", "--require-valid")
     assert result.exit_code == 0 and not preview["result"]["applied"]
     assert load_snapshot(root).files == before
-    result, data = call(root, "apply", str(path), "--require-valid")
+    result, data = call(root, "apply", "--plan", str(path), "--require-valid")
     assert result.exit_code == 0 and data["result"]["graph_valid"]
     alias = data["result"]["aliases"]["piece"]
     saved = load_snapshot(root)
@@ -136,9 +138,9 @@ def test_batch_candidate_is_coherent_bounded_explicit_and_aliases_are_ephemeral(
     assert not (root / ".specspec-local/journal.json").exists()
     duplicate = {"edits": [{"op": "update", "id": c, "body": "one"}, {"op": "delete", "ids": [c]}]}
     before = saved.files
-    result, _ = call(root, "apply", "-", input=json.dumps(duplicate))
+    result, _ = call(root, "apply", "--edits-json", json.dumps(duplicate))
     assert result.exit_code == 2 and load_snapshot(root).files == before
-    result, _ = call(root, "apply", "-", input='{"edits":[],"edits":[]}')
+    result, _ = call(root, "apply", "--edits-json", '{"edits":[],"edits":[]}')
     assert result.exit_code == 2
 
 
@@ -147,9 +149,9 @@ def test_batch_deletion_consent_is_not_waived_by_invalid_editing(workspace):
     _, child = add_node(root, "requirement", [manifesto], "# New\n")
     plan = json.dumps({"edits": [{"op": "delete", "ids": [child]}]})
     before = load_snapshot(root).files
-    refused, data = call(root, "apply", "-", input=plan)
+    refused, data = call(root, "apply", "--edits-json", plan)
     assert refused.exit_code == 1 and not data["ok"] and load_snapshot(root).files == before
-    allowed, data = call(root, "apply", "-", "--yes", input=plan)
+    allowed, data = call(root, "apply", "--edits-json", plan, "--yes")
     assert allowed.exit_code == 0 and data["result"]["deleted_ids"] == [child]
     assert "DELETE_GIT_UNAVAILABLE" in allowed.stderr
 
@@ -275,7 +277,7 @@ def test_recovery_restores_invalid_original_and_preserves_external_intervention(
             ]
         }
     )
-    result, _ = call(root, "apply", "-", "--require-valid", input=plan)
+    result, _ = call(root, "apply", "--edits-json", plan, "--require-valid")
     assert result.exit_code == 2 and (root / ".specspec-local/journal.json").exists()
     monkeypatch.setattr(module.os, "replace", original)
     recovered = recover(root)
@@ -304,7 +306,7 @@ def test_mutation_safety_does_not_depend_on_graph_validity(workspace, monkeypatc
     with pytest.raises(SpecError, match="manifesto"):
         mutate(root, lambda snapshot: {f"_specspec/{manifesto}.md": None})
     bad = {"edits": [{"op": "add", "type": [], "body": "# X", "parents": [b]}]}
-    result, data = call(root, "apply", "-", input=json.dumps(bad))
+    result, data = call(root, "apply", "--edits-json", json.dumps(bad))
     assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "BATCH"
     import base64
     import secrets

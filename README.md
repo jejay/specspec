@@ -112,19 +112,24 @@ root schemas. Review is a spectrum of confidence: users often spend more attenti
 
 ## First graph in another project
 
-This checkout already has a graph: do not run `init` here. In a different project, write manifesto **body text** in a file outside `_specspec`, then:
+This checkout already has a graph: do not run `init` here. In a different project,
+supply literal binding text directly as arguments:
 
 ```sh
-specspec init manifesto.md
+specspec init -m "# Product intention" -m "Help people understand their plan."
 specspec show
-specspec add --parent <manifesto-id> --body requirement.md
+specspec add --parent <manifesto-id> -m "# Readable timeline" -m "Show the timing clearly."
 specspec check
-specspec update <requirement-id> --body revised-requirement.md
+specspec update <requirement-id> -m "# Readable timeline" -m "Show timing and dependencies."
 specspec query <requirement-id> --max-distance 0 --with-ancestors
 ```
 
-`--root <project>` precedes the command when selecting a workspace explicitly. Body
-input accepts `-` for stdin. `update --parent` replaces the entire parent list.
+`--root <project>` precedes the command when selecting a workspace explicitly.
+Repeat `-m/--message` to join literal paragraphs with a blank line; a single argument
+preserves its exact text. Use `apply --edits-json '…'` for a whole explicit batch,
+including aliases for new nodes without IDs. `update --parent` replaces the entire
+parent list. Large input and existing UI transports remain available through
+[less-prominent integration inputs](docs/cli.md#integration-only-bulk-inputs).
 `delete` removes exactly the named files; surviving conclusions retain their parent
 references. Preview with `--dry-run`; use `--yes` for warned noninteractive deletion
 of uncommitted selected files. Graph-invalid intermediate edits are saved with

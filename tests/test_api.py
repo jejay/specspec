@@ -10,7 +10,7 @@ def test_stdin_is_utf8_and_preserves_binding_whitespace(tmp_path):
     body = "# Absicht 🐕\r\n\r\nText mit Umlauten: äöü.  \r\n"
     result = CliRunner().invoke(
         main,
-        ["--root", str(tmp_path), "init", "-", "--json"],
+        ["--root", str(tmp_path), "init", "--body", "-", "--json"],
         input=body.encode("utf-8"),
     )
     assert result.exit_code == 0, result.output

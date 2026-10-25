@@ -8,7 +8,7 @@ together. The CLI does not supply old command aliases or old protocol readers.
 ## Eight everyday commands
 
 ```sh
-specspec init manifesto.md                 # New project only; - reads UTF-8 stdin
+specspec init -m "# Product intention" -m "Explain the goal." # New project only
 specspec show                              # IDs/types/headings, not every body
 specspec show <full-id>                     # Complete node metadata and binding text
 specspec show <full-id> --dependents        # Structural potential impact
@@ -21,8 +21,8 @@ specspec query <full-id> --influence 5   # Rooted subgraph; influence >= 5
 specspec query --min-distance 25% --influence 25% # Independent selections, union
 specspec query <full-id> --max-distance 0 --with-ancestors # Node + every ancestor
 specspec query <full-id> --max-distance 2 --with-ancestors # Branch slice + ancestors
-specspec add --parent <id> --body node.md
-specspec update <id> --body revised.md
+specspec add --parent <id> -m "# Conclusion" -m "Explain the reasoning."
+specspec update <id> -m "# Revised conclusion" -m "Its current reasoning."
 specspec delete <id> --dry-run              # Exact files, retained reference faults
 specspec delete <id> --yes                  # Warned selected-file consent
 specspec query --issues --with-ancestors    # Broken justification and downstream context
@@ -38,8 +38,14 @@ specspec diff <base> <target>               # Historical comparison, no checkout
 case-sensitive. Hyphen-leading IDs remain accepted as full node arguments.
 `add --type implementation` selects an implementation leaf. Repeated `--parent`
 values specify the complete replacement set on update. The manifesto keeps its
-empty parents; ordinary nodes require parents. Bodies are files or `-` stdin,
-not shell-interpolated inline program text. A completed valid graph is shortcut-free:
+empty parents; ordinary nodes require parents. `-m/--message` supplies literal body
+text. One value is preserved exactly; repeated values join with exactly two LF
+characters, without trimming supplied whitespace or applying Git message cleanup.
+Markdown headings, Unicode and actual newlines remain text. `-` and filenames are
+literal text too; backslash-n is not automatically expanded. Quote for your shell;
+programmatic callers should pass an argument array with no shell. Omitting the body
+on update leaves it unchanged; explicit empty text is an explicit schema-checked
+edit. No editor opens implicitly. A completed valid graph is shortcut-free:
 no direct parent may already be an indirect parent. Graph-invalid intermediate edits
 are saved with explicit validity/completeness diagnostics; --require-valid checks the
 whole final candidate before any writes. The starting graph need not be valid. REDUNDANT_PARENT reports the
@@ -148,12 +154,13 @@ There is no automatic human/JSON choice based on TTY, and no LLM/UI JSON dialect
 
 ## Advanced tools and integration
 
-`apply PLAN.json` (or `apply -`) applies explicit add/update/delete edits through one
-recoverable transaction. `--dry-run` writes no canonical files; `--require-valid`
-requires the complete final candidate valid. Uncommitted selected deletion retains
-normal `--yes` consent. Body files resolve from the plan directory (stdin uses launch
-directory). Batch-local new-node aliases never enter canonical metadata; conflicting
-edits and malformed plans fail before writes. See the [plan grammar](invalid-graphs.md#apply-one-coherent-multi-node-change).
+`apply --edits-json '…'` accepts an explicit JSON edit object directly as an argument
+and applies its add/update/delete edits through one recoverable transaction. Bodies
+are inline strings; `body_file` is rejected in argument mode before opening a file.
+`--dry-run` writes no canonical files; `--require-valid` requires the complete final
+candidate valid. Uncommitted selected deletion retains normal `--yes` consent.
+Batch-local new-node aliases never enter canonical metadata; conflicting edits and
+malformed plans fail before writes. See the [plan grammar](invalid-graphs.md#apply-one-coherent-multi-node-change).
 
 `sources show [ID]` inspects mappings; `--source N` opens the Nth literal preview.
 `sources capture` and `sources reanchor` retain deliberate strict/expanding decisions,
@@ -175,6 +182,34 @@ Advanced source-array `--sources`, source `--symbol`/`--replace`,
 mixed metadata `--graph-ref` and `delete --reviewed-plan FILE|-` remain available
 without bloating everyday help. Reviewed deletion plans are rechecked under lock;
 plan transport does not waive warnings, native dirty guards or original-byte checks.
+
+### Integration-only bulk inputs
+
+Ordinary help focuses on message arguments and inline edit JSON. Explicit hidden
+inputs remain for bulk automation and the existing visual hosts:
+
+- `init/add/update --body FILE|-` reads UTF-8 body bytes from a file or stdin.
+- `apply --plan FILE|-` reads a JSON batch. In this integration mode edits may use
+  `body_file` instead of `body`; relative paths resolve from the plan directory.
+  Stdin plans use the launch directory. Nested stdin body files are not accepted.
+- `--message` and `--body`, or `--edits-json` and `--plan`, are mutually exclusive.
+  Conflicts fail before input reads or canonical writes. Positional init/apply
+  payloads are rejected rather than interpreted as body text or JSON.
+- Reviewed deletion-plan stdin and the private API channels are unchanged. Managed
+  UI saves still send body stdin; native VS Code saves retain their document owner.
+
+Node files remain bounded at 1 MiB and bulk requests at 16 MiB. Operating-system and
+shell argument limits are smaller and independent: Windows CreateProcess permits
+32,767 UTF-16 units for the whole command line including its terminator; cmd.exe
+permits 8,191 characters. Quotes/other arguments consume that budget too. Unix has
+platform-specific argument/environment limits. A long argv can fail before SpecSpec
+starts; repeated options do not bypass the total. Use the explicit bulk interfaces
+for large inputs. There is no automatic fallback, truncation or batch splitting.
+Command text may appear in shell history/process arguments. Shell quoting differs
+between Bash, PowerShell and cmd; the JSON examples use Bash single quotes.
+PowerShell native-argument quoting also depends on its version/passing mode.
+
+### Private application transport
 
 The hidden `api` operation consumes bounded JSON stdin and returns one API-7 envelope.
 Requests require integer `api_version: 7` and `op` from `read`, `plan`, `source-view`,

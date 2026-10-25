@@ -38,6 +38,10 @@ and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
 manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
+Ordinary authoring supplies literal `-m/--message` paragraphs to init/add/update;
+`apply --edits-json` supplies inline multi-node edits and local aliases. Explicit
+integration bulk inputs and the UI's existing transports retain their roles.
+
 Use `query ID --max-distance 0 --with-ancestors` and `show ID --dependents`
 before code changes. Query's optional ancestor completion follows every parent path
 after selection; added bindings consume no metric quota. `specspec diff` supplies

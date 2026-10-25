@@ -102,6 +102,11 @@ Reads and explicit edits can succeed while reporting `snapshot.valid: false`.
 Operation success, graph validity and analysis completeness have separate meanings.
 `--require-valid` adds a pre-write whole-candidate boundary; `check` remains strict.
 
+Ordinary people/agent authoring instead supplies literal `-m/--message` body
+arguments or an `apply --edits-json` object. Hidden `--body FILE|-` and
+`apply --plan FILE|-` remain explicit bulk interfaces; the UI transport above is
+unchanged. OS command-line limits are independent of bulk request/document limits.
+
 The CLI and library run in the **same Python process**. `cli.py` parses inputs,
 calls module functions, converts results to dictionaries and emits the envelope.
 Library clients instead receive Python types such as `Snapshot`/`Graph` or ordinary

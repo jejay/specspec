@@ -26,8 +26,10 @@ working files, --staged exact-index files and optional --sources mapping/retenti
 --warnings-as-errors remains available. Diff accepts optional positional BASE/TARGET,
 defaulting to freshly resolved HEAD versus working files. Root selection stays --root.
 
-Init takes a manifesto body file or stdin; add/update use --body FILE|- and explicit
-repeated --parent full IDs. Add defaults to requirement and supports --type implementation. Init and add
+Init/add/update accept literal repeatable -m/--message paragraphs and explicit
+repeated --parent full IDs where applicable. Bulk file/stdin sources stay
+integration-only. Add defaults to requirement and supports --type implementation.
+Init and add
 create <id>.md paths independently of body text.
 Updates replace the supplied parent list; valid manifesto parents stay empty.
 Delete retains --dry-run and --yes for exact selected-file deletion, retained
@@ -36,7 +38,8 @@ reads; query --issues selects faults and potential descendants; diff --with-cont
 adds before/current justification and finite cause evidence. --require-valid checks
 the complete final candidate, independently of a successful intermediate edit.
 
-Advanced apply performs one bounded explicit multi-node add/update/delete batch
+Advanced apply --edits-json performs one bounded inline explicit multi-node
+add/update/delete batch
 with optional final validity and normal deletion consent. Sources show/capture/
 reanchor and recover retain source and transaction recovery controls. Spotlight add/show/flush provides immutable checkout-local spotlights.
 Add takes full node IDs and one message with optional --base/--target comparison;

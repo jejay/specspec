@@ -28,7 +28,9 @@ sources:
 # Implement the compact command surface and complete review projection
 
 Click presents eight everyday verbs with focused advanced tools and a bounded hidden
-application adapter. Output rendering separates readable text/Markdown from explicit
+application adapter. Ordinary authoring uses literal message paragraphs and inline
+JSON batches; explicit bulk integration modes and existing UI stdin remain separate.
+Output rendering separates readable text/Markdown from explicit
 compact API-7 envelopes. Mutation receipts retain IDs/paths/scope and warnings rather
 than full graphs. Node format 7 and canonical identities/source grammar remain stable.
 

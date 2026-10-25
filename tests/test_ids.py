@@ -39,7 +39,7 @@ def test_creation_paths_depend_only_on_ids_and_edits_keep_them(tmp_path, monkeyp
     monkeypatch.setattr(module.secrets, "token_bytes", lambda _: next(values))
     runner = CliRunner()
     prefix = ["--root", str(tmp_path)]
-    result = runner.invoke(main, [*prefix, "init", "-", "--json"], input=body)
+    result = runner.invoke(main, [*prefix, "init", "-m", body, "--json"])
     assert result.exit_code == 0, result.output
     parent = json.loads(result.stdout)["result"]["changed_ids"][0]
     result = runner.invoke(

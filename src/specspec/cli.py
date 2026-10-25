@@ -128,6 +128,38 @@ def read_body(path):
     return raw.decode("utf8")
 
 
+def body_options(function):
+    function = click.option("--body", hidden=True, help="Integration body FILE, or - for stdin.")(
+        function
+    )
+    return click.option(
+        "-m",
+        "--message",
+        "messages",
+        multiple=True,
+        help="Literal binding text; repeat to join paragraphs with a blank line.",
+    )(function)
+
+
+def body_input(messages, path, *, required=False):
+    if messages and path is not None:
+        raise SpecError(
+            [Diagnostic("ARGUMENT", "Use --message or integration --body, not both.")], 2
+        )
+    if messages:
+        if (
+            sum(len(part.encode("utf8")) for part in messages) + 2 * (len(messages) - 1)
+            > MAX_FILE_BYTES
+        ):
+            raise SpecError([Diagnostic("FORMAT", "Body exceeds the 1 MiB node limit.")], 2)
+        return "\n\n".join(messages)
+    if path is not None:
+        return read_body(path)
+    if required:
+        raise SpecError([Diagnostic("ARGUMENT", "Supply -m/--message binding text.")], 2)
+    return None
+
+
 def source_input(value):
     if value is None:
         return None
@@ -186,14 +218,14 @@ def main(context, root):
 
 
 @main.command()
-@click.argument("manifesto")
+@body_options
 @json_option
 @click.pass_obj
 @guarded
-def init(root, manifesto, as_json):
-    """Create a graph from manifesto body FILE (or - for stdin)."""
-    body = read_body(manifesto)
-    snapshot = initialize(root.absolute() if root is not None else Path.cwd(), body)
+def init(root, messages, body, as_json):
+    """Create a graph from literal manifesto message paragraphs."""
+    text = body_input(messages, body, required=True)
+    snapshot = initialize(root.absolute() if root is not None else Path.cwd(), text)
     mutation_output(snapshot, [snapshot.nodes[0].id], as_json)
 
 
@@ -214,7 +246,7 @@ def init(root, manifesto, as_json):
 @click.option(
     "--parents-json", hidden=True, help="Explicit complete parent array, including empty."
 )
-@click.option("--body", required=True, help="Body FILE, or - for stdin.")
+@body_options
 @click.option("--sources", hidden=True)
 @click.option(
     "--require-valid", is_flag=True, help="Require a valid complete candidate before writing."
@@ -222,9 +254,9 @@ def init(root, manifesto, as_json):
 @json_option
 @click.pass_obj
 @guarded
-def add(root, node_type, parents, parents_json, body, sources, require_valid, as_json):
+def add(root, node_type, parents, parents_json, messages, body, sources, require_valid, as_json):
     """Create a schema-checked node and report graph findings."""
-    text = read_body(body)
+    text = body_input(messages, body, required=True)
     snapshot, node_id = add_node(
         root_path(root),
         node_type,
@@ -241,7 +273,7 @@ def add(root, node_type, parents, parents_json, body, sources, require_valid, as
 @click.option(
     "--parents-json", hidden=True, help="Explicit complete parent array, including empty."
 )
-@click.option("--body", help="Replacement body FILE, or - for stdin.")
+@body_options
 @click.option(
     "--parent", "parents", multiple=True, help="Replace the complete parent list; repeat per ID."
 )
@@ -252,16 +284,17 @@ def add(root, node_type, parents, parents_json, body, sources, require_valid, as
 @json_option
 @click.pass_obj
 @guarded
-def update(root, node_id, body, parents, parents_json, sources, require_valid, as_json):
+def update(root, node_id, messages, body, parents, parents_json, sources, require_valid, as_json):
     """Change binding text, parent relationships or source references."""
-    if body is None and not parents and parents_json is None and sources is None:
+    text = body_input(messages, body)
+    if text is None and not parents and parents_json is None and sources is None:
         raise SpecError(
-            [Diagnostic("ARGUMENT", "Supply --body, --parent or advanced --sources.")], 2
+            [Diagnostic("ARGUMENT", "Supply --message, --parent or advanced --sources.")], 2
         )
     snapshot = update_node(
         root_path(root),
         node_id,
-        body=read_body(body) if body is not None else None,
+        body=text,
         parents=parent_input(parents, parents_json),
         sources=source_input(sources),
         require_valid=require_valid,
@@ -610,7 +643,8 @@ def diff(root, base, target, summary, with_context, node_ids, max_bytes, as_json
 
 
 @main.command(name="apply")
-@click.argument("plan_file")
+@click.option("--edits-json", help="Explicit edit object as literal JSON, with inline bodies.")
+@click.option("--plan", "plan_file", hidden=True, help="Integration JSON FILE, or - for stdin.")
 @click.option("--dry-run", is_flag=True, help="Plan one explicit batch without canonical writes.")
 @click.option(
     "--yes", is_flag=True, help="Consent to selected uncommitted deletions; retain warnings."
@@ -621,18 +655,29 @@ def diff(root, base, target, summary, with_context, node_ids, max_bytes, as_json
 @json_option
 @click.pass_obj
 @guarded
-def apply_command(root, plan_file, dry_run, yes, require_valid, as_json):
+def apply_command(root, edits_json, plan_file, dry_run, yes, require_valid, as_json):
     """Advanced: apply explicit add/update/delete edits in one recoverable batch."""
     from .batch import MAX_BATCH_BYTES
 
-    if plan_file == "-":
+    if edits_json is not None and plan_file is not None:
+        raise SpecError(
+            [Diagnostic("ARGUMENT", "Use --edits-json or integration --plan, not both.")], 2
+        )
+    if edits_json is not None:
+        raw = edits_json.encode("utf8")
+        directory = Path.cwd()
+    elif plan_file == "-":
         raw = sys.stdin.buffer.read(MAX_BATCH_BYTES + 1)
         directory = Path.cwd()
-    else:
+    elif plan_file is not None:
         path = Path(plan_file).absolute()
         directory = path.parent
         with path.open("rb") as stream:
             raw = stream.read(MAX_BATCH_BYTES + 1)
+    else:
+        raise SpecError(
+            [Diagnostic("ARGUMENT", "Supply --edits-json with an explicit edit object.")], 2
+        )
 
     def pairs(items):
         result = {}
@@ -648,7 +693,7 @@ def apply_command(root, plan_file, dry_run, yes, require_valid, as_json):
         value = json.loads(raw, object_pairs_hook=pairs)
     except (ValueError, RecursionError) as error:
         raise SpecError([Diagnostic("BATCH", str(error))], 2) from error
-    edits = prepare(value, directory)
+    edits = prepare(value, directory, allow_body_files=edits_json is None)
     warnings = []
 
     def confirm(plan):

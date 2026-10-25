@@ -214,7 +214,7 @@ def test_symlink_rejection(workspace, tmp_path):
 def test_cli_end_to_end_and_budget(tmp_path):
     runner = CliRunner()
     prefix = ["--root", str(tmp_path)]
-    result = runner.invoke(main, [*prefix, "init", "-", "--json"], input="# Purpose\n")
+    result = runner.invoke(main, [*prefix, "init", "-m", "# Purpose\n", "--json"])
     assert result.exit_code == 0, result.output
     manifesto = json.loads(result.output)["result"]["changed_ids"][0]
     result = runner.invoke(

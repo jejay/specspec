@@ -18,7 +18,7 @@ def fail(message):
     raise SpecError([Diagnostic("BATCH", message)], 2)
 
 
-def prepare(value, directory: Path):
+def prepare(value, directory: Path, *, allow_body_files=True):
     if (
         not isinstance(value, dict)
         or set(value) != {"edits"}
@@ -40,6 +40,8 @@ def prepare(value, directory: Path):
         if not isinstance(op, str) or op not in fields or set(edit) - fields[op]:
             fail("Unknown batch operation or fields.")
         if "body_file" in edit:
+            if not allow_body_files:
+                fail("Inline edits use body text; body_file requires integration --plan.")
             if "body" in edit or not isinstance(edit["body_file"], str) or edit["body_file"] == "-":
                 fail("Select body or a body_file path, not nested stdin.")
             with (directory / edit.pop("body_file")).open("rb") as stream:
