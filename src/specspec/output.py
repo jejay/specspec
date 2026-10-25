@@ -86,6 +86,9 @@ def render_listing(snapshot):
 def render_receipt(result, verb="Changed"):
     lines = [f"{verb}: " + ", ".join(result["changed_ids"])]
     lines += [f"  {n['id']}  {n['path']}" for n in result.get("nodes", [])]
+    if result.get("aliases"):
+        lines.append("Aliases:")
+        lines += [f"  ${name} -> {id}" for name, id in sorted(result["aliases"].items())]
     lines.append(
         f"Affected: {len(result.get('affected', []))} nodes "
         "(potential scope, not proof of invalidity)"

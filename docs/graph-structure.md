@@ -37,8 +37,9 @@ node, direct edge and a deterministic alternative path. It never edits relations
 change involving several files, prepare the coherent Markdown changes together and
 validate the full result before staging the complete intended graph. Managed writes
 work from invalid starting graphs and retain safe document/identity/transaction
-checks. Advanced `apply` handles one explicit multi-node batch; raw Markdown remains
-available for malformed targets. See [invalid-state authoring](invalid-graphs.md).
+checks. Combine add/update/delete steps in one invocation for a coherent multi-node
+candidate with shared new-node aliases; raw Markdown remains available for malformed
+targets. See [invalid-state authoring](invalid-graphs.md).
 There is no automatic repair, separate approval status or extra hook policy.
 
 ## Current-only contract and history

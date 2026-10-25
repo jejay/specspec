@@ -138,7 +138,8 @@ analysis completeness and diagnostics. A graph-invalid save completes its journa
 normally; it is not an interrupted transaction.
 
 `--require-valid` accepts an invalid starting graph but checks the **whole final
-candidate before writing anything**. It applies to add/update/delete and batch apply.
+candidate before writing anything**. It applies to individual or combined
+add/update/delete steps.
 It is useful at the end of a repair, not an approval gate on individual conclusions.
 Use hidden integration `--parents-json '[]'` to explicitly replace a parent list with
 an empty transitional list; repeated public `--parent` replaces a nonempty list.
@@ -147,47 +148,45 @@ Resolution may rewrite a conclusion around surviving justification, split it,
 deliberately relink it, explicitly delete it, or recover a mistakenly deleted file
 using ordinary Git tooling. The CLI never chooses those semantic outcomes for you.
 
-## Apply one coherent multi-node change
+## One coherent multi-node change
+
+Use ordinary editing steps in one invocation. The example uses Bash quoting; replace
+uppercase placeholders with full existing IDs:
 
 ```sh
-specspec apply --edits-json '{"edits":[{"op":"update","id":"<C-id>","parents":["<B-id>"],"body":"# Revised conclusion\n"}]}' --dry-run
-specspec apply --edits-json '{"edits":[{"op":"update","id":"<C-id>","parents":["<B-id>"],"body":"# Revised conclusion\n"}]}' --require-valid
+specspec update C_ID --parent B_ID -m "# B-derived conclusion" \
+  add --as part --parent B_ID -m "# Independent part" \
+  update D_ID --parent '$part' \
+  delete E_ID --dry-run --require-valid
 ```
 
-The argument is a bounded JSON object with 1–1024 explicit edits. Pass the complete
-object as one quoted `--edits-json` value. The examples use Bash quoting;
-PowerShell/cmd.exe require version-appropriate native-argument quoting. Replace
-schematic IDs below with actual complete IDs:
+Remove `--dry-run` to write the complete candidate; add `--yes` for warned
+noninteractive deletion. The optional validity boundary assesses **all edits
+combined**, even if deleting a parent alone would temporarily break justification.
 
-```json
-{
-  "edits": [
-    {"op": "update", "id": "<C-id>", "parents": ["<B-id>"], "body": "# B-derived conclusion\n"},
-    {"op": "add", "as": "part", "parents": ["<B-id>"], "body": "# Independent part\n"},
-    {"op": "update", "id": "<D-id>", "parents": ["$part"]},
-    {"op": "delete", "ids": ["<E-id>"]}
-  ]
-}
-```
-
-- `add` accepts body, parents, optional requirement/implementation type, sources and
-  a unique local `as` name. `$name` references any new node in the same batch.
-- `update` names an existing identifiable node and explicit replacement body,
-  parents and/or sources. `delete` names exactly the files to remove.
-- Argument-mode bodies are literal inline `body` strings. `body_file` is rejected
-  before reads. [Integration-only `--plan FILE|-`](cli.md#integration-only-bulk-inputs)
-  retains file/stdin batches and relative body files for large inputs and automation.
+- Steps share the same argument grammar as standalone add/update/delete. `add --as
+  NAME` declares a local alias; `--parent '$NAME'` can reference new nodes anywhere
+  in the invocation, including later declarations. Update parent lists replace the
+  complete declared set. Aliases are parent references, not update/delete targets.
 - Aliases never enter node files. Dry-run generated IDs are not reservations.
   Creation avoids existing names and declared parent identities, including dangling
   ones, so a random ID cannot accidentally supply a missing justification.
-- Conflicting edits, duplicate JSON fields, unknown fields and malformed targets
-  fail without writes. Plans and aggregate bodies are bounded at 16 MiB; individual
-  node documents retain their 1 MiB limit. Shell/OS argv limits can be much smaller;
-  use the explicit integration input for large batches rather than splitting them.
-- `--dry-run` has no canonical writes. Applying re-reads actual current files; a dry
-  run is evidence, not a frozen workspace or a promise about later random IDs.
-- Selected uncommitted deletions require normal consent (`--yes` noninteractively).
-  The entire candidate is applied as one recoverable, byte-checked transaction.
+- Each target gets one edit. Conflicting or duplicate edits, duplicate/unknown aliases,
+  malformed targets and mixed read/edit commands fail without partial writes. All
+  command syntax and mutually exclusive body inputs are checked before body reads.
+- `--dry-run`, `--require-valid`, `--yes` and `--json` are invocation-wide, wherever
+  specified. Dry-run writes no canonical files; actual execution re-reads saved
+  files. A preview is evidence, not a frozen workspace or a promise about future IDs.
+- Selected deletions get one combined under-lock assessment and consent decision.
+  The receipt's nested `deletion_plan` describes deletion-only consequences in the
+  original graph; outer validity and findings describe the complete resulting graph.
+  Existing reviewed UI plans bind a standalone delete and cannot be mixed with steps.
+- Chains contain at most 1024 steps. Arguments and aggregate bodies each have a
+  16 MiB bound, with 1 MiB canonical node files and smaller platform argv limits.
+  [Integration body files/stdin](cli.md#integration-only-bulk-inputs) accommodate large
+  text without a separate batch JSON format; at most one body consumes stdin.
+- The complete candidate uses one recoverable, byte-checked transaction. Other
+  commands remain standalone; `apply` and its plan-input modes are absent.
 
 ## Exit codes and safety
 

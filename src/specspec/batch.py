@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import replace
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 
 from .deletion import deletion_plan, deletion_warnings
 from .inspection import findings, walks
@@ -12,18 +12,32 @@ from .model import MAX_FILE_BYTES, Diagnostic, SpecError
 from .workspace import mutate, new_node, require_node, serialize
 
 MAX_BATCH_BYTES = 16 * 1024 * 1024
+MAX_EDITS = 1024
 
 
 def fail(message):
     raise SpecError([Diagnostic("BATCH", message)], 2)
 
 
-def prepare(value, directory: Path, *, allow_body_files=True):
+def count_body_bytes(body, total):
+    """Charge each decoded input before retaining or reading another body."""
+    if not isinstance(body, str):
+        fail("body must be UTF-8 text.")
+    size = len(body.encode("utf8"))
+    if size > MAX_FILE_BYTES:
+        fail("Body exceeds 1 MiB.")
+    total += size
+    if total > MAX_BATCH_BYTES:
+        fail("Invocation bodies exceed 16 MiB in total.")
+    return total
+
+
+def prepare(value):
     if (
         not isinstance(value, dict)
         or set(value) != {"edits"}
         or not isinstance(value["edits"], list)
-        or not 1 <= len(value["edits"]) <= 1024
+        or not 1 <= len(value["edits"]) <= MAX_EDITS
     ):
         fail("Expected an object with 1-1024 explicit edits.")
     edits, total = [], 0
@@ -33,31 +47,14 @@ def prepare(value, directory: Path, *, allow_body_files=True):
         edit = dict(original)
         op = edit.get("op")
         fields = {
-            "add": {"op", "as", "type", "parents", "body", "body_file", "sources"},
-            "update": {"op", "id", "parents", "body", "body_file", "sources"},
+            "add": {"op", "as", "type", "parents", "body", "sources"},
+            "update": {"op", "id", "parents", "body", "sources"},
             "delete": {"op", "ids"},
         }
         if not isinstance(op, str) or op not in fields or set(edit) - fields[op]:
             fail("Unknown batch operation or fields.")
-        if "body_file" in edit:
-            if not allow_body_files:
-                fail("Inline edits use body text; body_file requires integration --plan.")
-            if "body" in edit or not isinstance(edit["body_file"], str) or edit["body_file"] == "-":
-                fail("Select body or a body_file path, not nested stdin.")
-            with (directory / edit.pop("body_file")).open("rb") as stream:
-                raw = stream.read(MAX_FILE_BYTES + 1)
-            if len(raw) > MAX_FILE_BYTES:
-                fail("Body file exceeds 1 MiB.")
-            edit["body"] = raw.decode("utf8")
         if "body" in edit:
-            if not isinstance(edit["body"], str):
-                fail("body must be UTF-8 text.")
-            size = len(edit["body"].encode("utf8"))
-            if size > MAX_FILE_BYTES:
-                fail("Body exceeds 1 MiB.")
-            total += size
-        if total > MAX_BATCH_BYTES:
-            fail("Batch body files exceed 16 MiB in total.")
+            total = count_body_bytes(edit["body"], total)
         if op == "update" and not set(edit).intersection({"body", "parents", "sources"}):
             fail("An update must name at least one replacement field.")
         if op == "add" and (
@@ -114,15 +111,21 @@ def apply_edits(root, edits, *, require_valid=False, dry_run=False, confirm=None
                 return aliases[value[1:]]
             return value
 
+        def existing(value):
+            node_id = identity(value)
+            if value.startswith("$"):
+                fail("Configure new nodes in their add step; aliases are parent references.")
+            return require_node(before, node_id)
+
         changes, ids, deleted = {}, [], []
         for index, edit in enumerate(edits):
             if edit["op"] == "delete":
                 values = edit.get("ids")
                 if not isinstance(values, list) or not values:
                     fail("delete requires a nonempty ids array.")
-                targets = [identity(v) for v in values]
-                for id in targets:
-                    node = require_node(before, id)
+                for value in values:
+                    node = existing(value)
+                    id = node.id
                     if node.type == "manifesto":
                         fail("The manifesto cannot be deleted.")
                     if id in used:
@@ -132,11 +135,7 @@ def apply_edits(root, edits, *, require_valid=False, dry_run=False, confirm=None
                     ids.append(id)
                     changes[node.path] = None
                 continue
-            node = (
-                created[index]
-                if edit["op"] == "add"
-                else require_node(before, identity(edit.get("id")))
-            )
+            node = created[index] if edit["op"] == "add" else existing(edit.get("id"))
             if node.id in used:
                 fail("Conflicting or duplicate edits for " + node.id)
             used.add(node.id)

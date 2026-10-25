@@ -54,7 +54,8 @@ material uncertainty and conflicts rather than manufacturing agreement.
   selected files and warns about uncommitted selected nodes before unlinking.
   Survivors retain missing-parent declarations. Inspect with `query --issues
   --with-ancestors` and `diff --with-context`; resolve deliberately with ordinary
-  edits or `apply`. Edits can save graph-invalid intermediates; `--require-valid`
+  edits or combined add/update/delete steps. Edits can save graph-invalid
+  intermediates; `--require-valid`
   checks the whole final candidate before writes. `check` stays strict. Never
   reparent or delete the manifesto. Default workspace compares to HEAD; D remains visible through staging
   and vanishes after commit. See `docs/deletion.md`.

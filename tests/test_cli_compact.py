@@ -29,7 +29,7 @@ def api(root, **value):
 
 @pytest.mark.parametrize("encoding", ["ascii", "cp1252"])
 @pytest.mark.parametrize(
-    "args", [[], ["diff"], ["query"], ["init"], ["add"], ["update"], ["apply"]]
+    "args", [[], ["diff"], ["query"], ["init"], ["add"], ["update"], ["delete"]]
 )
 def test_help_is_safe_through_legacy_windows_pipe_encodings(workspace, encoding, args):
     root, _ = workspace
@@ -56,7 +56,6 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
         "sources",
         "spotlight",
         "recover",
-        "apply",
     }
     assert set(main.commands["sources"].commands) == {"show", "capture", "reanchor"}
     assert set(main.commands["spotlight"].commands) == {"add", "show", "flush"}
@@ -72,6 +71,7 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
         ("hook", "check"),
         ("editor",),
         ("annotations",),
+        ("apply",),
     ]:
         assert call(root, *args).exit_code == 2
     for args in [("init", "-m", "# Body"), ("add", "--parent", node_id, "-m", "# Body")]:

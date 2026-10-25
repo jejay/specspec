@@ -56,6 +56,47 @@ managed writes never normalize them. See [graph structure](graph-structure.md) a
 Init and add create `_specspec/<id>.md`, including the ID's trailing `=`.
 Paths depend only on identity; headings and binding text remain inside the document.
 
+## Compose editing commands
+
+Repeat or combine **only `add`, `update` and `delete`** in one invocation. Each step
+uses its ordinary options; the complete invocation produces one explicit candidate,
+one receipt and one recoverable transaction. For example, in Bash/Git Bash (replace
+the uppercase placeholders with existing full IDs):
+
+```sh
+specspec delete OLD_ID \
+  add --as goal --parent EXISTING_ID -m "# New conclusion" \
+  add --as detail --parent '$goal' -m "# Its detail" \
+  update SURVIVING_ID --parent '$goal' --parent OTHER_ID \
+  --require-valid --yes --json
+```
+
+- `add --as NAME` defines a local new-node alias. `--parent '$NAME'` references its
+  generated ID; forward references work too. Names start with an ASCII letter,
+  followed by up to 63 ASCII letters, digits, underscores or hyphens. Quote the
+  dollar sign for your shell. The response's `result.aliases` maps names to full IDs.
+- Each `update` names one existing node. `delete` still accepts multiple IDs, and
+  either command may repeat. An update's `--parent` values replace its entire list.
+  Configure new nodes completely in their `add` step: aliases are parent references,
+  not instructions to update/delete a just-added node. One identity gets one edit;
+  duplicate aliases and conflicting/duplicate target edits are rejected.
+- `--dry-run`, `--require-valid`, `--yes` and `--json` apply to the **whole invocation**,
+  wherever supplied. The validity boundary checks the final candidate, not temporary
+  per-step states. Preview IDs are not reserved; re-running creates fresh IDs.
+- All steps are parsed before body-file/stdin reads or writes. Read/init/source/
+  spotlight/recovery/API commands cannot join an editing invocation. For example,
+  `update ID -m "..." show ID delete OTHER_ID` fails without partial edits.
+  Command names supplied as option values, such as `-m "delete"`, remain literal.
+- A singleton `add --as NAME` returns its alias too. `add` and `update` now support
+  `--dry-run` as well as `delete`. Existing ordinary single-edit result contracts
+  remain unchanged when these new capabilities are not requested.
+
+There is no separate `apply` command or JSON/file/stdin batch-plan input. Chains
+contain 1–1024 editing steps, with arguments and aggregate body input each bounded
+at 16 MiB and every canonical node still bounded at 1 MiB. Smaller shell/OS argv
+limits still apply. See [coherent repair](invalid-graphs.md#one-coherent-multi-node-change)
+and [verification boundaries](investigations/editing-chains.md).
+
 `query` is always a revision comparison: fresh `HEAD` to saved `workspace` by default,
 with spotlight-style `--base` and `--target` options. Current records use current
 parents; deleted records use former parents and old text in the same reading.
@@ -154,14 +195,6 @@ There is no automatic human/JSON choice based on TTY, and no LLM/UI JSON dialect
 
 ## Advanced tools and integration
 
-`apply --edits-json '…'` accepts an explicit JSON edit object directly as an argument
-and applies its add/update/delete edits through one recoverable transaction. Bodies
-are inline strings; `body_file` is rejected in argument mode before opening a file.
-`--dry-run` writes no canonical files; `--require-valid` requires the complete final
-candidate valid. Uncommitted selected deletion retains normal `--yes` consent.
-Batch-local new-node aliases never enter canonical metadata; conflicting edits and
-malformed plans fail before writes. See the [plan grammar](invalid-graphs.md#apply-one-coherent-multi-node-change).
-
 `sources show [ID]` inspects mappings; `--source N` opens the Nth literal preview.
 `sources capture` and `sources reanchor` retain deliberate strict/expanding decisions,
 `--range`, `--ref`/`--staged` and non-writing `--dry-run`. See [source regions](source-regions.md).
@@ -185,18 +218,21 @@ plan transport does not waive warnings, native dirty guards or original-byte che
 
 ### Integration-only bulk inputs
 
-Ordinary help focuses on message arguments and inline edit JSON. Explicit hidden
-inputs remain for bulk automation and the existing visual hosts:
+Ordinary help focuses on literal messages and composed editing steps. Explicit
+hidden inputs remain for bulk body automation and the existing visual hosts:
 
 - `init/add/update --body FILE|-` reads UTF-8 body bytes from a file or stdin.
-- `apply --plan FILE|-` reads a JSON batch. In this integration mode edits may use
-  `body_file` instead of `body`; relative paths resolve from the plan directory.
-  Stdin plans use the launch directory. Nested stdin body files are not accepted.
-- `--message` and `--body`, or `--edits-json` and `--plan`, are mutually exclusive.
-  Conflicts fail before input reads or canonical writes. Positional init/apply
-  payloads are rejected rather than interpreted as body text or JSON.
-- Reviewed deletion-plan stdin and the private API channels are unchanged. Managed
-  UI saves still send body stdin; native VS Code saves retain their document owner.
+  File paths resolve from the launch directory. Editing steps can each name a body
+  file; at most one step may consume stdin. `init` remains standalone.
+- `--message` and `--body` are mutually exclusive on each step. All such conflicts
+  fail before any body reads or canonical writes. Positional init payloads are
+  rejected rather than interpreted as body text.
+- Hidden `--parents-json` and `--sources` keep their existing integration meanings.
+- Reviewed deletion-plan stdin and the private API channels are unchanged. A reviewed
+  plan binds one standalone `delete`; combining it with editing steps is rejected
+  before reading the plan. Use the complete chain's `--dry-run` for a chained preview.
+  Managed UI saves still send body stdin; native VS Code saves retain their document
+  owner. The UI uses neither chained edits nor a JSON batch-plan transport.
 
 Node files remain bounded at 1 MiB and bulk requests at 16 MiB. Operating-system and
 shell argument limits are smaller and independent: Windows CreateProcess permits
@@ -204,9 +240,9 @@ shell argument limits are smaller and independent: Windows CreateProcess permits
 permits 8,191 characters. Quotes/other arguments consume that budget too. Unix has
 platform-specific argument/environment limits. A long argv can fail before SpecSpec
 starts; repeated options do not bypass the total. Use the explicit bulk interfaces
-for large inputs. There is no automatic fallback, truncation or batch splitting.
+for large bodies. There is no automatic fallback, truncation or batch splitting.
 Command text may appear in shell history/process arguments. Shell quoting differs
-between Bash, PowerShell and cmd; the JSON examples use Bash single quotes.
+between Bash, PowerShell and cmd; the chain examples use Bash single quotes.
 PowerShell native-argument quoting also depends on its version/passing mode.
 
 ### Private application transport

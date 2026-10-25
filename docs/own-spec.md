@@ -83,8 +83,8 @@ plan under lock. See [deletion commands](deletion.md) and [invalid-state repair]
 [Invalid-state intention](../_specspec/-RQn7Ug=.md) separates operation success,
 structural validity and potential semantic effects. [Inspection/context](../_specspec/L5Xamn4=.md)
 provides raw/working/historical reads, issue selection and contextual diffs.
-[Explicit authoring](../_specspec/0piRXe0=.md) permits intermediate edits and batch
-apply with optional complete `--require-valid`. [Fresh host context](../_specspec/PAkzXxk=.md)
+[Explicit authoring](../_specspec/0piRXe0=.md) permits individual or composed
+editing steps with optional complete `--require-valid`. [Fresh host context](../_specspec/PAkzXxk=.md)
 keeps broken relationships visible and safe current forms editable.
 [Native repair fields](../_specspec/qSK7qA0=.md) preserve actual empty/source-JSON
 input separately from canonical membership.
@@ -182,13 +182,18 @@ and [coordinated examples/cutover](../_specspec/4ZvnSGw=.md)
 retain their domain and verification boundaries. The [command guide](cli.md) gives
 current operational recipes; original owner source remains unchanged in AGENTS.md.
 [Direct authoring](../_specspec/rgGL5FY=.md) supplies bodies and batches through
-arguments. The [message/batch choice](../_specspec/BKekD_o=.md) exposes repeatable
-`-m/--message` and `apply --edits-json`, with explicit hidden bulk inputs separate
-from literal text. The [realization](../_specspec/Fy-_P9A=.md) maps parsing, unchanged
-UI transports, byte/argv regressions and reconstructed example receipts. Node format
-and API remain 7; OS argument limits are distinct from bulk input limits.
-[Verification and platform boundaries](investigations/argument-authoring.md) record
-the argument/bulk split, current-history reconstruction and evidence scope.
+arguments. The [message choice](../_specspec/BKekD_o=.md) exposes repeatable
+`-m/--message`, with explicit hidden bulk body inputs separate from literal text.
+[One editing vocabulary](../_specspec/pRK4Qwk=.md) and the
+[chain grammar](../_specspec/4626uI8=.md) combine add/update/delete steps into one
+candidate, consent decision and recovery scope, with `--as` / `$name` parent aliases
+and forward references. Other commands stay standalone. The
+[message realization](../_specspec/Fy-_P9A=.md) maps literal body input and unchanged
+UI transports. Node format and API remain 7; OS argument limits remain distinct from
+bulk input limits. [Message transport evidence](investigations/argument-authoring.md)
+and [chain verification](investigations/editing-chains.md) record the boundaries and
+current-history reconstruction. [Chain implementation](../_specspec/kdTk6-0=.md)
+maps complete preflight, shared transactions and alias receipts to code and tests.
 [CLI/review implementation](../_specspec/SF12qpA=.md)
 and [shared host implementation](../_specspec/GG_koyg=.md)
 map the code and verification seams.

@@ -100,11 +100,11 @@ def test_message_budget_counts_utf8_and_inserted_separators(workspace, monkeypat
 
 def test_help_focuses_on_arguments_and_missing_inputs_do_not_read_stdin(workspace):
     root, id = workspace
-    for command in ["init", "add", "update", "apply"]:
+    for command in ["init", "add", "update"]:
         text = CliRunner().invoke(cli.main, [command, "--help"]).stdout
         assert "--body" not in text and "--plan " not in text and "stdin" not in text
-        assert ("--edits-json" if command == "apply" else "--message") in text
-    for args in [("init",), ("add", "--parent", id), ("apply",)]:
+        assert "--message" in text
+    for args in [("init",), ("add", "--parent", id)]:
         result, data = call(root, *args)
         assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "ARGUMENT"
     # Old positional payloads cannot be mistaken for literal text or JSON.
@@ -113,21 +113,29 @@ def test_help_focuses_on_arguments_and_missing_inputs_do_not_read_stdin(workspac
         assert result.exit_code == 2
 
 
-def test_inline_subgraph_forward_aliases_and_dry_run(workspace):
+def test_chained_subgraph_forward_aliases_and_dry_run(workspace):
     root, parent = workspace
     before = load_snapshot(root).files
-    plan = json.dumps(
-        {
-            "edits": [
-                {"op": "add", "as": "detail", "parents": ["$goal"], "body": "node.md"},
-                {"op": "add", "as": "goal", "parents": [parent], "body": "# Goal\n"},
-            ]
-        }
-    )
-    result, data = call(root, "apply", "--edits-json", plan, "--dry-run", "--require-valid")
+    args = [
+        "add",
+        "--as",
+        "detail",
+        "--parent",
+        "$goal",
+        "-m",
+        "node.md",
+        "add",
+        "--as",
+        "goal",
+        "--parent",
+        parent,
+        "-m",
+        "# Goal\n",
+    ]
+    result, data = call(root, *args, "--dry-run", "--require-valid")
     assert result.exit_code == 0 and not data["result"]["applied"]
     assert load_snapshot(root).files == before
-    result, data = call(root, "apply", "--edits-json", plan, "--require-valid")
+    result, data = call(root, *args, "--require-valid")
     assert result.exit_code == 0 and data["result"]["graph_valid"]
     aliases = data["result"]["aliases"]
     saved = load_snapshot(root)
@@ -136,23 +144,27 @@ def test_inline_subgraph_forward_aliases_and_dry_run(workspace):
     assert all(b"$goal" not in raw for raw in saved.files.values())
 
 
-def test_inline_batches_reject_files_duplicate_keys_and_ambiguous_sources(workspace):
+def test_removed_batch_inputs_have_no_hidden_alias(workspace, monkeypatch):
     root, id = workspace
     before = load_snapshot(root).files
-    plans = [
-        json.dumps({"edits": [{"op": "add", "parents": [id], "body_file": "DO_NOT_OPEN.md"}]}),
-        '{"edits":[],"edits":[]}',
-    ]
-    for plan in plans:
-        result, data = call(root, "apply", "--edits-json", plan)
-        assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "BATCH"
+
+    def forbidden(path):
+        pytest.fail("Removed batch inputs must not read files or stdin.")
+
+    monkeypatch.setattr(cli, "read_body", forbidden)
+    for args in [
+        ["apply", "--edits-json", '{"edits":[]}'],
+        ["apply", "--plan", "-"],
+        ["apply", "DO_NOT_OPEN.json"],
+        ["add", "--parent", id, "--edits-json", '{"edits":[]}'],
+        ["add", "--parent", id, "--plan", "DO_NOT_OPEN.json"],
+    ]:
+        result = CliRunner().invoke(cli.main, ["--root", str(root), *args], input="UNREAD")
+        assert result.exit_code == 2, result.output
         assert load_snapshot(root).files == before
-    result, data = call(root, "apply", "--edits-json", plans[0], "--plan", "-")
-    assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "ARGUMENT"
-    assert load_snapshot(root).files == before
 
 
-def test_integration_body_files_and_stdin_plan_remain_available(workspace, tmp_path, monkeypatch):
+def test_integration_body_files_remain_available(workspace, tmp_path, monkeypatch):
     root, id = workspace
     directory = tmp_path / "inputs"
     directory.mkdir()
@@ -163,8 +175,7 @@ def test_integration_body_files_and_stdin_plan_remain_available(workspace, tmp_p
     added = data["result"]["changed_ids"][0]
     assert load_snapshot(root).graph.nodes[added].body == body
     monkeypatch.chdir(directory)
-    plan = json.dumps({"edits": [{"op": "update", "id": added, "body_file": "body.md"}]})
-    result, _ = call(root, "apply", "--plan", "-", input=plan)
+    result, _ = call(root, "update", added, "--body", "body.md")
     assert result.exit_code == 0 and load_snapshot(root).graph.nodes[added].body == body
 
 

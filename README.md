@@ -126,9 +126,12 @@ specspec query <requirement-id> --max-distance 0 --with-ancestors
 
 `--root <project>` precedes the command when selecting a workspace explicitly.
 Repeat `-m/--message` to join literal paragraphs with a blank line; a single argument
-preserves its exact text. Use `apply --edits-json '…'` for a whole explicit batch,
-including aliases for new nodes without IDs. `update --parent` replaces the entire
-parent list. Large input and existing UI transports remain available through
+preserves its exact text. Combine `add`, `update` and `delete` in one invocation
+for a whole explicit transaction. `add --as goal` and `--parent '$goal'` connect new
+nodes without knowing their IDs, including forward references. Other commands stay
+standalone. `update --parent` replaces the entire parent list. See
+[composed editing commands](docs/cli.md#compose-editing-commands). Large input and
+existing UI transports remain available through
 [less-prominent integration inputs](docs/cli.md#integration-only-bulk-inputs).
 `delete` removes exactly the named files; surviving conclusions retain their parent
 references. Preview with `--dry-run`; use `--yes` for warned noninteractive deletion

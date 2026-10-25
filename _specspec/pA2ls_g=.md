@@ -22,7 +22,8 @@ bytes. Native invalid text remains diagnosable and repairable.
 
 Relationship edits can affect other nodes. Diagnostics expose every affected edge;
 related changes are deliberate, and managed edits leave files intact on rejection.
-Owners can prepare coherent Markdown changes or use apply for one recoverable
-explicit multi-node batch. Ordinary updates retain their single-node contract.
+Owners can prepare coherent Markdown changes or combine ordinary add/update/delete
+steps in one recoverable explicit invocation. Each update step names one node;
+optional validity checks assess the complete final candidate.
 Inspection, candidate planning and recovery remain usable with invalid graphs. Validation never silently removes or normalizes relationships
 and introduces no approval workflow or permanent compatibility/migration command.

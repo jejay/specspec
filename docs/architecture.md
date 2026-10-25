@@ -102,10 +102,12 @@ Reads and explicit edits can succeed while reporting `snapshot.valid: false`.
 Operation success, graph validity and analysis completeness have separate meanings.
 `--require-valid` adds a pre-write whole-candidate boundary; `check` remains strict.
 
-Ordinary people/agent authoring instead supplies literal `-m/--message` body
-arguments or an `apply --edits-json` object. Hidden `--body FILE|-` and
-`apply --plan FILE|-` remain explicit bulk interfaces; the UI transport above is
-unchanged. OS command-line limits are independent of bulk request/document limits.
+Ordinary people/agent authoring supplies literal `-m/--message` body arguments and
+can combine add/update/delete steps with local `--as` / `$name` parent aliases.
+The complete editing invocation is parsed before input reads/writes and becomes one
+candidate/consent/recovery scope; other commands stay standalone. Hidden
+`--body FILE|-` accommodates bulk bodies. The UI's single-edit argv/stdin and native
+persistence owners above are unchanged. OS command-line limits remain independent of bulk limits.
 
 The CLI and library run in the **same Python process**. `cli.py` parses inputs,
 calls module functions, converts results to dictionaries and emits the envelope.

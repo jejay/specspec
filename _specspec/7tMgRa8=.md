@@ -38,9 +38,9 @@ reads; query --issues selects faults and potential descendants; diff --with-cont
 adds before/current justification and finite cause evidence. --require-valid checks
 the complete final candidate, independently of a successful intermediate edit.
 
-Advanced apply --edits-json performs one bounded inline explicit multi-node
-add/update/delete batch
-with optional final validity and normal deletion consent. Sources show/capture/
+add/update/delete may repeat or combine as one bounded invocation, with local
+new-node aliases, optional final validity and whole-invocation deletion consent.
+Other top-level commands remain standalone. Sources show/capture/
 reanchor and recover retain source and transaction recovery controls. Spotlight add/show/flush provides immutable checkout-local spotlights.
 Add takes full node IDs and one message with optional --base/--target comparison;
 show resolves each record's own context with statuses and advisory workspace drift;

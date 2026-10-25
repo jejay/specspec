@@ -80,8 +80,10 @@ The maintained process reconstruction reuses the example's existing canonical
 five-byte identities at creation, supplies the positive bodies to real current CLI
 commands as literal `-m` arguments, and captures new actual responses and staged
 source anchors. The receipt verifier independently reconstructs bodies from those
-arguments; every recorded stdin value is null. It is a
-labeled synthetic fixture construction, not an untouched original history or an
+arguments; every recorded stdin value is null. These receipts use ordinary single
+steps; the same editing vocabulary also composes into one invocation with new-node
+aliases and one recovery scope. All retained guides describe that current interface.
+It is a labeled synthetic fixture construction, not an untouched original history or an
 edited receipt translation. All previous manual clones and saved bundles remain
 available; use a fresh destination for the maintained history.
 

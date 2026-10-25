@@ -14,8 +14,9 @@ from . import __version__, wire
 from .annotation_commands import register as register_annotations
 from .application import compare
 from .application import request as application_request
-from .batch import apply_edits, prepare
+from .batch import apply_edits, count_body_bytes, prepare
 from .deletion import deletion_plan, deletion_warnings
+from .edit_cli import EDIT_COMMANDS, EditInvocation
 from .editor import MAX_REQUEST_BYTES
 from .inspection import findings, raw_document, walks
 from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError
@@ -99,13 +100,19 @@ json_option = click.option(
 
 
 class Commands(click.Group):
+    def resolve_command(self, ctx, args):
+        name, command, remaining = super().resolve_command(ctx, args)
+        if name in EDIT_COMMANDS:
+            command = EditInvocation(name, command, run_edit_chain)
+        return name, command, remaining
+
     def format_commands(self, ctx, formatter):
         for label, names in [
             (
                 "Everyday commands",
                 ["init", "show", "query", "add", "update", "delete", "check", "diff"],
             ),
-            ("Advanced tools", ["apply", "sources", "spotlight", "recover"]),
+            ("Advanced tools", ["sources", "spotlight", "recover"]),
         ]:
             with formatter.section(label):
                 formatter.write_dl(
@@ -141,7 +148,7 @@ def body_options(function):
     )(function)
 
 
-def body_input(messages, path, *, required=False):
+def body_input(messages, path, *, required=False, read=True):
     if messages and path is not None:
         raise SpecError(
             [Diagnostic("ARGUMENT", "Use --message or integration --body, not both.")], 2
@@ -154,7 +161,7 @@ def body_input(messages, path, *, required=False):
             raise SpecError([Diagnostic("FORMAT", "Body exceeds the 1 MiB node limit.")], 2)
         return "\n\n".join(messages)
     if path is not None:
-        return read_body(path)
+        return read_body(path) if read else None
     if required:
         raise SpecError([Diagnostic("ARGUMENT", "Supply -m/--message binding text.")], 2)
     return None
@@ -170,7 +177,7 @@ def source_input(value):
         for source in sources:
             validate_source(source)
         return sources
-    except (ValueError, TypeError) as error:
+    except (ValueError, TypeError, RecursionError) as error:
         raise SpecError([Diagnostic("SOURCES", f"Invalid sources JSON: {error}")]) from error
 
 
@@ -186,8 +193,68 @@ def parent_input(parents, encoded):
         ):
             raise ValueError("Expected full canonical IDs.")
         return values
-    except (ValueError, TypeError) as error:
+    except (ValueError, TypeError, RecursionError) as error:
         raise SpecError([Diagnostic("PARENTS", str(error))], 2) from error
+
+
+def edit_options(function):
+    for flag, help_text in [
+        ("--dry-run", "Preview the whole editing invocation without canonical writes."),
+        ("--yes", "Consent to selected uncommitted deletions throughout this invocation."),
+        ("--require-valid", "Require the whole final candidate to be valid before writing."),
+    ]:
+        function = click.option(flag, is_flag=True, help=help_text)(function)
+    return json_option(function)
+
+
+def edit_input(name, params, *, read=True):
+    if name == "delete":
+        return {"op": name, "ids": list(params["ids"])}
+    text = body_input(params["messages"], params["body"], required=name == "add", read=read)
+    parents = parent_input(params["parents"], params["parents_json"])
+    sources = source_input(params["sources"])
+    edit = {"op": name}
+    if name == "add":
+        edit.update(type=params["node_type"], parents=parents or [])
+        if params["alias"] is not None:
+            edit["as"] = params["alias"]
+    else:
+        edit["id"] = params["node_id"]
+        if parents is not None:
+            edit["parents"] = parents
+        if text is None and params["body"] is None and parents is None and sources is None:
+            raise SpecError(
+                [Diagnostic("ARGUMENT", "Supply --message, --parent or advanced --sources.")], 2
+            )
+    if text is not None:
+        edit["body"] = text
+    if sources is not None:
+        edit["sources"] = sources
+    return edit
+
+
+@guarded
+def run_edit_chain(root, steps, *, dry_run, require_valid, yes, as_json):
+    if any(p.get("reviewed_plan") is not None for _, p in steps):
+        raise SpecError(
+            [Diagnostic("ARGUMENT", "Reviewed deletion plans require one standalone delete.")], 2
+        )
+    if sum(p.get("body") == "-" for _, p in steps) > 1:
+        raise SpecError([Diagnostic("ARGUMENT", "Use at most one stdin body per invocation.")], 2)
+    # Validate every step and mutually exclusive input before opening any body source.
+    edits = [edit_input(name, params, read=False) for name, params in steps]
+    total = 0
+    for edit in edits:
+        if "body" in edit:
+            total = count_body_bytes(edit["body"], total)
+    for edit, (_, params) in zip(edits, steps, strict=True):
+        if params.get("body") is not None:
+            text = read_body(params["body"])
+            total = count_body_bytes(text, total)
+            edit["body"] = text
+    return write_edits(
+        root, edits, dry_run=dry_run, require_valid=require_valid, yes=yes, as_json=as_json
+    )
 
 
 def mutation_output(snapshot: Snapshot, ids, as_json):
@@ -213,7 +280,11 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
 @click.version_option(__version__)
 @click.pass_context
 def main(context, root):
-    """Manage an intention-conclusion specification graph."""
+    """Manage an intention-conclusion specification graph.
+
+    Combine add/update/delete steps in one invocation and transaction.
+    All other commands remain standalone. Editing flags apply to the whole invocation.
+    """
     context.obj = root
 
 
@@ -230,6 +301,9 @@ def init(root, messages, body, as_json):
 
 
 @main.command(name="add")
+@click.option(
+    "--as", "alias", help="Local name for this new node; reference it with --parent '$NAME'."
+)
 @click.option(
     "--type",
     "node_type",
@@ -248,24 +322,27 @@ def init(root, messages, body, as_json):
 )
 @body_options
 @click.option("--sources", hidden=True)
-@click.option(
-    "--require-valid", is_flag=True, help="Require a valid complete candidate before writing."
-)
-@json_option
+@edit_options
 @click.pass_obj
 @guarded
-def add(root, node_type, parents, parents_json, messages, body, sources, require_valid, as_json):
-    """Create a schema-checked node and report graph findings."""
-    text = body_input(messages, body, required=True)
+def add(root, **params):
+    """Create a node; combine with add/update/delete for one transaction."""
+    edit = edit_input("add", params)
+    if params["alias"] is not None or params["dry_run"]:
+        return write_edits(
+            root,
+            [edit],
+            **{key: params[key] for key in ("dry_run", "require_valid", "yes", "as_json")},
+        )
     snapshot, node_id = add_node(
         root_path(root),
-        node_type,
-        parent_input(parents, parents_json) or [],
-        text,
-        source_input(sources),
-        require_valid=require_valid,
+        edit["type"],
+        edit["parents"],
+        edit["body"],
+        edit.get("sources"),
+        require_valid=params["require_valid"],
     )
-    mutation_output(snapshot, [node_id], as_json)
+    mutation_output(snapshot, [node_id], params["as_json"])
 
 
 @main.command(context_settings={"ignore_unknown_options": True})
@@ -278,28 +355,27 @@ def add(root, node_type, parents, parents_json, messages, body, sources, require
     "--parent", "parents", multiple=True, help="Replace the complete parent list; repeat per ID."
 )
 @click.option("--sources", hidden=True)
-@click.option(
-    "--require-valid", is_flag=True, help="Require a valid complete candidate before writing."
-)
-@json_option
+@edit_options
 @click.pass_obj
 @guarded
-def update(root, node_id, messages, body, parents, parents_json, sources, require_valid, as_json):
-    """Change binding text, parent relationships or source references."""
-    text = body_input(messages, body)
-    if text is None and not parents and parents_json is None and sources is None:
-        raise SpecError(
-            [Diagnostic("ARGUMENT", "Supply --message, --parent or advanced --sources.")], 2
+def update(root, **params):
+    """Replace node fields; combine with add/update/delete for one transaction."""
+    edit = edit_input("update", params)
+    if params["dry_run"]:
+        return write_edits(
+            root,
+            [edit],
+            **{key: params[key] for key in ("dry_run", "require_valid", "yes", "as_json")},
         )
     snapshot = update_node(
         root_path(root),
-        node_id,
-        body=text,
-        parents=parent_input(parents, parents_json),
-        sources=source_input(sources),
-        require_valid=require_valid,
+        edit["id"],
+        body=edit.get("body"),
+        parents=edit.get("parents"),
+        sources=edit.get("sources"),
+        require_valid=params["require_valid"],
     )
-    mutation_output(snapshot, [node_id], as_json)
+    mutation_output(snapshot, [edit["id"]], params["as_json"])
 
 
 def interactive_stdin():
@@ -327,17 +403,8 @@ def read_deletion_plan(path):
 
 @main.command(name="delete", context_settings={"ignore_unknown_options": True})
 @click.argument("ids", nargs=-1, required=True)
-@click.option(
-    "--dry-run",
-    is_flag=True,
-    help="Preview exact selected files, retained references and warnings.",
-)
-@click.option("--yes", is_flag=True, help="Consent to warned deletion; warnings remain visible.")
 @click.option("--reviewed-plan", hidden=True)
-@click.option(
-    "--require-valid", is_flag=True, help="Require a valid complete candidate before writing."
-)
-@json_option
+@edit_options
 @click.pass_obj
 @guarded
 def delete(root, ids, dry_run, yes, reviewed_plan, require_valid, as_json):
@@ -642,58 +709,9 @@ def diff(root, base, target, summary, with_context, node_ids, max_bytes, as_json
         raise click.exceptions.Exit(1)
 
 
-@main.command(name="apply")
-@click.option("--edits-json", help="Explicit edit object as literal JSON, with inline bodies.")
-@click.option("--plan", "plan_file", hidden=True, help="Integration JSON FILE, or - for stdin.")
-@click.option("--dry-run", is_flag=True, help="Plan one explicit batch without canonical writes.")
-@click.option(
-    "--yes", is_flag=True, help="Consent to selected uncommitted deletions; retain warnings."
-)
-@click.option(
-    "--require-valid", is_flag=True, help="Require the whole candidate to be valid before writing."
-)
-@json_option
-@click.pass_obj
-@guarded
-def apply_command(root, edits_json, plan_file, dry_run, yes, require_valid, as_json):
-    """Advanced: apply explicit add/update/delete edits in one recoverable batch."""
-    from .batch import MAX_BATCH_BYTES
-
-    if edits_json is not None and plan_file is not None:
-        raise SpecError(
-            [Diagnostic("ARGUMENT", "Use --edits-json or integration --plan, not both.")], 2
-        )
-    if edits_json is not None:
-        raw = edits_json.encode("utf8")
-        directory = Path.cwd()
-    elif plan_file == "-":
-        raw = sys.stdin.buffer.read(MAX_BATCH_BYTES + 1)
-        directory = Path.cwd()
-    elif plan_file is not None:
-        path = Path(plan_file).absolute()
-        directory = path.parent
-        with path.open("rb") as stream:
-            raw = stream.read(MAX_BATCH_BYTES + 1)
-    else:
-        raise SpecError(
-            [Diagnostic("ARGUMENT", "Supply --edits-json with an explicit edit object.")], 2
-        )
-
-    def pairs(items):
-        result = {}
-        for key, value in items:
-            if key in result:
-                raise ValueError("Duplicate field: " + key)
-            result[key] = value
-        return result
-
-    try:
-        if len(raw) > MAX_BATCH_BYTES:
-            raise ValueError("Batch exceeds 16 MiB.")
-        value = json.loads(raw, object_pairs_hook=pairs)
-    except (ValueError, RecursionError) as error:
-        raise SpecError([Diagnostic("BATCH", str(error))], 2) from error
-    edits = prepare(value, directory, allow_body_files=edits_json is None)
+def write_edits(root, edits, *, dry_run, yes, require_valid, as_json):
+    """One explicit candidate, consent decision, receipt and recoverable transaction."""
+    edits = prepare({"edits": edits})
     warnings = []
 
     def confirm(plan):
