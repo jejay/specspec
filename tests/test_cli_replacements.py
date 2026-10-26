@@ -1,5 +1,6 @@
 """Literal passage edits share the existing candidate and transaction boundary."""
 
+import base64
 import json
 import os
 import subprocess
@@ -36,7 +37,7 @@ def test_pairs_refer_to_the_same_original_and_do_not_cascade(reverse):
         ("# Literal", [("absent", "new")], "not found"),
         ("# Literal", [("literal", "new")], "not found"),
         ("# Café", [("Cafe\u0301", "new")], "not found"),
-        ("# one\r\ntwo", [("one\ntwo", "new")], "not found"),
+        ("# one\r\n\r\ntwo", [("one\ntwo", "new")], "not found"),
         ("# abc42", [(r"\d+", "new")], "not found"),
         ("# old old", [("old", "new")], "more than once"),
         ("# aaaa", [("aaa", "new")], "more than once"),
@@ -84,7 +85,9 @@ def test_empty_new_deletes_text_equal_values_are_a_noop_and_empty_result_is_inva
     root, parent = workspace
     _, id = add_node(root, "requirement", [parent], "# Keep REMOVE\n")
     result, _ = call(root, "update", id, "--replace", " REMOVE", "")
-    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[id].body == "# Keep\n"
+    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[id].body == "# Keep\n", (
+        result.output
+    )
     before = load_snapshot(root).files
     result, _ = call(root, "update", id, "--replace", "Keep", "Keep")
     assert result.exit_code == 0 and load_snapshot(root).files == before
@@ -501,6 +504,39 @@ def test_external_edits_after_matching_are_protected_by_original_byte_checks(
     with pytest.raises(SpecError):
         recover(root)
     assert path.read_bytes() == external
+
+
+@pytest.mark.parametrize("id", ["-amuwNs=", "-mAAAAA=", "-mmAAA0="])
+def test_canonical_ids_cannot_become_message_options_and_option_values_stay_literal(
+    workspace, monkeypatch, id
+):
+    import specspec.workspace as workspace_module
+
+    root, parent = workspace
+    with monkeypatch.context() as patch:
+        patch.setattr(
+            workspace_module.secrets, "token_bytes", lambda n: base64.urlsafe_b64decode(id)
+        )
+        assert add_node(root, "requirement", [parent], "Old passage")[1] == id
+    result, data = call(
+        root,
+        "update",
+        id,
+        "--replace",
+        "Old passage",
+        id,
+        "add",
+        "--parent",
+        id,
+        "-m",
+        id,
+        "--require-valid",
+    )
+    assert result.exit_code == 0 and data["result"]["graph_valid"], result.output
+    saved = load_snapshot(root)
+    assert all(saved.graph.nodes[changed].body == id for changed in data["result"]["changed_ids"])
+    result, _ = call(root, "update", "-m", "# Updated", id)
+    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[id].body == "# Updated"
 
 
 def test_help_exposes_replacements_only_on_update():

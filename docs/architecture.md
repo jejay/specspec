@@ -108,8 +108,12 @@ The complete editing invocation is parsed before input reads/writes and becomes 
 candidate/consent/recovery scope; other commands stay standalone. Hidden
 `--body FILE|-` accommodates bulk bodies. Repeatable `update --replace OLD NEW`
 selects unique, disjoint original-body passages under the writer lock;
-[`body_replacements.py`](../src/specspec/body_replacements.py) validates exact spans
-and bounds the result before the shared planner serializes its candidate. OLD/NEW
+[`replacement_matching.py`](../src/specspec/replacement_matching.py) maps line-ending
+and paragraph-soft-break comparison views back to original spans. Its bounded
+CommonMark/table parser loads on demand; structures and other whitespace stay exact.
+[`body_replacements.py`](../src/specspec/body_replacements.py) validates disjoint
+spans and accounts for actual consumed bytes before the shared planner serializes
+its literal result. OLD/NEW
 material shares the body-input budget. The UI's single-edit argv/stdin and native
 persistence owners above are unchanged. OS command-line limits remain independent of bulk limits.
 

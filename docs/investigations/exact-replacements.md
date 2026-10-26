@@ -1,97 +1,126 @@
-# Exact selected-passage body updates
+# Selected-passage updates with newline-tolerant matching
 
-The [selected-passage intention](../../_specspec/kiRE62k=.md) supports concise agent
-and human edits while retaining unrelated binding text. The
-[replacement choice](../../_specspec/1GJRSPU=.md) uses explicit OLD/NEW arguments on
-`update`, within the existing [editing invocation](editing-chains.md) boundary.
-See [usage and quoting](../cli.md#replace-selected-body-text).
+The [selected-passage intention](../../_specspec/kiRE62k=.md) supports concise edits
+while retaining unrelated binding text. The [replacement contract](../../_specspec/1GJRSPU=.md)
+uses the existing `update --replace OLD NEW` input. Its
+[default layout choice](../../_specspec/EcEFfgg=.md) keeps words exact while tolerating
+line endings and ordinary prose wrapping. See [usage](../cli.md#replace-selected-body-text).
 
-## Choice and matching
+## One default comparison
 
-`update NODE_ID --replace OLD NEW` is repeatable. Each nonempty OLD must have exactly
-one literal occurrence in the original current body. Checking uniqueness includes
-overlapping occurrences: `aaa` in `aaaa` is ambiguous. Every pair matches the same
-original body; insertion order does not cascade or make another pair applicable.
-Matched ranges must be disjoint; adjacent ranges are permitted. Equal OLD/NEW is
-an explicit body no-op, and empty NEW removes a passage. The final body still satisfies
-ordinary nonempty/schema/size rules.
+Every nonempty OLD needs exactly one admissible original-body span. LF, CRLF and bare
+CR line endings compare equally. Within source-mapped Markdown paragraph text, a
+soft line break compares like one ASCII space, in either direction. Wrapping can
+move between words. All other characters, spaces, tabs, indentation, punctuation,
+case and Unicode normalization retain their literal significance.
 
-This is literal, case-sensitive text replacement, with no regular expression,
-fuzzy match, patch grammar or automatic global replacement. Context supplied in OLD
-identifies the passage. Unicode normalization, whitespace cleanup and line-ending
-conversion are not performed. Untouched body characters remain exact; inserted NEW
-is literal, including supplied LF/CRLF and final newlines. Frontmatter is outside
-the matching surface, and metadata uses its existing serializer and explicit flags.
+CommonMark plus table recognition distinguishes paragraph soft breaks from headings,
+blank-line paragraph boundaries, tables, fenced/indented code, inline code, HTML
+syntax and explicit hard breaks. These structures keep their newlines significant
+apart from line-ending encoding. Container markers and continuation indentation
+stay literal. Paragraphs whose inline content cannot be mapped contiguously to their
+actual source retain line-ending-only matching; prefixes and indentation are never
+guessed away. This is conservative source matching, not rendered-Markdown equivalence.
+For example, ordinary `alpha\nbeta` can match `alpha beta`, but a code block with
+those two lines cannot be selected by the single-line phrase.
 
-Whole-body `-m/--message` and integration `--body FILE|-` remain alternatives;
-combining either with replacements is an invocation error. Replacement syntax,
-source conflicts and input limits across all steps are checked before body input
-reads. Matching happens against the fresh identified document inside the existing
-workspace lock. An unrelated intervening body edit remains present when the selected
-OLD still matches uniquely. Failed matching rejects the complete candidate before
-journaling/writing; it does not undo independent successful earlier invocations.
+Collect line-ending-only and wrapping-aware candidates together. An exact-layout
+occurrence never takes precedence over another admissible differently wrapped one.
+Deduplicate identical original spans, require uniqueness and include overlapping
+occurrences. All pairs address that same original body; their ranges must be disjoint
+and can be adjacent. Insertions do not cascade into another pair's matching.
 
-## Implementation and bounds
+NEW always remains literal. Unmatched source characters/EOLs stay unchanged. Empty
+NEW deletes the matched passage. Equal OLD/NEW preserves a literally matched passage,
+but can change a tolerantly matched passage's physical layout: replacing wrapped
+`alpha\nbeta` with `alpha beta` deliberately produces one line. Comparison never
+reflows the whole body, adjusts NEW or edits frontmatter. Parent/source flags and
+metadata serialization retain their existing owners.
 
-- `body_replacements.py` validates pairs, finds unique original-body spans, rejects
-  overlaps and bounds the UTF-8 result before joining it. Diagnostics identify the
-  failing pair and canonical target without echoing body text.
-- `cli.py` exposes the two-value repeatable option only on update, preflights sources
-  and routes replacement updates through the existing explicit-candidate planner.
-- `edit_cli.py` uses the option's declared arity, including one attached value in
-  `--replace=OLD NEW`, so both values can literally equal commands or flags.
-- `batch.py` accounts for both sides of each pair with other supplied body input,
-  resolves each selected body's replacements under lock and retains one candidate,
-  deletion consent, optional validity boundary and recoverable journal scope.
+## Implementation and safety
 
-An invocation has at most 1024 replacement pairs across its 1–1024 editing steps.
-Each OLD/NEW value stays within 1 MiB, and both values count against the existing
-16 MiB aggregate authoring-text budget, together with messages and decoded body
-files/stdin. File loading stops on exceeding that combined budget. Each complete
-canonical node is still bounded at 1 MiB, including its header. Existing argument
-and platform limits remain independent; long argv can fail before the CLI starts.
-There is no additional replacement file/stdin/JSON interface or size fallback.
-Large full-body inputs retain their existing explicit integration sources.
+- `replacement_matching.py` creates line-ending comparison text with original
+  character-boundary offsets. An on-demand `markdown-it-py` 4.x parser records
+  ordinary text-space and soft-break positions from paragraph inline rules. Nested
+  image/HTML/code syntax is not treated as ordinary prose. Source correspondence is
+  verified before any soft-break positions are used.
+- The two comparison views have equal normalized character counts. Match spans map
+  back to original offsets before overlap checks and UTF-8 result accounting.
+  Whole-body exact and literal word matches can prove their result without loading
+  the Markdown parser. Ordinary help, messages and private API startup stay lazy.
+- `body_replacements.py` validates bounded pairs and constructs one result from the
+  original slices plus literal NEW. Its size calculation subtracts the actual
+  consumed source bytes, including CRLF, rather than OLD's comparison spelling.
+- `cli.py` retains the same repeatable two-value option, source-conflict preflight
+  and existing planner. `edit_cli.py` protects complete canonical IDs from short-
+  option interpretation; values consumed by options remain literal. `batch.py`
+  still combines input budgets, aliases, whole-graph validity, deletion consent
+  and one recoverable transaction.
 
-API and node format remain 7. Both hosts retain their ordinary single-edit
-argv/stdin, reviewed deletion and application channels, and native/managed save
-owners. No API request fields, host products, transaction-writer behavior, hooks
-or automatic Git staging/commits are introduced. Because this is an additive
-argument option rather than a schema or existing-command cutover, the maintained
-Gantt bundle/receipts/ledger remain unchanged and are validated with current tools.
+Matching occurs on the fresh identified body inside the writer lock. Missing,
+ambiguous, overlapping or analysis-limited matches reject the whole invocation before
+journaling/writing. Independent earlier invocations are not undone. Original-byte
+rechecks and recovery still protect external edits after matching.
+
+Input bounds stay at 1024 pairs per invocation, 1 MiB per OLD/NEW value and canonical
+node, and 16 MiB aggregate supplied body/OLD/NEW material. Shell/OS argv limits are
+separate. Each comparison projection is bounded at 32,768 newline-delimited lines.
+Emitted Markdown tokens are bounded at 131,072, nesting at 20, wrapping candidates
+at 8,192 and metered analysis work at 64 Mi units per selected body, including its
+OLD projections. Exhaustion
+reports an explicit analysis-budget error rather than treating an incomplete search
+as unique. Full-body input remains available. These are work guards, not runtime or
+memory guarantees for every Markdown input.
+
+There are no extra match options, modes, fuzzy spelling rules, regular expressions,
+patch language or replacement file/JSON transport. `-m/--message` and integration
+`--body` remain mutually exclusive whole-body alternatives. API and node format stay
+7. Both hosts, their argv/stdin/private channels and native/managed persistence owners
+remain unchanged. The maintained Gantt schema/history/receipts need no reconstruction
+for this matching-policy change and are checked with current tools.
 
 ## Verification scope
 
-Focused tests cover original-body/non-cascading semantics, adjacent/overlapping and
-missing/multiple matches, repeated/empty/no-op inputs, Unicode/case/normalization,
-LF/CRLF/final newlines, metadata boundaries, parents/sources, both option spellings,
-literal command/flag values, complete preflight, combined budgets and output size.
-Integration tests cover dry-run, invalid-graph boundaries, one alias/deletion/repair
-candidate, fresh under-lock matching, original-byte races, interruption recovery and
-shell-free Windows subprocesses with ASCII/cp1252 output configurations.
+Tests cover line-ending permutations, reflow in both directions, original Unicode
+spans, all-layout ambiguity, exact-match non-precedence, same-span deduplication,
+literal NEW, original-byte size accounting, overlap/non-cascading behavior and
+protected Markdown structures. Deterministic prose-layout combinations check
+unselected bytes. Adversarial tokens, nesting, candidates and work budgets reject
+explicitly without canonical writes; cached parser state remains isolated. CLI
+checks cover preview, alias/deletion chains and Windows Unicode subprocesses with
+ASCII/cp1252 output. A fresh subprocess checks lazy dependency loading.
 
-The complete Python suite passes **729 tests**, including **55 replacement tests**.
-The focused authoring/transaction/documentation group passes 202 tests. Ruff, format
-and whitespace checks pass. Shared UI passes 254 tests, VS Code 46 and Electron nine.
-Actual Windows subprocesses pass with ASCII/cp1252 output encodings, and an actual
-Git Bash invocation passes repeated Unicode replacements plus chained alias creation.
+The first full run exposed an existing ID-parsing bug: a generated ID such as
+`-amuwNs=` was split into an unknown short flag and `-m`, producing a spurious body-
+source conflict. The saved failed fixture reproduced it deterministically. Valid
+full IDs now enter Click's positional data stream before option-cluster parsing;
+explicit message and replacement values keep their ordinary option arities. Tests
+cover leading/mid-cluster m, double hyphens, standalone stdin/message updates,
+replacement chains and ID-looking literal values. This repairs the existing
+canonical-ID contract rather than adding syntax or relaxing ID validation.
 
-The complete 18-file candidate was first checked through a separate temporary Git
-index: **210 project nodes and 22 example nodes, zero errors/warnings**, including
-staged source checks. The real staging area remained untouched during that pass.
-The owner-authorized commit repeats graph/source checks against the actual index.
-All 203 original canonical
-files outside the four deliberately revised bindings retain their original bytes,
-including existing line-ending-only differences. The current-tool Gantt history
-verifier passes all eight retained refs and runnable stages 01–03: 123 actual recorded
-CLI operations, 22 current nodes and 22 historical deletions. Its maintained files
-are unchanged.
+The final complete Python run passes **808 tests**, after the ID fix; all three npm
+suites pass again: shared UI 254, VS Code 46 and Electron nine. Ruff/format and
+whitespace checks pass. Actual Windows subprocesses preserve Unicode arguments and
+literal output with ASCII/cp1252 stdout. A Git Bash invocation matches flat OLD to
+wrapped CRLF prose while retaining literal Unicode NEW and a chained alias. A separate
+Click 8.1.8 probe verifies the supported minimum-series parser with the deterministic
+hyphen-ID case, literal values and composed tolerant replacement. The development
+installation resolves `markdown-it-py` 4.2.0 through the declared 4.x dependency.
 
-Local evidence remains under `.specspec-local/exact-replacements/`, including
-`python-final.log`, `focused.log`, the three npm `*-final.log` files,
-`history-final.log`, `bash-probe.json`, `review.diff` and `candidate.json`.
-The complete installed-host suites were not rerun for this additive CLI option;
-no host product or private transport files changed. Physical Linux/macOS and every
-PowerShell/cmd native-argument quoting variant remain outside this verification.
-Staging and committing this slice follow the owner's explicit request; product
-commands continue to leave those Git operations under the caller's control.
+The complete 17-file slice is staged only after the owner's explicit commit request.
+Exact actual-index graph/source checks cover **211 project nodes and 22 example
+nodes with zero errors/warnings**. All 208 original canonical files outside the two
+revised bindings retain their original bytes, including existing line-ending-only
+differences. Current Gantt verification passes all eight refs and stages 01–03:
+123 recorded CLI operations, 22 current nodes and 22 historical deletions. Its
+bundle, receipts, ledger, snapshot and manual clones remain unchanged.
+
+Evidence and byte snapshots remain in `.specspec-local/replacement-tolerance/`,
+including `python-final.log`, `python-before-id-fix.log`, `id-fix.log`, the three npm
+`*-final.log` files, `history-final.log`, `bash-probe.json`, `click81-probe.log` and
+the final review artifacts. The complete installed-host suites and physical
+Linux/macOS gestures are outside this focused CLI qualification; host products and
+private transports are unchanged. Unrelated history, source anchors and earlier
+local evidence remain preserved. Product commands still perform no implicit Git
+staging, commits, hook installation or release.

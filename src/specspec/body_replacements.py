@@ -1,8 +1,9 @@
-"""Exact, disjoint replacements against one original Markdown body."""
+"""Disjoint original-body replacements with source-mapped newline tolerance."""
 
 from itertools import pairwise
 
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
+from .replacement_matching import Matcher
 
 MAX_REPLACEMENTS = 1024
 
@@ -38,23 +39,24 @@ def replace_body(body, pairs, *, path=None):
     input_bytes(pairs)
     spans = []
     size = len(body.encode("utf8"))
+    matcher = Matcher(body, path=path)
     for index, (old, new) in enumerate(pairs, 1):
-        start = body.find(old)
-        if start < 0:
+        matches = matcher.find(old)
+        if not matches:
             fail(
                 f"Replacement {index} OLD text was not found in the current body; reread it.",
                 path=path,
                 exit_code=1,
             )
-        # str.count misses overlapping occurrences, such as 'aaa' in 'aaaa'.
-        if body.find(old, start + 1) >= 0:
+        if len(matches) > 1:
             fail(
                 f"Replacement {index} OLD text occurs more than once; supply unique context.",
                 path=path,
                 exit_code=1,
             )
-        spans.append((start, start + len(old), index, new))
-        size += len(new.encode("utf8")) - len(old.encode("utf8"))
+        start, end = matches[0]
+        spans.append((start, end, index, new))
+        size += len(new.encode("utf8")) - len(body[start:end].encode("utf8"))
     spans.sort(key=lambda span: span[0])
     for earlier, later in pairwise(spans):
         if later[0] < earlier[1]:

@@ -17,7 +17,7 @@ from .application import request as application_request
 from .batch import apply_edits, count_body_bytes, input_budget, prepare
 from .body_replacements import input_bytes
 from .deletion import deletion_plan, deletion_warnings
-from .edit_cli import EDIT_COMMANDS, EditInvocation
+from .edit_cli import EDIT_COMMANDS, CanonicalIdCommand, EditInvocation
 from .editor import MAX_REQUEST_BYTES
 from .inspection import findings, raw_document, walks
 from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError
@@ -368,7 +368,7 @@ def add(root, **params):
     mutation_output(snapshot, [node_id], params["as_json"])
 
 
-@main.command(context_settings={"ignore_unknown_options": True})
+@main.command(cls=CanonicalIdCommand, context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @click.option(
     "--replace",
@@ -376,7 +376,7 @@ def add(root, **params):
     nargs=2,
     multiple=True,
     metavar="OLD NEW",
-    help="Replace a unique literal body passage; repeat for disjoint original-body matches.",
+    help="Replace unique body text; line endings/prose wrapping may differ. Repeat per passage.",
 )
 @click.option(
     "--parents-json", hidden=True, help="Explicit complete parent array, including empty."

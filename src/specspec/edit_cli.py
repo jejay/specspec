@@ -7,6 +7,7 @@ from contextlib import ExitStack
 import click
 
 from .batch import MAX_BATCH_BYTES, MAX_EDITS
+from .model import ID_RE
 
 EDIT_COMMANDS = frozenset({"add", "update", "delete"})
 EDIT_FLAGS = ("dry_run", "require_valid", "yes", "as_json")
@@ -58,6 +59,23 @@ def split_edits(group, parent, argv):
         if len(steps) > MAX_EDITS:
             raise click.UsageError("An editing invocation accepts at most 1024 steps.", parent)
     return steps
+
+
+class CanonicalIdCommand(click.Command):
+    """A complete node ID is data, even if it resembles a short-option cluster."""
+
+    def make_parser(self, ctx):
+        parser = super().make_parser(ctx)
+        process_options = parser._process_opts
+
+        def process(arg, state):
+            if ID_RE.fullmatch(arg):
+                state.largs.append(arg)
+            else:
+                process_options(arg, state)
+
+        parser._process_opts = process
+        return parser
 
 
 class EditInvocation(click.Command):

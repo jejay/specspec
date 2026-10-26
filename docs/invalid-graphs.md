@@ -149,9 +149,11 @@ Resolution may rewrite a conclusion around surviving justification, split it,
 deliberately relink it, explicitly delete it, or recover a mistakenly deleted file
 using ordinary Git tooling. The CLI never chooses those semantic outcomes for you.
 Repeatable [exact body replacements](cli.md#replace-selected-body-text) can retain
-unrelated binding text: each OLD must match once in the original body, and matches
-must be disjoint. Missing/ambiguous/overlapping matches reject the complete invocation
-before writes, including any combined deletions.
+unrelated binding text: each OLD must match once across the default line-ending and
+prose-wrapping equivalences, and actual original ranges must be disjoint. Structure
+and other whitespace remain significant; NEW is literal. Missing, ambiguous,
+overlapping or analysis-limited matches reject the complete invocation before writes,
+including any combined deletions.
 
 ## One coherent multi-node change
 

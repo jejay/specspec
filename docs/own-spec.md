@@ -199,8 +199,11 @@ maps complete preflight, shared transactions and alias receipts to code and test
 `update --replace OLD NEW` as an alternative to full-body input. Unique, disjoint
 matches on the fresh original body retain unrelated text; every step shares the
 same candidate and recovery boundary. [Realization](../_specspec/O0xeA4Y=.md) links
-the exact matcher, preflight and existing writer. [Replacement evidence](investigations/exact-replacements.md)
-records literal EOL behavior, bounds, stale-match rejection and verification scope.
+the matcher, preflight and existing writer. The [default layout choice](../_specspec/EcEFfgg=.md)
+tolerates line endings and source-mapped prose soft breaks while preserving Markdown
+structure, all-layout uniqueness and literal NEW. It adds no matching options.
+[Replacement evidence](investigations/exact-replacements.md) records parser/work
+bounds, original source mapping, stale-match rejection and verification scope.
 [CLI/review implementation](../_specspec/SF12qpA=.md)
 and [shared host implementation](../_specspec/GG_koyg=.md)
 map the code and verification seams.

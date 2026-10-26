@@ -68,19 +68,28 @@ specspec update NODE_ID \
   --replace "another old passage" "replacement passage"
 ```
 
-Each nonempty `OLD` must occur **exactly once in the original current body**. Supply
-surrounding context when a short phrase repeats. Missing/multiple matches, including
-overlapping occurrences, reject the whole invocation. All pairs refer to the same
-original body, not the preceding pair's output, and their matched ranges must not
-overlap. Adjacent matches are allowed. Empty `NEW` deletes a passage; equal OLD/NEW
-keeps that body passage unchanged. The result must still satisfy the node schema.
+Each nonempty `OLD` needs **exactly one original-body match**, including all permitted
+newline layouts. LF, CRLF and bare CR compare equally. Ordinary Markdown paragraph
+soft breaks can match one ASCII space, in either direction: `a long` followed by a
+soft newline and `sentence` can be selected with `"a long sentence"`. This is the
+default behavior of the same option; no additional match options are needed.
 
-Both values are literal, case-sensitive Unicode text, including whitespace and
-actual LF/CRLF. No regex, fuzzy matching, automatic global replacement or backslash-n
-expansion is performed. Unmatched body text is retained exactly; `NEW` is inserted
-exactly. For multiline matches, raw JSON (`show NODE_ID --raw --json`) retains the
-actual document line endings; ordinary node-record JSON bodies normalize to LF.
-Frontmatter is outside the matching surface. Parent/source flags retain their
+Words, case, Unicode normalization, punctuation, other spaces and indentation stay
+literal. Paragraph boundaries, headings, table rows, code, HTML syntax, list markers
+and explicit hard breaks retain their structure. Only source-mapped paragraph soft
+breaks participate; container prefixes/continuation indentation are not stripped to
+force a match. Missing/multiple matches, including overlapping occurrences, reject
+the whole invocation. An exact-layout match does not win over another admissible
+wrapped occurrence. Supply context to disambiguate.
+
+All pairs refer to the same original body, never preceding insertions, and their
+actual matched ranges must be disjoint. NEW is always inserted literally; empty NEW
+deletes the passage. Even equal OLD/NEW may change a tolerantly matched passage's
+physical wrapping/EOLs. All unmatched body characters and line endings stay exact;
+there is no whole-body reflow, regex, fuzzy spelling or backslash-n expansion.
+The resulting node must satisfy the ordinary schema and size limits. Raw JSON
+(`show NODE_ID --raw --json`) remains available for exact document text and structure.
+Frontmatter is outside the matching surface; parent/source flags retain their
 separate meanings and can accompany replacements.
 
 Replacement input is mutually exclusive with `-m/--message` and integration `--body`
@@ -97,7 +106,9 @@ each replacement value and resulting canonical node has a 1 MiB limit. Arguments
 also retain their separate budget and smaller OS limits. Quote both values for your
 shell (the examples use Bash/Git Bash); programmatic callers should use an argument
 array. `--replace=OLD NEW` is also accepted; the attached spelling supplies only OLD.
-See [matching and verification details](investigations/exact-replacements.md).
+Markdown/candidate analysis has bounded work guards; exceeding them rejects the
+whole invocation explicitly rather than guessing uniqueness. Full-body input stays
+available. See [matching and verification details](investigations/exact-replacements.md).
 
 ## Compose editing commands
 

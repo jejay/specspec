@@ -2,7 +2,7 @@
 id: O0xeA4Y=
 type: implementation
 parents:
-- 1GJRSPU=
+- EcEFfgg=
 sources:
 - path: src/specspec/body_replacements.py
 - path: src/specspec/cli.py
@@ -13,26 +13,39 @@ sources:
 - path: tests/test_transactions.py
 - path: docs/cli.md
 - path: docs/investigations/exact-replacements.md
+- path: src/specspec/replacement_matching.py
+- path: tests/test_replacement_matching.py
+- path: pyproject.toml
+- path: tests/test_ids.py
 ---
-# Implement exact body replacements through the existing candidate writer
+# Implement source-mapped body replacements through the existing writer
 
-cli.py parses repeatable OLD/NEW arguments, rejects mixed body sources and exposes
-replacement updates through the shared explicit-edit planner. edit_cli.py consumes
-the complete two-value option arity, including an attached OLD, before callbacks.
-Literal command/flag words remain values rather than accidental step boundaries.
+cli.py parses the same repeatable OLD/NEW arguments, rejects mixed body sources
+and exposes replacements through the shared explicit-edit planner. edit_cli.py
+consumes the complete two-value option arity before callbacks. CanonicalIdCommand
+keeps full hyphen-leading IDs out of Click short-option clusters, preserving IDs
+containing m alongside the message option. All option values remain literal;
+comparison tolerance is a domain rule rather than another input mode.
 
-body_replacements.py validates nonempty bounded pairs and locates each unique OLD
-in one original body, including overlapping-occurrence ambiguity checks. Disjoint
-spans build a single bounded UTF-8 result with literal NEW and unchanged surrounding
-characters. batch.py charges both sides with other body input before auxiliary
-reads and applies each transformation to the fresh node under the writer lock.
-The existing serializer, complete-candidate validity, deletion consent, original
-bytes, journal and recovery retain their owners. UI transports and API/format 7
-remain unchanged.
+replacement_matching.py maps LF/CRLF/CR positions to original character boundaries.
+A lazy CommonMark/table parser records only source-proven prose spaces and soft
+breaks, protecting structural and inline syntax. Both comparison views contribute
+to one unique original-span assessment without exact-layout preference. Parser line,
+token, nesting and candidate/work guards reject incomplete analysis explicitly.
+body_replacements.py resolves all pairs against the same original body, rejects
+physical range overlaps and joins unchanged slices with literal NEW. Output byte
+bounds subtract the actual consumed original bytes, including CRLF.
 
-Regression tests cover exact and simultaneous matching, ambiguity/overlap, empty
-and no-op pairs, source conflicts, body/metadata separation, field association,
-argument arities, UTF-8/EOL and payload/result limits, previews and invalid graphs,
-combined alias/deletion repair, fresh locking, byte races and interruption recovery.
-Windows subprocesses retain multiline Unicode argv under legacy output encodings.
-The linked investigation records completed verification and platform boundaries.
+batch.py retains combined input accounting and fresh under-lock transformation.
+The existing serializer, final graph validation, deletion consent, original-byte
+checks, journal and recovery retain their owners. Ordinary word/full-body matches
+and normal CLI/private API startup avoid the Markdown dependency until needed.
+UI transports and API/node format 7 remain unchanged.
+
+Tests cover line-ending and prose-layout permutations, protected Markdown, Unicode
+source boundaries, all-layout ambiguity, duplicate-span handling, literal output,
+actual consumed bytes, source conflicts, bounds and parser laziness. Existing CLI
+and transaction tests retain previews, invalid states, alias/deletion repair,
+concurrency and interruption recovery. Windows subprocesses preserve Unicode argv
+under legacy output encodings. The linked investigation records completed evidence
+and the bounded qualification scope.

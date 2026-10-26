@@ -219,7 +219,9 @@ def test_full_id_round_trips_cli_native_plan_context_and_dependents(workspace):
         assert runner.invoke(main, ["--root", str(root), *args, "--json"]).exit_code == 2
 
 
-@pytest.mark.parametrize("node_id", ["-_____8=", "--____8="])
+@pytest.mark.parametrize(
+    "node_id", ["-_____8=", "--____8=", "-amuwNs=", "-mAAAAA=", "-mmAAA0=", "--mAAA0="]
+)
 def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatch, node_id):
     root, manifesto = workspace
     raw = base64.urlsafe_b64decode(node_id)

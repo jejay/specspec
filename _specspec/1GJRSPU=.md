@@ -5,21 +5,22 @@ parents:
 - kiRE62k=
 - 4626uI8=
 ---
-# Match exact original-body passages for bounded update replacements
+# Select unique original-body passages for bounded update replacements
 
 update accepts repeatable --replace OLD NEW pairs as an alternative to whole-body
-message or integration input. OLD is nonempty and each OLD has exactly one literal
-occurrence in the current original body, including overlapping occurrences when
-checking uniqueness. All pairs refer to that same original body, have disjoint
-matched ranges and produce one candidate without cascading into inserted text.
-NEW may be empty to remove the matched passage. Equal OLD/NEW is an explicit body no-op.
+message or integration input. OLD is nonempty and has exactly one original-body
+match under the default line-ending and prose-wrapping comparison rules. Include
+overlapping occurrences and all permitted layouts when checking uniqueness. All
+pairs refer to that same original body, have disjoint matched ranges and produce
+one candidate without cascading into inserted text. NEW may be empty to remove a
+passage, and is always inserted literally.
 
-Preserve untouched body characters, line endings and final-newline state literally;
-insert NEW exactly as supplied. Matching is case-sensitive and Unicode-literal.
-Body matching and transformation occur under the existing writer lock against the
-fresh identified node. Parents, sources and other metadata retain their existing
-separate edit owners. Missing, multiple or overlapping matches reject the complete
-invocation before canonical writes, with an actionable target diagnostic.
+Preserve untouched body characters, line endings and final-newline state literally.
+Words, case and Unicode characters remain exact; comparison alone tolerates standard
+line endings and Markdown prose soft breaks. Match and transform under the existing
+writer lock against the fresh identified node. Parents, sources and other metadata
+retain their existing separate edit owners. Missing, multiple or overlapping matches
+reject the complete invocation before canonical writes, with a target diagnostic.
 
 Replacement, message and integration body sources are mutually exclusive within
 an update. Validate syntax, body-source conflicts and replacement input limits
@@ -31,6 +32,6 @@ remain authoritative. Full-body replacement and existing UI transports remain us
 An invocation contains at most 1024 replacement pairs across its editing steps.
 Count OLD and NEW UTF-8 bytes together with other body input against the 16 MiB
 authoring budget; each replacement value and resulting canonical node retains the
-1 MiB bound. Operating-system argument limits remain independent. Replacement input
-is explicit argument text, with no file autodetection, patch language, regular
-expression matching or whitespace cleanup. API and node format remain 7.
+1 MiB bound. Operating-system argument limits remain independent. OLD/NEW remain
+explicit argument text. The same replacement option provides its complete default
+matching behavior. API and node format remain 7.

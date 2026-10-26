@@ -132,7 +132,9 @@ for a whole explicit transaction. `add --as goal` and `--parent '$goal'` connect
 nodes without knowing their IDs, including forward references. Other commands stay
 standalone. `update --parent` replaces the entire parent list. Repeatable
 [`update --replace OLD NEW`](docs/cli.md#replace-selected-body-text) edits unique,
-disjoint passages of the original body; it is an alternative to whole-body input. See
+disjoint passages of the original body. Matching tolerates line endings and prose
+soft wrapping by default, while NEW and unmatched text stay literal. It is an
+alternative to whole-body input. See
 [composed editing commands](docs/cli.md#compose-editing-commands). Large input and
 existing UI transports remain available through
 [less-prominent integration inputs](docs/cli.md#integration-only-bulk-inputs).
