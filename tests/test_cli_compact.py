@@ -92,7 +92,7 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     assert result.exit_code == 0, result.output
     receipt = json.loads(result.stdout)["result"]
     child = receipt["changed_ids"][0]
-    assert receipt["nodes"][0]["path"] == f"_specspec/{child}.md"
+    assert receipt["nodes"][0]["path"] == f".specspec/{child}.md"
     assert set(receipt["nodes"][0]) == {"id", "path"}
     assert len(result.stdout) < 1000 and '"body"' not in result.stdout
     listing = call(root, "query").stdout
@@ -193,7 +193,7 @@ def test_shared_application_delta_keeps_ghosts_through_staging_until_commit(work
     delete_nodes(root, [child])
     for staged in (False, True):
         if staged:
-            git(root, "add", "-u", "_specspec")
+            git(root, "add", "-u", ".specspec")
         response = api(root, base="HEAD", cache=True)
         result = response["result"]
         assert result["diff"]["target_ref"] == "workspace"
@@ -238,7 +238,7 @@ def test_historical_application_read_ignores_invalid_saved_workspace_and_rejects
                 "op": "read",
                 "base": "HEAD",
                 "target": "HEAD",
-                "documents": {"_specspec/x.md": "x"},
+                "documents": {".specspec/x.md": "x"},
             }
         ),
     )

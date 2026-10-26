@@ -43,7 +43,7 @@ def node(index, parents=(), *, body=None, kind="requirement"):
         kind,
         [identity(p) for p in parents],
         body if body is not None else f"Body {index}.\n",
-        f"_specspec/{identity(index)}.md",
+        f".specspec/{identity(index)}.md",
         FORMAT_VERSION if kind == "manifesto" else None,
     )
 
@@ -424,7 +424,7 @@ def test_deep_overlay_remains_iterative():
             node(i, kind="requirement" if i else "manifesto"),
             id=f"A{i:05d}A=",
             parents=[f"A{i - 1:05d}A="] if i else [],
-            path=f"_specspec/A{i:05d}A=.md",
+            path=f".specspec/A{i:05d}A=.md",
         )
         for i in range(1250)
     ]
@@ -724,7 +724,7 @@ def test_cli_fresh_head_and_workspace_default_can_be_overridden(workspace):
     setup_repository(root)
     initial = git(root, "rev-parse", "HEAD").decode().strip()
     update_node(root, parent, body="Committed text\n")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Second")
     current = git(root, "rev-parse", "HEAD").decode().strip()
     update_node(root, parent, body="Saved text\n")

@@ -1,6 +1,6 @@
 # Native node-file editors and portable graph views
 
-Opening `**/_specspec/???????=.md` defaults to **SpecSpec Graph** in VS Code's main
+Opening `**/.specspec/???????=.md` defaults to **SpecSpec Graph** in VS Code's main
 editor area. The filename glob is discovery only: Python resolves/validates the
 actual node. **Reopen Editor With → Text Editor** remains available, and user
 editor associations can override the default. There is no Activity Bar container.
@@ -102,9 +102,9 @@ The hidden `specspec api` integration adapter consumes bounded API-7 JSON on std
 {
   "api_version": 7,
   "op": "plan",
-  "documents": {"_specspec/Zm9vYmE=.md": "---\n..."},
+  "documents": {".specspec/Zm9vYmE=.md": "---\n..."},
   "edit": {
-    "path": "_specspec/Zm9vYmE=.md",
+    "path": ".specspec/Zm9vYmE=.md",
     "id": "Zm9vYmE=",
     "body": "# Updated binding text\n",
     "parents": ["ZnJlc2g="],

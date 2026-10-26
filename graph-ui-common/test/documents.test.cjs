@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { ProjectDocuments, minimalTextEdit } = require('../host/documents.cjs');
 
 function fixture(options = {}) {
-  const doc = { path: '_specspec/node.md', text: '# Original', version: 1, dirty: false };
+  const doc = { path: '.specspec/node.md', text: '# Original', version: 1, dirty: false };
   const calls = [], confirmations = [];
   const project = new ProjectDocuments({
     documents: () => [doc], confirm: async text => { confirmations.push(text); return options.confirm !== false; },

@@ -292,6 +292,16 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
             "nodes": [{"id": i, "path": require_node(snapshot, i).path} for i in ids],
             "affected": sorted(affected),
             "applied": True,
+            **(
+                {
+                    "agent_instructions": {
+                        "path": "AGENTS.md",
+                        "created": snapshot.created_instructions,
+                    }
+                }
+                if snapshot.created_instructions is not None
+                else {}
+            ),
             **findings(snapshot),
         },
         snapshot.diagnostics,
@@ -552,7 +562,7 @@ def delete(root, ids, dry_run, yes, reviewed_plan, require_valid, as_json):
     is_flag=True,
     help="Read literal document text/bytes, including malformed nodes; select ID or --path.",
 )
-@click.option("--path", help="With --raw, read this direct _specspec/ID.md path instead of an ID.")
+@click.option("--path", help="With --raw, read this direct .specspec/ID.md path instead of an ID.")
 @click.option(
     "--staged",
     is_flag=True,

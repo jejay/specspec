@@ -29,7 +29,7 @@ def test_interrupted_edit_can_restore_original(workspace):
         update_node(root, manifesto, body="Another\n")
     assert recover(root)["restored"] == [path]
     assert load_snapshot(root).files == before.files
-    assert all(p.suffix == ".md" for p in (root / "_specspec").iterdir())
+    assert all(p.suffix == ".md" for p in (root / ".specspec").iterdir())
 
 
 def test_recovery_refuses_external_changes(workspace):
@@ -95,5 +95,5 @@ def test_recover_init_removes_only_known_node(workspace):
         },
     )
     recover(root)
-    assert not (root / "_specspec").exists()
+    assert not (root / ".specspec").exists()
     assert not (root / ".specspec-local" / "journal.json").exists()

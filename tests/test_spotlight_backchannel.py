@@ -77,7 +77,7 @@ def test_historical_backchannel_selects_target_and_deleted_base_nodes(gantt_hist
     assert shot["nodes"] == [removed, added] and "workspace" not in shot
     assert load_snapshot(root).files == before
     with pytest.raises(SpecError, match="Historical"):
-        create(root, [added], target="stage/03-spec", documents={"_specspec/forged.md": "text"})
+        create(root, [added], target="stage/03-spec", documents={".specspec/forged.md": "text"})
     loaded, _ = request(
         root, {"api_version": 7, "op": "read", "base": base.commit, "target": target.commit}
     )

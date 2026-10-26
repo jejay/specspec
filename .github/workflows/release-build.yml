@@ -1,0 +1,46 @@
+name: Build release artifacts
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-artifacts:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Self-graph source anchors can reference earlier blobs; no old schema reader.
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: python -m pip install -e ".[dev]"
+      - run: npm ci
+      - run: specspec check --sources --warnings-as-errors
+      - run: python example/gantt/history/verify.py --history
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python -m pytest
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - run: npm run package:all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: specspec-0.1-${{ runner.os }}
+          if-no-files-found: error
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/*.vsix
+            dist/*.zip
+            dist/release-manifest.json
+            dist/SHA256SUMS
+      # No release, registry, Marketplace, signing, tag or owner-install steps.

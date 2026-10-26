@@ -9,7 +9,7 @@ const lastSnapshot=messages=>messages.filter(m=>m.type==='snapshot').at(-1);
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 
 test('identical concurrent project reads share work, not mutable view payloads; later reads stay fresh',async()=>{
- const gate=deferred(),calls=[];const doc={path:'_specspec/node.md',text:'A',version:1,dirty:false};
+ const gate=deferred(),calls=[];const doc={path:'.specspec/node.md',text:'A',version:1,dirty:false};
  const cache={commit:'a'.repeat(40),files:{}};
  const p=new ProjectDocuments({documents:()=>[doc],cli:async(args,input)=>{calls.push(JSON.parse(input));await gate.promise;return {result:{snapshot,diagnostics:[],base_cache:cache}};}});
  const a=p.readGraph('HEAD'),b=p.readGraph('HEAD');assert.equal(calls.length,1);gate.resolve();const [x,y]=await Promise.all([a,b]);
@@ -19,7 +19,7 @@ test('identical concurrent project reads share work, not mutable view payloads; 
 });
 
 test('bootstrap is one-shot reusable context with actual stamp checks, not a permanent working cache',async()=>{
- let calls=0;const doc={path:'_specspec/node.md',text:'A',version:1};
+ let calls=0;const doc={path:'.specspec/node.md',text:'A',version:1};
  const p=new ProjectDocuments({documents:()=>[doc],cli:async()=>{calls++;return {result:{snapshot,diagnostics:[]}};}});
  const lease=await p.bootstrap();await p.initial(lease);assert.equal(calls,1);
  doc.text='B';await p.initial(lease);assert.equal(calls,2);
@@ -27,7 +27,7 @@ test('bootstrap is one-shot reusable context with actual stamp checks, not a per
 });
 
 test('native bootstrap retries document/generation races before attaching the custom editor',async()=>{
- const doc={path:'_specspec/node.md',text:'A',version:1};let calls=0;
+ const doc={path:'.specspec/node.md',text:'A',version:1};let calls=0;
  const p=new ProjectDocuments({documents:()=>[doc],cli:async()=>{
   if(++calls<3){doc.text+='x';doc.version++;p.changed();}
   return {result:{snapshot,diagnostics:[]}};
@@ -44,7 +44,7 @@ test('native bootstrap preserves bounded supersession and disposal distinctions'
 });
 
 test('changed document text without a notification rejects shared late results; disposal drops hints',async()=>{
- const gate=deferred();const doc={path:'_specspec/node.md',text:'A',version:1};
+ const gate=deferred();const doc={path:'.specspec/node.md',text:'A',version:1};
  const p=new ProjectDocuments({documents:()=>[doc],cli:async()=>{await gate.promise;return {result:{snapshot,base_cache:{commit:'a'.repeat(40),files:{}},diagnostics:[]}};}});
  const reading=p.readGraph('HEAD');doc.text='B';gate.resolve();await assert.rejects(reading,SupersededReadError);
  const q=new ProjectDocuments({documents:()=>[],cli:async()=>({result:{snapshot,base_cache:{commit:'a'.repeat(40),files:{}},diagnostics:[]}})});
@@ -73,7 +73,7 @@ test('historical comparisons bypass provisional working data',async t=>{
 });
 
 function racingSession(t) {
- const doc={path:'_specspec/node.md',text:'A',version:1};
+ const doc={path:'.specspec/node.md',text:'A',version:1};
  const messages=[];let races=0,calls=0,session;
  const reads=new ProjectDocuments({documents:()=>[doc],cli:async()=>{
   calls++;

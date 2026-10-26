@@ -228,7 +228,7 @@ def test_budget_rejection_cancels_other_chained_edits_without_writes(workspace, 
     )
     assert result.exit_code == 2 and not data["ok"]
     assert data["diagnostics"][0]["code"] == "REPLACE"
-    assert data["diagnostics"][0]["path"] == f"_specspec/{id}.md"
+    assert data["diagnostics"][0]["path"] == f".specspec/{id}.md"
     assert load_snapshot(root).files == before
     assert not (root / ".specspec-local/journal.json").exists()
 

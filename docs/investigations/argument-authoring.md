@@ -1,8 +1,8 @@
 # Argument-first authoring and the retained UI seam
 
-The [direct-authoring intention](../../_specspec/rgGL5FY=.md) and
-[message choice](../../_specspec/BKekD_o=.md) separate ordinary invocation
-arguments from bulk integration transport. [Implementation](../../_specspec/Fy-_P9A=.md)
+The [direct-authoring intention](../../.specspec/rgGL5FY=.md) and
+[message choice](../../.specspec/BKekD_o=.md) separate ordinary invocation
+arguments from bulk integration transport. [Implementation](../../.specspec/Fy-_P9A=.md)
 links the parser, tests and maintained examples. See the [command guide](../cli.md)
 and [coherent editing grammar](../invalid-graphs.md#one-coherent-multi-node-change).
 [Editing-chain verification](editing-chains.md) records the current composition

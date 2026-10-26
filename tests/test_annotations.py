@@ -58,7 +58,7 @@ def test_color_free_cli_add_show_statuses_and_atomic_rejection(workspace):
 @pytest.mark.parametrize("node_id", ["-_____8=", "--AAAQA="])
 def test_dash_leading_ids_and_color_names_in_message(workspace, node_id):
     root, parent = workspace
-    path = next((root / "_specspec").glob("*.md"))
+    path = next((root / ".specspec").glob("*.md"))
     path.write_text(path.read_text().replace(parent, node_id))
     path.rename(path.with_name(path.name.replace(parent, node_id)))
     setup_repository(root)
@@ -138,7 +138,7 @@ def test_workspace_drift_warns_without_losing_members_and_original_is_immutable(
     shown = annotations.listing(root)["shots"][0]
     assert shown["members"][1]["kind"] == "absent"
     assert path.read_bytes() == raw
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "commit", "--allow-empty", "-m", "Move HEAD")
     assert "HEAD moved" in " ".join(annotations.listing(root)["shots"][0]["warnings"])
 
@@ -171,7 +171,7 @@ def test_gantt_comparison_pins_branches_and_resolves_deleted_added_changed_uncha
     common = next(n for n in target.nodes if n.id in base.graph.nodes)
     git(root, "checkout", "--detach", target.commit)
     update_node(root, common.id, body=common.body + "\nComparison regression.\n")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "commit", "-m", "Exercise a changed surviving node")
     target = git_snapshot(root, "HEAD")
     diff = annotations.semantic_diff(base, target)
@@ -207,7 +207,7 @@ def test_workspace_against_other_branch_uses_head_for_dirty_detection(workspace)
     setup_repository(root)
     first = git_snapshot(root, "HEAD").commit
     update_node(root, parent, body="# Committed update\n")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "commit", "-m", "New intention")
     shot = annotations.submit(root, payload(parent), base=first, target="workspace")
     assert shot["comparison"] == {"base": first, "target": "workspace"}

@@ -2,7 +2,9 @@
   "name": "specspec-desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "Standalone local SpecSpec graph UI for Linux and Windows",
+  "description": "Connect intentions, revisable choices and implementation in a local desktop graph",
+  "productName": "SpecSpec",
+  "repository": { "type": "git", "url": "https://github.com/jejay/specspec.git", "directory": "electron" },
   "license": "MIT",
   "main": "main.cjs",
   "scripts": {
@@ -10,13 +12,10 @@
     "start": "npm run build && electron .",
     "test": "node --test test/*.test.cjs",
     "test:host": "npm run build && node test-host/run.cjs",
-    "package": "npm run build && electron-packager . SpecSpec --out=release --overwrite --prune=true --ignore=\"^/(node_modules|test|test-host|scripts|release|[.]specspec-local|[.]vscode-test)(/|$)\""
-  },
-  "allowScripts": {
-    "electron@44.6.0": true
+    "package": "npm run build && node scripts/package.cjs"
   },
   "devDependencies": {
-    "electron": "44.6.0",
+    "electron": "44.9.3",
     "@electron/packager": "20.3.0"
   }
 }

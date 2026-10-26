@@ -1,0 +1,29 @@
+{
+  "name": "specspec-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SpecSpec CLI, VS Code extension and Electron desktop — one source workspace",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/jejay/specspec.git" },
+  "engines": { "node": ">=22.12.0", "npm": ">=10" },
+  "workspaces": ["graph-ui-common", "vscode", "electron"],
+  "allowScripts": { "electron@44.9.3": true, "esbuild@0.28.2": true, "@vscode/vsce-sign@2.1.0": true },
+  "overrides": {
+    "@azure/msal-node": "7.1.1",
+    "undici": "7.30.1"
+  },
+  "scripts": {
+    "build": "npm run build:vscode && npm run build:electron",
+    "build:vscode": "npm run compile --workspace specspec-vscode",
+    "build:electron": "npm run build --workspace specspec-desktop",
+    "desktop": "npm run build:electron && electron electron",
+    "test": "npm test --workspaces --if-present",
+    "test:host:vscode": "npm run test:host --workspace specspec-vscode",
+    "test:host:electron": "npm run test:host --workspace specspec-desktop",
+    "package:cli": "python -m build",
+    "package:vscode": "npm run package --workspace specspec-vscode",
+    "package:electron": "npm run package --workspace specspec-desktop && python tools/release.py archive",
+    "package:all": "npm run package:cli && npm run package:vscode && npm run package:electron && npm run verify:packages",
+    "verify:packages": "python tools/release.py check"
+  }
+}

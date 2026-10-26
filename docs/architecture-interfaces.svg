@@ -267,7 +267,7 @@
     <g id="trace-native-save" aria-label="Native Save or autosave persists the TextDocument to node files separately from Python; invalid text may be saved">
       <path d="M1240 2139V2168H1282" class="write"/>
       <path d="M1282 2147H1306L1318 2159V2193H1282ZM1306 2147V2159H1318" fill="#fff" stroke="#b86e35" stroke-width="1.7"/>
-      <text x="854" y="2165" class="small gold">Native Save / autosave → _specspec/</text>
+      <text x="854" y="2165" class="small gold">Native Save / autosave → .specspec/</text>
       <text x="854" y="2195" class="caption">No Python lock / journal; invalid text can be saved.</text>
     </g>
     <text x="64" y="2233" class="caption">Typing is coalesced; version and sequence guards protect newer input. Raw text edits go straight to the TextDocument.</text>

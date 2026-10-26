@@ -1,6 +1,6 @@
 # A planning app that changes its mind
 
-A runnable Gantt example with an independent `_specspec` graph and agent-planned
+A runnable Gantt example with an independent `.specspec` graph and agent-planned
 spec-before-code development through two substantial redirects. Every retained
 graph describes that stage's current product positively, with separately reasoned
 conclusions and actual implementation mappings. Git records changed decisions. The existing
@@ -23,7 +23,8 @@ intentionally unsupported. This explains failed UI comparisons of its old commit
 Do not install nested `.git` metadata here or resurrect legacy schema readers.
 
 The [complete Git bundle](history/gantt.bundle) holds a separate rewritten,
-current-schema history. From the SpecSpec root, with development Python active:
+current-schema history. Install the global CLI with `uv tool install .` or
+`pipx install .` from the SpecSpec checkout first. From that checkout's root:
 
 ```sh
 python example/gantt/history/checkout.py
@@ -37,9 +38,9 @@ Open **that clone** as the project in VS Code/Electron. From the clone:
 
 ```sh
 git rev-parse --show-toplevel
-python -m specspec check --warnings-as-errors
-python -m specspec diff stage/01-code stage/02-spec
-python -m specspec diff stage/02-code stage/03-spec
+specspec check --warnings-as-errors
+specspec diff stage/01-code stage/02-spec
+specspec diff stage/02-code stage/03-spec
 ```
 
 Use the same tags in **Compare Revisions**. The clone has its own Git root, index,
@@ -103,15 +104,17 @@ is unrelated to obsolete SpecSpec node schemas.
 From the clone:
 
 ```sh
-python -m specspec query
-python -m specspec diff
-python -m specspec query <full-id> --max-distance 0 --with-ancestors
+specspec query
+specspec diff
+specspec query FULL_ID --max-distance 0 --with-ancestors
 npm test
 npm run test:browser
 ```
 
-IDs are canonical padded Base64url over five random bytes, including `=`; filenames
-are `<id>.md`. Manual Markdown is permitted and validated; CLI/UI editing is
+`FULL_ID` means an actual complete node ID, not a literal argument. IDs are canonical
+padded Base64url over five random bytes, including `=`; `.specspec/` contains direct
+`<id>.md` files. Init supplies a packaged root `AGENTS.md` only when absent;
+this example retains its own project-specific instructions. Manual Markdown is permitted and validated; CLI/UI editing is
 recommended. Do not reinitialize the graph. Node 22+ is needed for the installed
 Chromium browser harness; no app dependencies or browser downloads are required.
 `GANTT_BROWSER` selects the installed browser; `GANTT_SCREENSHOT_DIR` saves screenshots.
@@ -130,6 +133,6 @@ history. Existing Windows browser evidence is bounded prototype verification,
 not exhaustive accessibility/platform/performance/security proof or a remote CI claim.
 
 Before an authorized SpecSpec-checkout commit, validate both **exact staged** graphs
-from its root: `python -m specspec check --staged` and
-`python -m specspec --root example/gantt check --staged`. In an independent example
+from its root: `specspec check --staged` and
+`specspec --root example/gantt check --staged`. In an independent example
 repository, only its own `check --staged` applies. No hooks are installed automatically.

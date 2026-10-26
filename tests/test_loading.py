@@ -40,7 +40,7 @@ def test_git_batches_and_verified_cache_hints_preserve_exact_results(workspace, 
     assert editor_request(root, {"base_cache": forged}, "HEAD") == expected
     assert calls == ["--batch-check", "--batch"]
     update_node(root, manifesto, body="# New HEAD\n")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Change HEAD")
     assert editor_request(root, {"base_cache": cached}, "HEAD") == editor_request(root, {}, "HEAD")
 
@@ -75,7 +75,7 @@ def test_cache_cannot_hide_a_missing_git_blob(workspace):
         {},
         {"commit": "not-a-commit", "files": {}},
         {"commit": "a" * 40, "files": {"../bad.md": "bad"}},
-        {"commit": "a" * 40, "files": {"_specspec/x.md": 1}},
+        {"commit": "a" * 40, "files": {".specspec/x.md": 1}},
     ],
 )
 def test_invalid_cache_inputs_are_bounded_editor_errors(workspace, bad):

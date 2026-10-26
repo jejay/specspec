@@ -48,11 +48,11 @@ def test_pairs_refer_to_the_same_original_and_do_not_cascade(reverse):
 )
 def test_uncertain_matches_are_rejected_without_guessing(body, pairs, message):
     with pytest.raises(SpecError) as caught:
-        replace_body(body, pairs, path="_specspec/AAAAAAA=.md")
+        replace_body(body, pairs, path=".specspec/AAAAAAA=.md")
     error = caught.value
     assert error.exit_code == 1 and error.diagnostics[0].code == "REPLACE"
     assert message in error.diagnostics[0].message
-    assert error.diagnostics[0].path == "_specspec/AAAAAAA=.md"
+    assert error.diagnostics[0].path == ".specspec/AAAAAAA=.md"
 
 
 @pytest.mark.parametrize("pairs", [None, {}, [], [("", "x")], [("x",)], [("x", 1)], ["xy"]])
@@ -67,7 +67,7 @@ def test_singleton_preserves_untouched_body_and_frontmatter(workspace, ending):
     root, parent = workspace
     body = '# Heading\r\n\r\nOld 🐕 passage.  \r\nKeep "quotes", \\ and $literal.' + ending
     _, id = add_node(root, "requirement", [parent], body)
-    path = root / f"_specspec/{id}.md"
+    path = root / f".specspec/{id}.md"
     header, marker, raw_body = path.read_bytes().partition(b"\n---\n")
     header = header.replace(b"parents:", b"# Owner comment\nparents:")
     path.write_bytes(header + marker + raw_body)
@@ -452,7 +452,7 @@ def test_interruption_recovery_restores_patched_and_new_files(workspace, monkeyp
     original, writes = workspace_module.os.replace, []
 
     def interrupt(source, target):
-        if Path(target).parent == root / "_specspec":
+        if Path(target).parent == root / ".specspec":
             writes.append(Path(target).name)
             if len(writes) == 2:
                 raise OSError("Interrupted exact replacements")
@@ -489,7 +489,7 @@ def test_external_edits_after_matching_are_protected_by_original_byte_checks(
 
     root, parent = workspace
     _, id = add_node(root, "requirement", [parent], "# Old")
-    path = root / f"_specspec/{id}.md"
+    path = root / f".specspec/{id}.md"
     external = path.read_bytes().replace(b"# Old", b"# External")
     original = workspace_module.write_journal
 

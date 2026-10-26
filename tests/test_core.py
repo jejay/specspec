@@ -27,8 +27,8 @@ def test_flat_init(workspace):
     snapshot = load_snapshot(root)
     assert snapshot.valid
     assert snapshot.graph.order == [manifesto]
-    assert all(path.is_file() and path.suffix == ".md" for path in (root / "_specspec").iterdir())
-    assert not (root / "_specspec" / "specspec.yaml").exists()
+    assert all(path.is_file() and path.suffix == ".md" for path in (root / ".specspec").iterdir())
+    assert not (root / ".specspec" / "specspec.yaml").exists()
     assert snapshot.nodes[0].format_version == 7
     assert "fingerprint" not in snapshot.to_dict()
     assert all("managed_hash" not in node.to_dict() for node in snapshot.nodes)
@@ -119,7 +119,7 @@ def test_noncanonical_filename_is_diagnosed_without_rewriting_it(workspace):
     root, _ = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    destination = root / "_specspec" / f"{node.id}extra.md"
+    destination = root / ".specspec" / f"{node.id}extra.md"
     (root / node.path).rename(destination)
     invalid = load_snapshot(root)
     assert not invalid.valid
@@ -130,7 +130,7 @@ def test_noncanonical_filename_is_diagnosed_without_rewriting_it(workspace):
 @pytest.mark.parametrize("extra", ["nested", "specspec.yaml", "notes.txt"])
 def test_forbidden_entries(workspace, extra):
     root, _ = workspace
-    path = root / "_specspec" / extra
+    path = root / ".specspec" / extra
     if extra == "nested":
         path.mkdir()
     else:
@@ -141,7 +141,7 @@ def test_forbidden_entries(workspace, extra):
 def test_nearest_workspace_does_not_fall_back(workspace):
     root, _ = workspace
     nested = root / "nested"
-    (nested / "_specspec").mkdir(parents=True)
+    (nested / ".specspec").mkdir(parents=True)
     assert discover_root(nested) == nested
     assert not load_snapshot(nested).valid
 
@@ -174,7 +174,7 @@ def test_duplicate_ids_and_missing_parents(workspace):
     root, manifesto = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    duplicates = {**snapshot.files, f"_specspec/{node.id}duplicate.md": snapshot.files[node.path]}
+    duplicates = {**snapshot.files, f".specspec/{node.id}duplicate.md": snapshot.files[node.path]}
     assert not snapshot_from_files(root, duplicates).valid
     with pytest.raises(SpecError, match="Missing parent"):
         add_node(root, "requirement", ["bWlzc2k="], "Missing\n", require_valid=True)
@@ -203,7 +203,7 @@ def test_symlink_rejection(workspace, tmp_path):
     root, _ = workspace
     target = root / "outside.md"
     target.write_text("outside")
-    link = root / "_specspec" / "link.md"
+    link = root / ".specspec" / "link.md"
     try:
         link.symlink_to(target)
     except OSError:

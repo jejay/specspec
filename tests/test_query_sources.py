@@ -19,7 +19,7 @@ BASE = "before\nalpha\nbeta\nafter\nend\n"
 
 
 def commit(root, message):
-    git(root, "add", "_specspec", "code.py")
+    git(root, "add", ".specspec", "code.py")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", message)
 
 
@@ -33,7 +33,7 @@ def project(workspace):
     commit(root, "Code baseline")
     source = SourceReader(root, ref="HEAD").capture("code.py", [[2, 3]], "strict")
     update_node(root, implementation, sources=[source])
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Anchored mapping")
     return root, manifesto, requirement, implementation, source
 
@@ -83,7 +83,7 @@ def test_source_fact_matrix(project, code, mode, content, position, region, outc
     if mode != source["mode"]:
         source = {**source, "mode": mode}
         update_node(root, implementation, sources=[source])
-        git(root, "add", "_specspec")
+        git(root, "add", ".specspec")
         git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Broad mapping")
     (root / "code.py").write_bytes(code.encode("utf8"))
     query, values = rows(project)
@@ -184,7 +184,7 @@ def test_intrafile_move_uses_existing_region_evidence(project):
     commit(root, "Move baseline")
     source = SourceReader(root, ref="HEAD").capture("code.py", [[2, 3]], "strict")
     update_node(root, implementation, sources=[source])
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Move anchor")
     (root / "code.py").write_text(
         "start\nlong-x\nlong-y\nlong-z\nalpha\nbeta\nlast\n", encoding="utf8"
@@ -199,7 +199,7 @@ def test_intrafile_move_uses_existing_region_evidence(project):
 def test_missing_anchor_is_explicit_while_actual_file_bytes_are_still_known(project):
     root, _, _, implementation, source = project
     update_node(root, implementation, sources=[{**source, "blob": "a" * 40}])
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Unavailable mapping")
     query, values = rows(project)
     assert values[0]["bytes"] == "same" and values[0]["region"] == "unavailable"
@@ -326,7 +326,7 @@ def test_query_source_symlink_escape_remains_unavailable(project):
     escape = root / "escape.py"
     escape.write_bytes(b"permitted source\n")
     update_node(root, implementation, sources=[source, {"path": "escape.py"}])
-    git(root, "add", "_specspec", "escape.py")
+    git(root, "add", ".specspec", "escape.py")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Safe historical source")
     outside = root.parent / (root.name + "-outside.py")
     outside.write_bytes(b"not a permitted source\n")

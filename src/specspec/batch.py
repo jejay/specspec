@@ -196,7 +196,7 @@ def apply_edits(root, edits, *, require_valid=False, dry_run=False, confirm=None
             changed_ids=ids,
             deleted_ids=deleted,
             aliases=aliases,
-            nodes=[{"id": id, "path": f"_specspec/{id}.md"} for id in ids],
+            nodes=[{"id": id, "path": f".specspec/{id}.md"} for id in ids],
             deletion_plan=plan,
             applied=not dry_run,
             affected=sorted(walks(before.graph, ids)),

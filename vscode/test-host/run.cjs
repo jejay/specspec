@@ -8,6 +8,7 @@ const { checkUI } = require('./ui.cjs');
 const { fixture } = require('../../graph-ui-common/test-host/fixture.cjs');
 const { platformChecks } = require('../../graph-ui-common/test-host/platform.cjs');
 const { documentChecks } = require('./documents.cjs');
+const { codeCli } = require('./install.cjs');
 const { VSCODE_HOST_GUARD_MS } = require('../../graph-ui-common/test-host/budgets.cjs');
 
 async function run() {
@@ -44,17 +45,31 @@ async function run() {
   // Opt in only within this disposable profile; retain phase/CLI diagnostics on failure.
   const userData = join(profile, 'user-data');
   mkdirSync(join(userData, 'User'), { recursive: true });
-  writeFileSync(join(userData, 'User', 'settings.json'), JSON.stringify({ 'specspec.traceLoading': true }));
+  writeFileSync(join(userData, 'User', 'settings.json'), JSON.stringify({ 'specspec.traceLoading': true,
+    ...(process.env.SPECSPEC_TEST_COMMAND ? { 'specspec.command': process.env.SPECSPEC_TEST_COMMAND, 'specspec.args': [] } : {}) }));
+  let developmentPath = join(root, 'vscode');
+  if (process.env.SPECSPEC_TEST_VSIX) {
+    // The tested product is installed normally. Only this tiny controller is a
+    // development extension, so --extensionTestsPath can run the existing harness.
+    developmentPath = join(profile, 'test-controller'); mkdirSync(developmentPath);
+    writeFileSync(join(developmentPath, 'package.json'), JSON.stringify({ name: 'specspec-artifact-controller', publisher: 'specspec-test', version: '0.0.0', engines: { vscode: '^1.90.0' }, main: './index.cjs' }));
+    writeFileSync(join(developmentPath, 'index.cjs'), 'exports.activate = () => {};');
+    const cli = codeCli(executable);
+    const installed = execFileSync(executable, [cli, `--user-data-dir=${userData}`, `--extensions-dir=${extensions}`, '--install-extension', resolve(process.env.SPECSPEC_TEST_VSIX), '--force'],
+      { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, encoding: 'utf8', timeout: 60_000 });
+    console.log(installed);
+  }
   const native = { request: join(profile, 'native-request.json'), response: join(profile, 'native-response.json'), result: join(profile, 'native-result.json') };
   const env = { ...process.env, SPECSPEC_PYTHON: python, SPECSPEC_TEST_PROJECT_ROOT: project.root, SPECSPEC_UI_RESULT: uiResult,
     SPECSPEC_NATIVE_REQUEST: native.request, SPECSPEC_NATIVE_RESPONSE: native.response, SPECSPEC_NATIVE_RESULT: native.result, SPECSPEC_NATIVE_NODE: nativeNode,
     SPECSPEC_NATIVE_PATH: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeNode).path),
-    SPECSPEC_NATIVE_OTHER: JSON.stringify({ id: nativeOther, path: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path) }) };
+    SPECSPEC_NATIVE_OTHER: JSON.stringify({ id: nativeOther, path: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path) }),
+    ...(process.env.SPECSPEC_TEST_VSIX ? { SPECSPEC_ARTIFACT_EXTENSIONS_DIR: extensions } : {}) };
   delete env.ELECTRON_RUN_AS_NODE;
   const child = spawn(executable, [
     '--new-window', '--skip-welcome', '--skip-release-notes', '--disable-workspace-trust',
     `--user-data-dir=${userData}`, `--extensions-dir=${extensions}`,
-    `--extensionDevelopmentPath=${join(root, 'vscode')}`, `--extensionTestsPath=${join(__dirname, 'smoke.cjs')}`,
+    `--extensionDevelopmentPath=${developmentPath}`, `--extensionTestsPath=${join(__dirname, 'smoke.cjs')}`,
     `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1',
     // Unknown Code switches need explicit values; a bare final switch consumes
     // the following project path as its value and launches an empty window.

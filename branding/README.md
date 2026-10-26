@@ -15,8 +15,15 @@ local copies and need no sibling checkout or network access.
   `final/png/specspec-app-icon-512.png`, the supplied spectrum launcher tile for
   Electron windows and extension packaging. The small icon is its own optical
   drawing, not a scaled launcher or detailed mark.
+- [`specspec-logo-light.svg`](specspec-logo-light.svg) and
+  [`specspec-logo-dark.svg`](specspec-logo-dark.svg) import the primary full logos
+  byte-for-byte; matching transparent PNGs support README/package introductions.
+  Keep the supplied geometry and continuous gradient. The wordmark needs no font.
+- [`app-icon.ico`](app-icon.ico) is a Windows launcher container generated from the
+  unchanged supplied PNG, not another logo design. `python tools/build_icon.py`
+  regenerates its native sizes using the developer-only Pillow dependency.
 - [`identity.sha256.json`](identity.sha256.json) records original source paths and
-  SHA-256 digests for these imports. The optical SVG is a non-text Git asset to
+  SHA-256 digests for the byte-identical imports. The optical SVG is a non-text Git asset to
   preserve its exact bytes on every checkout. Artifact tests verify the local copies.
 
 The selected source geometry remains intact. Brand colors identify the product;

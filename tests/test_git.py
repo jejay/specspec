@@ -23,7 +23,7 @@ def setup_repository(root):
     git(root, "config", "user.name", "SpecSpec tests")
     git(root, "config", "user.email", "tests@example.invalid")
     git(root, "config", "core.autocrlf", "false")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Initial graph")
 
 
@@ -36,7 +36,7 @@ def test_index_validation_checks_partial_staging(workspace):
     path.write_bytes(valid_bytes.replace(b"parents: []", b"parents: invalid"))
     # Unstaged corruption must not break validation of the already valid index.
     assert git_snapshot(root, staged=True).valid
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     assert not git_snapshot(root, staged=True).valid
     # A repaired worktree must not mask a corrupt staged version.
     path.write_bytes(valid_bytes)
@@ -49,9 +49,9 @@ def test_index_and_revision_reject_noncanonical_paths_despite_working_repair(wor
     setup_repository(root)
     snapshot = load_snapshot(root)
     node = snapshot.graph.nodes[manifesto]
-    wrong = root / "_specspec" / f"{manifesto}extra.md"
+    wrong = root / ".specspec" / f"{manifesto}extra.md"
     (root / node.path).rename(wrong)
-    git(root, "add", "-A", "_specspec")
+    git(root, "add", "-A", ".specspec")
     wrong.rename(root / node.path)
     assert load_snapshot(root).valid
     staged = git_snapshot(root, staged=True)
@@ -79,7 +79,7 @@ def test_commit_diffs_removed_edges_and_changed_bodies(workspace):
     result = semantic_diff(base, load_snapshot(root))
     assert {"id": left, "kind": "changed", "fields": ["body"]} in result["changes"]
     assert load_snapshot(root).graph.nodes[left].path == node.path
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Changed graph")
     assert (
         semantic_diff(git_snapshot(root, "HEAD~1"), git_snapshot(root, "HEAD"))["changes"]
@@ -125,7 +125,7 @@ def test_resolved_head_skips_unborn_probes_and_reads_fresh_commits(workspace, mo
     assert first.valid and first.nodes
     assert not any(args[0] in {"symbolic-ref", "show-ref"} for args in calls)
     update_node(root, manifesto, body="# Changed HEAD\n")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Move HEAD")
     second = git_snapshot(root, "HEAD", allow_empty=True)
     assert second.commit != first.commit and second.nodes[0].body == "# Changed HEAD\n"
@@ -165,7 +165,7 @@ def test_owner_configured_hook_calls_current_exact_index_check(workspace):
     (root / node.path).write_bytes(
         snapshot.files[node.path].replace(b"parents: []", b"parents: invalid")
     )
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     result = subprocess.run(
         ["git", "-C", str(root), "commit", "-m", "Should fail"], capture_output=True
     )
@@ -181,5 +181,5 @@ def test_nested_project_paths(workspace):
     nested = root / "subproject"
     nested.mkdir()
     initialize(nested, "Nested\n")
-    git(root, "add", "subproject/_specspec")
+    git(root, "add", "subproject/.specspec")
     assert git_snapshot(nested, staged=True).valid

@@ -10,6 +10,7 @@ import shutil
 from collections.abc import Callable, Collection
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
+from importlib.resources import files as package_files
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -17,7 +18,7 @@ from .format import parse_node, read_document, serialize
 from .graph import Graph, build_graph
 from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
 
-SPEC_DIR = "_specspec"
+SPEC_DIR = ".specspec"
 STATE_DIR = ".specspec-local"
 
 
@@ -30,6 +31,7 @@ class Snapshot:
     graph: Graph | None
     commit: str | None = None
     declared_version: int | None = None
+    created_instructions: bool | None = None
 
     @property
     def valid(self) -> bool:
@@ -113,7 +115,7 @@ def discover_root(start: Path | None = None) -> Path:
         if directory.exists() or directory.is_symlink():
             return candidate
     raise SpecError(
-        [Diagnostic("WORKSPACE", "No _specspec directory found; run specspec init.")], 2
+        [Diagnostic("WORKSPACE", "No .specspec directory found; run specspec init.")], 2
     )
 
 
@@ -141,7 +143,7 @@ def read_files(root: Path) -> tuple[dict[str, bytes], list[Diagnostic]]:
     diagnostics: list[Diagnostic] = []
     files: dict[str, bytes] = {}
     if directory.is_symlink() or not directory.is_dir():
-        return files, [Diagnostic("DIRECTORY", "_specspec must be a real directory.", SPEC_DIR)]
+        return files, [Diagnostic("DIRECTORY", ".specspec must be a real directory.", SPEC_DIR)]
     for entry in sorted(directory.iterdir()):
         path = f"{SPEC_DIR}/{entry.name}"
         if entry.is_symlink() or not entry.is_file() or entry.suffix != ".md":
@@ -348,7 +350,7 @@ def initialize(root: Path, body: str) -> Snapshot:
     destination = root / SPEC_DIR
     if destination.exists() or destination.is_symlink():
         raise SpecError(
-            [Diagnostic("EXISTS", "Refusing to overwrite an existing _specspec workspace.")]
+            [Diagnostic("EXISTS", "Refusing to overwrite an existing .specspec workspace.")]
         )
     with workspace_lock(root) as state:
         node = new_node("manifesto", [], body)
@@ -362,16 +364,29 @@ def initialize(root: Path, body: str) -> Snapshot:
         staging = state / "stage-init"
         staging.mkdir()
         (staging / Path(node.path).name).write_bytes(raw)
-        write_journal(
-            state, {"kind": "init", "files": {node.path: {"old": None, "new": encode(raw)}}}
-        )
+        instructions = root / "AGENTS.md"
+        create_instructions = not os.path.lexists(instructions)
+        changes = {node.path: {"old": None, "new": encode(raw)}}
+        if create_instructions:
+            guide = package_files("specspec").joinpath("templates/AGENTS.md").read_bytes()
+            staged_guide = state / "stage-init-agents"
+            staged_guide.write_bytes(guide)
+            changes["AGENTS.md"] = {"old": None, "new": encode(guide)}
+        write_journal(state, {"kind": "init", "files": changes})
         if destination.exists() or destination.is_symlink():
             raise SpecError(
                 [Diagnostic("CONCURRENT", "Workspace appeared while initialization was staged.")]
             )
         os.rename(staging, destination)
+        if create_instructions:
+            # Atomic, exclusive publication: unlike POSIX rename, link never replaces
+            # an instruction file that appeared after the absence check.
+            os.link(staged_guide, instructions)
+            if instructions.is_symlink() or instructions.read_bytes() != guide:
+                raise SpecError([Diagnostic("CONCURRENT", "Instructions changed during init.")])
         result = load_snapshot(root, ignore_state=True)
         result.require_valid()
+        result.created_instructions = create_instructions
         cleanup(state)
     return result
 
@@ -617,8 +632,15 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
                 raise ValueError("Unsupported journal.")
             originals: dict[str, bytes | None] = {}
             for path, states in journal["files"].items():
-                parts = PurePosixPath(path).parts
-                if len(parts) != 2 or parts[0] != SPEC_DIR or "\\" in path:
+                pure = PurePosixPath(path)
+                node_path = (
+                    len(pure.parts) == 2
+                    and pure.parent.as_posix() == SPEC_DIR
+                    and pure.as_posix() == path
+                    and "\\" not in path
+                )
+                instruction_path = journal["kind"] == "init" and path == "AGENTS.md"
+                if not (node_path or instruction_path):
                     raise ValueError("Unsafe journal path.")
                 old, new = decode(states["old"]), decode(states["new"])
                 target = root / path
@@ -633,7 +655,9 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
                     raise ValueError("Initialization journal cannot contain original files.")
                 directory = root / SPEC_DIR
                 if directory.exists():
-                    expected = {Path(path).name for path in originals}
+                    expected = {
+                        Path(path).name for path in originals if path.startswith(SPEC_DIR + "/")
+                    }
                     if {entry.name for entry in directory.iterdir()} != expected:
                         raise ValueError(
                             "Unexpected initialization files; recovery changed nothing."

@@ -105,7 +105,7 @@ def workspace_state(snapshot, head=None):
                 "--no-renames",
                 head.commit,
                 "--",
-                "_specspec",
+                ".specspec",
             ).split(b"\0")
             if p
         }
@@ -470,7 +470,7 @@ def listing(root, shot_id=None):
                 else None
             )
             unreadable = not node and any(
-                f"_specspec/{node_id}.md" in s.files for s in (old, new) if s
+                f".specspec/{node_id}.md" in s.files for s in (old, new) if s
             )
             kind = (
                 "unavailable"

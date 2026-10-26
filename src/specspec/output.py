@@ -86,6 +86,9 @@ def render_listing(snapshot):
 def render_receipt(result, verb="Changed"):
     lines = [f"{verb}: " + ", ".join(result["changed_ids"])]
     lines += [f"  {n['id']}  {n['path']}" for n in result.get("nodes", [])]
+    if instructions := result.get("agent_instructions"):
+        status = "created" if instructions["created"] else "existing entry preserved"
+        lines.append(f"Agent instructions: {instructions['path']} ({status})")
     if result.get("aliases"):
         lines.append("Aliases:")
         lines += [f"  ${name} -> {id}" for name, id in sorted(result["aliases"].items())]

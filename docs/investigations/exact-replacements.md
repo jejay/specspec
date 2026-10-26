@@ -1,9 +1,9 @@
 # Selected-passage updates with newline-tolerant matching
 
-The [selected-passage intention](../../_specspec/kiRE62k=.md) supports concise edits
-while retaining unrelated binding text. The [replacement contract](../../_specspec/1GJRSPU=.md)
+The [selected-passage intention](../../.specspec/kiRE62k=.md) supports concise edits
+while retaining unrelated binding text. The [replacement contract](../../.specspec/1GJRSPU=.md)
 uses the existing `update --replace OLD NEW` input. Its
-[default layout choice](../../_specspec/EcEFfgg=.md) keeps words exact while tolerating
+[default layout choice](../../.specspec/EcEFfgg=.md) keeps words exact while tolerating
 line endings and ordinary prose wrapping. See [usage](../cli.md#replace-selected-body-text).
 
 ## One default comparison

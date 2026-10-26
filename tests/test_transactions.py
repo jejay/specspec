@@ -16,7 +16,7 @@ def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
 
     def interrupted(target, *args, **kwargs):
         nonlocal deletions
-        if target.parent == root / "_specspec":
+        if target.parent == root / ".specspec":
             deletions += 1
             if deletions == 2:
                 raise OSError("Simulated process interruption")
@@ -27,8 +27,8 @@ def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
         delete_nodes(root, [parent, child], allow_uncommitted=True)
     assert not load_snapshot(root).valid
     assert (root / ".specspec-local" / "journal.json").exists()
-    assert all(entry.suffix == ".md" for entry in (root / "_specspec").iterdir())
-    assert len(list((root / "_specspec").iterdir())) == 2
+    assert all(entry.suffix == ".md" for entry in (root / ".specspec").iterdir())
+    assert len(list((root / ".specspec").iterdir())) == 2
     monkeypatch.setattr(Path, "unlink", original)
     recover(root)
     assert load_snapshot(root).files == before.files

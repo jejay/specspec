@@ -1,10 +1,10 @@
 # One inspection command and task-oriented terminal help
 
 The owner requested removal of the top-level `show` command and substantially
-more useful help for every command. [Inspection intention](../../_specspec/2FfVd-Y=.md)
-and [help intention](../../_specspec/DOqGIio=.md) separate these outcomes from the
-[query consolidation](../../_specspec/aILBxDs=.md) and
-[help presentation](../../_specspec/ivvUgP4=.md) choices.
+more useful help for every command. [Inspection intention](../../.specspec/2FfVd-Y=.md)
+and [help intention](../../.specspec/DOqGIio=.md) separate these outcomes from the
+[query consolidation](../../.specspec/aILBxDs=.md) and
+[help presentation](../../.specspec/ivvUgP4=.md) choices.
 
 ## Interface and evidence
 

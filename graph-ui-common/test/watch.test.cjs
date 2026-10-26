@@ -20,15 +20,15 @@ test('directory watches reattach on replacement and missing filenames without re
   watches[0].callback('rename', 'unrelated'); assert.equal(changes, 0);
   ino = 2; watches[0].callback('rename', null);
   assert.equal(first.closed, true); assert.equal(watches.length, 3);
-  exists = false; watches[0].callback('rename', Buffer.from('_specspec')); assert.equal(watches[2].closed, true);
-  exists = true; ino = 3; watches[0].callback('rename', '_specspec'); assert.equal(watches.length, 4);
+  exists = false; watches[0].callback('rename', Buffer.from('.specspec')); assert.equal(watches[2].closed, true);
+  exists = true; ino = 3; watches[0].callback('rename', '.specspec'); assert.equal(watches.length, 4);
   watches[3].emit('error', new Error('Watch unavailable')); assert.equal(watches[3].closed, true); assert.match(errors[0].message, /optional polling/);
-  watches[0].callback('rename', '_specspec'); assert.equal(watches.length, 5);
+  watches[0].callback('rename', '.specspec'); assert.equal(watches.length, 5);
   w.close(); assert.ok(watches.every(watcher => watcher.closed));
 });
 
 test('real watcher-only saves, atomic replacements, deletion and directory recreation notify', async t => {
-  const root = mkdtempSync(join(tmpdir(), 'specspec-watch-')), dir = join(root, '_specspec'); mkdirSync(dir);
+  const root = mkdtempSync(join(tmpdir(), 'specspec-watch-')), dir = join(root, '.specspec'); mkdirSync(dir);
   let changes = 0; const errors = [];
   const watcher = new GraphWatcher(root, () => changes++, error => errors.push(error));
   t.after(() => { watcher.close(); rmSync(root, { recursive: true, force: true }); });

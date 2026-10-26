@@ -78,7 +78,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
     try {
       const project = await this.project(document.uri);
       const path = project.documentPath(document);
-      if (!path) throw new Error('Only direct canonical _specspec node files can use the graph editor.');
+      if (!path) throw new Error('Only direct canonical .specspec node files can use the graph editor.');
       const bootstrap = await project.documents.bootstrap();
       const node: SpecNode | undefined = bootstrap.result.snapshot.nodes.find((item: SpecNode) => item.path === path);
       if (!node) throw new Error('Node Markdown needs repair. Reopen with Text Editor.');
@@ -147,7 +147,7 @@ class GraphProject implements vscode.Disposable {
       cli: (args: string[], input?: string) => this.cli(args, input),
       confirm: async (message: string) => (await vscode.window.showWarningMessage(message, { modal: true }, 'Confirm')) === 'Confirm',
     });
-    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '_specspec{,/**}'));
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '.specspec{,/**}'));
     this.disposables.push(watcher, watcher.onDidChange(() => this.documents.changed()),
       watcher.onDidCreate(() => this.documents.changed()), watcher.onDidDelete(() => this.documents.changed()));
     this.disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
@@ -172,7 +172,7 @@ class GraphProject implements vscode.Disposable {
   documentPath(document: vscode.TextDocument): string | undefined {
     if (document.uri.scheme !== 'file') return;
     const path = relative(this.root.fsPath, document.uri.fsPath).split(sep).join('/');
-    if (/^_specspec\/[^/]+\.md$/.test(path)) return path;
+    if (/^\.specspec\/[^/]+\.md$/.test(path)) return path;
   }
   documentState(document: vscode.TextDocument): DocumentState {
     return { path: this.documentPath(document)!, text: document.getText(), version: document.version, dirty: document.isDirty,

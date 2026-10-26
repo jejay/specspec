@@ -2,7 +2,7 @@
 
 ## Project specification and review
 
-The active specification is the tool-managed graph in `_specspec/`. Read
+The active specification is the tool-managed graph in `.specspec/`. Read
 `docs/own-spec.md` for entry points, current choices, and withdrawn design history.
 `INTENTION_SPEC.md` is the user's original source; `CONCLUSION_SPEC.md` records
 technical conclusions. The graph also records the user's later corrections.
@@ -36,6 +36,21 @@ token cost, there is no additional per-node approval ceremony before proceeding.
 Keep conclusions revisable. Working code and passing tests are evidence, not proof
 of correctness or a reason to silently rewrite the user's intentions. Surface
 material uncertainty and conflicts rather than manufacturing agreement.
+
+## Release workspace and generated guides
+
+This checkout is a private npm workspace with one root `package-lock.json`.
+Run `npm ci` at the root; CLI users normally install globally with `uv tool install .`
+or `pipx install .`. See `CONTRIBUTING.md` and `docs/releasing.md` for root build,
+VSIX, portable desktop and artifact-check commands. Builds do not publish or install
+into an owner's editor. Only separate explicit requests authorize release tags or publication.
+
+The generic guide created by `init` is `src/specspec/templates/AGENTS.md`, adapted
+from the owner drafting workspace and current tool contracts. Keep it generic and
+validate wheel/sdist resources, exact selected deletion, ID-only `.specspec/` paths,
+replacement defaults and explicit Git ownership. Preserve existing root instructions
+and protect newly created guides through initialization/recovery. Repository-specific
+maintenance guidance remains here rather than being copied into every product.
 
 ## Changes
 

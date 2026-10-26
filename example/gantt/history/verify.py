@@ -85,7 +85,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
     current.require_valid()
     assert not current.diagnostics, current.diagnostics
     assert all(
-        ID_RE.fullmatch(node.id) and node.path == f"_specspec/{node.id}.md"
+        ID_RE.fullmatch(node.id) and node.path == f".specspec/{node.id}.md"
         for node in current.nodes
     )
     assert_current_bindings(current.nodes)
@@ -129,7 +129,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 node_type,
                 [argv[i + 1] for i, arg in enumerate(argv) if arg == "--parent"],
                 "\n\n".join(messages),
-                f"_specspec/{node_id}.md",
+                f".specspec/{node_id}.md",
                 FORMAT_VERSION if node_type == "manifesto" else None,
                 json.loads(argv[argv.index("--sources") + 1]) if "--sources" in argv else [],
             )

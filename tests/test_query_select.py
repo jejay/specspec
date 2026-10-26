@@ -324,7 +324,7 @@ def test_default_metric_root_is_target_manifesto_and_old_roots_remain_explicit(q
     root = query_project
     g = load_snapshot(root).graph
     old = g.nodes[identity(0)]
-    new = replace(old, id=identity(99), path=f"_specspec/{identity(99)}.md")
+    new = replace(old, id=identity(99), path=f".specspec/{identity(99)}.md")
     (root / old.path).unlink()
     (root / new.path).write_bytes(serialize(new))
     for index in (1, 2):
@@ -384,7 +384,7 @@ def test_cli_accepts_hyphen_leading_full_ids_and_keeps_every_boundary_parent(que
     snapshot = load_snapshot(root)
     old = snapshot.graph.nodes[identity(8)]
     (root / old.path).unlink()
-    new = replace(old, id="-AAAAAA=", path="_specspec/-AAAAAA=.md")
+    new = replace(old, id="-AAAAAA=", path=".specspec/-AAAAAA=.md")
     (root / new.path).write_bytes(serialize(new))
     result = call(root, "-AAAAAA=", "--max-distance", "0", "--json")
     assert result.exit_code == 0, result.output
@@ -412,7 +412,7 @@ def test_filtered_reads_use_fresh_saved_graph_bytes_not_mtime_or_the_index(query
 
 def test_scoped_reads_do_not_modify_files_refs_index_or_object_store(query_project):
     root = query_project
-    files = {p: p.read_bytes() for p in (root / "_specspec").iterdir()}
+    files = {p: p.read_bytes() for p in (root / ".specspec").iterdir()}
     before = [
         git(root, *args)
         for args in (
@@ -490,7 +490,7 @@ def test_excluded_descendant_evidence_preserves_selected_badges_and_skips_unrela
         "Other source\n",
         [{"path": "unrelated.py"}],
     )
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Independent source branch")
     if reparent:
         update_node(root, implementation, parents=[other])

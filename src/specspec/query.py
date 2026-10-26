@@ -175,7 +175,7 @@ def comparison_graph(base: Snapshot, target: Snapshot) -> Graph:
     current = dict(target.graph.nodes) if target.graph else {}
     nodes = (dict(base.graph.nodes) if base.graph else {}) | current
     for parent in sorted({p for n in nodes.values() for p in n.parents} - nodes.keys()):
-        path = f"_specspec/{parent}.md"
+        path = f".specspec/{parent}.md"
         reason = "Unreadable parent file" if path in target.files else "Missing parent file"
         nodes[parent] = SpecNode(parent, "missing", [], reason + ": " + parent, path)
     parents = {i: set(n.parents) for i, n in nodes.items()}

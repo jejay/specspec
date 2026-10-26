@@ -7,12 +7,12 @@ const { join } = require('node:path');
 
 class GraphWatcher {
   constructor(root, changed, failed, filesystem = fs) {
-    this.root = root; this.directory = join(root, '_specspec');
+    this.root = root; this.directory = join(root, '.specspec');
     this.changed = changed; this.failed = failed; this.fs = filesystem;
     try {
       this.parent = this.fs.watch(root, (_event, name) => {
         if (this.closed) return;
-        if (name != null && String(name) !== '_specspec') return;
+        if (name != null && String(name) !== '.specspec') return;
         this.reconcile(); this.changed();
       });
       this.parent.on('error', error => this.report(error));

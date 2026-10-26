@@ -38,6 +38,9 @@ and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
 manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
+Use the global `specspec` command installed with uv tools or pipx. The canonical
+`.specspec/` directory contains direct node files; `.specspec-local/` is runtime state.
+Init supplies a packaged root `AGENTS.md` when absent and preserves existing instructions.
 Ordinary authoring supplies literal `-m/--message` paragraphs to init/add/update.
 Combine add/update/delete steps in one invocation and transaction; `add --as NAME`
 and `--parent '$NAME'` connect new nodes, including forward references. Other commands
@@ -75,8 +78,8 @@ commits, and existing clones retain their experiments.
 Before an authorized SpecSpec-checkout commit, run from its root:
 
 ```sh
-python -m specspec check --staged --sources
-python -m specspec --root example/gantt check --staged --sources
+specspec check --staged --sources
+specspec --root example/gantt check --staged --sources
 ```
 
 In a standalone clone, check its own exact index. Git hook/CI setup is owner-managed;

@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { resolve } = require('node:path');
+const { resolve, dirname } = require('node:path');
 const { existsSync, readFileSync, writeFileSync } = require('node:fs');
 const vscode = require('vscode');
 const { UI_GUARD_MS, NATIVE_GUARD_MS } = require('../../graph-ui-common/test-host/budgets.cjs');
@@ -11,6 +11,13 @@ exports.run = async function run() {
   const normalize = path => process.platform === 'win32' ? resolve(path).toLowerCase() : resolve(path);
   assert.equal(normalize(actual), normalize(expected));
   assert.ok(vscode.workspace.isTrusted, 'The isolated test workspace must be trusted.');
+  if (process.env.SPECSPEC_ARTIFACT_EXTENSIONS_DIR) {
+    const extension = vscode.extensions.getExtension('specspec-dev.specspec-vscode');
+    assert.ok(extension, 'The VSIX must be installed in the isolated extensions directory.');
+    assert.equal(normalize(dirname(extension.extensionPath)), normalize(process.env.SPECSPEC_ARTIFACT_EXTENSIONS_DIR), 'Load the normally installed VSIX, not the source development copy.');
+    assert.notEqual(normalize(extension.extensionPath), normalize(resolve(__dirname, '..')));
+    console.log('SPECSPEC_INSTALLED_VSIX_OK:', extension.extensionPath);
+  }
 
   // Only the disposable test profile: give the node editor a useful screenshot area.
   await vscode.commands.executeCommand('workbench.action.closeSidebar');

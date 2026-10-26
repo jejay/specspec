@@ -45,7 +45,7 @@
     for (const [id, node] of nodes) if (!live.has(id) && unreadable.has(node.path) && !node.repairForm) nodes.set(id, { ...node, unavailable: true, earlierContext: true });
     const declared = [...state.snapshot.edges, ...(state.repair_forms || []).flatMap(n => n.parents.map(p => [p,n.id]))];
     for (const [parent] of declared) if (!nodes.has(parent)) {
-      const path = `_specspec/${parent}.md`, unavailable = unreadable.has(path);
+      const path = `.specspec/${parent}.md`, unavailable = unreadable.has(path);
       nodes.set(parent, { id:parent, type:'missing', parents:[], sources:[], path,
         body:`# ${unavailable ? 'Unreadable parent' : 'Missing parent'}\n${parent}\n${unavailable ? 'Current file cannot be parsed; use raw Markdown repair.' : 'Earlier binding unavailable in this comparison.'}`,
         missing:!unavailable, unavailable });
@@ -58,7 +58,7 @@
     }
     for (const {edge:[parent]} of edges) if (!nodes.has(parent)) nodes.set(parent, {
       id:parent,type:'missing',body:`# Unresolved earlier parent\n${parent}\nNo binding available in the selected comparison.`,
-      path:`_specspec/${parent}.md`,parents:[],sources:[],missing:true,
+      path:`.specspec/${parent}.md`,parents:[],sources:[],missing:true,
     });
     return { nodes, edges };
   }

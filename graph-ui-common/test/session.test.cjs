@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { GraphSession, pollInterval } = require('../host/session.cjs');
 const { renderMatches, sameNode, displayGraph } = require('../media/graph-model.js');
-const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '_specspec/node.md' };
+const node = { id: 'node', type: 'requirement', body: '# Original', parents: [], sources: [], extensions: {}, path: '.specspec/node.md' };
 const snapshot = { valid: true, format_version: 7, nodes: [node], edges: [] };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function advanceClock(t, milliseconds) {
@@ -67,12 +67,12 @@ test('highlight creation uses the guarded local API with trusted overlays, not c
   const f = fixture(t); await f.s.open();
   let drained = false;
   f.s.documentEdits = Promise.resolve().then(() => { drained = true; });
-  f.s.host.annotationDocuments = async () => { assert.ok(drained); return { '_specspec/node.md': 'Native dirty text' }; };
+  f.s.host.annotationDocuments = async () => { assert.ok(drained); return { '.specspec/node.md': 'Native dirty text' }; };
   const message = 'Please reconsider', nodes = ['Zm9vYmE='];
   const count = f.calls.length;
   await f.s.handle({ type: 'annotation-create', message, nodes, documents: { 'forged.md': 'ignored' }, target: 'forged' });
   const request = JSON.parse(f.calls.slice(count).find(c => JSON.parse(c.input).op === 'annotation-create').input);
-  assert.deepEqual(request, { api_version: 7, op: 'annotation-create', message, nodes, documents: { '_specspec/node.md': 'Native dirty text' } });
+  assert.deepEqual(request, { api_version: 7, op: 'annotation-create', message, nodes, documents: { '.specspec/node.md': 'Native dirty text' } });
   assert.equal(f.messages.at(-1).type, 'annotation-created');
   assert.ok(!f.calls.slice(count).some(c => ['add','update','delete'].includes(c.args[0])));
   f.revoke(); const before = f.calls.length;

@@ -59,7 +59,7 @@ def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index
     nested = tmp_path / "example/gantt"
     git(tmp_path, "init")
     git(tmp_path, "config", "core.autocrlf", "false")
-    git(tmp_path, "add", "_specspec", "example/gantt/_specspec")
+    git(tmp_path, "add", ".specspec", "example/gantt/.specspec")
     assert invoke(tmp_path, "check", "--staged")[0] == 0
     assert invoke(nested, "check", "--staged")[0] == 0
 

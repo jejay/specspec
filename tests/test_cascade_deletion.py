@@ -46,7 +46,7 @@ def test_selected_ancestors_and_descendants_are_exact_not_implicitly_expanded(
     removed, original = [], Path.unlink
 
     def unlink(path, *args, **kwargs):
-        if path.parent == root / "_specspec":
+        if path.parent == root / ".specspec":
             removed.append(path.name)
         return original(path, *args, **kwargs)
 
@@ -77,7 +77,7 @@ def test_selected_file_warnings_preserve_git_and_line_ending_semantics(workspace
     if kind in {"untracked", "staged-added", "ignored"}:
         _, target = add_node(root, "requirement", [c], "# Fresh\n")
         if kind == "ignored":
-            (root / ".gitignore").write_text("_specspec/\n", encoding="utf8")
+            (root / ".gitignore").write_text(".specspec/\n", encoding="utf8")
     path = load_snapshot(root).graph.nodes[target].path
     if kind in {"unstaged", "staged-modified"}:
         update_node(root, target, body="# Pending\n")
@@ -93,7 +93,7 @@ def test_selected_file_warnings_preserve_git_and_line_ending_semantics(workspace
         (root / path).unlink()
         target, path = replacement.id, replacement.path
     if kind in {"staged-added", "staged-modified", "renamed"}:
-        git(root, "add", "-A", "_specspec")
+        git(root, "add", "-A", ".specspec")
     elif kind == "staged-mode":
         git(root, "config", "core.filemode", "false")
         git(root, "update-index", "--chmod=+x", path)
@@ -169,7 +169,7 @@ def test_reviewed_consequences_are_rechecked_under_lock(workspace, change):
     else:
         node = before.graph.nodes[a]
         replacement = replace(node, id=new_node(node.type, node.parents, node.body).id)
-        replacement.path = f"_specspec/{replacement.id}.md"
+        replacement.path = f".specspec/{replacement.id}.md"
         (root / replacement.path).write_bytes(serialize(replacement))
         (root / node.path).unlink()
     current = load_snapshot(root).files
@@ -234,7 +234,7 @@ def test_warning_delivery_precedes_unlink_and_external_changes_are_preserved(
         return original_emit(result, diagnostics, **kwargs)
 
     def unlink(path, *args, **kwargs):
-        if path.parent == root / "_specspec":
+        if path.parent == root / ".specspec":
             assert any(d.severity == "warning" and d.node_id == child for d in messages)
         return original_unlink(path, *args, **kwargs)
 
@@ -242,7 +242,7 @@ def test_warning_delivery_precedes_unlink_and_external_changes_are_preserved(
     monkeypatch.setattr(Path, "unlink", unlink)
     assert invoke(root, child, "--yes")[0].exit_code == 0
     _, child = add_node(root, "requirement", [manifesto], "# Another\n")
-    path = root / f"_specspec/{child}.md"
+    path = root / f".specspec/{child}.md"
 
     def confirm(plan):
         path.write_bytes(path.read_bytes() + b"\nExternal text\n")

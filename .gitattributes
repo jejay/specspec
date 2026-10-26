@@ -1,4 +1,4 @@
 # Preserve supplied artwork and its byte-identical import across Git checkouts.
 /Monochrome_Dachshund_Puppy_Emblem.svg -text
 /branding/dachshund.svg -text
-/branding/activity-icon.svg -text whitespace=cr-at-eol
+/branding/*.svg -text whitespace=cr-at-eol

@@ -78,6 +78,6 @@ fallbacks. Unsupported historical node schemas stay unsupported. Use the indepen
 maintained Gantt history for serious temporal and host tests, not obsolete SpecSpec
 development snapshots or the tracked non-Git example fixture directory.
 
-The [owner intention](../_specspec/fuyy0Lk=.md),
-[plan/safety choice](../_specspec/AuhoBoU=.md) and
-[implementation mapping](../_specspec/huB7hcg=.md) describe this behavior.
+The [owner intention](../.specspec/fuyy0Lk=.md),
+[plan/safety choice](../.specspec/AuhoBoU=.md) and
+[implementation mapping](../.specspec/huB7hcg=.md) describe this behavior.

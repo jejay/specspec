@@ -6,5 +6,21 @@
   "app-icon.png": {
     "source": "final/png/specspec-app-icon-512.png",
     "sha256": "a9007d1a10d1ed2f2cec696756fd35ba8985aca0a6e2f41712cbbd26b157cb50"
+  },
+  "specspec-logo-light.svg": {
+    "source": "final/logos/specspec-logo-light.svg",
+    "sha256": "3c8256485dc02dc19e393c289a2ee70e46bd3ec9401a7673aa5c788834c727a0"
+  },
+  "specspec-logo-light.png": {
+    "source": "final/png/specspec-logo-light@2x.png",
+    "sha256": "6ca5c4f0f29d5b331763fbb5dfa8cab408753c03896174c5bd1b2a28167affc6"
+  },
+  "specspec-logo-dark.svg": {
+    "source": "final/logos/specspec-logo-dark.svg",
+    "sha256": "57b6aff5ab2fbcbe399358ccdcf560c8d157c380b6b4167f717358fd85a8815e"
+  },
+  "specspec-logo-dark.png": {
+    "source": "final/png/specspec-logo-dark@2x.png",
+    "sha256": "7ae42992c46e66fdd8fb6f8260b85fc490f92874f1d5eb675ff82f857b888950"
   }
 }

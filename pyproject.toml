@@ -5,20 +5,42 @@ build-backend = "hatchling.build"
 [project]
 name = "specspec"
 version = "0.1.0"
-description = "Tool-managed intention–conclusion specification graphs"
+description = "Connect intentions, revisable choices and implementation in versioned Markdown"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 dependencies = ["click>=8.1,<9", "ruamel.yaml>=0.18.6,<0.19", "markdown-it-py>=4,<5"]
+keywords = ["specification", "coding-agents", "requirements", "markdown", "git"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Documentation",
+]
+
+[project.urls]
+Homepage = "https://github.com/jejay/specspec"
+Repository = "https://github.com/jejay/specspec"
+Documentation = "https://github.com/jejay/specspec/tree/main/docs"
+Issues = "https://github.com/jejay/specspec/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10", "ruff>=0.11,<1", "build>=1,<2"]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1", "build>=1,<2", "pillow>=12,<13"]
 
 [project.scripts]
 specspec = "specspec.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/specspec"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/specspec", "/pyproject.toml", "/README.md", "/LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -17,9 +17,13 @@ async function run() {
   const project = fixture(join(source, 'example/gantt'), python), profile = mkdtempSync(join(tmpdir(), 'specspec-electron-host-'));
   const port = await new Promise(resolve => { const server = createServer(); server.listen(0, '127.0.0.1', () => { const p = server.address().port; server.close(() => resolve(p)); }); });
   const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+  if (process.env.SPECSPEC_TEST_COMMAND) {
+    delete env.SPECSPEC_PYTHON;
+    env.SPECSPEC_COMMAND = process.env.SPECSPEC_TEST_COMMAND; env.SPECSPEC_ARGS = '[]';
+  }
   const executable = process.env.SPECSPEC_DESKTOP_EXECUTABLE || require('electron');
   const launchDirectory = resolve(__dirname, '..');
-  const child = spawn(executable, [...(process.env.SPECSPEC_DESKTOP_EXECUTABLE ? [] : [launchDirectory]), '--project', project.root, '--python', relative(launchDirectory, python), '--profile', profile,
+  const child = spawn(executable, [...(process.env.SPECSPEC_DESKTOP_EXECUTABLE ? [] : [launchDirectory]), '--project', project.root, ...(process.env.SPECSPEC_TEST_COMMAND ? [] : ['--python', relative(launchDirectory, python)]), '--profile', profile,
     `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1',
     // Test profile only: sample real geometry without occluded-window timer throttling.
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'], { cwd: launchDirectory, env, stdio: ['ignore', 'pipe', 'pipe'] });

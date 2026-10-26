@@ -49,13 +49,13 @@ def install_help(command):
 HELP = {
     "root": """Manage a product's intention-conclusion specification graph.
 
-    A graph lives in _specspec/ inside your project. Its Markdown nodes describe
+    A graph lives in .specspec/ inside your project. Its Markdown nodes describe
     goals, conclusions and implementation links. Use the seven everyday commands
     below to read, edit, validate and review it. Nothing stages or commits Git
     changes for you.
 
     Start with query to read an existing graph. Use init only for a project that
-    does not yet have _specspec/. NODE_ID and PARENT_ID in examples mean actual
+    does not yet have .specspec/. NODE_ID and PARENT_ID in examples mean actual
     full node IDs, including the final '='. Put --root PROJECT before the command
     to choose a project explicitly; otherwise discovery searches the current
     directory and its parents.
@@ -90,8 +90,10 @@ HELP = {
     "init": """Create a new graph with one manifesto: the product's core goal.
 
     Run this in a new project's directory, or select that directory with the root
-    --root option. Creates _specspec/ and a randomly identified manifesto file.
-    Refuses to overwrite an existing graph; use query and update there instead.
+    --root option. Creates .specspec/ and a randomly identified manifesto file.
+    Creates a root AGENTS.md with graph/process/CLI guidance when that name is free;
+    existing instructions are preserved unchanged. Refuses to overwrite an existing
+    graph; use query and update there instead.
 
     -m/--message is literal Markdown text, not a filename. Repeat it to join
     paragraphs with one blank line. Actual newlines, Unicode and whitespace are
@@ -159,14 +161,14 @@ HELP = {
 
     --raw is a separate literal-document read for repair, including malformed
     frontmatter, body whitespace and line endings. Select a full ID or a direct
-    _specspec/ID.md --path. --target chooses a committed revision; --staged reads
+    .specspec/ID.md --path. --target chooses a committed revision; --staged reads
     exact index bytes and requires --raw. Other comparison/selection/presentation
     flags do not combine with raw reads. Non-UTF-8 bytes are returned as Base64.
 
     \b
     Repair examples:
       specspec query NODE_ID --raw --json
-      specspec query --raw --path _specspec/NODE_ID.md
+      specspec query --raw --path .specspec/NODE_ID.md
       specspec query NODE_ID --raw --staged --json
       specspec query NODE_ID --raw --target main~1 --json
 

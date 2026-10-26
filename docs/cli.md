@@ -59,7 +59,7 @@ affected edge and alternative path, including redundancies on other nodes after 
 update. Related multi-file Markdown changes must be made coherently and checked;
 managed writes never normalize them. See [graph structure](graph-structure.md) and
 [invalid-state inspection/repair](invalid-graphs.md).
-Init and add create `_specspec/<id>.md`, including the ID's trailing `=`.
+Init and add create `.specspec/<id>.md`, including the ID's trailing `=`.
 Paths depend only on identity; headings and binding text remain inside the document.
 
 ## Replace selected body text
@@ -173,7 +173,8 @@ broken/uncertain/restored hints. `--human` keeps logical body lines and lists so
 occurrences individually, without changing parents, source facts or revision selection.
 `query --json` retains reconstructible API-7 records and complete source facts, with
 file-change summaries rather than patches. Use `diff` for exact text modifications.
-Original body layout remains in JSON and node files. `--human --json` is identical
+Parsed JSON preserves logical body layout with CRLF normalized to LF. Node files,
+raw query documents and literal diffs retain physical line endings. `--human --json` is identical
 to `--json`. Optional `query [NODE_ID]` starts at that current/deleted node, otherwise
 metric selections start at the target manifesto. `--min-distance`/`--max-distance`
 admit values <= their integer cutoff; `--influence` admits self-inclusive counts >=

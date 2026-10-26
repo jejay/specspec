@@ -1,7 +1,7 @@
 # One editing vocabulary and one invocation boundary
 
-[Owner intention](../../_specspec/pRK4Qwk=.md) combines individual and multi-node
-editing through add/update/delete. The [grammar choice](../../_specspec/4626uI8=.md)
+[Owner intention](../../.specspec/pRK4Qwk=.md) combines individual and multi-node
+editing through add/update/delete. The [grammar choice](../../.specspec/4626uI8=.md)
 keeps literal message input and existing host communication while turning composed
 editing steps into one explicit final candidate. See the [CLI guide](../cli.md#compose-editing-commands)
 and [invalid-state repair](../invalid-graphs.md#one-coherent-multi-node-change).

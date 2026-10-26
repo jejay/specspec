@@ -141,7 +141,7 @@ def test_ancestor_completion_is_iterative_and_never_calls_per_node_closure(monke
             node(i, [] if not i else [i - 1], kind="manifesto" if not i else "requirement"),
             id=key,
             parents=[] if not i else [ids[i - 1]],
-            path=f"_specspec/{key}.md",
+            path=f".specspec/{key}.md",
         )
         for i, key in enumerate(ids)
     ]
@@ -252,7 +252,7 @@ def test_unfiltered_completion_is_noop_even_with_distinct_manifesto_roots(query_
     root = query_project
     g = load_snapshot(root).graph
     old = g.nodes[identity(0)]
-    new = replace(old, id=identity(99), path=f"_specspec/{identity(99)}.md")
+    new = replace(old, id=identity(99), path=f".specspec/{identity(99)}.md")
     (root / old.path).unlink()
     (root / new.path).write_bytes(serialize(new))
     for index in (1, 2):
@@ -304,7 +304,7 @@ def test_added_ancestors_keep_global_source_evidence_and_deduplicated_reader_wor
         [{"path": "other.py"}],
     )
     (root / "other.py").write_bytes(b"Other source\n")
-    git(root, "add", "_specspec", "other.py")
+    git(root, "add", ".specspec", "other.py")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Independent source branch")
     (root / "code.py").write_bytes(BASE.replace("alpha\n", "alpha\ninserted\n").encode())
     reads, original = [], SourceReader.resolve

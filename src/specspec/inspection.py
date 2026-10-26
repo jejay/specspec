@@ -15,7 +15,7 @@ def findings(snapshot):
     for node in sorted(known.values(), key=lambda n: n.id):
         for parent in sorted(node.parents):
             if parent not in known:
-                path = f"_specspec/{parent}.md"
+                path = f".specspec/{parent}.md"
                 reason = "unreadable" if path in snapshot.files else "missing"
                 if any(n.id.casefold() == parent.casefold() for n in snapshot.nodes):
                     reason = (
@@ -155,16 +155,16 @@ def repair_context(base, target, changes, node_ids=()):
 
 def raw_document(snapshot, node_id=None, path=None):
     if path is None:
-        path = f"_specspec/{node_id}.md"
+        path = f".specspec/{node_id}.md"
     pure = PurePosixPath(path)
     if (
         len(pure.parts) != 2
-        or pure.parent.as_posix() != "_specspec"
+        or pure.parent.as_posix() != ".specspec"
         or "\\" in path
         or pure.suffix != ".md"
         or pure.as_posix() != path
     ):
-        raise SpecError([Diagnostic("PATH", "Raw reads require a direct _specspec/*.md path.")], 2)
+        raise SpecError([Diagnostic("PATH", "Raw reads require a direct .specspec/*.md path.")], 2)
     if path not in snapshot.files:
         raise SpecError([Diagnostic("NODE", "No readable canonical file at " + path)])
     try:

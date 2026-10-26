@@ -31,7 +31,7 @@ def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
     )
     original = original.replace("\n", "\r\n")
     path.write_bytes(original.encode("utf-8"))
-    before = {p.name: p.read_bytes() for p in (root / "_specspec").iterdir()}
+    before = {p.name: p.read_bytes() for p in (root / ".specspec").iterdir()}
     overlay = original.replace("# Original", "# Unsaved 🐕")
     result = request(root, {"documents": {node.path: overlay}})
     assert next(n for n in result["snapshot"]["nodes"] if n["id"] == node_id)["body"] == (
@@ -51,14 +51,14 @@ def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
     assert change["after"].startswith("---\r\n")
     assert change["after"].endswith("# Planned 🐕\r\n")
     assert planned["snapshot"]["valid"]
-    assert {p.name: p.read_bytes() for p in (root / "_specspec").iterdir()} == before
+    assert {p.name: p.read_bytes() for p in (root / ".specspec").iterdir()} == before
 
 
 def test_native_plan_diagnoses_noncanonical_filename_without_saving(workspace):
     root, manifesto = workspace
     snapshot = load_snapshot(root)
     node = snapshot.graph.nodes[manifesto]
-    destination = f"_specspec/{manifesto}extra.md"
+    destination = f".specspec/{manifesto}extra.md"
     (root / node.path).rename(root / destination)
     before = (root / destination).read_bytes()
     planned = request(
@@ -189,9 +189,9 @@ def test_editor_rejects_unsafe_paths_identity_changes_and_deleted_files(workspac
     node = load_snapshot(root).nodes[0]
     for path in [
         "../README.md",
-        "_specspec/../README.md",
-        "_specspec/nested/a.md",
-        "_specspec\\a.md",
+        ".specspec/../README.md",
+        ".specspec/nested/a.md",
+        ".specspec\\a.md",
     ]:
         with pytest.raises(SpecError, match="direct"):
             editor_request(root, {"documents": {path: "text"}})
@@ -281,7 +281,7 @@ def test_native_partial_sources_keep_literal_form_input_separate_from_canonical_
 
 def test_editor_has_bounded_structured_input_errors(workspace):
     root, _ = workspace
-    for raw in ["{", "[]", '{"documents": []}', '{"documents": {"_specspec/a.md": 42}}']:
+    for raw in ["{", "[]", '{"documents": []}', '{"documents": {".specspec/a.md": 42}}']:
         result = CliRunner().invoke(main, ["--root", str(root), "api"], input=raw)
         assert result.exit_code == 2
         assert json.loads(result.output)["ok"] is False

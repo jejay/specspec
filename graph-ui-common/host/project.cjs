@@ -5,7 +5,7 @@ async function findProjectRoot(start) {
   let current = resolve(start);
   if ((await lstat(current)).isFile()) current = dirname(current);
   while (true) {
-    try { await lstat(join(current, '_specspec')); return current; }
+    try { await lstat(join(current, '.specspec')); return current; }
     catch (error) { if (error.code !== 'ENOENT') throw error; }
     const parent = dirname(current);
     if (parent === current) break;

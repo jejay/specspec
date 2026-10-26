@@ -163,7 +163,7 @@ class SourceReader:
         self.retained: set[str] | None = None
         try:
             self.repo, prefix = repository_paths(self.root)
-            self.prefix = prefix.removesuffix("_specspec")
+            self.prefix = prefix.removesuffix(".specspec")
             if ref:
                 self.commit = resolve_commit(self.repo, ref)
                 data = run_git(self.repo, "ls-tree", "-r", "-z", self.commit)

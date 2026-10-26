@@ -10,13 +10,13 @@ not retain old readers just to understand SpecSpec development history.
 
 The complete, **independent** example history lives in `gantt.bundle`. It has eight
 commits: an empty predecessor, three spec-before-code pairs and a final audit.
-Every nonempty revision uses the current node schema. Clone it outside the
+Every nonempty revision uses the current node schema and `.specspec/` directory. Clone it outside the
 SpecSpec worktree and open **that clone** in VS Code or Electron for Git experiments.
 Do not add `.git` to the tracked snapshot or compare obsolete parent-repository refs.
 
 ## Create a manual example workspace
 
-From the SpecSpec repository root, with its development Python active:
+From the SpecSpec repository root (install the global CLI with uv tools or pipx):
 
 ```sh
 python example/gantt/history/checkout.py
@@ -39,9 +39,9 @@ From the new example folder:
 ```sh
 git rev-parse --show-toplevel  # Must be this example folder, not SpecSpec.
 git log --oneline --all
-python -m specspec check --warnings-as-errors
-python -m specspec diff stage/01-code stage/02-spec
-python -m specspec diff stage/02-code stage/03-spec
+specspec check --warnings-as-errors
+specspec diff stage/01-code stage/02-spec
+specspec diff stage/02-code stage/03-spec
 ```
 
 In the graph UI, choose the clone as the project, then **Compare Revisions** with

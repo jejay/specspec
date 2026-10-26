@@ -10,7 +10,7 @@ jobs:
         python: ['3.11', '3.14']
     runs-on: ${{ matrix.os }}
     steps:
-      # Example history is self-contained in the bundle; no root-history fetch is needed.
+      # Temporal fixtures are self-contained; ordinary tests need no old root schemas.
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -19,12 +19,9 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install -e ".[dev]"
-      - name: Validate the repository specification
-        run: python -m specspec check --warnings-as-errors
-      - name: Validate the tracked Gantt fixture snapshot
-        run: python -m specspec --root example/gantt check --warnings-as-errors
-      - name: Verify example CLI receipts and Git history
-        run: python example/gantt/history/verify.py --history
+      - run: specspec check --warnings-as-errors
+      - run: specspec --root example/gantt check --warnings-as-errors
+      - run: python example/gantt/history/verify.py --history
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m pytest
@@ -34,20 +31,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: vscode
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: vscode/package-lock.json
-      - run: npm --prefix ../graph-ui-common ci
-      - run: npm --prefix ../graph-ui-common test
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm test
+      - run: npm test --workspace @specspec/graph-ui-common
+      - run: npm test --workspace specspec-vscode
+      - run: npm run package:vscode
   desktop:
     strategy:
       matrix:
@@ -58,6 +52,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -65,22 +61,20 @@ jobs:
       - name: Select the isolated test interpreter
         shell: bash
         run: python -c "import sys; print('SPECSPEC_PYTHON=' + sys.executable)" >> "$GITHUB_ENV"
-      - run: npm --prefix graph-ui-common ci
-      - run: npm --prefix electron ci
-      - run: npm --prefix electron test
+      - run: npm ci
+      - run: npm test --workspace specspec-desktop
       - name: Install pinned Electron runtime
-        run: node electron/node_modules/electron/install.js
+        run: node node_modules/electron/install.js
       - name: Configure Linux sandbox helper (CI only)
         if: runner.os == 'Linux'
-        run: sudo chown root:root electron/node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 electron/node_modules/electron/dist/chrome-sandbox
+        run: sudo chown root:root node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: Real Linux desktop smoke
         if: runner.os == 'Linux'
-        run: xvfb-run -a npm --prefix electron run test:host
+        run: xvfb-run -a npm run test:host:electron
       - name: Real Windows desktop smoke
         if: runner.os == 'Windows'
-        run: npm --prefix electron run test:host
-      - name: Build current-platform portable package
-        run: npm --prefix electron run package
+        run: npm run test:host:electron
+      - run: npm run package:electron
   gantt:
     runs-on: ubuntu-latest
     steps:
@@ -88,11 +82,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Clone the independent maintained example history
+      - name: Clone independent maintained history
         run: python example/gantt/history/checkout.py "${{ runner.temp }}/gantt"
-      - name: Test dependency-free planning model in the example repository
-        run: npm --prefix "${{ runner.temp }}/gantt" test
-      - name: Check the real local browser app in the example repository
+      - run: npm --prefix "${{ runner.temp }}/gantt" test
+      - name: Real local browser app
         env:
           GANTT_BROWSER: /usr/bin/google-chrome
         run: npm --prefix "${{ runner.temp }}/gantt" run test:browser

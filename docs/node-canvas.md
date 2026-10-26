@@ -186,7 +186,7 @@ paint variables and edge compensation.
   incident-hover emphasis keep independent paint so the overview mesh stays quiet
   beside spotlight batches.
 - **Webview state** holds overview/per-node camera preferences and drafts. No
-  layout positions, magnification, colors, or derived scores enter `_specspec`.
+  layout positions, magnification, colors, or derived scores enter `.specspec`.
 
 ## Why change the initial heuristic?
 

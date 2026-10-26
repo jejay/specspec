@@ -44,7 +44,7 @@ def test_parent_only_deletion_preserves_all_survivor_bytes_and_declarations(work
     assert result.exit_code == 0 and receipt["ok"] and receipt["result"]["applied"]
     after = load_snapshot(root)
     assert not after.valid and after.complete
-    assert after.files == {p: raw for p, raw in before.files.items() if p != f"_specspec/{a}.md"}
+    assert after.files == {p: raw for p, raw in before.files.items() if p != f".specspec/{a}.md"}
     assert next(n for n in after.nodes if n.id == c).parents == [a, b]
     assert set(after.graph.nodes) == {manifesto, b, c, d, e}
     assert not (root / ".specspec-local/journal.json").exists()
@@ -186,7 +186,7 @@ def test_cycles_are_finite_and_explicit_metrics_do_not_invent_longest_paths(work
 
 def test_unreadable_file_is_not_mislabeled_as_deletion_and_unrelated_edits_work(workspace):
     root, manifesto, a, b, c, d, e = branch(workspace)
-    file = root / f"_specspec/{a}.md"
+    file = root / f".specspec/{a}.md"
     file.write_text("not frontmatter\n", encoding="utf8", newline="\n")
     assert not load_snapshot(root).complete
     assert findings(load_snapshot(root))["broken_references"][0]["reason"] == "unreadable"
@@ -204,7 +204,7 @@ def test_unreadable_file_is_not_mislabeled_as_deletion_and_unrelated_edits_work(
 def test_absent_history_and_committed_dangling_references_remain_honest(workspace):
     root, manifesto, a, b, c, d, e = branch(workspace)
     delete_nodes(root, [a])
-    git(root, "add", "-u", "_specspec")
+    git(root, "add", "-u", ".specspec")
     assert call(root, "check", "--staged")[0].exit_code == 1
     git(
         root,
@@ -236,7 +236,7 @@ def test_spotlights_can_describe_invalid_comparisons(workspace):
 
 def test_spotlight_drift_tracks_unreadable_file_bytes_instead_of_fabricating_deletion(workspace):
     root, manifesto, a, b, c, d, e = branch(workspace)
-    path = root / f"_specspec/{c}.md"
+    path = root / f".specspec/{c}.md"
     path.write_bytes(b"First unreadable current file\n")
     result, data = call(root, "spotlight", "add", c, "Explain this unfinished edit")
     assert result.exit_code == 0
@@ -253,7 +253,7 @@ def test_unreadable_uncommitted_identity_can_receive_a_message_without_inventing
     workspace,
 ):
     root, manifesto = workspace
-    (root / f"_specspec/{manifesto}.md").write_bytes(b"Unfinished raw document\n")
+    (root / f".specspec/{manifesto}.md").write_bytes(b"Unfinished raw document\n")
     result, data = call(root, "spotlight", "add", manifesto, "Please repair this document")
     assert result.exit_code == 0 and data["result"]["shots"][0]["nodes"] == [manifesto]
     result, data = call(root, "spotlight", "show")
@@ -275,7 +275,7 @@ def test_recovery_restores_invalid_original_and_preserves_external_intervention(
 
     def interrupt(source, target):
         nonlocal count
-        if Path(target).parent == root / "_specspec":
+        if Path(target).parent == root / ".specspec":
             count += 1
             if count == 2:
                 raise OSError("Interrupted invalid repair")
@@ -303,15 +303,15 @@ def test_mutation_safety_does_not_depend_on_graph_validity(workspace, monkeypatc
     before = load_snapshot(root).files
     for path, raw in [
         ("../outside.md", b"bad"),
-        ("_specspec/nested/no.md", b"bad"),
-        (f"_specspec/{b}.md", b"bad"),
+        (".specspec/nested/no.md", b"bad"),
+        (f".specspec/{b}.md", b"bad"),
     ]:
         with pytest.raises(SpecError):
             mutate(root, lambda snapshot, path=path, raw=raw: {path: raw})
         assert load_snapshot(root).files == before
         assert not (root / ".specspec-local/journal.json").exists()
     with pytest.raises(SpecError, match="manifesto"):
-        mutate(root, lambda snapshot: {f"_specspec/{manifesto}.md": None})
+        mutate(root, lambda snapshot: {f".specspec/{manifesto}.md": None})
     from specspec.batch import prepare
 
     bad = {"edits": [{"op": "add", "type": [], "body": "# X", "parents": [b]}]}

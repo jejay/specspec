@@ -648,7 +648,7 @@
       originalNode = formRecord(); loadForm();
     }
     if (dirty || creating) {
-      const absentTitle = state.snapshot.unreadable_paths?.includes(originalNode?.path || `_specspec/${selected}.md`) ? 'Unreadable node draft' : 'Deleted node draft';
+      const absentTitle = state.snapshot.unreadable_paths?.includes(originalNode?.path || `.specspec/${selected}.md`) ? 'Unreadable node draft' : 'Deleted node draft';
       const warning = orphaned() ? `${absentTitle} · Available for copying or discard.`
         : !creating && !model.sameNode(originalNode, currentNode()) ? 'This node changed outside your draft. Draft retained; saving will ask before overwriting current contents.'
           : 'Graph refreshed. Unsaved draft retained.';

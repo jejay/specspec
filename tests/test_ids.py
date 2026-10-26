@@ -27,7 +27,7 @@ def test_canonical_five_byte_vectors_and_equals_filename(monkeypatch, raw, expec
     monkeypatch.setattr(module.secrets, "token_bytes", random_bytes)
     node = new_node("manifesto", [], "# Root\n")
     assert node.id == expected and len(node.id) == 8
-    assert node.path == f"_specspec/{expected}.md"
+    assert node.path == f".specspec/{expected}.md"
     assert base64.urlsafe_b64decode(node.id) == raw
     data, body = read_document(serialize(node), node.path)
     assert parse_node(data, body, node.path).id == expected
@@ -48,7 +48,7 @@ def test_creation_paths_depend_only_on_ids_and_edits_keep_them(tmp_path, monkeyp
     assert result.exit_code == 0, result.output
     child = json.loads(result.stdout)["result"]["changed_ids"][0]
     snapshot = load_snapshot(tmp_path)
-    assert {n.path for n in snapshot.nodes} == {f"_specspec/{i}.md" for i in [parent, child]}
+    assert {n.path for n in snapshot.nodes} == {f".specspec/{i}.md" for i in [parent, child]}
     result = runner.invoke(
         main, [*prefix, "update", child, "--body", "-", "--json"], input="# Different heading\n"
     )
@@ -84,7 +84,7 @@ def test_every_last_octet_uses_zero_pad_bits(monkeypatch):
 def test_invalid_ids_and_parent_ids_are_rejected(invalid):
     node = new_node("manifesto", [], "# Root\n")
     with pytest.raises(SpecError, match="canonical padded Base64url"):
-        serialize(replace(node, id=invalid, path=f"_specspec/{invalid}.md"))
+        serialize(replace(node, id=invalid, path=f".specspec/{invalid}.md"))
     with pytest.raises(SpecError, match="parents"):
         serialize(replace(node, parents=[invalid]))
 
@@ -93,14 +93,14 @@ def test_invalid_ids_and_parent_ids_are_rejected(invalid):
 def test_only_exact_id_followed_by_markdown_extension_is_valid(suffix):
     node = new_node("manifesto", [], "# Root\n")
     with pytest.raises(SpecError, match="Filename must equal"):
-        serialize(replace(node, path=f"_specspec/{node.id}{suffix}"))
+        serialize(replace(node, path=f".specspec/{node.id}{suffix}"))
 
 
 def test_filename_must_match_id_case_exactly():
     node = new_node("manifesto", [], "# Root\n")
     node.id = "Zm9vYmE="
     with pytest.raises(SpecError, match="Filename must equal"):
-        serialize(replace(node, path="_specspec/zm9vYmE=.md"))
+        serialize(replace(node, path=".specspec/zm9vYmE=.md"))
 
 
 def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monkeypatch):
@@ -149,9 +149,9 @@ def test_case_only_duplicate_graph_ids_are_invalid(workspace):
     root, manifesto = workspace
     node = new_node("requirement", [manifesto], "Child\n")
     node.id = "Zm9vYmE="
-    node.path = f"_specspec/{node.id}.md"
+    node.path = f".specspec/{node.id}.md"
     alias_id = node.id[0].swapcase() + node.id[1:]
-    alias = replace(node, id=alias_id, path=f"_specspec/{alias_id}.md")
+    alias = replace(node, id=alias_id, path=f".specspec/{alias_id}.md")
     files = {**load_snapshot(root).files, node.path: serialize(node), alias.path: serialize(alias)}
     snapshot = module.snapshot_from_files(root, files)
     assert not snapshot.valid

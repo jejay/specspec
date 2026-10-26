@@ -1,106 +1,140 @@
-# SpecSpec Desktop — initial Electron adapter
+# SpecSpec Desktop
 
-A local Linux/Windows window using **exactly the same graph UI/session as VS Code**.
-This is a runnable initial slice, not a signed installer, bundled Python distribution,
-auto-updater, production security certification, or Claude Code/Codex connector.
+A standalone Windows/Linux graph editor using the **same renderer and guarded
+session as the VS Code extension**. Connect intentions, separately revisable choices
+and actual implementation in local, Git-versioned Markdown.
 
-## Run from this checkout
+This is the early **0.1** desktop: portable, unsigned, without installers,
+auto-updates or a bundled Python runtime. CLI and Git remain external prerequisites.
+There is no hosted service or built-in coding-agent connector.
 
-Use Node **22.12+**, npm, Git and a Python environment with the local SpecSpec CLI.
-From the repository root:
+## Run from the monorepo
 
-```sh
-python -m pip install -e '.[dev]'  # In your development Python environment.
-npm --prefix graph-ui-common ci
-npm --prefix electron ci
-npm --prefix electron start
-```
-
-The first runtime launch downloads the pinned Electron framework if absent; this is
-installation, not a renderer/CDN dependency. The app itself makes no remote requests.
-Click **Open project**, choose a folder and explicitly **Trust and Open**. Discovery
-finds the nearest `_specspec/`. For Gantt Git comparisons, choose the independent
-clone, not the tracked `example/gantt` fixture snapshot. A configured, trusted CLI
-executable is run in the main process; project content cannot choose it.
-
-For an explicit interpreter and authorized initial folder (paths are interpreted
-from the Electron process's **launch directory**, normally `electron/` under npm).
-Explicit interpreter/CLI paths are made absolute at launch, before the subprocess
-cwd switches to a selected project; choosing another graph does not rebase them.
-Bare executable names such as `python`, `specspec`, and `uvx` continue to use PATH:
+Install the CLI globally first: from the repository root, `uv tool install .` or
+`pipx install .`. Check `specspec --version` in the shell used to launch the app.
+Then use Node 22.12+ and npm 10+:
 
 ```sh
-# Linux, with the repository's .venv:
-npm --prefix electron start -- --python ../.venv/bin/python --project ..
-# Windows (PowerShell or Git Bash):
-npm --prefix electron start -- --python ../.venv/Scripts/python.exe --project ..
-# The worked example, in its own Git repository:
-python example/gantt/history/checkout.py
-npm --prefix electron start -- --python ../.venv/Scripts/python.exe --project ../../specspec-examples/gantt
+# All commands from the repository root:
+npm ci
+npm run desktop
+# Alternative: authorize this checkout as the initial project:
+npm run desktop -- --project .
 ```
 
-`SPECSPEC_PYTHON` supplies an interpreter with `-m specspec`. Alternatively use
-`SPECSPEC_COMMAND` and `SPECSPEC_ARGS` (a JSON string array, e.g. `uvx` / `["specspec"]`)
-for an installed isolated CLI. These trusted launch settings are not read from project
-files or exposed to the renderer. An explicit `--project` is authorization by the
-local launcher; don't pass untrusted folder/executable paths. An invalid nearest
-canonical directory is diagnosed rather than silently falling back to its parent.
+The default launcher invokes `specspec` on PATH, not a project-specific Python.
+Choose **Open project**, select a containing folder and explicitly **Trust and Open**.
+An explicit `--project` authorizes that launch folder instead. Never pass project or
+executable paths from untrusted content. Discovery selects the nearest `.specspec/`
+entry, including an invalid one; it does not silently fall back to a parent.
 
-Graph controls, native inline editing, cameras, min/max colors, hover, physical deletion
-and current-schema revision overlays are shared. IDs are canonical five-byte padded
-Base64url, including the trailing equals sign. Obsolete node schemes are rejected;
-no migration controls or compatibility readers are retained. **Compare revisions** uses a native HTML
-modal with bounded base/target input; an empty target means workspace. Historical
-views are read-only. Default workspace compares to HEAD; D survives staging and disappears after commit.
-Git HEAD/ref notifications refresh that base without default polling.
-Native confirmations protect Delete and
-saving a draft over externally changed node contents.
-
-Markdown edits outside the tool are allowed. File watchers reload the graph by
-default, including canonical-directory replacement/recreation. Optional polling is
-disabled: enable with `--poll-interval-ms 5000` or `SPECSPEC_POLL_INTERVAL_MS=5000`;
-`0` turns it off. This trusted launch setting is not taken from project content.
-Events are coalesced and incomplete saves get bounded retries; unchanged data does
-not redraw. Invalid files retain the last graph marked out of date and disable
-mutations until valid. Watcher errors are visible; no hidden polling is enabled.
-Explicit Refresh remains available, particularly for filesystems that miss events.
-
-Presentation preferences and dirty drafts are scoped by project in
-`graph-presentation.json` under Electron's normal user-data directory. They retain
-original node contents, including after reload, and do not modify canonical metadata.
-Corrupt saved bytes remain protected with a visible error; move that file aside
-explicitly to reset. Storage has limits and never silently evicts retained drafts.
-This is not guaranteed power-loss durability or backup; export/manage the actual
-specification in Git as usual. A failed renderer can be recovered by restarting the
-app; no writer/recovery artifacts are silently cleaned.
-
-## Packages and checks
+Root scripts interpret relative launch paths from the repository root. To test an
+editable development environment, use one of:
 
 ```sh
-npm --prefix electron test
-npm --prefix electron run test:host
-npm --prefix electron run package
+# Windows, from the root:
+npm run desktop -- --python .venv/Scripts/python.exe --project .
+# Linux, from the root:
+npm run desktop -- --python .venv/bin/python --project .
 ```
 
-Packaging produces an unpacked portable app under `electron/release/` for the current
-platform. For an explicit target use `npm --prefix electron run package -- --platform=linux`
-or `--platform=win32` (cross-building is not proof that it runs on that OS). Python/Git
-remain external prerequisites. Packaging and dependency licenses are retained; signing,
-installers and publication are separate work. `npm audit` reports no known findings
-for the pinned dependency trees at the time of this implementation, not a security guarantee.
+The workspace-local `npm --prefix electron start` still runs from `electron/`;
+its equivalent relative Python/project arguments are `../.venv/...` and `..`.
+Root scripts avoid that cwd surprise.
 
-The real Windows host test clones the maintained Gantt Git bundle into an independent
-repository and uses a disposable profile. It retains the real stage tags/ancestry,
-with loopback-only Chromium debugging and the same real canvas regression harness as
-VS Code. It checks A/M/D and live theme tokens, sandbox/no Node/blocked requests and
-popups, actual saving, manual-file watcher sync, invalid-file/draft preservation, reload persistence and actual
-historical/workspace switching. `SPECSPEC_SCREENSHOT_DIR` captures diagnostics;
-`SPECSPEC_PYTHON` selects the test interpreter. No real project is mutated or hook
-installed by these tests. DOM-dispatched tests/screenshots are not exhaustive manual,
-accessibility, performance, cross-device or adversarial-filesystem evidence.
+## Portable package
 
-Linux is targeted by platform-neutral code and a CI/Xvfb smoke job. It has **not been
-run locally on Linux**; remote CI is not claimed completed. Keep Electron's sandbox
-on; Linux environments may need a working Chromium sandbox helper or user namespaces.
-Claude Code/Codex integration remains a separately recorded future intention using
-the common adapter seam, with transport, lifecycle and authorization still to decide.
+Activate the [developer Python environment](../CONTRIBUTING.md) for the standard-
+library archive helper, then run from the repository root:
+
+```sh
+npm ci
+npm run package:electron
+```
+
+Output follows the current Node platform/architecture:
+
+- `dist/desktop/SpecSpec-win32-x64/` and `dist/SpecSpec-0.1.0-win32-x64.zip`, or
+- `dist/desktop/SpecSpec-linux-x64/` and `dist/SpecSpec-0.1.0-linux-x64.tar.gz`
+  (other supported Node architectures use their own suffix).
+
+Extract the whole archive and run `SpecSpec.exe` or `./SpecSpec`. Keep resources,
+Chromium/Electron licenses and shared-library notices together. End users need
+**the global CLI and Git, not Node/npm**. Linux archives retain executable modes;
+keep the Chromium sandbox enabled and satisfy its OS prerequisites. macOS packaging
+is not supplied; the CLI/VS Code are alternatives there. Cross-building or CI
+configuration alone is not proof of execution on a target OS.
+
+The package contains only the selected application entry points, compiled shared
+runtime/assets and licenses, with the selected launcher icon. It does not carry
+source test harnesses, sibling branding workspaces, npm dependencies or a Python
+installation. [Release inspection/checks](../docs/releasing.md)
+
+## Executable and project settings
+
+If PATH does not reach the CLI, set trusted launch environment `SPECSPEC_COMMAND`
+to its absolute executable and `SPECSPEC_ARGS` to `[]`. `SPECSPEC_PYTHON` or `--python`
+selects a specific interpreter with `-m specspec`. `SPECSPEC_ARGS` is a JSON string
+array, not a shell command. These settings are not read from project files or
+exposed to the renderer.
+
+Path-bearing executable settings are resolved once from the launch directory,
+before project subprocess cwd changes. Bare names such as `specspec` and `python`
+use PATH. Project switching does not rebase an explicit executable path.
+
+To explore Git comparisons, create the independent Gantt workspace with
+`python example/gantt/history/checkout.py` and select that clone. The tracked
+`example/gantt/` snapshot is not a standalone Git repository.
+
+## Editing, local state and safety
+
+The shared UI supplies native forms, graph navigation, color modes, source previews,
+spotlights, selected deletion and current-schema revision comparisons. **Ctrl+S**
+saves the focused managed form. Compare revisions uses bounded native input;
+historical views are read-only. Workspace views compare against fresh HEAD, with
+D ghosts retained through staging and disappearing after commit.
+
+Manual Markdown edits are allowed. Watchers reconcile external files while retaining
+drafts/caret/camera; invalid graphs display their current broken relationships and
+diagnostics with safe forms still editable. Unreadable targets retain repair access;
+unavailable loads retain marked last-usable context rather than enabling stale writes.
+Same-node external changes and destructive actions receive native confirmation.
+
+Polling is off by default. `--poll-interval-ms 5000` or trusted launch environment
+`SPECSPEC_POLL_INTERVAL_MS=5000` enables a supplement; `0` disables it. Watchers are
+filesystem-dependent hints and explicit Refresh remains available.
+
+Presentation and dirty drafts live by project in `graph-presentation.json` under
+Electron's normal user-data directory. Corrupt bytes are protected and storage is
+bounded, with no silent eviction. A new portable executable does not migrate or
+remove that state. Preserve drafts and project `.specspec-local/` recovery data;
+`specspec recover` handles interrupted managed transactions, not arbitrary Undo.
+Process recovery is not guaranteed power-loss durability or backup.
+
+The sandboxed/context-isolated renderer has no Node/FS/spawn API. Main owns trusted
+CLI execution and project authorization. Requests/navigation/popups/permissions
+remain restricted to the local application boundary; setup downloads are distinct
+from runtime renderer requests. These protections are bounded, not a security
+certification. Source symbols are descriptive; graph validity is not semantic proof.
+
+## Checks
+
+From the monorepo root:
+
+```sh
+npm test
+npm run test:host:electron
+```
+
+The host runner uses a disposable profile and an external clone of maintained Gantt
+history. `SPECSPEC_PYTHON` selects the test CLI interpreter;
+`SPECSPEC_DESKTOP_EXECUTABLE` selects an unpacked portable executable for artifact
+qualification. It checks actual saves, native consent, watchers/invalid drafts,
+source/spotlight behavior, reload persistence, historical switching and sandbox
+boundaries. It never installs owner hooks or changes a real product.
+
+[Platform scope](../docs/platforms.md) and [release evidence](../docs/investigations/release-0.1.md)
+distinguish executed Windows checks from unexecuted targets. Physical Linux/macOS,
+every filesystem, all accessibility/performance poses and remote transports are
+separate qualification. Production behavior and individual test deadlines remain
+independent of the harness's aggregate budgets.

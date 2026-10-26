@@ -1,7 +1,7 @@
 # Current technical conclusions
 
 The binding specification is the intention-conclusion graph in
-[`_specspec/`](_specspec/). [Its tour](docs/own-spec.md) distinguishes owner outcomes,
+[`.specspec/`](.specspec/). [Its tour](docs/own-spec.md) distinguishes owner outcomes,
 reasoned implementation choices and actual realization links. This document summarizes
 current choices. Git stores their evolution and execution evidence; the original
 owner input remains in [`INTENTION_SPEC.md`](INTENTION_SPEC.md).
@@ -20,7 +20,8 @@ addressable choices, with human review assessing remaining uncertainty.
 ## Domain library, CLI and hosts
 
 Use Python 3.11+, Hatchling, Click, ruamel.yaml, markdown-it-py and pytest. The importable domain
-library and console/module CLI serve all hosts. Support pipx/uvx isolation and local/
+library and console/module CLI serve all hosts. Prefer global `uv tool install` or
+`pipx install` isolation across projects, retain optional one-shot uvx, and support local/
 Git installation; publication is separately authorized.
 
 ```text
@@ -105,9 +106,33 @@ The emitter formats once; advanced --max-bytes bounds its exact UTF-8 response,
 envelope/control escaping and final newline, failing without partial success.
 Canonical node schema and existing host operations retain their contracts.
 
+## Local 0.1 distribution and onboarding
+
+Python wheels/source distributions and a private three-workspace npm monorepo provide
+separate CLI, VS Code and Electron products. One root lock and root commands install,
+build/test and package offline UI assets/runtime and all bundled dependency notices.
+The locally built VSIX installs into the owner's ordinary VS Code instance without
+Marketplace submission; F5 remains a developer alternative. The portable desktop
+uses an explicitly unpacked runtime allowlist and Windows ZIP/Linux tar archives;
+Python/Git remain external. Artifact checks enforce versions, resources, runtime
+membership and licenses and emit digests, never publication or owner installation.
+
+New project initialization bundles a conceptual/process/CLI AGENTS.md and creates
+it at the project root only when no entry occupies that name. Existing files,
+directories and symlinks remain untouched. New instructions share the lock and
+journal, exclusive publication and all-before-any recovery validation, while ordinary
+mutations remain node-only. The guide is owner-editable text, not graph membership.
+
+The introduction uses exact selected light/dark primary logos and explains intentions,
+revisable conclusions, source realizations and owner delegation without semantic
+proof or hosted-agent claims. Release guides distinguish actual Windows artifact
+qualification from other targets and retain dependency-audit and authentication
+compatibility limits. Parsed API-7 records retain logical bodies with CRLF normalized
+to LF; raw documents, canonical files and diff are physical-layout evidence.
+
 ## Canonical files and grammar
 
-Use a flat project-root `_specspec` with direct regular node Markdown files.
+Use a flat project-root `.specspec` with direct regular node Markdown files.
 The unique manifesto contains integer `format_version: 7`. Requirements depend on
 manifesto/requirement parents; implementation leaves depend on requirements. All
 nodes form one rooted connected DAG. Frontmatter fields are `id`, `type`, `parents`,
@@ -117,7 +142,7 @@ JSON-compatible `extensions`. Bodies carry binding current text and readable hea
 IDs are padded RFC 4648 Base64url over `secrets.token_bytes(5)`: **40 random bits**,
 seven payload symbols plus `=`. Filename is `<id>.md`. Lock-scoped
 creation retries exact/casefold collisions; input validation detects portable aliases.
-Full identities and zero pad bits are canonical. VS Code associates `**/_specspec/???????=.md` and asks Python to validate
+Full identities and zero pad bits are canonical. VS Code associates `**/.specspec/???????=.md` and asks Python to validate
 the actual resource. IDs and paths remain stable through body and parent changes.
 
 Bootstrap the unique manifesto/version, then validate typed metadata, YAML keys,
@@ -142,7 +167,7 @@ Managed operations diagnose saved and candidate graphs under a workspace lock,
 allow graph-invalid intermediates and optionally require a valid complete result
 with --require-valid. Safe identifiable target schemas and physical safeguards stay
 enforced independently. They
-stage same-filesystem bytes, journal originals/replacements outside `_specspec`,
+stage same-filesystem bytes, journal originals/replacements outside `.specspec`,
 byte-check targets, replace and validate again. Null replacement states mean physical
 deletion. Interrupted writes block further mutations until recovery. Recovery accepts
 known original/replacement/absence states and preserves intervening external text.

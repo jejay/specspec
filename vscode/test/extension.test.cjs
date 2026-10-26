@@ -12,7 +12,7 @@ const lastSnapshot = panel => panel.messages.filter(m => m.type === 'snapshot').
 
 function fixture(t, options = {}) {
   const root = mkdtempSync(join(tmpdir(), 'specspec-extension-'));
-  mkdirSync(join(root, '_specspec'));
+  mkdirSync(join(root, '.specspec'));
   mkdirSync(join(root, 'vscode'));
   const uri = path => ({ scheme: 'file', fsPath: resolve(path), toString() { return this.fsPath; } });
   const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], gitWatchers: [], sessions: [], gitLookups: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
@@ -193,7 +193,7 @@ test('graph refresh watches real HEAD/refs without subscribing to Git-extension 
 
 test('native fallback attachment completes while its error notification awaits owner action',async t=>{
   const {calls,openDocument}=fixture(t,{snapshot:{...snapshot,valid:false},holdError:true});
-  let attached=false;const opening=openDocument({id:'node',path:'_specspec/node.md',body:'# Repair'}).then(()=>{attached=true;});
+  let attached=false;const opening=openDocument({id:'node',path:'.specspec/node.md',body:'# Repair'}).then(()=>{attached=true;});
   await waitFor(()=>attached);await opening;assert.ok(calls.fallbackHtml);assert.equal(calls.errors.length,1);
 });
 
@@ -207,7 +207,7 @@ test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
 });
 
 test('physical deletion is confirmed and retired/restore/accept messages are rejected', async t => {
-  const node = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Node', path: '_specspec/node.md' };
+  const node = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Node', path: '.specspec/node.md' };
   const { calls } = fixture(t, { snapshot: { ...snapshot, nodes: [node] }, confirm: true });
   await calls.commands.get('specspec.openGraph')();
   const count = calls.panels[0].messages.filter(message => message.type === 'snapshot').length;
@@ -325,7 +325,7 @@ test('Open Graph creates independent main-editor panels and a shared project wat
 
 test('watchers include directory replacement, refresh external changes, and polling defaults off', async t => {
   const f = fixture(t); await f.calls.commands.get('specspec.openGraph')();
-  assert.equal(f.calls.watchers[0].pattern.pattern, '_specspec{,/**}');
+  assert.equal(f.calls.watchers[0].pattern.pattern, '.specspec{,/**}');
   const count = f.calls.cli.length; await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, count);
   f.change({ ...snapshot, nodes: [{ id: 'manual', type: 'requirement', body: '# Manually edited', parents: [], sources: [] }] });
   f.calls.watchers[0].change(); f.calls.watchers[0].create(); f.calls.watchers[0].delete();
@@ -405,7 +405,7 @@ test('closing a panel while initial Git discovery is pending ignores its late co
 
 test('opening a nested project creates an independent graph tab', async t => {
   const {root,uri,calls}=fixture(t);await calls.commands.get('specspec.openGraph')();
-  const nested=join(root,'example/gantt');mkdirSync(join(nested,'_specspec'),{recursive:true});
+  const nested=join(root,'example/gantt');mkdirSync(join(nested,'.specspec'),{recursive:true});
   await calls.commands.get('specspec.openGraph')(uri(nested));
   assert.equal(calls.panels.length,2);assert.equal(calls.cli.at(-1).root,nested);
   await calls.commands.get('specspec.openGraph')();assert.equal(calls.cli.at(-1).root,nested);
@@ -426,7 +426,7 @@ test('remote workspace placement uses host-file resources, remote executable set
 });
 
 test('native spotlight creation includes actual dirty buffers without invoking Save or managed node writes', async t => {
-  const node={id:'Zm9vYmE=',type:'requirement',parents:[],body:'# Original',sources:[],path:'_specspec/Zm9vYmE=.md'};
+  const node={id:'Zm9vYmE=',type:'requirement',parents:[],body:'# Original',sources:[],path:'.specspec/Zm9vYmE=.md'};
   const f=fixture(t,{snapshot:{...snapshot,nodes:[node]}}), {doc,panel}=await f.openDocument(node);
   doc.text=doc.text.replace('# Original','# Unsaved intent'); doc.version++; doc.isDirty=true;
   f.calls.textListeners.forEach(fn=>fn({document:doc}));
@@ -456,7 +456,7 @@ test('external annotation shots notify all project views without reloading their
   assert.ok(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations').every(c => c.root === f.root));
 });
 
-const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '_specspec/node.md' };
+const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '.specspec/node.md' };
 test('native bootstrap supplies the first working render with one no-baseline read', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { panel } = await f.openDocument(fileNode);
@@ -497,7 +497,7 @@ test('native Delete is bound, confirmed and managed, never a retired buffer edit
   assert.equal(doc.isDirty, false);
 });
 test('native exact deletion warns about the selected file and dirty descendant tabs remain protected', async t => {
-  const child={...fileNode,id:'child',parents:['node'],path:'_specspec/child.md'};
+  const child={...fileNode,id:'child',parents:['node'],path:'.specspec/child.md'};
   const plan={requested_ids:['node'],deleted_ids:['node'],nodes:[{id:'node',path:fileNode.path}],uncommitted:[{id:'node',path:fileNode.path,status:'M '}],git_available:true,git_note:'',broken_references:[{parent:'node',child:'child'}],potentially_affected:['child'],graph_valid:false};
   const f=fixture(t,{snapshot:{...snapshot,nodes:[fileNode,child]},deletePlan:plan,deleteWarnings:[{severity:'warning',message:'Node node has uncommitted staged changes; staging is not committing.'}]});
   const root=await f.openDocument(fileNode),leaf=await f.openDocument(child);
@@ -515,7 +515,7 @@ test('native exact deletion warns about the selected file and dirty descendant t
   assert.equal(root.doc.isDirty,false);assert.equal(leaf.doc.isDirty,true);
 });
 test('split node views share native contents but preserve independent panels and open other node files', async t => {
-  const other = { ...fileNode, id: 'other', path: '_specspec/other.md', body: '# Other' };
+  const other = { ...fileNode, id: 'other', path: '.specspec/other.md', body: '# Other' };
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode, other] } });
   const { doc, panel } = await f.openDocument(fileNode);
   const split = await f.openDocument(other);
@@ -550,7 +550,7 @@ test('node-file comparisons open an independent panel instead of rebinding the w
 });
 test('the manifest selects only canonical node patterns and has no Activity Bar container', () => {
   const manifest = require('../package.json');
-  assert.deepEqual(manifest.contributes.customEditors[0].selector, [{ filenamePattern: '**/_specspec/???????=.md' }]);
+  assert.deepEqual(manifest.contributes.customEditors[0].selector, [{ filenamePattern: '**/.specspec/???????=.md' }]);
   assert.equal(manifest.contributes.customEditors[0].priority, 'default');
   assert.equal(manifest.contributes.viewsContainers, undefined);
 });

@@ -73,7 +73,7 @@ continue to use the individual original revisions and known relationships.
 
 ```sh
 specspec query <node-id> --raw
-specspec query --raw --path _specspec/<node-id>.md
+specspec query --raw --path .specspec/<node-id>.md
 specspec query <node-id> --raw --staged
 specspec query <node-id> --raw --target <revision>
 specspec query <deleted-id> --base <before> --target <before> --with-ancestors

@@ -14,7 +14,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.mark.parametrize(
     "path",
-    ["README.md", "AGENTS.md", "INTENTION_SPEC.md", "CONCLUSION_SPEC.md", "branding/README.md"]
+    [
+        "README.md",
+        "AGENTS.md",
+        "INTENTION_SPEC.md",
+        "CONCLUSION_SPEC.md",
+        "branding/README.md",
+        "CONTRIBUTING.md",
+        "CHANGELOG.md",
+        "vscode/README.md",
+        "electron/README.md",
+        "src/specspec/templates/AGENTS.md",
+    ]
     + [p.relative_to(ROOT).as_posix() for p in sorted((ROOT / "docs").rglob("*.md"))]
     + [
         "example/gantt/README.md",
@@ -39,7 +50,7 @@ def test_current_documentation_uses_id_only_node_path_examples():
     paths += list((ROOT / "docs").rglob("*.md")) + list((ROOT / "docs").glob("*.svg"))
     paths += list((ROOT / "example/gantt").rglob("*.md"))
     for path in paths:
-        if "_specspec" in path.parts:
+        if ".specspec" in path.parts:
             continue
         text = path.read_text(encoding="utf8")
         assert "--slug" not in text, path
@@ -151,13 +162,18 @@ def test_selected_identity_imports_and_built_host_assets_match():
     for name, record in manifest.items():
         data = (ROOT / "branding" / name).read_bytes()
         assert hashlib.sha256(data).hexdigest() == record["sha256"]
-        for output, target in [
-            ("vscode/media", "specspec.svg" if name.endswith(".svg") else name),
-            (
-                "electron/build/media" if name.endswith(".svg") else "electron/build",
-                "specspec.svg" if name.endswith(".svg") else name,
-            ),
-        ]:
+        outputs = (
+            [
+                ("vscode/media", "specspec.svg" if name.endswith(".svg") else name),
+                (
+                    "electron/build/media" if name.endswith(".svg") else "electron/build",
+                    "specspec.svg" if name.endswith(".svg") else name,
+                ),
+            ]
+            if name in {"activity-icon.svg", "app-icon.png"}
+            else []
+        )
+        for output, target in outputs:
             built = ROOT / output / target
             if built.exists():
                 assert built.read_bytes() == data, built

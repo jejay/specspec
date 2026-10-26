@@ -45,7 +45,7 @@ def test_each_stream_frame_reads_current_text_and_validation(workspace):
             if calls == 2:
                 update_node(root, manifesto, body="# Current 🦉\n")
             if calls == 3:
-                path = next((root / "_specspec").glob("*.md"))
+                path = next((root / ".specspec").glob("*.md"))
                 path.write_text(
                     path.read_text(encoding="utf-8").replace("parents:", "broken:"),
                     encoding="utf-8",

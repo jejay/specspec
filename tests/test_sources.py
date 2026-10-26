@@ -185,7 +185,7 @@ def test_same_commit_index_blob_capture_and_hook_reads_exact_index(project):
         )[0]
         == 0
     )
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     index = git(root, "ls-files", "--stage")
     (root / "new.py").write_text("one\nchanged\nthree\n")
     assert invoke(root, "check", "--staged", "--sources")[0] == 0

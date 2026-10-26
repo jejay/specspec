@@ -61,7 +61,7 @@ def test_query_errors_retain_structured_incomplete_evidence(workspace):
     import json
 
     root, _ = workspace
-    (root / "_specspec" / "bad.txt").write_text("bad")
+    (root / ".specspec" / "bad.txt").write_text("bad")
     result = CliRunner().invoke(main, ["--root", str(root), "query", "--json"])
     assert result.exit_code == 1
     assert not json.loads(result.output)["ok"]
@@ -90,7 +90,7 @@ def test_init_recovery_refuses_extra_files_before_modifying_anything(workspace):
             },
         },
     )
-    extra = root / "_specspec" / "unexpected.txt"
+    extra = root / ".specspec" / "unexpected.txt"
     extra.write_text("intervening edit")
     with pytest.raises(SpecError, match="recovery changed nothing"):
         recover(root)

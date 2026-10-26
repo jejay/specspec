@@ -6,8 +6,8 @@ const { JSDOM } = require('jsdom');
 const { graphHtml } = require('../view.cjs');
 const model = require('../media/graph-model.js');
 
-const root = { id: 'root', type: 'manifesto', parents: [], body: '# Purpose\n', path: '_specspec/root.md', sources: [] };
-const child = { id: 'child', type: 'requirement', parents: ['root'], body: '# Child\n', path: '_specspec/child.md', sources: [] };
+const root = { id: 'root', type: 'manifesto', parents: [], body: '# Purpose\n', path: '.specspec/root.md', sources: [] };
+const child = { id: 'child', type: 'requirement', parents: ['root'], body: '# Child\n', path: '.specspec/child.md', sources: [] };
 
 function fixture(t, options = {}) {
   const dom = new JSDOM(graphHtml(name => name, 'local', 'test', options.html), { runScripts: 'outside-only', pretendToBeVisual: true });
@@ -98,7 +98,7 @@ test('fresh graph-invalid snapshots show missing endpoint stubs and keep current
   assert.equal(f.$('save').disabled,true);assert.equal(f.$('delete').disabled,true);assert.equal(f.$('body').readOnly,true);
   assert.equal(f.dom.window.document.querySelector('.git-corner'),null,'A missing never-committed identity is not a fabricated D.');
   assert.match(f.$('focus-context').textContent,/Unknown/);
-  f.send({type:'snapshot',snapshot:{...broken,inventory:[root.path,child.path,'_specspec/gone.md'],unreadable_paths:['_specspec/gone.md']},diagnostics:[{code:'SCHEMA',message:'Unreadable current parent'}],readonly:false});
+  f.send({type:'snapshot',snapshot:{...broken,inventory:[root.path,child.path,'.specspec/gone.md'],unreadable_paths:['.specspec/gone.md']},diagnostics:[{code:'SCHEMA',message:'Unreadable current parent'}],readonly:false});
   assert.equal(f.$('title').textContent,'Unreadable parent');
   assert.match(f.$('identity').textContent,/unreadable document/);assert.doesNotMatch(f.$('identity').textContent,/deleted|earlier context/);
   assert.equal(f.$('save').disabled,true);
@@ -261,9 +261,9 @@ test('tool copy stays concise and positive while project text and validation evi
 
 test('canonical compact IDs retain equals signs in cards, parent pickers and save messages', t => {
   const { dom, snapshot, send, $, messages } = fixture(t);
-  const shortRoot = { ...root, id: '-_____8=', path: '_specspec/-_____8=.md' };
-  const shortChild = { ...child, id: 'Zm9vYmE=', parents: [shortRoot.id], path: '_specspec/Zm9vYmE=.md' };
-  const candidate = { ...child, id: 'ZnJlc2g=', parents: [shortRoot.id], path: '_specspec/ZnJlc2g=.md' };
+  const shortRoot = { ...root, id: '-_____8=', path: '.specspec/-_____8=.md' };
+  const shortChild = { ...child, id: 'Zm9vYmE=', parents: [shortRoot.id], path: '.specspec/Zm9vYmE=.md' };
+  const candidate = { ...child, id: 'ZnJlc2g=', parents: [shortRoot.id], path: '.specspec/ZnJlc2g=.md' };
   send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [shortRoot, shortChild, candidate], edges: [[shortRoot.id, shortChild.id], [shortRoot.id, candidate.id]] }, diagnostics: [], readonly: false });
   assert.ok(dom.window.document.querySelector('[data-node-id="-_____8="] small').textContent.endsWith(shortRoot.id));
   dom.window.document.querySelector('[data-node-id="Zm9vYmE="]').click();
@@ -1537,7 +1537,7 @@ function influenceFixture(t) {
   const edges = [['root','a'],['root','b'],['root','c'],['a','left'],['a','right'],
     ['left','shared'],['right','shared'],['b','shared'],['shared','tail']];
   const nodes = [...new Set(edges.flat())].map(id => id === 'root' ? root : { ...child,id,
-    type: id === 'tail' ? 'implementation' : 'requirement',body:`# ${id}\n`,path:`_specspec/${id}.md`,
+    type: id === 'tail' ? 'implementation' : 'requirement',body:`# ${id}\n`,path:`.specspec/${id}.md`,
     parents:edges.filter(([,b])=>b===id).map(([a])=>a) });
   f.snapshot = {...f.snapshot,nodes,edges};
   f.send({type:'snapshot',snapshot:f.snapshot,diagnostics:[],readonly:false});

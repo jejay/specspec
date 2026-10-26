@@ -1,7 +1,10 @@
 {
   "name": "specspec-vscode",
   "displayName": "SpecSpec",
-  "description": "View, edit, and compare tool-managed specification graphs",
+  "description": "Connect intentions, revisable choices and implementation in versioned Markdown",
+  "repository": { "type": "git", "url": "https://github.com/jejay/specspec.git", "directory": "vscode" },
+  "homepage": "https://github.com/jejay/specspec",
+  "bugs": { "url": "https://github.com/jejay/specspec/issues" },
   "version": "0.1.0",
   "publisher": "specspec-dev",
   "private": true,
@@ -16,7 +19,7 @@
   "main": "./out/extension.js",
   "extensionKind": ["workspace"],
   "activationEvents": [
-    "workspaceContains:_specspec/*.md"
+    "workspaceContains:.specspec/*.md"
   ],
   "capabilities": {
     "virtualWorkspaces": { "supported": false },
@@ -80,7 +83,7 @@
         "viewType": "specspec.graphEditor",
         "displayName": "SpecSpec Graph",
         "selector": [
-          { "filenamePattern": "**/_specspec/???????=.md" }
+          { "filenamePattern": "**/.specspec/???????=.md" }
         ],
         "priority": "default"
       }
@@ -107,10 +110,12 @@
     "watch": "node scripts/build-webview.cjs && tsc -w -p .",
     "test": "npm run compile && node --test test/*.test.cjs",
     "test:host": "npm run compile && node test-host/run.cjs",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "package": "node scripts/package.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "@vscode/vsce": "4.0.0",
     "@types/vscode": "^1.90.0",
     "jsdom": "^26.1.0",
     "typescript": "^5.8.0"

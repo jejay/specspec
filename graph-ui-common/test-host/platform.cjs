@@ -181,7 +181,7 @@ function platformChecks(fixture, host) {
       assert.equal(fixture.saved().valid,true);
       assert.deepEqual(readFileSync(join(fixture.root,outside.path)),outsideBytes);
       assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes);
-      git('add','-u','--',`_specspec/${branch}.md`,`_specspec/${full}.md`,`_specspec/${partial}.md`);
+      git('add','-u','--',`.specspec/${branch}.md`,`.specspec/${full}.md`,`.specspec/${partial}.md`);
       await delay(500);assert.ok(await evaluate(`document.querySelector('[data-node-id="${branch}"].removed')!==null`));
       git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Remove one justification and explicitly rewrite surviving conclusions under remaining intent');
       await waitFor(`document.querySelector('[data-node-id="${branch}"]')===null`);

@@ -139,7 +139,7 @@ Two-column rails (`│ │`, `├─requirement`, `└─↪`) continue through 
 body line. Root metadata/body align at column zero, without an extra tree indent.
 Headers give the lowercase type word, full node ID and all direct parents in
 ascending full-ID order after ` @ `, separated by `, ` in both default and human
-output, including the display parent. The ID names `_specspec/<id>.md`. Shared nodes, including deleted ones, have one full record at
+output, including the display parent. The ID names `.specspec/<id>.md`. Shared nodes, including deleted ones, have one full record at
 their last conceptual unfolded occurrence; earlier occurrences are short `↪ ID ↓`
 pointers. Iterative walks avoid recursion and exponential unfolding. The preamble
 contains selected versions and applicable notes, with no abbreviation or `@` legend.

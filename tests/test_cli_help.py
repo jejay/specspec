@@ -170,7 +170,7 @@ def test_show_is_removed_not_a_hidden_alias_and_does_not_read_project(monkeypatc
 def test_query_raw_retains_literal_malformed_bytes_by_id_and_path(workspace, raw):
     root, parent = workspace
     _, id = add_node(root, "requirement", [parent], "# Before")
-    path = f"_specspec/{id}.md"
+    path = f".specspec/{id}.md"
     (root / path).write_bytes(raw)
     before = load_snapshot(root).files
     for selector in [[id], ["--path", path]]:
@@ -188,11 +188,11 @@ def test_query_raw_retains_literal_malformed_bytes_by_id_and_path(workspace, raw
 def test_query_raw_reads_current_index_and_history_without_checkout(workspace):
     root, parent = workspace
     _, id = add_node(root, "requirement", [parent], "# Old\r\n")
-    path = root / f"_specspec/{id}.md"
+    path = root / f".specspec/{id}.md"
     setup_repository(root)
     old = path.read_bytes()
     path.write_bytes(old.replace(b"Old", b"Index"))
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     indexed = path.read_bytes()
     path.write_bytes(indexed.replace(b"Index", b"Saved"))
     index, refs = git(root, "ls-files", "--stage"), git(root, "show-ref")
@@ -209,7 +209,7 @@ def test_query_raw_reads_current_index_and_history_without_checkout(workspace):
 @pytest.mark.parametrize(
     "flags",
     [
-        ["--path", "_specspec/AAAAAAA=.md"],
+        ["--path", ".specspec/AAAAAAA=.md"],
         ["--staged"],
         ["--raw", "--base", "HEAD"],
         ["--raw", "--human"],

@@ -6,11 +6,11 @@
     "spec_node_count": 15,
     "deletion_reason": "",
     "deleted_ids": [],
-    "predecessor_commit": "16bedf7e17ee6458f50dee3b6e25ee258dbc8e67",
+    "predecessor_commit": "4e48e6e3fdba05f10ca63e114f6d55e549746639",
     "spec_receipt": 28,
-    "spec_commit": "6531cdd6f7ca32a037f5c398ce1e658097f1f80f",
+    "spec_commit": "475db3be5ad0da45d224102f7b4ae3f38e6bc1ba",
     "implementation_receipt": 34,
-    "implementation_commit": "af4e40da13434588419d299e2802879aa7e42184"
+    "implementation_commit": "2f8aac8b67e6a341db4961938760eeb9844285c0"
   },
   {
     "key": "02",
@@ -33,11 +33,11 @@
       "zc8JxKI=",
       "K49IgJM="
     ],
-    "predecessor_commit": "af4e40da13434588419d299e2802879aa7e42184",
+    "predecessor_commit": "2f8aac8b67e6a341db4961938760eeb9844285c0",
     "spec_receipt": 69,
-    "spec_commit": "d11767d10da392dc75af20f53f836806d240f138",
+    "spec_commit": "05e321e35ec40a121addfa2eb7f0ecfb9b10e142",
     "implementation_receipt": 75,
-    "implementation_commit": "16ac6594768111dd9a59d6adbdd904adcaa336a8"
+    "implementation_commit": "8cb24fe1a6de83796e5b1bfcd27bfb1a32396ef9"
   },
   {
     "key": "03",
@@ -56,10 +56,10 @@
       "brGH6zM=",
       "ZQyhSnM="
     ],
-    "predecessor_commit": "16ac6594768111dd9a59d6adbdd904adcaa336a8",
+    "predecessor_commit": "8cb24fe1a6de83796e5b1bfcd27bfb1a32396ef9",
     "spec_receipt": 110,
-    "spec_commit": "6c4076467f9c58ef562504cda61d80db2a302d6e",
+    "spec_commit": "69fb06a59caaee62a4de33662fa6fe6a3c5570e0",
     "implementation_receipt": 118,
-    "implementation_commit": "911151d41bf30df695e9b4fa3082dd0053d32ffa"
+    "implementation_commit": "f03bf7391254e2e6d693dab1f2b485cbea26cec0"
   }
 ]

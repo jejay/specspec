@@ -20,7 +20,7 @@ def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(wo
     snapshot, child = add_node(root, "requirement", [manifesto], "# Earlier rationale\n")
     git(root, "init")
     git(root, "config", "core.autocrlf", "false")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "commit", "-m", "Record an experiment")
     path = root / snapshot.graph.nodes[child].path
     delete_nodes(root, [child])
@@ -28,7 +28,7 @@ def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(wo
     runner = CliRunner()
     for staged in [False, True]:
         if staged:
-            git(root, "add", "-u", "_specspec")
+            git(root, "add", "-u", ".specspec")
         response = runner.invoke(main, ["--root", str(root), "diff", "HEAD", "--json"])
         assert response.exit_code == 0, response.output
         result = expand_comparison(json.loads(response.output)["result"])
@@ -64,7 +64,7 @@ def test_unborn_head_is_known_empty_non_git_is_incomplete_and_bad_refs_fail(work
 def test_uncommitted_created_then_deleted_node_has_no_head_ghost(workspace):
     root, manifesto = workspace
     git(root, "init")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "commit", "-m", "Root")
     _, child = add_node(root, "requirement", [manifesto], "# Trial\n")
     delete_nodes(root, [child], allow_uncommitted=True)
@@ -99,7 +99,7 @@ def test_partial_delete_recovery_refuses_a_new_external_file(workspace, monkeypa
     removed = []
 
     def interrupted(path, *args, **kwargs):
-        if path.parent == root / "_specspec":
+        if path.parent == root / ".specspec":
             if removed:
                 raise OSError("Interrupted deletion")
             removed.append(path)

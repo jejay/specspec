@@ -23,7 +23,7 @@ def test_gantt_index_reads_staged_corruption_not_repaired_worktree(gantt_history
     file = root / node.path
     file.write_bytes(before.files[node.path].replace(b"parents:", b"unknown:"))
     assert not load_snapshot(root).valid and git_snapshot(root, staged=True).valid
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     file.write_bytes(before.files[node.path])
     assert load_snapshot(root).valid and not git_snapshot(root, staged=True).valid
     assert git_snapshot(root, "stage/03-code").valid
@@ -35,19 +35,19 @@ def test_gantt_full_identity_stable_paths_parent_edges_and_impact(gantt_history)
     manifesto = next(n.id for n in original.nodes if n.type == "manifesto")
     parent = next(n.id for n in original.nodes if n.type == "requirement")
     _, child = add_node(root, "requirement", [parent], "# Current-scheme regression\n")
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     git(root, "commit", "-m", "Add current-schema regression branch")
     base = git_snapshot(root, "HEAD")
     changed = update_node(root, child, parents=[manifesto])
     node = changed.graph.nodes[child]
-    assert node.path == f"_specspec/{child}.md"
+    assert node.path == f".specspec/{child}.md"
     diff = semantic_diff(base, load_snapshot(root))
     assert diff["impact_complete"]
     assert [parent, child] in diff["removed_edges"]
     assert [manifesto, child] in diff["added_edges"]
     assert child in diff["affected"]
     assert next(c for c in diff["changes"] if c["id"] == child)["fields"] == ["parents"]
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     assert git_snapshot(root, staged=True).valid
     git(root, "commit", "-m", "Reparent without changing full identity or path")
     committed = git_snapshot(root, "HEAD")

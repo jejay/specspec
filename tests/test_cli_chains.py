@@ -103,7 +103,7 @@ def test_delete_add_add_update_with_shared_aliases_is_one_transaction(workspace,
     assert saved.graph.nodes[aliases["detail"]].parents == [aliases["goal"]]
     assert all(b"$goal" not in raw for raw in saved.files.values())
     assert len(journals) == 1 and len(journals[0]["files"]) == 4
-    assert not (root / f"_specspec/{old}.md").exists()
+    assert not (root / f".specspec/{old}.md").exists()
     assert not (root / ".specspec-local/journal.json").exists()
 
 
@@ -530,7 +530,7 @@ def test_recovery_rolls_back_mixed_creation_deletion_and_update(tmp_path, monkey
     original, writes = workspace_module.os.replace, []
 
     def interrupt(source, target):
-        if Path(target).parent == tmp_path / "_specspec":
+        if Path(target).parent == tmp_path / ".specspec":
             writes.append(Path(target).name)
             if len(writes) == 2:
                 raise OSError("Interrupted mixed edit chain")
@@ -556,8 +556,8 @@ def test_recovery_rolls_back_mixed_creation_deletion_and_update(tmp_path, monkey
         "--require-valid",
     )
     assert result.exit_code == 2 and (tmp_path / ".specspec-local/journal.json").exists()
-    assert not (tmp_path / f"_specspec/{removed}.md").exists()
-    assert (tmp_path / f"_specspec/{ids[-1]}.md").exists()
+    assert not (tmp_path / f".specspec/{removed}.md").exists()
+    assert (tmp_path / f".specspec/{ids[-1]}.md").exists()
     monkeypatch.setattr(workspace_module.os, "replace", original)
     assert recover(tmp_path)["graph_valid"]
     assert load_snapshot(tmp_path).files == before

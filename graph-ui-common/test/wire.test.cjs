@@ -2,8 +2,8 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {comparison,expandResult}=require('../host/wire.cjs');
 const {ProjectReads}=require('../host/reads.cjs');
-const root={id:'root',type:'manifesto',parents:[],body:'# Root',path:'_specspec/root.md'};
-const old={id:'child',type:'requirement',parents:['root'],body:'# Earlier',sources:[],path:'_specspec/child.md'};
+const root={id:'root',type:'manifesto',parents:[],body:'# Root',path:'.specspec/root.md'};
+const old={id:'child',type:'requirement',parents:['root'],body:'# Earlier',sources:[],path:'.specspec/child.md'};
 const current={format_version:7,valid:true,nodes:[root]};
 const compact={base:{format_version:7,valid:true},before:[old],changes:[{id:'child',kind:'removed',fields:[]}],added_edges:[],removed_edges:[['root','child']],impact_complete:true};
 

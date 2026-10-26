@@ -189,7 +189,7 @@ def test_exact_index_owner_hook_and_revision_checks_share_the_rule(workspace):
     runner = CliRunner()
     prefix = ["--root", str(root), "check"]
     assert runner.invoke(main, [*prefix, "--staged", "--json"]).exit_code == 0
-    git(root, "add", "_specspec")
+    git(root, "add", ".specspec")
     (root / node.path).write_bytes(before.files[node.path])
     assert runner.invoke(main, [*prefix, "--json"]).exit_code == 0
     checked = runner.invoke(main, [*prefix, "--staged", "--json"])

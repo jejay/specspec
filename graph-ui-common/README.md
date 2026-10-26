@@ -67,7 +67,7 @@ operations to project content. Future agent integration is a seam, not an implem
 Claude Code/Codex connector.
 
 ```sh
-npm --prefix graph-ui-common ci
+npm ci  # From the repository root: install the single locked workspace.
 npm --prefix graph-ui-common test
 ```
 

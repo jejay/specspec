@@ -34,7 +34,7 @@ def document_path(value: Any) -> str:
         or not value.endswith(".md")
         or value != PurePosixPath(value).as_posix()
     ):
-        fail("Editor documents must be direct _specspec/*.md paths.")
+        fail("Editor documents must be direct .specspec/*.md paths.")
     return value
 
 
