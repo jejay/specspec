@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+- Compare node text independently of LF/CRLF/CR encoding, without changing any Git
+  configuration or attributes. Existing-document writes/native plans retain local
+  newline style; new nodes use LF. Normal diffs omit encoding-only changes and
+  newline counters; raw reads and physical transaction/recovery guards remain exact.
+
 - Group mutation feedback by Added/Modified/Deleted/Unchanged with unpadded,
   comma-separated full node IDs. Init reports Added; previews use Would add/modify/
-  delete. Classification compares stored bytes within the transaction, independently
+  delete. Classification compares logical text within the transaction, independently
   of Git status. Preserve diagnostics, explicit aliases and API-7 JSON records.
 
 ## 0.1.0 — initial release preparation

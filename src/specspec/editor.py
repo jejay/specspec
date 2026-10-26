@@ -16,6 +16,7 @@ from .format import json_value, read_document, yaml_parser
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .git_objects import OBJECT_ID
 from .model import FORMAT_VERSION, ID_RE, MAX_FILE_BYTES, NODE_TYPES, Diagnostic, SpecError
+from .node_text import document_eol, logical_text, stored_text
 from .workspace import SPEC_DIR, read_files, runtime_diagnostics, snapshot_from_files
 
 MAX_REQUEST_BYTES = 16 * 1024 * 1024
@@ -155,11 +156,12 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 data["sources"] = sources
                 metadata_changed = True
         before = files[path].decode("utf-8")
+        eol = document_eol(files[path])
+        body = stored_text(body, eol)
         if metadata_changed:
             stream = io.StringIO()
             yaml_parser().dump(data, stream)
-            eol = "\r\n" if before.startswith("---\r\n") else "\n"
-            after = f"---{eol}{stream.getvalue().replace(chr(10), eol)}---{eol}{body}"
+            after = f"---{eol}{stored_text(stream.getvalue(), eol)}---{eol}{body}"
         else:
             # Ordinary typing leaves the entire frontmatter byte-for-byte intact.
             after = before[: len(before) - len(original_body)] + body
@@ -200,7 +202,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                         "path": path,
                         "type": kind,
                         "parents": list(parents),
-                        "body": body,
+                        "body": logical_text(body),
                         "sources": sources if isinstance(sources, list) else [],
                         "sources_text": sources
                         if isinstance(sources, str)

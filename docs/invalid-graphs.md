@@ -97,8 +97,8 @@ specspec diff <before-revision> --with-context --json
 specspec diff --with-context --node <child-id> --node <another-id>
 ```
 
-Full diff always retains complete canonical-file patches, including frontmatter,
-comments, whitespace and line endings. Context adds deduplicated before/current
+Full diff retains complete logical canonical-text patches, including frontmatter,
+comments, whitespace and EOF termination; encoding-only EOL differences are equivalent. Context adds deduplicated before/current
 bindings, surviving parents and ancestor context, structural findings and finite
 cause paths from both revisions. Repeated `--node` focuses the evidence packet.
 `--max-bytes N` bounds the actual encoded result and fails before emitting a partial

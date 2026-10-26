@@ -19,7 +19,7 @@ records only where a target record differs or is absent, base metadata/resolved 
 ID-based changes, relationships and source/file impact. Every base node is either
 shared with an unchanged target record or present in previous records; added target
 IDs are excluded from base reconstruction. Preserve both complete revision structures,
-old bodies/sources for deleted/historical nodes, and literal file changes where the
+old bodies/sources for deleted/historical nodes, and logical file changes where the
 operation requests a full diff. Explicit rooted query selections scope the
 comparison records to selected IDs while preserving full parent references and
 needed source evidence; selection metadata identifies the partial view and its

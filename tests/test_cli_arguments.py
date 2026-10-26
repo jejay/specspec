@@ -10,6 +10,7 @@ from click.testing import CliRunner
 
 from specspec import cli
 from specspec.model import API_VERSION, FORMAT_VERSION
+from specspec.node_text import logical_text
 from specspec.workspace import load_snapshot
 
 
@@ -40,7 +41,7 @@ def test_single_message_is_literal_for_init_add_and_update(tmp_path, monkeypatch
     assert result.exit_code == 0, result.output
     assert data["api_version"] == API_VERSION == 7
     root_id = data["result"]["changed_ids"][0]
-    assert load_snapshot(tmp_path).graph.nodes[root_id].body == body
+    assert load_snapshot(tmp_path).graph.nodes[root_id].body == logical_text(body)
     result, data = call(tmp_path, "add", "--parent", root_id, "--message=" + body)
     assert result.exit_code == 0, result.output
     id = data["result"]["changed_ids"][0]
@@ -48,8 +49,12 @@ def test_single_message_is_literal_for_init_add_and_update(tmp_path, monkeypatch
     assert result.exit_code == 0, result.output
     saved = load_snapshot(tmp_path)
     assert saved.format_version == FORMAT_VERSION == 7 and saved.valid
-    assert saved.graph.nodes[id].body == body
-    assert (tmp_path / saved.graph.nodes[id].path).read_bytes().endswith(body.encode("utf8"))
+    assert saved.graph.nodes[id].body == logical_text(body)
+    assert (
+        (tmp_path / saved.graph.nodes[id].path)
+        .read_bytes()
+        .endswith(logical_text(body).encode("utf8"))
+    )
 
 
 def test_repeated_messages_join_without_cleanup_and_omission_keeps_body(workspace):
@@ -61,7 +66,7 @@ def test_repeated_messages_join_without_cleanup_and_omission_keeps_body(workspac
     result, data = call(root, *args)
     assert result.exit_code == 0, result.output
     id = data["result"]["changed_ids"][0]
-    expected = "\n\n".join(pieces)
+    expected = logical_text("\n\n".join(pieces))
     assert load_snapshot(root).graph.nodes[id].body == expected
     assert call(root, "update", id, "--parent", manifesto)[0].exit_code == 0
     assert load_snapshot(root).graph.nodes[id].body == expected
@@ -175,10 +180,12 @@ def test_integration_body_files_remain_available(workspace, tmp_path, monkeypatc
     result, data = call(root, "add", "--parent", id, "--body", str(directory / "body.md"))
     assert result.exit_code == 0
     added = data["result"]["changed_ids"][0]
-    assert load_snapshot(root).graph.nodes[added].body == body
+    assert load_snapshot(root).graph.nodes[added].body == logical_text(body)
     monkeypatch.chdir(directory)
     result, _ = call(root, "update", added, "--body", "body.md")
-    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[added].body == body
+    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[added].body == logical_text(
+        body
+    )
 
 
 @pytest.mark.parametrize("encoding", ["ascii", "cp1252"])
@@ -193,8 +200,8 @@ def test_real_argv_unicode_quotes_and_eol_round_trip(tmp_path, encoding):
     assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
     assert json.loads(result.stdout)["api_version"] == 7
     saved = load_snapshot(tmp_path)
-    assert saved.nodes[0].body == body
-    assert (tmp_path / saved.nodes[0].path).read_bytes().endswith(body.encode("utf8"))
+    assert saved.nodes[0].body == logical_text(body)
+    assert (tmp_path / saved.nodes[0].path).read_bytes().endswith(logical_text(body).encode("utf8"))
 
 
 def test_large_integration_stdin_does_not_move_into_argv(tmp_path):

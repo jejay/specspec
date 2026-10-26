@@ -126,15 +126,16 @@ def test_update_classifies_actual_candidate_bytes(workspace, dry_run, changed, f
         assert saved.files[node.path] != before.files[node.path]
 
 
-def test_layout_only_change_is_modified_not_semantically_unchanged(workspace):
+def test_newline_encoding_does_not_make_a_noop_modified(workspace):
     root, manifesto = workspace
-    before, target = add_node(root, "requirement", [manifesto], "# Same\r\n")
+    before, target = add_node(root, "requirement", [manifesto], "# Same\n")
+    path = root / f".specspec/{target}.md"
+    raw = before.files[f".specspec/{target}.md"].replace(b"\n", b"\r\n")
+    path.write_bytes(raw)
     result = invoke(root, "update", target, "-m", "# Same\n")
     assert_compact(result)
-    assert summaries(result) == [f"Modified: {target}"]
-    after = load_snapshot(root)
-    assert before.graph.nodes[target].semantic() == after.graph.nodes[target].semantic()
-    assert before.files != after.files
+    assert summaries(result) == [f"Unchanged: {target}"]
+    assert path.read_bytes() == raw
 
 
 @pytest.mark.parametrize("dry_run", [False, True])

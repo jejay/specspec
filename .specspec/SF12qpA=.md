@@ -35,6 +35,8 @@ sources:
 - path: graph-ui-common/test-host/platform.cjs
 - path: src/specspec/workspace.py
 - path: tests/test_cli_receipts.py
+- path: src/specspec/node_text.py
+- path: tests/test_node_newlines.py
 ---
 # Implement the compact command surface and complete review projection
 
@@ -50,15 +52,18 @@ envelopes. Structured mutation receipts retain IDs/paths/scope and warnings rath
 than full graphs. Readable receipts group full node IDs by Added, Modified, Deleted
 and Unchanged, with hypothetical preview labels and explicit alias associations.
 The writer records transient invocation actions from locked original/candidate
-bytes; output uses the verified transaction result independently of Git status.
+logical text; output uses the verified transaction result independently of Git status.
 Tests cover init, singleton and composed mutations, no-op body/parent/source and
 replacement edits, byte-only changes, fresh locked originals, post-write external
 edits, preview/refusal, invalid/incomplete context and unchanged protocol fields.
 Node format 7 and canonical identities/source grammar remain stable.
 
-Full review output combines stable-ID classification, every canonical-file hunk,
-relationship labels and separate linked-source context. Comment/whitespace/newline
-changes remain represented. API comparisons carry one target plus previous differing/
+Full review output combines stable-ID classification, every logical canonical
+text hunk, relationship labels and separate linked-source context. Comments,
+whitespace and EOF changes remain represented while encoding-only changes stay
+quiet. node_text.py shares logical normalization and existing-document EOL selection
+across comparison, serialization, native planning and action receipts. Raw bytes
+remain authoritative for safety, recovery, Git objects and explicit raw reads. API comparisons carry one target plus previous differing/
 deleted records and ID-based metadata; projections reconstruct both complete revisions.
 Query ancestor completion preserves every chosen parent path. The shared emitter
 formats once and budgets actual encoded query output, including envelopes and
@@ -66,7 +71,7 @@ terminal-control escaping, before writing a complete result. Read-only source
 inspection and deliberate capture/reanchor share the domain resolver and writer.
 
 Tests cover text/control/Unicode output, actual byte budgets, API validation, complete
-raw-only patches, compact/expanded equivalence, deleted membership through staging/
+logical text patches, compact/expanded equivalence, deleted membership through staging/
 commit, source retention and exact-index distinction. The Gantt corpus uses actual
 current CLI receipts across all retained refs, preserving identities, redirects,
 application bytes and positive spec-before-code checkpoints. Guides and diagrams name

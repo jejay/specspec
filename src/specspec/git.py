@@ -9,6 +9,7 @@ from typing import Any
 
 from .git_objects import read_blobs
 from .model import Diagnostic, SpecError
+from .node_text import logical_bytes
 from .workspace import SPEC_DIR, Snapshot, snapshot_from_files
 
 
@@ -186,8 +187,7 @@ def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
             else "changed",
         }
         for path in sorted(base.files.keys() | target.files.keys())
-        if base.files.get(path) != target.files.get(path)
-        or (path in base.files) != (path in target.files)
+        if logical_bytes(base.files.get(path)) != logical_bytes(target.files.get(path))
     ]
     return {
         "base": base.to_dict(),

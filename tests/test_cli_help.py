@@ -125,7 +125,7 @@ def test_help_explains_the_actual_choices_not_only_option_names():
         "SAME original body",
         "REPLACES",
         "does not append",
-        "NEW is always literal",
+        "NEW keeps literal content",
         "--body FILE|-",
     ]:
         assert phrase in update, phrase

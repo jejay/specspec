@@ -8,7 +8,7 @@ from specspec.cli import main
 from specspec.workspace import add_node
 
 
-def test_logical_json_normalizes_crlf_while_raw_and_replacement_bytes_stay_literal(workspace):
+def test_logical_json_and_raw_reads_keep_their_roles_when_writes_adapt_newlines(workspace):
     root, manifesto = workspace
     _, node = add_node(root, "requirement", [manifesto], "# Body\n\nalpha\r\nbeta\n")
     runner = CliRunner()
@@ -26,7 +26,7 @@ def test_logical_json_normalizes_crlf_while_raw_and_replacement_bytes_stay_liter
         ],
     )
     assert result.exit_code == 0, result.output
-    physical = "# Body\n\nliteral\r\nNEW 😀\n"
+    physical = "# Body\n\nliteral\nNEW 😀\n"
     assert (root / f".specspec/{node}.md").read_bytes().endswith(physical.encode("utf8"))
     result = runner.invoke(
         main, ["--root", str(root), "query", node, "--max-distance", "0", "--json"]

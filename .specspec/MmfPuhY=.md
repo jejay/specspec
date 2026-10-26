@@ -5,16 +5,18 @@ parents:
 - aILBxDs=
 - DFS2oJM=
 ---
-# Distinguish logical API records from literal canonical documents
+# Distinguish logical node records from physical document evidence
 
-Preserve the API-7 parsed node projection: complete logical body text with CRLF
-normalized to LF, sorted parent/source fields and unchanged node identities. JSON
-retains logical line/paragraph layout rather than the readable one-line projection.
-Raw query documents, canonical files and literal diff evidence carry physical line
-endings and bytes. Replacement NEW remains literal in saved files and unmatched
-source text stays unchanged. Verify logical and physical representations separately.
+API-7 parsed records carry complete logical bodies with newline encodings normalized
+to LF, sorted parent/source fields and unchanged identities. Readable projections
+and logical diffs use the same content. Spaces, indentation, blank lines and final
+newline presence stay meaningful. Physical newline encoding alone is equivalent.
 
-Release qualification tests the existing distinction and describes it explicitly;
-packaging does not introduce a protocol change or promise byte-identical canonical
-text from parsed node records. Semantic records and physical repair/evidence each
-retain their own roles.
+Raw query documents, native before/after plans, canonical files, immutable Git
+blobs, transaction guards and recovery retain exact bytes. New nodes use LF;
+existing-document writes adapt body input and replacement NEW to that document's
+newline style. Git configuration, attributes and linked source files remain under
+their existing owners. Verify logical behavior and physical safety separately.
+
+Application API and canonical node fields remain version 7. Representation policy
+changes do not add a node-format constraint rejecting existing newline encodings.

@@ -83,7 +83,9 @@ HELP = {
     Default results are readable text. Editing receipts group full node IDs under
     Added, Modified, Deleted or Unchanged, with comma-separated IDs and no padding.
     Previews use Would add/modify/delete. These are invocation effects, not Git status.
-    Add --json for structured API-7 output.
+    Add --json for structured API-7 output. Node comparisons ignore newline encoding;
+    existing-document writes retain local style and new nodes use LF. Git settings
+    and attributes stay untouched. Spaces, blank lines and EOF termination matter.
     Editing can succeed while reporting an invalid intermediate graph; check is
     strict, and --require-valid checks the whole final candidate before writes.
     Run COMMAND --help for arguments, examples, defaults and safety details.
@@ -99,8 +101,9 @@ HELP = {
     graph; use query and update there instead.
 
     -m/--message is literal Markdown text, not a filename. Repeat it to join
-    paragraphs with one blank line. Actual newlines, Unicode and whitespace are
-    preserved. The body must be nonempty. No editor opens automatically.
+    paragraphs with one blank line. Logical line boundaries, Unicode and whitespace
+    are preserved; new-node storage uses LF. The body must be nonempty.
+    No editor opens automatically.
 
     \b
     Examples:
@@ -232,8 +235,9 @@ HELP = {
     layouts. Line endings compare equally; ordinary prose soft wraps can match
     spaces. Words, other whitespace and Markdown structure remain significant.
     Multiple pairs address the SAME original body and must not overlap: they do
-    not run sequentially on preceding insertions. NEW is always literal; empty
-    NEW deletes the passage. Ambiguity rejects the whole invocation rather than
+    not run sequentially on preceding insertions. NEW keeps literal content; its
+    newline encoding follows the target document. Empty NEW deletes the passage.
+    Ambiguity rejects the whole invocation rather than
     choosing an exact-layout occurrence over another wrapped one. Unselected text
     remains unchanged; analysis limits reject explicitly, not approximately.
 
@@ -247,7 +251,7 @@ HELP = {
     several passages. --dry-run writes nothing; --require-valid checks the entire
     final graph. Invalid intermediate graphs remain editable with diagnostics,
     while schema, locks, original-byte checks and recovery stay enforced.
-    Output groups full IDs under Modified, or Unchanged when stored bytes match.
+    Output groups full IDs under Modified, or Unchanged when logical text matches.
     Previews use Would modify; Unchanged stays Unchanged. These describe this
     invocation relative to saved contents, not Git status. No Git staging or commit.
 
@@ -341,8 +345,10 @@ HELP = {
       specspec diff --summary
       specspec diff HEAD --json
 
-    Default output includes all changed canonical-file hunks: body, frontmatter,
-    comments, whitespace, line endings, final newlines and added/deleted records.
+    Default output includes all changed logical canonical-text hunks: body,
+    frontmatter, comments, whitespace, EOF termination and added/deleted records.
+    LF/CRLF/CR encoding alone is equivalent; patches use LF and omit newline counts.
+    Use query --raw for exact physical documents. No Git settings are changed.
     --summary is deliberately abridged; it is not the default. Relationship changes
     identify both ends. Source changes and their possible requirement effects are
     separate from directly modified bindings.

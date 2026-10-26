@@ -6,6 +6,7 @@ from collections import deque
 from pathlib import PurePosixPath
 
 from .model import Diagnostic, SpecError
+from .node_text import logical_bytes
 
 
 def findings(snapshot):
@@ -100,7 +101,7 @@ def repair_context(base, target, changes, node_ids=()):
     )
     # Literal-only edits are evidence too.
     for id, node in (old | new).items():
-        if base.files.get(node.path) != target.files.get(node.path):
+        if logical_bytes(base.files.get(node.path)) != logical_bytes(target.files.get(node.path)):
             seeds.add(id)
     available = set(old) | set(new) | {p for n in [*old.values(), *new.values()] for p in n.parents}
     if node_ids:

@@ -21,7 +21,7 @@ class ProjectDocuments extends ProjectReads {
       if (typeof message.body !== 'string' || Buffer.byteLength(message.body, 'utf8') > 1024 * 1024 ||
         !Array.isArray(message.parents) || message.parents.some(id => typeof id !== 'string') ||
         typeof message.sources !== 'string' || Buffer.byteLength(message.sources, 'utf8') > 1024 * 1024) throw new Error('Invalid document edit.');
-      const body = ['\n', '\r\n'].includes(current.eol) ? message.body.replace(/\r?\n/g, current.eol) : message.body;
+      const body = ['\n', '\r\n'].includes(current.eol) ? message.body.replace(/\r\n?|\n/g, current.eol) : message.body;
       const result = await this.request({ path: current.path, id: adapter.id, body, parents: message.parents, sources: message.sources });
       const change = result.changes[0];
       if (change.after !== change.before && message.documentVersion !== current.version && adapter.lastAppliedVersion !== current.version &&

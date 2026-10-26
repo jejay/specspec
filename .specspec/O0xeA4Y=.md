@@ -33,8 +33,9 @@ breaks, protecting structural and inline syntax. Both comparison views contribut
 to one unique original-span assessment without exact-layout preference. Parser line,
 token, nesting and candidate/work guards reject incomplete analysis explicitly.
 body_replacements.py resolves all pairs against the same original body, rejects
-physical range overlaps and joins unchanged slices with literal NEW. Output byte
-bounds subtract the actual consumed original bytes, including CRLF.
+physical range overlaps and joins unchanged slices with content-literal NEW. The
+writer adapts newline encoding to the existing target style. Bounds use actual
+target-style bytes after a conservative bounded-construction check.
 
 batch.py retains combined input accounting and fresh under-lock transformation.
 The existing serializer, final graph validation, deletion consent, original-byte

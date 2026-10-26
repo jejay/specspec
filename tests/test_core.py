@@ -109,7 +109,7 @@ def test_unconditional_updates_round_trip_body_comments(workspace):
     assert load_snapshot(root).nodes[0].semantic() == snapshot.nodes[0].semantic()
     changed = update_node(root, manifesto, body="# New\r\n\r\nKeep whitespace.  \r\n")
     assert b"# keep this comment" in path.read_bytes()
-    assert path.read_bytes().endswith(b"# New\r\n\r\nKeep whitespace.  \r\n")
+    assert path.read_bytes().endswith(b"# New\n\nKeep whitespace.  \n")
     assert load_snapshot(root).files == changed.files
     update_node(root, manifesto, body="Next edit\n")
     assert load_snapshot(root).nodes[0].body == "Next edit\n"

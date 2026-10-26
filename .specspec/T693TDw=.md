@@ -21,7 +21,8 @@ Unicode continuation rails prefix displayed data. Full headers give type, full n
 ID and all direct parents. Retain all current/deleted binding content in a compact reading with sparse
 revision hints and safe terminal presentation. Structured comparison records
 retain complete logical bodies and whitespace, with parsed CRLF normalized to LF. Canonical comments, spelling and literal
-line endings remain available through node files and the dedicated diff command.
+line endings remain available through node files and raw query; diff compares
+logical canonical text.
 
 Query diagnoses the selected graphs and reads code from those versions. Invalid
 components use finite deterministic cycle-safe presentation with complete bindings.

@@ -13,6 +13,7 @@ from .git import repository_paths, semantic_diff, source_change_impact
 from .graph import Graph, build_graph
 from .inspection import findings
 from .model import Diagnostic, SpecError, SpecNode
+from .node_text import logical_text
 from .output import json_text
 from .query_select import Limit, reachable, scope_result, select_graph, select_issues
 from .query_sources import contract_state, source_comparisons, source_contract_impact
@@ -306,11 +307,11 @@ def source_line(row: dict) -> str:
 
 
 def body_line(body: str) -> str:
-    """Flatten LF/CRLF runs without truncating text or parsing Markdown."""
+    """Flatten logical newline runs without truncating text or parsing Markdown."""
     return re.sub(
         r"\n+",
         lambda match: " " if len(match[0]) == 1 else " ¶ ",
-        body.replace("\r\n", "\n"),
+        logical_text(body),
     )
 
 
@@ -388,7 +389,7 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
         # Originals stay intact in JSON and diff. The CLI applies shared
         # terminal-control escaping to either text presentation.
         if human:
-            yield from node.body.replace("\r\n", "\n").split("\n")
+            yield from logical_text(node.body).split("\n")
         else:
             yield body_line(node.body)
 

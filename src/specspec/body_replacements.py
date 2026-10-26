@@ -3,6 +3,7 @@
 from itertools import pairwise
 
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
+from .node_text import stored_text
 from .replacement_matching import Matcher
 
 MAX_REPLACEMENTS = 1024
@@ -34,7 +35,7 @@ def input_bytes(pairs):
     return total
 
 
-def replace_body(body, pairs, *, path=None):
+def replace_body(body, pairs, *, path=None, eol=None):
     """Resolve every span on the original before constructing the bounded result."""
     input_bytes(pairs)
     spans = []
@@ -65,11 +66,18 @@ def replace_body(body, pairs, *, path=None):
                 path=path,
                 exit_code=1,
             )
-    if size > MAX_FILE_BYTES:
+    # Newline adaptation can shrink CRLF by at most half. Bound construction
+    # before joining, then assess actual target-style bytes before serialization.
+    if size > MAX_FILE_BYTES * (2 if eol is not None else 1):
         fail("Replacement result exceeds the 1 MiB node limit.", path=path, exit_code=1)
     parts, cursor = [], 0
     for start, end, _, new in spans:
         parts.extend((body[cursor:start], new))
         cursor = end
     parts.append(body[cursor:])
-    return "".join(parts)
+    result = "".join(parts)
+    if eol is not None:
+        result = stored_text(result, eol)
+    if len(result.encode("utf8")) > MAX_FILE_BYTES:
+        fail("Replacement result exceeds the 1 MiB node limit.", path=path, exit_code=1)
+    return result

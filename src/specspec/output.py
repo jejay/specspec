@@ -7,6 +7,7 @@ import json
 from typing import Any
 
 from .model import API_VERSION
+from .node_text import logical_bytes, logical_text
 
 
 def json_text(value: Any) -> str:
@@ -157,14 +158,14 @@ def file_patches(base, target):
     result = []
     for path in sorted(base.files.keys() | target.files.keys()):
         old, new = base.files.get(path), target.files.get(path)
-        if old == new:
+        if logical_bytes(old) == logical_bytes(new):
             continue
         entry = {
             "path": path,
             "kind": "added" if old is None else "removed" if new is None else "changed",
         }
         try:
-            a, b = (old or b"").decode("utf8"), (new or b"").decode("utf8")
+            a, b = (logical_text(raw.decode("utf8")) for raw in [old or b"", new or b""])
             left, right = physical_lines(a), physical_lines(b)
             fromfile = "/dev/null" if old is None else "a/" + path
             tofile = "/dev/null" if new is None else "b/" + path
@@ -206,8 +207,8 @@ def render_diff(result, summary=False):
         if c["fields"]:
             lines.append("  Changed: " + ", ".join(c["fields"]))
     if not summary:
-        # Canonical patches contain frontmatter and body. Their complete set also
-        # includes comment/whitespace changes with no semantic node modification.
+        # Logical patches contain frontmatter/body and retain comment/whitespace
+        # changes. Newline encodings are storage details; raw reads retain bytes.
         path_nodes = {n["path"]: n for n in [*old.values(), *new.values()]}
         for f in result["file_changes"]:
             n = path_nodes.get(f["path"])
@@ -217,13 +218,6 @@ def render_diff(result, summary=False):
             ]
             if n and n["id"] not in changes:
                 lines.append("  File-only change; canonical node meaning unchanged.")
-            endings = f.get("line_endings")
-
-            def ending_style(value):
-                return ([k for k in ("crlf", "lf", "cr") if value[k]], value["final_newline"])
-
-            if endings and ending_style(endings["before"]) != ending_style(endings["after"]):
-                lines.append("  Line endings/newline: " + json_text(endings))
             lines.append(f.get("patch", f.get("note", "")))
         if result["added_edges"] or result["removed_edges"]:
             lines += ["", "Relationship changes:"]

@@ -16,7 +16,7 @@ or uncertainty hints. Quote unusual paths, including commas, as in individual so
 readings; range components retain their existing spelling.
 
 The --human flag preserves each binding's logical lines, blank lines, indentation,
-tabs and trailing spaces, normalizing CRLF for readable output and applying shared
+tabs and trailing spaces, normalizing node newline encodings for readable output and applying shared
 terminal-control escaping. It lists each source occurrence on its own "sources: "
 line. Current nodes retain target bodies and deleted nodes retain base bodies in
 both presentations. Full lowercase headers, sparse hints, root alignment, compact

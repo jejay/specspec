@@ -164,7 +164,7 @@ specspec update ID --parent FIRST_ID --parent SECOND_ID
 
 Repeated `-m` joins literal paragraphs with a blank line; `update ID -m TEXT` replaces the whole body. `update --parent` supplies the complete parent set. Implementation leaves have requirement parents.
 
-Each replacement OLD must identify one original-body span across all supported layouts; repeated pairs must be disjoint and do not cascade. Matching tolerates LF/CRLF/CR and ordinary Markdown prose soft wrapping, not changes to words, case, Unicode normalization, indentation or structural boundaries. NEW is literal, including its line endings; unmatched text stays unchanged. Ambiguity or analysis limits reject the candidate. Whole-body input remains available, including integration `--body FILE|-` for UTF-8 files/stdin and arguments too large for the shell.
+Each replacement OLD must identify one original-body span across all supported layouts; repeated pairs must be disjoint and do not cascade. Matching tolerates LF/CRLF/CR and ordinary Markdown prose soft wrapping, not changes to words, case, Unicode normalization, indentation or structural boundaries. NEW is literal in content; newline encoding follows the existing document (LF for new nodes). Unmatched logical text stays unchanged. Ambiguity or analysis limits reject the candidate. Whole-body input remains available, including integration `--body FILE|-` for UTF-8 files/stdin and arguments too large for the shell.
 
 Combine add/update/delete for one candidate and recoverable transaction. `--as goal` names a new node locally and quoted `--parent '$goal'` links it, including forward references. Preview IDs are not reservations.
 
@@ -186,7 +186,9 @@ specspec diff --with-context --node ID
 specspec check --sources --warnings-as-errors
 ```
 
-Inspect full canonical hunks with `diff` and artifact patches with Git; query hints are orientation, not a patch review. Deleted HEAD nodes remain D through staging and vanish from the default comparison after commit. Earlier text remains available through explicit historical comparisons. There are no stored approval statuses, confidence scores or parent-review gates.
+Node reads/diffs compare logical LF text independently of Git settings. Existing-document writes/native plans retain local newline style; new nodes use LF. Spaces, blank lines and final-newline presence stay meaningful. Raw query, byte guards and recovery retain exact physical evidence. Leave repository Git settings and attributes under owner control.
+
+Inspect full logical canonical hunks with `diff` and artifact patches with Git; query hints are orientation, not a patch review. Deleted HEAD nodes remain D through staging and vanish from the default comparison after commit. Earlier text remains available through explicit historical comparisons. There are no stored approval statuses, confidence scores or parent-review gates.
 
 Before an authorized commit, stage the complete intended graph/artifact slice and run:
 

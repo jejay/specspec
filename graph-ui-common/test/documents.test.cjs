@@ -68,7 +68,8 @@ test('project-wide mutations refuse dirty open documents and unknown node editor
 test('native document line endings are respected without an unnecessary overwrite after undo', async () => {
   const f = fixture(); f.doc.text = '# Same\r\n'; f.doc.eol = '\r\n'; f.doc.version = 4;
   f.adapter.lastAppliedVersion = 2;
-  await f.project.edit(f.adapter, { ...edit('# Same\n'), documentVersion: 2 });
+  for (const body of ['# Same\n', '# Same\r\n', '# Same\r'])
+    await f.project.edit(f.adapter, { ...edit(body), documentVersion: 2 });
   assert.equal(f.doc.text, '# Same\r\n'); assert.equal(f.doc.dirty, false); assert.equal(f.confirmations.length, 0);
   assert.equal(JSON.parse(f.calls[0].input).edit.body, '# Same\r\n');
 });

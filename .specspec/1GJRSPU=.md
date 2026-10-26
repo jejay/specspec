@@ -13,11 +13,11 @@ match under the default line-ending and prose-wrapping comparison rules. Include
 overlapping occurrences and all permitted layouts when checking uniqueness. All
 pairs refer to that same original body, have disjoint matched ranges and produce
 one candidate without cascading into inserted text. NEW may be empty to remove a
-passage, and is always inserted literally.
+passage, and retains literal content with newline encoding adapted to the document.
 
-Preserve untouched body characters, line endings and final-newline state literally.
-Words, case and Unicode characters remain exact; comparison alone tolerates standard
-line endings and Markdown prose soft breaks. Match and transform under the existing
+Preserve untouched logical body characters and final-newline state. Words, case,
+Unicode, indentation and blank lines remain exact. OLD comparison tolerates standard
+line endings and Markdown prose soft breaks; storage adapts newline encoding only. Match and transform under the existing
 writer lock against the fresh identified node. Parents, sources and other metadata
 retain their existing separate edit owners. Missing, multiple or overlapping matches
 reject the complete invocation before canonical writes, with a target diagnostic.

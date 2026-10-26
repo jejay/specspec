@@ -27,7 +27,8 @@ unknown fields, duplicate YAML keys, tags/aliases, coerced types, unsafe filenam
 invalid UTF-8 and files exceeding 1 MiB produce explicit diagnostics. Direct regular
 node files are the canonical entries. Source-region syntax is specified separately.
 
-Preserve unaffected frontmatter comments and body bytes on targeted writes.
+Preserve unaffected frontmatter comments and logical body content on targeted writes.
+Retain existing document newline style; new documents use LF.
 Normalize tool-controlled fields when writing them. CLI arguments and hosts retain full IDs, including
 hyphen-leading identities; VS Code associates `**/.specspec/???????=.md` and verifies
 the actual resource through the backend.

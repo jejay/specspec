@@ -179,9 +179,11 @@ def test_full_diff_exposes_line_endings_and_final_newlines(workspace, after):
     assert result.exit_code == 0, result.output
     if after == b"# Root\n\n":
         assert "\n+\n" in result.stdout
+    assert "Line endings/newline:" not in result.stdout
+    if after == b"# Root\r\n":
+        assert "File patch:" not in result.stdout
     else:
-        assert "Line endings/newline:" in result.stdout
-    assert "File patch:" in result.stdout
+        assert "File patch:" in result.stdout
     if not after.endswith(b"\n"):
         assert "No newline at end of file" in result.stdout
 

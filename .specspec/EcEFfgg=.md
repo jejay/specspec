@@ -27,10 +27,11 @@ back to exact original character boundaries before overlap checks, byte-size che
 and construction. Ambiguous matches reject rather than preferring an exact-layout
 occurrence. Every pair still refers to the same original body.
 
-NEW is literal and unmatched original bytes remain unchanged. Comparison normalization
-never reformats the entire body or adjusts NEW. Equal OLD/NEW may deliberately change
-the matched passage's physical layout when OLD matched through an equivalent layout.
-Apply canonical size checks to the actual consumed span, including original CRLF bytes.
+NEW retains literal content and unmatched logical characters remain unchanged.
+Comparison normalization preserves paragraph layout. Serialization adapts newline
+encoding to the target document; equal OLD/NEW can change a matched prose wrap.
+Apply bounds to the actual target-style replacement result and serialized node,
+with bounded construction and original-span overlap/uniqueness checks.
 
 Bound Markdown line/token analysis, inline nesting and candidate-comparison work.
 Exhausted analysis rejects the invocation explicitly instead of selecting from an

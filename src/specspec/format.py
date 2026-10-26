@@ -24,6 +24,7 @@ from .model import (
     SpecError,
     SpecNode,
 )
+from .node_text import document_eol, stored_text
 from .source_schema import MAX_REFERENCES, validate_source
 from .source_schema import safe_source_path as safe_source_path
 
@@ -216,7 +217,13 @@ def serialize(node: SpecNode, original: bytes | None = None) -> bytes:
             data[key] = value
     stream = io.StringIO()
     yaml_parser().dump(data, stream)
-    result = ("---\n" + stream.getvalue() + "---\n" + node.body).encode("utf-8")
+    eol = document_eol(original)
+    result = (
+        f"---{eol}"
+        + stored_text(stream.getvalue(), eol)
+        + f"---{eol}"
+        + stored_text(node.body, eol)
+    ).encode("utf-8")
     # Apply the same schema/size limits to generated documents before writing.
     header, body = read_document(result, node.path)
     parse_node(header, body, node.path)

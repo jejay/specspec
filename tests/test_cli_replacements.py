@@ -69,8 +69,10 @@ def test_singleton_preserves_untouched_body_and_frontmatter(workspace, ending):
     _, id = add_node(root, "requirement", [parent], body)
     path = root / f".specspec/{id}.md"
     header, marker, raw_body = path.read_bytes().partition(b"\n---\n")
-    header = header.replace(b"parents:", b"# Owner comment\nparents:")
-    path.write_bytes(header + marker + raw_body)
+    header = header.replace(b"parents:", b"# Owner comment\nparents:").replace(b"\n", b"\r\n")
+    marker = marker.replace(b"\n", b"\r\n")
+    body = raw_body.decode().replace("\n", "\r\n")
+    path.write_bytes(header + marker + body.encode("utf8"))
     result, data = call(root, "update", id, "--replace", "Old 🐕 passage.", "New 🐕 reasoning.")
     assert result.exit_code == 0 and data["result"]["applied"], result.output
     assert data["api_version"] == 7
@@ -552,6 +554,8 @@ def test_real_process_preserves_unicode_multiline_replacement_arguments(workspac
     old = 'Old 🐕\r\n"quoted" $value and \\.'
     new = "New 🐕\r\n`literal` and spaces.  "
     _, id = add_node(root, "requirement", [parent], "# Body\r\n" + old)
+    path = root / f".specspec/{id}.md"
+    path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
     result = subprocess.run(
         [
             sys.executable,

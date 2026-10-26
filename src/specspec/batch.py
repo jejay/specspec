@@ -10,6 +10,7 @@ from .body_replacements import MAX_REPLACEMENTS, input_bytes, replace_body
 from .deletion import deletion_plan, deletion_warnings
 from .inspection import findings, walks
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
+from .node_text import document_eol
 from .workspace import mutate, new_node, require_node, serialize
 
 MAX_BATCH_BYTES = 16 * 1024 * 1024
@@ -168,7 +169,12 @@ def apply_edits(root, edits, *, require_valid=False, dry_run=False, confirm=None
             candidate = replace(
                 node,
                 body=(
-                    replace_body(node.body, edit["replacements"], path=node.path)
+                    replace_body(
+                        node.body,
+                        edit["replacements"],
+                        path=node.path,
+                        eol=document_eol(before.files.get(node.path)),
+                    )
                     if "replacements" in edit
                     else edit.get("body", node.body)
                 ),

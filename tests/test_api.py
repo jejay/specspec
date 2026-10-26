@@ -3,6 +3,7 @@ import json
 from click.testing import CliRunner
 
 from specspec.cli import main
+from specspec.node_text import logical_text
 from specspec.workspace import load_snapshot
 
 
@@ -15,8 +16,8 @@ def test_stdin_is_utf8_and_preserves_binding_whitespace(tmp_path):
     )
     assert result.exit_code == 0, result.output
     node = load_snapshot(tmp_path).nodes[0]
-    assert node.body == body
-    assert (tmp_path / node.path).read_bytes().endswith(body.encode("utf-8"))
+    assert node.body == logical_text(body)
+    assert (tmp_path / node.path).read_bytes().endswith(logical_text(body).encode("utf-8"))
 
 
 def test_budget_covers_serialized_json_response(workspace):

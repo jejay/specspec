@@ -43,7 +43,7 @@ literal-only changes. Source-changed identifies known contract changes and
 ancestors in both original graphs, independently of
 shared conservative file-impact facts. Normal records and permitted code edits
 stay unmarked. Query keeps summaries and reconstructed original graphs; diff owns
-canonical patch review and raw LF-exact textual changes.
+logical canonical patch review; raw query owns exact physical documents.
 
 query_sources.py retains exact declaration multisets and cached shared readers.
 Known committed source blobs and anchors populate the existing per-invocation cache
@@ -72,13 +72,13 @@ caching, original-graph ancestor ripple, declaration independence and historical
 selection. Plain text/metadata, source facts, exact diff application, saved-buffer
 semantics, read-only Git/files and legacy pipe safety retain regression coverage.
 
-body_line normalizes CRLF and replaces single LF runs with a space and longer runs
+body_line shares logical newline normalization and replaces single LF runs with a space and longer runs
 with " ¶ ", without truncating text or changing original bodies. The readable
 renderer spells out types and change hints, carries revisions/notes without a legend,
 and aligns root content at column zero. Golden and newline-run matrices cover
 paragraphs, headless text, Markdown markers, other whitespace, controls and deleted
 bodies. Complete logical bodies remain reconstructible in JSON with CRLF normalized to LF;
-raw query documents and diff retain literal canonical layout. The
+raw query documents retain literal canonical layout and diff retains logical layout. The
 one-line projection is the ordinary reading behavior; --human retains logical body lines.
 
 query_lines/render_query accept a presentation-only human option; the CLI forwards

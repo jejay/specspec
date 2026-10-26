@@ -45,8 +45,9 @@ case-sensitive. Hyphen-leading IDs remain accepted as full node arguments.
 `add --type implementation` selects an implementation leaf. Repeated `--parent`
 values specify the complete replacement set on update. The manifesto keeps its
 empty parents; ordinary nodes require parents. `-m/--message` supplies literal body
-text. One value is preserved exactly; repeated values join with exactly two LF
-characters, without trimming supplied whitespace or applying Git message cleanup.
+text. Repeated values join with one blank line, without trimming supplied whitespace
+or applying Git message cleanup. Logical line boundaries are preserved; their encoding
+follows the existing document's style, or LF for a new node.
 Markdown headings, Unicode and actual newlines remain text. `-` and filenames are
 literal text too; backslash-n is not automatically expanded. Quote for your shell;
 programmatic callers should pass an argument array with no shell. Omitting body-edit
@@ -88,12 +89,13 @@ the whole invocation. An exact-layout match does not win over another admissible
 wrapped occurrence. Supply context to disambiguate.
 
 All pairs refer to the same original body, never preceding insertions, and their
-actual matched ranges must be disjoint. NEW is always inserted literally; empty NEW
-deletes the passage. Even equal OLD/NEW may change a tolerantly matched passage's
-physical wrapping/EOLs. All unmatched body characters and line endings stay exact;
+actual matched ranges must be disjoint. NEW retains literal content; empty NEW
+deletes the passage. Newline encoding follows the target document, independently of
+Git settings. Equal OLD/NEW can change a tolerantly matched prose wrap. Unmatched
+logical characters, indentation, spaces and blank lines stay exact;
 there is no whole-body reflow, regex, fuzzy spelling or backslash-n expansion.
 The resulting node must satisfy the ordinary schema and size limits. Raw JSON
-(`show NODE_ID --raw --json`) remains available for exact document text and structure.
+(`query NODE_ID --raw --json`) remains available for exact document text and structure.
 Frontmatter is outside the matching surface; parent/source flags retain their
 separate meanings and can accompany replacements.
 
@@ -173,8 +175,8 @@ broken/uncertain/restored hints. `--human` keeps logical body lines and lists so
 occurrences individually, without changing parents, source facts or revision selection.
 `query --json` retains reconstructible API-7 records and complete source facts, with
 file-change summaries rather than patches. Use `diff` for exact text modifications.
-Parsed JSON preserves logical body layout with CRLF normalized to LF. Node files,
-raw query documents and literal diffs retain physical line endings. `--human --json` is identical
+Parsed JSON preserves logical body layout with CRLF/CR normalized to LF. Raw query
+retains physical documents; normal diffs compare logical newline boundaries. `--human --json` is identical
 to `--json`. Optional `query [NODE_ID]` starts at that current/deleted node, otherwise
 metric selections start at the target manifesto. `--min-distance`/`--max-distance`
 admit values <= their integer cutoff; `--influence` admits self-inclusive counts >=
@@ -211,8 +213,8 @@ have distinct meanings.
 ## Full review diff
 
 Diff groups nodes by stable ID and readable heading, identifies type/parent/source/
-metadata changes, and shows **all changed canonical-file hunks** including YAML,
-body text, comments, whitespace, line endings and final newlines. Added/deleted files
+metadata changes, and shows **all changed logical canonical-text hunks** including
+YAML, body text, comments, whitespace and final-newline presence. Added/deleted files
 are shown completely. A relationship overview labels both ends with full IDs/titles.
 `diff --summary` is explicitly abridged; it is not the default. Git supplies directly
 applicable byte patches. Linked-code file impact is a separate informational section,
@@ -227,6 +229,24 @@ Repeated `--node ID` focuses it; advanced `--max-bytes N` bounds the actual enco
 result. Context supplies evidence, never a determination of owner motive or semantic
 justification. Full canonical patches remain present unless --summary is explicit.
 
+## Newlines independent of Git configuration
+
+LF, CRLF and CR represent the same logical node line boundaries. Reads and normal
+diffs ignore encoding-only differences without changing saved files. Diff patches
+use logical LF lines and omit the newline-counter dump. Words, case, indentation,
+trailing spaces, blank-line counts and EOF termination remain significant; EOF
+changes use ordinary patch markers. `query --raw` supplies exact physical bytes.
+
+Existing-document managed writes and native plans retain the newline convention
+of the opening frontmatter delimiter; new nodes use LF. This also applies to
+message/file/stdin body inputs and replacement NEW. Actual serialized byte limits
+still apply. Original-byte checks, journals, recovery and immutable Git objects
+remain byte-exact. Linked source files keep their own formatting and contracts.
+
+No Git settings, attributes, hooks or index entries are installed or changed to
+implement this policy. It works with repository/user checkout settings as they are;
+no repo-specific clean/smudge filters run for application text normalization.
+
 ## Mutation receipts
 
 Default mutation output identifies nodes, rather than their backing Markdown files.
@@ -239,14 +259,14 @@ Modified: LmnOpqA=
 Deleted: RstUvwA=
 ```
 
-`init` reports its first node under `Added` too. Updates whose proposed stored bytes
-match the saved bytes report `Unchanged`. Body, parent, source and selected-passage
-updates use the same rule, including physical layout-only changes. These labels
+`init` reports its first node under `Added` too. Updates whose proposed logical text
+matches the saved logical text report `Unchanged`, including encoding-only changes.
+Body, parent, source and selected-passage updates use the same rule. These labels
 compare the invocation's locked original and candidate contents, independently of
 Git status against HEAD. Groups appear in Added/Modified/Deleted/Unchanged order;
 IDs retain the writer's target order within each group.
 
-Dry runs use `Would add`, `Would modify` and `Would delete`; identical bytes still
+Dry runs use `Would add`, `Would modify` and `Would delete`; equal logical text still
 report `Unchanged`. Generated preview IDs remain unreserved. A rejected operation
 prints diagnostics rather than a completed-change summary. A deletion requiring
 consent can show its `Would delete` proposal while refusing to remove anything.
@@ -267,8 +287,9 @@ no-op update targets; the text action groups do not add protocol fields.
 Query JSON returns complete normalized selected target/before records; parents encode
 relationships without a redundant edges array. Mutation receipts return changed IDs,
 ID/path nodes and affected IDs. Delete additionally retains its complete assessed plan.
-Node-record bodies use LF normalization; canonical files and native before/after plans
-preserve their original body/EOL bytes. Full diff patches expose literal file changes.
+Node-record bodies use LF normalization. Raw documents and native before/after plans
+retain physical evidence. Full diff patches expose logical canonical-text changes;
+existing structured patch records retain physical layout metadata where applicable.
 
 Comparison JSON contains one `target` snapshot, base metadata, a `before` array of
 previous records only for differing/deleted nodes, ID-based `changes`, added/removed

@@ -19,6 +19,7 @@ from specspec.cli import main
 from specspec.format import serialize
 from specspec.graph import build_graph
 from specspec.model import FORMAT_VERSION, SpecNode
+from specspec.node_text import logical_text
 from specspec.output import safe_text
 from specspec.query import (
     body_line,
@@ -447,7 +448,7 @@ def test_deep_overlay_remains_iterative():
         ("one\r\ntwo\r\n\r\nthree", "one two ¶ three"),
         ("# Head\r\n\r\n  nested\ttext  \r\n", "# Head ¶   nested\ttext   "),
         ("literal \\u202e\n", "literal \\u202e "),
-        ("a\rb\u2028c\u2029\n", "a\rb\u2028c\u2029 "),
+        ("a\rb\u2028c\u2029\n", "a b\u2028c\u2029 "),
         ("\nleading\n\n\n", " leading ¶ "),
         ("first\n \nlast", "first   last"),
         ("- one\n- two\n", "- one - two "),
@@ -459,9 +460,10 @@ def test_body_presentation_flattens_only_the_default_and_preserves_human_lines(
 ):
     g = graph([node(0, kind="manifesto", body=body)])
     query = comparison(g)
+    original_body = query.target.graph.nodes[identity(0)].body
     text = render_query(query, human=human)
     assert body_line(body) == expected and "\n" not in expected
-    body_rows = body.replace("\r\n", "\n").split("\n") if human else [expected]
+    body_rows = logical_text(body).split("\n") if human else [expected]
     assert text.split("\n") == [
         "HEAD → workspace",
         f"manifesto {identity(0)}",
@@ -469,7 +471,7 @@ def test_body_presentation_flattens_only_the_default_and_preserves_human_lines(
         "",
         *body_rows,
     ]
-    assert query.target.graph.nodes[identity(0)].body == body
+    assert query.target.graph.nodes[identity(0)].body == original_body
     assert "body @@" not in text and "No newline at end of file" not in text
 
 
@@ -558,7 +560,7 @@ def test_comment_only_eol_changes_have_literal_not_fake_semantic_status(workspac
     assert "[file-only]" in render_query(result)
 
 
-def test_cr_only_frontmatter_stays_hidden_behind_a_literal_change_hint(workspace):
+def test_cr_only_encoding_change_is_quiet_without_rewriting_the_file(workspace):
     root, parent = workspace
     setup_repository(root)
     n = load_snapshot(root).graph.nodes[parent]
@@ -566,8 +568,9 @@ def test_cr_only_frontmatter_stays_hidden_behind_a_literal_change_hint(workspace
     path.write_bytes(path.read_bytes().replace(b"\n", b"\r"))
     result = read_query(root)
     text = render_query(result)
-    assert "@@" not in text and "[file-only]" not in text  # Bare CR also changes the body.
-    assert "[modified]" in text and "\\u000d" in safe_text(text)
+    assert "@@" not in text and "[file-only]" not in text
+    assert "[modified]" not in text and "\\u000d" not in safe_text(text)
+    assert b"\r" in path.read_bytes() and b"\n" not in path.read_bytes()
 
 
 @pytest.mark.parametrize("human", [False, True])

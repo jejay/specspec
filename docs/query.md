@@ -160,7 +160,7 @@ than being mislabeled as a known `source-changed` change.
 
 Every body uses the same untruncated one-line projection by default:
 
-- Normalize CRLF to LF.
+- Normalize CRLF and CR to LF.
 - Replace a single LF with one space, keeping adjacent words separate.
 - Replace each run of two or more consecutive LFs with ` ¶ `.
 - Apply the rule to leading/trailing runs too; retain every other character,
@@ -168,8 +168,8 @@ Every body uses the same untruncated one-line projection by default:
 
 This approximates Markdown soft breaks and paragraph separation, not full Markdown
 rendering: lists, code and hard breaks are flattened by the same literal rule, and
-whitespace between LFs interrupts a run. Original bodies remain exact in JSON and
-node files; `diff` supplies literal changes. `--human` preserves logical body lines,
+whitespace between LFs interrupts a run. JSON preserves logical bodies; raw query
+preserves physical documents. `diff` supplies logical canonical-text changes. `--human` preserves logical body lines,
 blank lines, indentation, tabs and trailing spaces instead of applying the one-line
 projection. CRLF is normalized to LF for display. Both presentations use shared
 visible terminal-control escaping and retain full content with no truncation.

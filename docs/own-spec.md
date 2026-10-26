@@ -119,6 +119,19 @@ checks staged blobs and compares full IDs/edges/sources without checkout.
 Owner-configured hooks/CI call `check --staged`; adding `--sources` assesses staged
 code mapping/retention. Hook files and Git operations remain under owner control.
 
+## Logical node text across Git newline policies
+
+[Checkout-independent meaning](../.specspec/w7A25ZA=.md) and the
+[logical/newline-storage policy](../.specspec/qTT_OhY=.md) separate node content from
+LF/CRLF/CR encoding without configuring Git or adding attributes. Existing-document
+writes and native plans retain the opening delimiter's convention; new nodes use LF.
+Words, indentation, spaces, blank lines and EOF termination remain meaningful.
+Normal diffs and query hints ignore encoding-only differences and use logical LF
+patches without newline-counter dumps. Raw reads, guards, journals/recovery, Git
+objects and cache verification remain byte-exact. Linked source files retain their
+own formatting contracts. Node fields/accepted encodings and API-7 field grammar
+remain unchanged; existing maintained LF receipts retain their contents.
+
 ## Shared host experience
 
 [One renderer/session](../.specspec/YOPhqYc=.md) and a
@@ -201,7 +214,7 @@ matches on the fresh original body retain unrelated text; every step shares the
 same candidate and recovery boundary. [Realization](../.specspec/O0xeA4Y=.md) links
 the matcher, preflight and existing writer. The [default layout choice](../.specspec/EcEFfgg=.md)
 tolerates line endings and source-mapped prose soft breaks while preserving Markdown
-structure, all-layout uniqueness and literal NEW. It adds no matching options.
+structure, all-layout uniqueness and content-literal NEW with target-document EOL. It adds no matching options.
 [Replacement evidence](investigations/exact-replacements.md) records parser/work
 bounds, original source mapping, stale-match rejection and verification scope.
 [One inspection vocabulary](../.specspec/2FfVd-Y=.md) and
@@ -212,8 +225,8 @@ safety in every help output. [Evidence](investigations/cli-help.md) records the
 host preflight and maintained-history coordination.
 [Grouped mutation feedback](../.specspec/6p7T7CY=.md) reports Added, Modified,
 Deleted and Unchanged as unpadded comma-separated full IDs, with hypothetical preview
-labels. The writer classifies locked original/candidate bytes independently of Git
-status; init adds its first node. Structured ID/path receipts retain API 7.
+labels. The writer classifies locked original/candidate logical text independently
+of Git status; init adds its first node. Structured ID/path receipts retain API 7.
 [CLI/review implementation](../.specspec/SF12qpA=.md)
 and [shared host implementation](../.specspec/GG_koyg=.md)
 map the code and verification seams.
@@ -228,7 +241,8 @@ keeps two-column rails and every direct parent in full headers. The
 uses spotlight-style HEAD/workspace defaults, complete current/base binding content
 and sparse worded change hints. The [default one-line choice](../.specspec/AY1g-sU=.md)
 joins single newlines with a space and longer runs with ` ¶ `; JSON preserves logical
-body layout with CRLF normalized to LF, while raw query/diff retains physical bytes. The [compact/human presentation choice](../.specspec/B6y6hgo=.md)
+body layout with newline encodings normalized to LF. Raw query retains physical
+bytes, while ordinary diff compares logical canonical text. The [compact/human presentation choice](../.specspec/B6y6hgo=.md)
 groups sources into one comma-separated line by default; `--human` keeps logical
 body lines and lists sources individually. Parent IDs always use comma-space
 separators. Both modes retain the same facts and JSON. Lowercase type/status words
@@ -462,7 +476,7 @@ location across the backend, hosts and every maintained Gantt revision. Original
 owner input remains archival, while current guides use the installed global command.
 [Pinned-dependency scope](../.specspec/Q7FDb7A=.md) separates local packaging from
 unqualified publishing authentication. [Logical versus physical readings](../.specspec/MmfPuhY=.md)
-make API-7 CRLF normalization explicit while raw documents preserve bytes.
+keep logical LF records and target-style writes distinct from byte-exact raw reads.
 [Release realization](../.specspec/przmxmo=.md) and
 [guide realization](../.specspec/nxNOTwc=.md) map the packaging, documentation,
 initialization and artifact-host verification. [Release procedure](releasing.md)

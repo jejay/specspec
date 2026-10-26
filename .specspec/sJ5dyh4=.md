@@ -15,7 +15,7 @@ budgets count the actual representation and fail rather than truncate required t
 
 Mutations identify changed nodes by full ID and report affected scope and warnings;
 checks report counts and diagnostics. Keep stdout for results and stderr for human diagnostics. Escape
-terminal control characters visibly without executing project text. Preserve original
-UTF-8/body/EOL bytes in canonical files and native before/after plans. Normalized
-node records use LF; literal review patches identify file-only EOL changes. Machine mode is explicit
+terminal control characters visibly without executing project text. Preserve meaningful content whitespace and native before/after byte ownership.
+Logical node records and review patches use LF; encoding-only changes remain quiet.
+Raw reads, original-byte transaction checks and recovery retain physical evidence. Machine mode is explicit
 --json; pipes do not silently switch representation and there is no LLM-only interface.

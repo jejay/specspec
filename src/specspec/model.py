@@ -7,6 +7,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from .node_text import logical_text
+
 # Five octets encode to seven Base64url symbols and one '='. The last
 # symbol has four significant bits and two zero pad bits (RFC 4648).
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$")
@@ -54,7 +56,7 @@ class SpecNode:
             "id": self.id,
             "type": self.type,
             "parents": sorted(self.parents),
-            "body": self.body.replace("\r\n", "\n"),
+            "body": logical_text(self.body),
             "sources": sorted(self.sources, key=lambda s: json.dumps(s, sort_keys=True)),
             "extensions": self.extensions,
         }

@@ -11,6 +11,7 @@ import pytest
 from click.testing import CliRunner
 
 from specspec import cli, edit_cli
+from specspec.node_text import logical_text
 from specspec.workspace import add_node, initialize, load_snapshot, recover
 
 
@@ -99,7 +100,7 @@ def test_delete_add_add_update_with_shared_aliases_is_one_transaction(workspace,
     # The deletion-only assessment is distinct from the complete repaired candidate.
     assert not receipt["deletion_plan"]["graph_valid"]
     assert saved.graph.nodes[survivor].parents == [aliases["goal"], peer]
-    assert saved.graph.nodes[survivor].body == "# Retained\r\n"
+    assert saved.graph.nodes[survivor].body == "# Retained\n"
     assert saved.graph.nodes[aliases["detail"]].parents == [aliases["goal"]]
     assert all(b"$goal" not in raw for raw in saved.files.values())
     assert len(journals) == 1 and len(journals[0]["files"]) == 4
@@ -340,7 +341,9 @@ def test_hidden_body_files_and_one_stdin_body_can_join_a_chain(workspace, tmp_pa
     )
     assert result.exit_code == 0, result.output
     saved = load_snapshot(root)
-    assert all(saved.graph.nodes[id].body == body for id in data["result"]["changed_ids"])
+    assert all(
+        saved.graph.nodes[id].body == logical_text(body) for id in data["result"]["changed_ids"]
+    )
     before = saved.files
     result, data = call(
         root,
@@ -596,5 +599,5 @@ def test_real_argv_chain_preserves_unicode_crlf_and_aliases(workspace, encoding)
     assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
     data = json.loads(result.stdout)["result"]
     saved = load_snapshot(root)
-    assert saved.graph.nodes[data["aliases"]["goal"]].body == body
+    assert saved.graph.nodes[data["aliases"]["goal"]].body == logical_text(body)
     assert saved.graph.nodes[data["changed_ids"][1]].parents == [data["aliases"]["goal"]]

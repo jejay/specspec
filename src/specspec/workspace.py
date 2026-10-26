@@ -17,6 +17,7 @@ from typing import Any
 from .format import parse_node, read_document, serialize
 from .graph import Graph, build_graph
 from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
+from .node_text import logical_bytes
 
 SPEC_DIR = ".specspec"
 STATE_DIR = ".specspec-local"
@@ -441,7 +442,7 @@ def mutate(
         actions: dict[str, list[str]] = {}
         for path, raw in changes.items():
             original = before.files.get(path)
-            if raw == original:
+            if logical_bytes(raw) == logical_bytes(original):
                 action = "unchanged"
             elif original is None:
                 action = "added"

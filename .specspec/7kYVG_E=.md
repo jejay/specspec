@@ -13,9 +13,10 @@ text hunks with context; show added/deleted records completely. Expose exact par
 type, source-reference and extension changes and an intelligible added/
 removed relationship overview labelled with IDs and revision-appropriate headings.
 
-Represent every canonical file change, including frontmatter comments, whitespace,
-line-ending and final-newline-only edits. Literal unified canonical-file patches may
-accompany the semantic node presentation so normalization never hides a change. These
+Represent every meaningful canonical text change, including frontmatter comments,
+whitespace and final-newline-only edits. Unified canonical-text patches use logical
+LF lines; newline-encoding-only differences are equivalent. Raw query retains exact
+physical documents while full patches retain every other content change. These
 are review records; ordinary Git supplies directly applicable byte patches. A summary
 alone is explicitly requested, not substituted for the full default. Invalid or
 unavailable revisions carry actionable diagnostics and incomplete impact, never a

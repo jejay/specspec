@@ -262,6 +262,8 @@ def test_ambiguity_after_normalization_cancels_deletions_and_creation(workspace)
 def test_tolerant_matching_reuses_alias_chains_and_preserves_literal_new(workspace):
     root, parent = workspace
     _, id = add_node(root, "requirement", [parent], "# Heading\r\n\r\nalpha\r\nbeta\r\n")
+    path = root / f".specspec/{id}.md"
+    path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
     before = load_snapshot(root).files
     args = [
         "add",
@@ -287,7 +289,7 @@ def test_tolerant_matching_reuses_alias_chains_and_preserves_literal_new(workspa
     assert result.exit_code == 0 and data["result"]["graph_valid"]
     node = load_snapshot(root).graph.nodes[id]
     assert node.parents == [data["result"]["aliases"]["goal"]]
-    assert node.body == "# Heading\r\n\r\nNEW\n  \r\n"
+    assert node.body == "# Heading\r\n\r\nNEW\r\n  \r\n"
 
 
 def test_markdown_dependency_is_lazy_for_ordinary_imports_and_word_replacements():
@@ -309,6 +311,8 @@ assert 'markdown_it' in sys.modules
 def test_real_windows_argv_matches_wrapped_unicode_and_keeps_new_literal(workspace, encoding):
     root, parent = workspace
     _, id = add_node(root, "requirement", [parent], "# Heading\r\n\r\nOld 🐕\r\npassage.\r\n")
+    path = root / f".specspec/{id}.md"
+    path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
     new = 'New 🐕\n"literal" $value.  '
     result = subprocess.run(
         [
@@ -331,4 +335,7 @@ def test_real_windows_argv_matches_wrapped_unicode_and_keeps_new_literal(workspa
     )
     assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
     assert json.loads(result.stdout)["api_version"] == 7
-    assert load_snapshot(root).graph.nodes[id].body == "# Heading\r\n\r\n" + new + "\r\n"
+    assert (
+        load_snapshot(root).graph.nodes[id].body
+        == "# Heading\r\n\r\n" + new.replace("\n", "\r\n") + "\r\n"
+    )
