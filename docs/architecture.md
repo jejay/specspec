@@ -106,7 +106,11 @@ Ordinary people/agent authoring supplies literal `-m/--message` body arguments a
 can combine add/update/delete steps with local `--as` / `$name` parent aliases.
 The complete editing invocation is parsed before input reads/writes and becomes one
 candidate/consent/recovery scope; other commands stay standalone. Hidden
-`--body FILE|-` accommodates bulk bodies. The UI's single-edit argv/stdin and native
+`--body FILE|-` accommodates bulk bodies. Repeatable `update --replace OLD NEW`
+selects unique, disjoint original-body passages under the writer lock;
+[`body_replacements.py`](../src/specspec/body_replacements.py) validates exact spans
+and bounds the result before the shared planner serializes its candidate. OLD/NEW
+material shares the body-input budget. The UI's single-edit argv/stdin and native
 persistence owners above are unchanged. OS command-line limits remain independent of bulk limits.
 
 The CLI and library run in the **same Python process**. `cli.py` parses inputs,

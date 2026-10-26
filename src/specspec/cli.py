@@ -14,7 +14,8 @@ from . import __version__, wire
 from .annotation_commands import register as register_annotations
 from .application import compare
 from .application import request as application_request
-from .batch import apply_edits, count_body_bytes, prepare
+from .batch import apply_edits, count_body_bytes, input_budget, prepare
+from .body_replacements import input_bytes
 from .deletion import deletion_plan, deletion_warnings
 from .edit_cli import EDIT_COMMANDS, EditInvocation
 from .editor import MAX_REQUEST_BYTES
@@ -210,6 +211,18 @@ def edit_options(function):
 def edit_input(name, params, *, read=True):
     if name == "delete":
         return {"op": name, "ids": list(params["ids"])}
+    replacements = params.get("replacements", ())
+    if replacements and (params["messages"] or params["body"] is not None):
+        raise SpecError(
+            [
+                Diagnostic(
+                    "ARGUMENT", "Use --replace, --message or integration --body, not together."
+                )
+            ],
+            2,
+        )
+    if replacements:
+        input_bytes(replacements)
     text = body_input(params["messages"], params["body"], required=name == "add", read=read)
     parents = parent_input(params["parents"], params["parents_json"])
     sources = source_input(params["sources"])
@@ -222,12 +235,25 @@ def edit_input(name, params, *, read=True):
         edit["id"] = params["node_id"]
         if parents is not None:
             edit["parents"] = parents
-        if text is None and params["body"] is None and parents is None and sources is None:
+        if (
+            text is None
+            and params["body"] is None
+            and not replacements
+            and parents is None
+            and sources is None
+        ):
             raise SpecError(
-                [Diagnostic("ARGUMENT", "Supply --message, --parent or advanced --sources.")], 2
+                [
+                    Diagnostic(
+                        "ARGUMENT", "Supply --message, --replace, --parent or advanced --sources."
+                    )
+                ],
+                2,
             )
     if text is not None:
         edit["body"] = text
+    if replacements:
+        edit["replacements"] = [list(pair) for pair in replacements]
     if sources is not None:
         edit["sources"] = sources
     return edit
@@ -243,10 +269,7 @@ def run_edit_chain(root, steps, *, dry_run, require_valid, yes, as_json):
         raise SpecError([Diagnostic("ARGUMENT", "Use at most one stdin body per invocation.")], 2)
     # Validate every step and mutually exclusive input before opening any body source.
     edits = [edit_input(name, params, read=False) for name, params in steps]
-    total = 0
-    for edit in edits:
-        if "body" in edit:
-            total = count_body_bytes(edit["body"], total)
+    total = input_budget(edits)
     for edit, (_, params) in zip(edits, steps, strict=True):
         if params.get("body") is not None:
             text = read_body(params["body"])
@@ -348,6 +371,14 @@ def add(root, **params):
 @main.command(context_settings={"ignore_unknown_options": True})
 @click.argument("node_id")
 @click.option(
+    "--replace",
+    "replacements",
+    nargs=2,
+    multiple=True,
+    metavar="OLD NEW",
+    help="Replace a unique literal body passage; repeat for disjoint original-body matches.",
+)
+@click.option(
     "--parents-json", hidden=True, help="Explicit complete parent array, including empty."
 )
 @body_options
@@ -361,7 +392,7 @@ def add(root, **params):
 def update(root, **params):
     """Replace node fields; combine with add/update/delete for one transaction."""
     edit = edit_input("update", params)
-    if params["dry_run"]:
+    if params["dry_run"] or "replacements" in edit:
         return write_edits(
             root,
             [edit],

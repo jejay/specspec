@@ -6,6 +6,7 @@ import re
 from dataclasses import replace
 from pathlib import PurePosixPath
 
+from .body_replacements import MAX_REPLACEMENTS, input_bytes, replace_body
 from .deletion import deletion_plan, deletion_warnings
 from .inspection import findings, walks
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
@@ -32,6 +33,24 @@ def count_body_bytes(body, total):
     return total
 
 
+def input_budget(edits):
+    """Bound supplied text, including both sides of every replacement, before I/O."""
+    total, replacements = 0, 0
+    for edit in edits:
+        if "body" in edit:
+            total = count_body_bytes(edit["body"], total)
+        if "replacements" in edit:
+            total += input_bytes(edit["replacements"])
+            replacements += len(edit["replacements"])
+            if replacements > MAX_REPLACEMENTS:
+                fail("An editing invocation accepts at most 1024 replacement pairs.")
+            if total > MAX_BATCH_BYTES:
+                fail(
+                    "Invocation bodies exceed 16 MiB in total, including OLD/NEW replacement text."
+                )
+    return total
+
+
 def prepare(value):
     if (
         not isinstance(value, dict)
@@ -40,7 +59,7 @@ def prepare(value):
         or not 1 <= len(value["edits"]) <= MAX_EDITS
     ):
         fail("Expected an object with 1-1024 explicit edits.")
-    edits, total = [], 0
+    edits = []
     for original in value["edits"]:
         if not isinstance(original, dict):
             fail("Each edit must be an object.")
@@ -48,14 +67,16 @@ def prepare(value):
         op = edit.get("op")
         fields = {
             "add": {"op", "as", "type", "parents", "body", "sources"},
-            "update": {"op", "id", "parents", "body", "sources"},
+            "update": {"op", "id", "parents", "body", "replacements", "sources"},
             "delete": {"op", "ids"},
         }
         if not isinstance(op, str) or op not in fields or set(edit) - fields[op]:
             fail("Unknown batch operation or fields.")
-        if "body" in edit:
-            total = count_body_bytes(edit["body"], total)
-        if op == "update" and not set(edit).intersection({"body", "parents", "sources"}):
+        if "body" in edit and "replacements" in edit:
+            fail("Use whole-body text or exact replacements, not both.")
+        if op == "update" and not set(edit).intersection(
+            {"body", "replacements", "parents", "sources"}
+        ):
             fail("An update must name at least one replacement field.")
         if op == "add" and (
             not isinstance(edit.get("type", "requirement"), str)
@@ -72,6 +93,7 @@ def prepare(value):
         if "sources" in edit and not isinstance(edit["sources"], list):
             fail("sources must be an array.")
         edits.append(edit)
+    input_budget(edits)
     return edits
 
 
@@ -145,7 +167,11 @@ def apply_edits(root, edits, *, require_valid=False, dry_run=False, confirm=None
                 fail("The manifesto cannot be reparented.")
             candidate = replace(
                 node,
-                body=edit.get("body", node.body),
+                body=(
+                    replace_body(node.body, edit["replacements"], path=node.path)
+                    if "replacements" in edit
+                    else edit.get("body", node.body)
+                ),
                 parents=parents,
                 sources=edit.get("sources", node.sources),
             )

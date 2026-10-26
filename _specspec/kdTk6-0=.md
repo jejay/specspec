@@ -22,13 +22,15 @@ sources:
 # Implement composed edits through complete CLI preflight and the shared writer
 
 edit_cli.py identifies step boundaries with the declared Click option arities,
+including two-value replacement options and attached OLD values,
 retains literal option values and parses every step before callbacks. cli.py
 preflights body-source conflicts and prepares explicit add/update/delete records.
-Aggregate body bytes are charged as inputs load, stopping before further reads
+Aggregate authoring bytes are charged as inputs load, stopping before further reads
 once the budget is exceeded.
 Invocation-wide flags select one preview/write, final validity boundary, consent
 and output mode. Ordinary singleton calls keep their current writer, envelope and
-reviewed-deletion behavior; named adds and add/update previews use the batch planner.
+reviewed-deletion behavior; named adds, add/update previews and exact body
+replacements use the batch planner.
 
 The internal batch planner allocates safe IDs under lock, resolves forward/backward
 parent aliases, rejects conflicting targets and constructs one candidate for the

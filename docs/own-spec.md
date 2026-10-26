@@ -194,6 +194,13 @@ bulk input limits. [Message transport evidence](investigations/argument-authorin
 and [chain verification](investigations/editing-chains.md) record the boundaries and
 current-history reconstruction. [Chain implementation](../_specspec/kdTk6-0=.md)
 maps complete preflight, shared transactions and alias receipts to code and tests.
+[Selected-passage edits](../_specspec/kiRE62k=.md) and the
+[exact replacement choice](../_specspec/1GJRSPU=.md) add repeatable
+`update --replace OLD NEW` as an alternative to full-body input. Unique, disjoint
+matches on the fresh original body retain unrelated text; every step shares the
+same candidate and recovery boundary. [Realization](../_specspec/O0xeA4Y=.md) links
+the exact matcher, preflight and existing writer. [Replacement evidence](investigations/exact-replacements.md)
+records literal EOL behavior, bounds, stale-match rejection and verification scope.
 [CLI/review implementation](../_specspec/SF12qpA=.md)
 and [shared host implementation](../_specspec/GG_koyg=.md)
 map the code and verification seams.

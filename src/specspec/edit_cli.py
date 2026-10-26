@@ -48,8 +48,10 @@ def split_edits(group, parent, argv):
                 else:
                     spelling, separator, _ = arg.partition("=")
                     option = options.get(spelling)
-                    if option is not None and not option.is_flag and not separator:
-                        index = min(len(argv), index + option.nargs)
+                    if option is not None and not option.is_flag:
+                        # --option=value supplies one value, not an entire multi-value pair.
+                        remaining = option.nargs - bool(separator)
+                        index = min(len(argv), index + remaining)
                     # Attached short option values, such as -madd, occupy this token
                     # only. Click subsequently validates all spellings and values.
         steps.append((name, argv[start:index]))

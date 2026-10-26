@@ -23,6 +23,7 @@ specspec query <full-id> --max-distance 0 --with-ancestors # Node + every ancest
 specspec query <full-id> --max-distance 2 --with-ancestors # Branch slice + ancestors
 specspec add --parent <id> -m "# Conclusion" -m "Explain the reasoning."
 specspec update <id> -m "# Revised conclusion" -m "Its current reasoning."
+specspec update <id> --replace "old passage" "new passage" # Exact body edit
 specspec delete <id> --dry-run              # Exact files, retained reference faults
 specspec delete <id> --yes                  # Warned selected-file consent
 specspec query --issues --with-ancestors    # Broken justification and downstream context
@@ -43,8 +44,8 @@ text. One value is preserved exactly; repeated values join with exactly two LF
 characters, without trimming supplied whitespace or applying Git message cleanup.
 Markdown headings, Unicode and actual newlines remain text. `-` and filenames are
 literal text too; backslash-n is not automatically expanded. Quote for your shell;
-programmatic callers should pass an argument array with no shell. Omitting the body
-on update leaves it unchanged; explicit empty text is an explicit schema-checked
+programmatic callers should pass an argument array with no shell. Omitting body-edit
+inputs on update leaves the body unchanged; explicit empty text is an explicit schema-checked
 edit. No editor opens implicitly. A completed valid graph is shortcut-free:
 no direct parent may already be an indirect parent. Graph-invalid intermediate edits
 are saved with explicit validity/completeness diagnostics; --require-valid checks the
@@ -55,6 +56,48 @@ managed writes never normalize them. See [graph structure](graph-structure.md) a
 [invalid-state inspection/repair](invalid-graphs.md).
 Init and add create `_specspec/<id>.md`, including the ID's trailing `=`.
 Paths depend only on identity; headings and binding text remain inside the document.
+
+## Replace selected body text
+
+Use repeatable `update --replace OLD NEW` to edit passages without resending the
+whole body:
+
+```sh
+specspec update NODE_ID \
+  --replace "old wording" "new wording" \
+  --replace "another old passage" "replacement passage"
+```
+
+Each nonempty `OLD` must occur **exactly once in the original current body**. Supply
+surrounding context when a short phrase repeats. Missing/multiple matches, including
+overlapping occurrences, reject the whole invocation. All pairs refer to the same
+original body, not the preceding pair's output, and their matched ranges must not
+overlap. Adjacent matches are allowed. Empty `NEW` deletes a passage; equal OLD/NEW
+keeps that body passage unchanged. The result must still satisfy the node schema.
+
+Both values are literal, case-sensitive Unicode text, including whitespace and
+actual LF/CRLF. No regex, fuzzy matching, automatic global replacement or backslash-n
+expansion is performed. Unmatched body text is retained exactly; `NEW` is inserted
+exactly. For multiline matches, raw JSON (`show NODE_ID --raw --json`) retains the
+actual document line endings; ordinary node-record JSON bodies normalize to LF.
+Frontmatter is outside the matching surface. Parent/source flags retain their
+separate meanings and can accompany replacements.
+
+Replacement input is mutually exclusive with `-m/--message` and integration `--body`
+within that update. Whole-body inputs remain available for substantial rewrites.
+Replacements work in ordinary editing chains and support `--dry-run` and
+`--require-valid`. Syntax, source conflicts and input limits are checked before
+body-file/stdin reads. Actual matching happens under the writer lock on fresh saved
+body text; stale matches fail before any canonical writes. This is context matching,
+not a claim that unrelated text or its meaning has stayed unchanged.
+
+There are at most 1024 replacement pairs across the invocation. OLD and NEW both
+count toward the 16 MiB aggregate authoring-text budget alongside other body inputs;
+each replacement value and resulting canonical node has a 1 MiB limit. Arguments
+also retain their separate budget and smaller OS limits. Quote both values for your
+shell (the examples use Bash/Git Bash); programmatic callers should use an argument
+array. `--replace=OLD NEW` is also accepted; the attached spelling supplies only OLD.
+See [matching and verification details](investigations/exact-replacements.md).
 
 ## Compose editing commands
 
@@ -79,7 +122,8 @@ specspec delete OLD_ID \
   either command may repeat. An update's `--parent` values replace its entire list.
   Configure new nodes completely in their `add` step: aliases are parent references,
   not instructions to update/delete a just-added node. One identity gets one edit;
-  duplicate aliases and conflicting/duplicate target edits are rejected.
+  duplicate aliases and conflicting/duplicate target edits are rejected. Use repeated
+  `--replace OLD NEW` pairs within one update for several passages of the same node.
 - `--dry-run`, `--require-valid`, `--yes` and `--json` apply to the **whole invocation**,
   wherever supplied. The validity boundary checks the final candidate, not temporary
   per-step states. Preview IDs are not reserved; re-running creates fresh IDs.
@@ -224,8 +268,8 @@ hidden inputs remain for bulk body automation and the existing visual hosts:
 - `init/add/update --body FILE|-` reads UTF-8 body bytes from a file or stdin.
   File paths resolve from the launch directory. Editing steps can each name a body
   file; at most one step may consume stdin. `init` remains standalone.
-- `--message` and `--body` are mutually exclusive on each step. All such conflicts
-  fail before any body reads or canonical writes. Positional init payloads are
+- `--message`, `--body` and update's `--replace` are mutually exclusive on each step.
+  All such conflicts fail before body reads or canonical writes. Positional init payloads are
   rejected rather than interpreted as body text.
 - Hidden `--parents-json` and `--sources` keep their existing integration meanings.
 - Reviewed deletion-plan stdin and the private API channels are unchanged. A reviewed

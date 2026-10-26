@@ -127,6 +127,7 @@ state, approval receipt or compulsory deletion explanation.
 
 ```sh
 specspec update <child-id> --parent <surviving-parent-id> -m "# Revised conclusion"
+specspec update <child-id> --replace "old passage" "revised passage"
 specspec update <other-id> --parent <parent-id> --require-valid
 specspec check --warnings-as-errors
 ```
@@ -147,6 +148,10 @@ an empty transitional list; repeated public `--parent` replaces a nonempty list.
 Resolution may rewrite a conclusion around surviving justification, split it,
 deliberately relink it, explicitly delete it, or recover a mistakenly deleted file
 using ordinary Git tooling. The CLI never chooses those semantic outcomes for you.
+Repeatable [exact body replacements](cli.md#replace-selected-body-text) can retain
+unrelated binding text: each OLD must match once in the original body, and matches
+must be disjoint. Missing/ambiguous/overlapping matches reject the complete invocation
+before writes, including any combined deletions.
 
 ## One coherent multi-node change
 
@@ -168,6 +173,7 @@ combined**, even if deleting a parent alone would temporarily break justificatio
   NAME` declares a local alias; `--parent '$NAME'` can reference new nodes anywhere
   in the invocation, including later declarations. Update parent lists replace the
   complete declared set. Aliases are parent references, not update/delete targets.
+  An update may use repeatable `--replace OLD NEW` instead of whole-body input.
 - Aliases never enter node files. Dry-run generated IDs are not reservations.
   Creation avoids existing names and declared parent identities, including dangling
   ones, so a random ID cannot accidentally supply a missing justification.
@@ -181,8 +187,9 @@ combined**, even if deleting a parent alone would temporarily break justificatio
   The receipt's nested `deletion_plan` describes deletion-only consequences in the
   original graph; outer validity and findings describe the complete resulting graph.
   Existing reviewed UI plans bind a standalone delete and cannot be mixed with steps.
-- Chains contain at most 1024 steps. Arguments and aggregate bodies each have a
-  16 MiB bound, with 1 MiB canonical node files and smaller platform argv limits.
+- Chains contain at most 1024 steps and 1024 exact replacement pairs. Arguments and
+  aggregate authoring text (including both OLD and NEW) each have a 16 MiB bound,
+  with 1 MiB canonical node files and smaller platform argv limits.
   [Integration body files/stdin](cli.md#integration-only-bulk-inputs) accommodate large
   text without a separate batch JSON format; at most one body consumes stdin.
 - The complete candidate uses one recoverable, byte-checked transaction. Other

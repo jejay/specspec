@@ -11,7 +11,7 @@ parents:
 init/add/update expose repeatable -m/--message arguments. One message is preserved
 literally; repeated values are joined with exactly two LF characters, preserving
 all supplied whitespace, Markdown headings and line endings. Values such as dash
-or a filename are text. Omitting the body on update retains its current bytes;
+or a filename are text. Omitting all body-edit inputs on update retains its current bytes;
 explicit empty text remains an explicit schema-checked edit. Combined message and
 integration body sources fail before reads or writes. Document size checks apply.
 

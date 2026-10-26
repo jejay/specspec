@@ -121,6 +121,7 @@ specspec show
 specspec add --parent <manifesto-id> -m "# Readable timeline" -m "Show the timing clearly."
 specspec check
 specspec update <requirement-id> -m "# Readable timeline" -m "Show timing and dependencies."
+specspec update <requirement-id> --replace "timing and dependencies" "timing and relationships"
 specspec query <requirement-id> --max-distance 0 --with-ancestors
 ```
 
@@ -129,7 +130,9 @@ Repeat `-m/--message` to join literal paragraphs with a blank line; a single arg
 preserves its exact text. Combine `add`, `update` and `delete` in one invocation
 for a whole explicit transaction. `add --as goal` and `--parent '$goal'` connect new
 nodes without knowing their IDs, including forward references. Other commands stay
-standalone. `update --parent` replaces the entire parent list. See
+standalone. `update --parent` replaces the entire parent list. Repeatable
+[`update --replace OLD NEW`](docs/cli.md#replace-selected-body-text) edits unique,
+disjoint passages of the original body; it is an alternative to whole-body input. See
 [composed editing commands](docs/cli.md#compose-editing-commands). Large input and
 existing UI transports remain available through
 [less-prominent integration inputs](docs/cli.md#integration-only-bulk-inputs).

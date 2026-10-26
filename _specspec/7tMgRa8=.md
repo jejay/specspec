@@ -32,6 +32,8 @@ integration-only. Add defaults to requirement and supports --type implementation
 Init and add
 create <id>.md paths independently of body text.
 Updates replace the supplied parent list; valid manifesto parents stay empty.
+Repeatable update --replace OLD NEW selects unique, disjoint original-body passages
+as an alternative to complete body input, retaining unrelated binding text.
 Delete retains --dry-run and --yes for exact selected-file deletion, retained
 reference faults and selected-file warnings. show supports raw/staged/historical
 reads; query --issues selects faults and potential descendants; diff --with-context
