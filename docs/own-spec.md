@@ -204,6 +204,12 @@ tolerates line endings and source-mapped prose soft breaks while preserving Mark
 structure, all-layout uniqueness and literal NEW. It adds no matching options.
 [Replacement evidence](investigations/exact-replacements.md) records parser/work
 bounds, original source mapping, stale-match rejection and verification scope.
+[One inspection vocabulary](../_specspec/2FfVd-Y=.md) and
+[query consolidation](../_specspec/aILBxDs=.md) put parsed bindings, descendants and
+raw repair reads under query. [Understandable help](../_specspec/DOqGIio=.md) and
+[task guides](../_specspec/ivvUgP4=.md) explain arguments, defaults, examples and
+safety in every help output. [Evidence](investigations/cli-help.md) records the
+host preflight and maintained-history coordination.
 [CLI/review implementation](../_specspec/SF12qpA=.md)
 and [shared host implementation](../_specspec/GG_koyg=.md)
 map the code and verification seams.
@@ -254,7 +260,7 @@ adds every matched record's parents after selection, distinguishes additional
 bindings from quota matches and lists omitted nearby IDs without their bodies.
 The query emitter formats once and supports an exact encoded byte budget. The
 same query pipeline supplies complete agent context; the current everyday surface
-has eight verbs. Current-command receipts, source anchors and all retained Gantt
+has seven verbs. Current-command receipts, source anchors and all retained Gantt
 refs are reconstructed together. Node format is 7; API is 7.
 
 ## Header identity and keyboard saving
@@ -444,10 +450,9 @@ tracks shared launch files. Diagnostics, backups and experiments stay available.
 Use the installed CLI or development Python; this checkout already has a graph:
 
 ```sh
-python -m specspec show
 python -m specspec query
 python -m specspec query <full-id> --max-distance 0 --with-ancestors
-python -m specspec show <full-id> --dependents
+python -m specspec query <full-id>
 python -m specspec update <full-id> -m "# Revised conclusion" -m "Current reasoning."
 python -m specspec delete <full-id> --dry-run --json
 python -m specspec check --warnings-as-errors

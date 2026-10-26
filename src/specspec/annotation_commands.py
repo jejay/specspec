@@ -5,6 +5,7 @@ import sys
 import click
 
 from . import annotations
+from .cli_help import HELP
 from .model import ID_RE, Diagnostic, SpecError
 
 STATUS = {
@@ -48,11 +49,20 @@ def parse_arguments(parts):
 
 
 def register(main, root_path, emit, guarded, json_option):
-    @main.group(name="spotlight")
+    @main.group(
+        name="spotlight",
+        help=HELP["spotlight"],
+        short_help="Attach local messages to nodes and comparison context.",
+    )
     def group():
         """Advanced: add local comparison spotlights, inspect or flush them."""
 
-    @group.command(name="add", context_settings={"ignore_unknown_options": True})
+    @group.command(
+        name="add",
+        context_settings={"ignore_unknown_options": True},
+        help=HELP["spotlight add"],
+        short_help="Record one local message about selected node IDs.",
+    )
     @click.argument("parts", nargs=-1, required=True, metavar="NODE_ID... MESSAGE")
     @click.option("--base", help="Base commit/ref; explicit refs are pinned. Default: live HEAD.")
     @click.option("--target", help="Target commit/ref or workspace (default).")
@@ -69,7 +79,11 @@ def register(main, root_path, emit, guarded, json_option):
         shot = annotations.submit(path, parse_arguments(parts), base=base, target=target)
         emit(annotations.listing(path, shot["id"]), as_json=as_json, text=render_shots)
 
-    @group.command(name="show")
+    @group.command(
+        name="show",
+        help=HELP["spotlight show"],
+        short_help="Read messages, membership statuses and drift warnings.",
+    )
     @click.argument("shot_id", required=False)
     @json_option
     @click.pass_obj
@@ -78,7 +92,11 @@ def register(main, root_path, emit, guarded, json_option):
         """Show all spotlights (or one ID), their comparison statuses and drift warnings."""
         emit(annotations.listing(root_path(root), shot_id), as_json=as_json, text=render_shots)
 
-    @group.command(name="flush")
+    @group.command(
+        name="flush",
+        help=HELP["spotlight flush"],
+        short_help="Explicitly clear all checkout-local spotlight records.",
+    )
     @click.option(
         "--yes", is_flag=True, help="Explicitly consent to clearing all local spotlights."
     )

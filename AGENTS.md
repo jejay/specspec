@@ -12,7 +12,7 @@ Use the installed CLI, or `python -m specspec` in the development environment:
 ```sh
 python -m specspec query --max-distance 2
 python -m specspec query <node-id> --max-distance 0 --with-ancestors
-python -m specspec show <node-id> --dependents
+python -m specspec query <node-id>
 python -m specspec diff
 ```
 

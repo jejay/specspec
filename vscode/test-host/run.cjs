@@ -34,7 +34,7 @@ async function run() {
   const manifesto = nativeCli(['init', '--body', '-', '--json'], '# Native document fixture\n').changed_ids[0];
   const nativeNode = nativeCli(['add', '--parent', manifesto, '--body', '-', '--json'], '# Native node\n').changed_ids[0];
   const nativeOther = nativeCli(['add', '--parent', nativeNode, '--body', '-', '--json'], '# Other node\n').changed_ids[0];
-  const nativeSnapshot = nativeCli(['show', '--json']);
+  const nativeSnapshot = nativeCli(['query', '--json']).target;
   const otherPath = join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path);
   writeFileSync(otherPath, readFileSync(otherPath, 'utf8').replace(/\n/g, '\r\n'));
   const nativeProject = { root: nativeRoot, modified: nativeNode, cli: nativeCli };

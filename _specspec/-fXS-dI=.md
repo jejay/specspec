@@ -42,6 +42,6 @@ source evidence from other branches, even when those bindings remain omitted.
 An explicit advanced --max-bytes bounds the actual UTF-8 result plus its final
 newline, including terminal escaping or the JSON envelope. Format once and fail
 before emitting a partial result when the chosen representation exceeds the budget.
-The sole ancestor-reading interface is query; everyday verbs are init, show, query,
+The specification-reading interface is query; everyday verbs are init, query,
 add, update, delete, check and diff. Guides, checks and actual retained example
 receipts use that current interface. Node format is 7 and application API is 7.

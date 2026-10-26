@@ -6,9 +6,10 @@ parents:
 ---
 # Expose everyday commands and focused advanced tools
 
-The everyday vocabulary is init, show, query, add, update, delete, check and diff.
-Show without an ID lists concise node summaries; show ID reads its complete record;
-show ID --dependents reports structural descendants. Query --with-ancestors
+The everyday vocabulary is init, query, add, update, delete, check and diff.
+Query supplies all specification inspection: an unfiltered graph, a selected node
+with --max-distance 0, its descendant scope with query ID, and complete ancestor
+context with --with-ancestors. Query --with-ancestors
 completes the selected bindings with every ancestor, identifying omitted surrounding
 children and siblings by ID. Query reads
 a complete revision comparison as a tree-shaped view, defaulting to fresh HEAD versus
@@ -35,8 +36,10 @@ Updates replace the supplied parent list; valid manifesto parents stay empty.
 Repeatable update --replace OLD NEW selects unique, disjoint original-body passages
 as an alternative to complete body input, retaining unrelated binding text.
 Delete retains --dry-run and --yes for exact selected-file deletion, retained
-reference faults and selected-file warnings. show supports raw/staged/historical
-reads; query --issues selects faults and potential descendants; diff --with-context
+reference faults and selected-file warnings. Query --raw reads literal identifiable
+or path-selected documents, including malformed text, saved or exact staged bytes
+and explicit --target revisions. Query --issues selects faults and potential
+descendants; diff --with-context
 adds before/current justification and finite cause evidence. --require-valid checks
 the complete final candidate, independently of a successful intermediate edit.
 
@@ -55,7 +58,8 @@ ranges, explicit revision and staged selection remain meaningful. Raw source JSO
 mixed graph/code revision selection, reviewed deletion plans and cache hints
 belong to advanced/integration usage. A hidden api command accepts bounded
 structured application read/plan/source requests. Basic help separates the
-everyday vocabulary from advanced tooling.
+everyday vocabulary from advanced tooling. Every command and subgroup help explains
+its purpose, inputs, defaults, consequences and useful complete examples in detail.
 
 One spelling serves each operation. The current CLI exposes text and --json output;
 Git hook/CI setup calls check --staged through owner-controlled Git tooling. Mermaid

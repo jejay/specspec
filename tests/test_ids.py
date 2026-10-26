@@ -186,16 +186,16 @@ def test_full_id_round_trips_cli_native_plan_context_and_dependents(workspace):
     snapshot, child = add_node(root, "requirement", [manifesto], "# Child\n")
     runner = CliRunner()
     for command in [
-        ["show"],
+        ["query", "--max-distance", "0"],
         ["query", "--max-distance", "0", "--with-ancestors"],
-        ["show", "--dependents"],
+        ["query"],
     ]:
         result = runner.invoke(main, ["--root", str(root), *command, child, "--json"])
         assert result.exit_code == 0, result.output
         assert child in result.output
-    result = runner.invoke(main, ["--root", str(root), "show", manifesto, "--dependents", "--json"])
+    result = runner.invoke(main, ["--root", str(root), "query", manifesto, "--json"])
     assert result.exit_code == 0
-    assert child in json.loads(result.output)["result"]["affected"]
+    assert child in json.loads(result.output)["result"]["selection"]["ids"]
     node = snapshot.graph.nodes[child]
     result = editor_request(
         root, {"edit": {"path": node.path, "id": child, "body": "# Native edit\n"}}
@@ -237,9 +237,9 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     assert added.exit_code == 0, added.output
     assert json.loads(added.output)["result"]["changed_ids"] == [node_id]
     for command in [
-        ["show"],
+        ["query", "--max-distance", "0"],
         ["query", "--max-distance", "0", "--with-ancestors"],
-        ["show", "--dependents"],
+        ["query", "--raw"],
     ]:
         result = runner.invoke(main, [*prefix, *command, node_id, "--json"])
         assert result.exit_code == 0, result.output

@@ -14,7 +14,7 @@ specspec query --base main~2 --target main
 specspec query --json
 ```
 
-`query` is always a revision comparison, like [spotlights](spotlights.md), but its
+A parsed graph `query` is a revision comparison, like [spotlights](spotlights.md), but its
 readable output focuses on **current state**, not patch text. Each surviving node
 shows all target body content once, projected onto one line. Deleted nodes appear
 among the others, under their former parents, with `[deleted]` and their base content.

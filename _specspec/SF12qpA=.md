@@ -2,12 +2,13 @@
 id: SF12qpA=
 type: implementation
 parents:
-- 7tMgRa8=
 - sJ5dyh4=
 - 7kYVG_E=
 - cpFRqIM=
 - nIj9fmE=
 - 4ZvnSGw=
+- aILBxDs=
+- ivvUgP4=
 sources:
 - path: src/specspec/cli.py
 - path: src/specspec/output.py
@@ -24,11 +25,22 @@ sources:
 - path: example/gantt/history/revisions.json
 - path: example/gantt/history/gantt.bundle
 - path: docs/cli.md
+- path: src/specspec/cli_help.py
+- path: src/specspec/annotation_commands.py
+- path: tests/test_cli_help.py
+- path: graph-ui-common/host/session.cjs
+- path: graph-ui-common/test/session.test.cjs
+- path: docs/investigations/cli-help.md
+- path: graph-ui-common/test-host/fixture.cjs
+- path: graph-ui-common/test-host/platform.cjs
 ---
 # Implement the compact command surface and complete review projection
 
-Click presents eight everyday verbs with focused advanced tools and a bounded hidden
-application adapter. Ordinary authoring uses literal message paragraphs and
+Click presents seven everyday verbs with focused advanced tools and a bounded hidden
+application adapter. Query owns parsed and raw specification inspection, while
+cli_help.py supplies detailed task guides and a scoped ASCII-safe help formatter.
+Host managed preflights use the existing saved API read. Ordinary authoring uses
+literal message paragraphs and
 combinable add/update/delete steps; explicit body integration inputs and existing UI
 stdin remain separate.
 Output rendering separates readable text/Markdown from explicit
@@ -54,4 +66,6 @@ the current operations and separate protocol 7 from node schema 7.
 Static command help uses ASCII punctuation so Click can render help through legacy
 Windows pipe encodings. Readable result/diagnostic and structured envelope emission
 retain their explicit UTF-8 byte paths. Subprocess regressions force ASCII/cp1252
-stdout encodings for root, diff and query help without changing canonical project text.
+stdout encodings for every root/subcommand help without changing canonical project
+text. Dedicated tests cover all help paths, removed-command rejection, safe raw
+repair/index/history reads and unchanged managed/native mutation ownership.

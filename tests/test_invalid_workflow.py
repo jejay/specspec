@@ -51,13 +51,13 @@ def test_parent_only_deletion_preserves_all_survivor_bytes_and_declarations(work
     assert call(root, "check")[0].exit_code == 1
 
 
-def test_show_query_context_and_declared_diff_work_while_invalid(workspace):
+def test_query_context_raw_and_declared_diff_work_while_invalid(workspace):
     root, manifesto, a, b, c, d, e = branch(workspace)
     delete_nodes(root, [a])
     for args in [
-        ("show", b),
-        ("show", c, "--dependents"),
-        ("show",),
+        ("query", b, "--max-distance", "0"),
+        ("query", c),
+        ("query", c, "--raw"),
         ("query",),
         ("query", c, "--max-distance", "0", "--with-ancestors"),
     ]:
@@ -190,15 +190,15 @@ def test_unreadable_file_is_not_mislabeled_as_deletion_and_unrelated_edits_work(
     file.write_text("not frontmatter\n", encoding="utf8", newline="\n")
     assert not load_snapshot(root).complete
     assert findings(load_snapshot(root))["broken_references"][0]["reason"] == "unreadable"
-    result, data = call(root, "show", a, "--raw")
+    result, data = call(root, "query", a, "--raw")
     assert result.exit_code == 0 and data["result"]["text"] == "not frontmatter\n"
-    assert call(root, "show", b)[0].exit_code == 0
+    assert call(root, "query", b, "--raw")[0].exit_code == 0
     assert call(root, "update", b, "--body", "-", input="# Still editable\n")[0].exit_code == 0
     result, data = call(root, "diff", "--with-context")
     assert result.exit_code == 1 and data["result"]
     assert next(n for n in data["result"]["changes"] if n["id"] == a)["kind"] == "unavailable"
     assert file.read_text(encoding="utf8") == "not frontmatter\n"
-    assert call(root, "show", "--raw", "--path", "../README.md")[0].exit_code == 2
+    assert call(root, "query", "--raw", "--path", "../README.md")[0].exit_code == 2
 
 
 def test_absent_history_and_committed_dangling_references_remain_honest(workspace):

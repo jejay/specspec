@@ -50,6 +50,19 @@ function fixture(t, options = {}) {
   t.after(() => s.dispose()); s.receive({ type: 'ready' });
   return { s, calls, messages, confirmations, change: value => { current = value; }, fail: value => { failure = value; }, failNext: count => { remainingFailures = count; }, changeShots: value => { shots = value; }, failAnnotations: value => { annotationFailure = value; }, revoke: () => { authorized = false; } };
 }
+test('managed edit preflight reads fresh saved state through the existing API, without overlays or comparison hints', async t => {
+  const f = fixture(t); await f.s.open();
+  const start = f.calls.length;
+  await f.s.handle({ type: 'save', id: node.id, body: '# Changed', parents: [], sources: '[]', originalNode: node });
+  const calls = f.calls.slice(start);
+  assert.deepEqual(calls[0].args, ['api']);
+  assert.deepEqual(JSON.parse(calls[0].input), { api_version: 7, op: 'read' });
+  const update = calls.find(c => c.args[0] === 'update');
+  assert.ok(update.args.includes('--body') && update.args.includes('-'));
+  assert.equal(update.input, '# Changed');
+  assert.equal(calls.some(c => c.args[0] === 'show'), false);
+});
+
 test('highlight creation uses the guarded local API with trusted overlays, not canonical mutations', async t => {
   const f = fixture(t); await f.s.open();
   let drained = false;
@@ -239,7 +252,8 @@ test('unrelated changes do not block drafts; every save re-reads actual files', 
   await f.s.handle(save(node));
   assert.equal(f.confirmations.length, 0);
   const write = f.calls.findIndex(c => c.args[0] === 'update');
-  assert.equal(f.calls[write - 1].args[0], 'show');
+  assert.equal(f.calls[write - 1].args[0], 'api');
+  assert.deepEqual(JSON.parse(f.calls[write - 1].input), { api_version: 7, op: 'read' });
   assert.ok(f.calls[write].args.every(a => a !== '--expect'));
 });
 test('same-node external changes ask before overwrite; cancellation retains current contents', async t => {

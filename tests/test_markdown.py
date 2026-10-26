@@ -38,9 +38,9 @@ def test_cli_outputs_have_no_content_hashes(workspace):
     root, manifesto = workspace
     runner = CliRunner()
     for args in [
-        ["show"],
-        ["show", manifesto],
-        ["show", manifesto, "--dependents"],
+        ["query"],
+        ["query", manifesto, "--max-distance", "0"],
+        ["query", manifesto],
         ["query", manifesto, "--max-distance", "0", "--with-ancestors"],
         ["check"],
     ]:

@@ -44,7 +44,7 @@ and `--parent '$NAME'` connect new nodes, including forward references. Other co
 stay standalone. Explicit integration body inputs and the UI's existing transports
 retain their roles.
 
-Use `query ID --max-distance 0 --with-ancestors` and `show ID --dependents`
+Use `query ID --max-distance 0 --with-ancestors` and `query ID`
 before code changes. Query's optional ancestor completion follows every parent path
 after selection; added bindings consume no metric quota. `specspec diff` supplies
 canonical-file hunks; ordinary `git diff` supplies code patches. Read untracked

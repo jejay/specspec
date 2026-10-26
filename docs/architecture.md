@@ -60,7 +60,7 @@ A typical agent loop is:
    node and its complete ancestor context with
    `query <id> --max-distance 0 --with-ancestors`. Rooted query limits help orient;
    `diff` provides exact specification changes and ordinary Git provides code patches.
-2. Use `show <id> --dependents --json` and `diff <ref> --json` to understand dependencies
+2. Use `query <id> --json` and `diff <ref> --json` to understand dependencies
    and changes. Discuss consequential scope changes with the owner; use `add`/`update`
    for requested graph refinement and preview destructive `delete` operations.
 3. Implement under those intentions, keep implementation explanations and `sources`
@@ -125,8 +125,12 @@ returns diagnostics and a `.valid` flag; `.require_valid()` raises for an unusab
 graph. Library calls stay in-process; the host's API channels are project-scoped
 child processes with bounded pipes.
 
-`show`, `query`, `show ID --dependents` and `diff` are the compact read-side
-entry points for engineers/agents. Text/Markdown is default; explicit `--json` selects
+`query` and `diff` are the specification read-side entry points for engineers/agents.
+Query supplies one binding at --max-distance 0, descendant scope with an ID, and raw
+saved/staged/historical document inspection with --raw. cli_help.py supplies static,
+task-oriented root and subcommand guides without changing normal result verbosity.
+Fresh managed mutation context uses the existing saved API-7 read without overlays
+or comparison/cache hints; canonical writes retain their argv/stdin owners. Text/Markdown is default; explicit `--json` selects
 compact API 7. Query's `--with-ancestors` completes selected bindings through every
 parent path and identifies omitted surrounding child/sibling IDs without their
 bodies. The shared emitter formats once and applies an optional `--max-bytes` to
@@ -164,7 +168,7 @@ once per original graph. Unfiltered queries retain both complete graphs;
 shared conservative file-impact facts remain available. Known committed source blobs
 are prefetched into the existing per-call cache in batches; no query cache crosses
 invocations. Patches belong to `diff`. See [query profiling](investigations/query-performance.md).
-[The command guide](cli.md) describes all eight everyday verbs.
+[The command guide](cli.md) describes all seven everyday verbs.
 
 The renderer uses local assets and a nonce-protected CSP, inserting project text
 through `textContent`/`value`, never executable Markdown. Electron's

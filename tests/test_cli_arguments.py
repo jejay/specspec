@@ -102,7 +102,9 @@ def test_help_focuses_on_arguments_and_missing_inputs_do_not_read_stdin(workspac
     root, id = workspace
     for command in ["init", "add", "update"]:
         text = CliRunner().invoke(cli.main, [command, "--help"]).stdout
-        assert "--body" not in text and "--plan " not in text and "stdin" not in text
+        options = text.split("Options:", 1)[1]
+        assert "--body" not in options and "--plan " not in text
+        assert "Integration" in text and "stdin" in text
         assert "--message" in text
     for args in [("init",), ("add", "--parent", id)]:
         result, data = call(root, *args)

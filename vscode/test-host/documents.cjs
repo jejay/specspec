@@ -54,7 +54,7 @@ exports.documentChecks = async function documentChecks(port, project, paths) {
     await waitFor(async () => { view = (await contexts(project.modified))[0]; return view; }, 'default file editor');
     try { await view.client.send('Page.bringToFront'); } catch {}
     const evaluate = code => view.client.evaluate(view.context, code);
-    const node = project.cli(['show', project.modified, '--json']).node;
+    const node = project.cli(['query', project.modified, '--max-distance', '0', '--json']).target.nodes.find(n => n.id === project.modified);
     const path = join(project.root, node.path), before = readFileSync(path, 'utf8');
     const draft = '# Native VS Code draft 🐕\n';
     await evaluate(`document.getElementById('body').value=${JSON.stringify(draft)};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);

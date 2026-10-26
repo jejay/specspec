@@ -20,14 +20,14 @@ function platformChecks(fixture, host) {
       assert.equal(chrome.name,'SpecSpec');assert.equal(chrome.revision,'revision');assert.equal(chrome.wordmark,false);
       assert.equal(chrome.project,host==='electron');assert.equal(chrome.refreshText,'');assert.equal(chrome.refreshLabel,'Refresh graph');
       assert.match(chrome.mask,/specspec.svg/);
-      const original=fixture.cli(['show',modified,'--json']).node.body;
+      const original=fixture.node(modified).body;
       const keyboardBody=original+'\nKeyboard save probe.\n';
       await evaluate(`document.querySelector('[data-node-id="${modified}"]').click();const body=document.getElementById('body');body.value=${JSON.stringify(keyboardBody)};body.dispatchEvent(new Event('input'));body.focus()`);
       await key({type:'rawKeyDown',key:'s',code:'KeyS',windowsVirtualKeyCode:83,modifiers:2});
       await key({type:'keyUp',key:'s',code:'KeyS',windowsVirtualKeyCode:83,modifiers:2});
       for(let i=0;i<300;i++) {if(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`))break;await delay(100);}
       assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`),'Ctrl+S must finish the focused managed save in the real host.');
-      assert.equal(fixture.cli(['show',modified,'--json']).node.body,keyboardBody);
+      assert.equal(fixture.node(modified).body,keyboardBody);
       await screenshot(`${host}-brand-header-keyboard-save`);
       fixture.cli(['update',modified,'--body','-','--json'],original);
       for(let i=0;i<300;i++) {if(await evaluate(`document.getElementById('body').value===${JSON.stringify(original)}`))break;await delay(100);}
@@ -68,7 +68,7 @@ function platformChecks(fixture, host) {
       }
       // A real root change in the independent disposable clone exercises the new
       // revision-mode exception, not a synthetic renderer-only status injection.
-      const root=fixture.cli(['show','--json']).nodes.find(n=>n.type==='manifesto');
+      const root=fixture.saved().nodes.find(n=>n.type==='manifesto');
       fixture.cli(['update',root.id,'--body','-','--json'],root.body+'\nRoot revision-color fixture.\n');
       for(let i=0;i<300;i++) {
         if(await evaluate(`document.querySelector('#cards .card.manifesto.changed')!==null`)) break;
@@ -83,7 +83,7 @@ function platformChecks(fixture, host) {
         assert.ok(await evaluate(expression), JSON.stringify(await evaluate(`({message:document.getElementById('message').textContent,body:document.getElementById('body').value})`)));
       };
       // Live context drift is advisory: the current version still receives a ring.
-      const beforeDrift=fixture.cli(['show',modified,'--json']).node;
+      const beforeDrift=fixture.node(modified);
       const drift=fixture.cli(['spotlight','add',modified,'Live workspace drift review','--json']).shots[0];
       await waitFor(`document.querySelector('[data-shot-id="${drift.id}"]')!==null`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.querySelector('[data-shot-id="${drift.id}"]').click()`);
@@ -137,7 +137,7 @@ function platformChecks(fixture, host) {
       console.log(`${host}: physical deletion D survives staging and vanishes after commit through Git watching without Refresh/polling.`);
       // Exact deletion leaves real exclusive/shared/deep conclusions available
       // for deliberate UI repair over the complete independent maintained history.
-      const current = fixture.cli(['show','--json']);
+      const current = fixture.saved();
       const manifesto = current.nodes.find(n=>n.type==='manifesto');
       const outside = current.nodes.find(n=>n.id===fixture.modified);
       const outsideBytes = readFileSync(join(fixture.root,outside.path));
@@ -150,14 +150,14 @@ function platformChecks(fixture, host) {
       const partial = add([branch,outside.id],'shared-conclusion');
       const deep = add([partial,deeperOutside.id],'deeper-conclusion');
       const committed = [branch,full,partial,deep];
-      const files = fixture.cli(['show','--json']).nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
+      const files = fixture.saved().nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
       git('add','--',...files);
       git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable exclusive/shared justification branch');
       const fresh = add([deep],'never-committed-surviving-conclusion');
-      const deepPath = fixture.cli(['show','--json']).nodes.find(n=>n.id===deep).path;
+      const deepPath = fixture.node(deep).path;
       fixture.cli(['update',deep,'--body','-','--json'],'# Staged but surviving descendant\n');
       git('add','--',deepPath);
-      const survivors=fixture.cli(['show','--json']).nodes.filter(n=>[full,partial,deep,fresh].includes(n.id));
+      const survivors=fixture.saved().nodes.filter(n=>[full,partial,deep,fresh].includes(n.id));
       const survivorBytes=new Map(survivors.map(n=>[n.path,readFileSync(join(fixture.root,n.path))]));
       const plan = fixture.cli(['delete',branch,'--dry-run','--json']);
       assert.deepEqual(plan.deleted_ids,[branch]);assert.deepEqual(plan.uncommitted,[]);
@@ -175,10 +175,10 @@ function platformChecks(fixture, host) {
         if(id===full) await evaluate(`document.getElementById('parent-candidate').value='${outside.id}';document.getElementById('parent-candidate').dispatchEvent(new Event('change'));document.getElementById('add-parent').click()`);
         await evaluate(`document.getElementById('body').value+=${JSON.stringify('\nDeliberately retained under surviving justification.\n')};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('save').click()`);
         await waitFor(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`);
-        assert.deepEqual(fixture.cli(['show',id,'--json']).node.parents,[outside.id]);
+        assert.deepEqual(fixture.node(id).parents,[outside.id]);
         await evaluate(`document.getElementById('back').click()`);
       }
-      assert.equal(fixture.cli(['show','--json']).valid,true);
+      assert.equal(fixture.saved().valid,true);
       assert.deepEqual(readFileSync(join(fixture.root,outside.path)),outsideBytes);
       assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes);
       git('add','-u','--',`_specspec/${branch}.md`,`_specspec/${full}.md`,`_specspec/${partial}.md`);
@@ -189,7 +189,7 @@ function platformChecks(fixture, host) {
       console.log(`${host}: exact deletion preserves exclusive/shared/deep/staged/new survivors; fresh invalid graph, actual UI repairs and exact-index commit passed.`);
       // Real manual Markdown writes, with no Refresh click, CLI mutation or polling.
       await evaluate(`document.getElementById('discard').click();document.getElementById('back').click();document.querySelector('[data-node-id="${modified}"]').click()`);
-      const node = fixture.cli(['show', modified, '--json']).node, path = join(fixture.root, node.path);
+      const node = fixture.node(modified), path = join(fixture.root, node.path);
       const raw = readFileSync(path), prefix = raw.subarray(0, raw.length - Buffer.byteLength(node.body));
       const manual = Buffer.concat([prefix, Buffer.from('# Manual watcher-only update\n')]);
       writeFileSync(path, manual);
@@ -227,7 +227,7 @@ function platformChecks(fixture, host) {
       // canonical files: the CLI intentionally rejects reads during an active journal.
       for(let i=0;i<300;i++){if(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`))break;await delay(100);}
       assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`));
-      assert.ok(fixture.cli(['show',modified,'--json']).node.body.includes('Saved from real Electron UI'));
+      assert.ok(fixture.node(modified).body.includes('Saved from real Electron UI'));
       await evaluate(`document.getElementById('body').value='# Retained stale desktop draft';document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
       const old = await evaluate(`window.SpecSpecHost.getState().originalNode`);
       fixture.cli(['update',modified,'--body','-','--json'],'# External fixture update\n');
@@ -238,7 +238,7 @@ function platformChecks(fixture, host) {
       assert.ok(await evaluate(`!document.getElementById('save').disabled`));
       // Actual overwrite dialogs are tested through the shared host session,
       // not auto-accepted by this native-window smoke harness.
-      assert.equal(fixture.cli(['show',modified,'--json']).node.body,'# External fixture update\n');
+      assert.equal(fixture.node(modified).body,'# External fixture update\n');
       await screenshot('electron-stale-draft');
       await evaluate(`location.reload()`);await delay(1200);
       // The harness context is refreshed on a reload only in a separate test phase.

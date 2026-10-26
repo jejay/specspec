@@ -6,7 +6,7 @@ parents:
 ---
 # Read current records with sparse revision hints
 
-Query always compares revisions, using fresh HEAD versus saved workspace by default
+Parsed graph query compares revisions, using fresh HEAD versus saved workspace by default
 and spotlight-style --base/--target selection. Diagnose both graphs and retain explicit
 empty/unavailable context. Present complete current and deleted records together
 in relationship context, ordered by last occurrence. Full headers retain all parents.

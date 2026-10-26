@@ -31,7 +31,7 @@ test('launch-resolved executable actually runs with a different project cwd', as
   writeFileSync(script, 'process.stdout.write(JSON.stringify({api_version:7,ok:true,result:{cwd:process.cwd(),argv:process.argv.slice(2)},diagnostics:[]}));');
   const launch = resolve(__dirname, '..');
   const executable = resolveExecutable(relative(launch, process.execPath), launch);
-  const result = await invoke(executable, [script], project, ['show', '--json']);
+  const result = await invoke(executable, [script], project, ['query', '--json']);
   assert.equal(result.result.cwd, project);
-  assert.deepEqual(result.result.argv, ['--root', project, 'show', '--json']);
+  assert.deepEqual(result.result.argv, ['--root', project, 'query', '--json']);
 });

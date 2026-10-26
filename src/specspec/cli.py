@@ -16,6 +16,7 @@ from .application import compare
 from .application import request as application_request
 from .batch import apply_edits, count_body_bytes, input_budget, prepare
 from .body_replacements import input_bytes
+from .cli_help import HELP, install_help
 from .deletion import deletion_plan, deletion_warnings
 from .edit_cli import EDIT_COMMANDS, CanonicalIdCommand, EditInvocation
 from .editor import MAX_REQUEST_BYTES
@@ -25,12 +26,9 @@ from .output import (
     envelope,
     json_text,
     render_diff,
-    render_listing,
-    render_node,
     render_plan,
     render_receipt,
     safe_text,
-    title,
 )
 from .query import read_query, render_query
 from .source_commands import register as register_sources
@@ -96,7 +94,10 @@ def guarded(function):
 
 
 json_option = click.option(
-    "--json", "as_json", is_flag=True, help="Emit compact versioned JSON instead of readable text."
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Return one structured API-7 JSON result with diagnostics instead of readable text.",
 )
 
 
@@ -111,13 +112,16 @@ class Commands(click.Group):
         for label, names in [
             (
                 "Everyday commands",
-                ["init", "show", "query", "add", "update", "delete", "check", "diff"],
+                ["init", "query", "add", "update", "delete", "check", "diff"],
             ),
             ("Advanced tools", ["sources", "spotlight", "recover"]),
         ]:
             with formatter.section(label):
                 formatter.write_dl(
-                    [(name, self.get_command(ctx, name).get_short_help_str()) for name in names]
+                    [
+                        (name, self.get_command(ctx, name).get_short_help_str(limit=1000))
+                        for name in names
+                    ]
                 )
 
 
@@ -145,7 +149,7 @@ def body_options(function):
         "--message",
         "messages",
         multiple=True,
-        help="Literal binding text; repeat to join paragraphs with a blank line.",
+        help="Literal Markdown body; repeat for blank-line-separated paragraphs. Not a filename.",
     )(function)
 
 
@@ -296,9 +300,11 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
     )
 
 
-@click.group(cls=Commands)
+@click.group(cls=Commands, help=HELP["root"])
 @click.option(
-    "--root", type=click.Path(path_type=Path, file_okay=False), help="Explicit project root."
+    "--root",
+    type=click.Path(path_type=Path, file_okay=False),
+    help="Project directory before the command. Default: discover from current/parent directories.",
 )
 @click.version_option(__version__)
 @click.pass_context
@@ -311,7 +317,9 @@ def main(context, root):
     context.obj = root
 
 
-@main.command()
+@main.command(
+    help=HELP["init"], short_help="Create a new graph and its manifesto in a new project."
+)
 @body_options
 @json_option
 @click.pass_obj
@@ -323,7 +331,9 @@ def init(root, messages, body, as_json):
     mutation_output(snapshot, [snapshot.nodes[0].id], as_json)
 
 
-@main.command(name="add")
+@main.command(
+    name="add", help=HELP["add"], short_help="Create a conclusion or implementation node."
+)
 @click.option(
     "--as", "alias", help="Local name for this new node; reference it with --parent '$NAME'."
 )
@@ -368,7 +378,12 @@ def add(root, **params):
     mutation_output(snapshot, [node_id], params["as_json"])
 
 
-@main.command(cls=CanonicalIdCommand, context_settings={"ignore_unknown_options": True})
+@main.command(
+    cls=CanonicalIdCommand,
+    context_settings={"ignore_unknown_options": True},
+    help=HELP["update"],
+    short_help="Replace body text, selected passages or relationship fields.",
+)
 @click.argument("node_id")
 @click.option(
     "--replace",
@@ -432,7 +447,12 @@ def read_deletion_plan(path):
         ) from error
 
 
-@main.command(name="delete", context_settings={"ignore_unknown_options": True})
+@main.command(
+    name="delete",
+    context_settings={"ignore_unknown_options": True},
+    help=HELP["delete"],
+    short_help="Delete exactly selected nodes; retain their descendants.",
+)
 @click.argument("ids", nargs=-1, required=True)
 @click.option("--reviewed-plan", hidden=True)
 @edit_options
@@ -514,93 +534,56 @@ def delete(root, ids, dry_run, yes, reviewed_plan, require_valid, as_json):
     )
 
 
-@main.command(context_settings={"ignore_unknown_options": True})
+@main.command(
+    cls=CanonicalIdCommand,
+    context_settings={"ignore_unknown_options": True},
+    help=HELP["query"],
+    short_help="Read nodes, descendants, ancestor context or raw repair text.",
+)
 @click.argument("node_id", required=False)
-@click.option("--dependents", is_flag=True, help="Show structural descendants of this node.")
 @click.option(
-    "--raw", is_flag=True, help="Read literal canonical bytes, including malformed documents."
-)
-@click.option("--path", help="Direct canonical path for a raw read.")
-@click.option("--ref", help="Read an immutable graph revision.")
-@click.option("--staged", is_flag=True, help="Read exact staged documents.")
-@json_option
-@click.pass_obj
-@guarded
-def show(root, node_id, dependents, raw, path, ref, staged, as_json):
-    """List or inspect saved nodes independently of surrounding graph validity."""
-    snapshot = target_graph(root_path(root), ref, staged)
-    graph = snapshot.graph
-    if raw:
-        if dependents or (node_id is None and path is None):
-            raise SpecError(
-                [
-                    Diagnostic(
-                        "ARGUMENT", "Raw reads need a node ID or --path, without --dependents."
-                    )
-                ],
-                2,
-            )
-        value = raw_document(snapshot, node_id, path)
-        emit(
-            value, snapshot.diagnostics, as_json=as_json, text=lambda r: r.get("text", json_text(r))
-        )
-        return
-    if path is not None:
-        raise SpecError([Diagnostic("ARGUMENT", "--path requires --raw.")], 2)
-    snapshot.require_current()
-    if dependents and node_id is None:
-        raise SpecError([Diagnostic("ARGUMENT", "--dependents requires a node ID.")], 2)
-    if node_id is None:
-        emit(
-            wire.snapshot(snapshot.to_dict()),
-            snapshot.diagnostics,
-            as_json=as_json,
-            text=render_listing,
-        )
-        return
-    node = require_node(snapshot, node_id)
-    if dependents:
-        ids = sorted(graph.closure(node_id)) if graph else []
-        emit(
-            {
-                "id": node_id,
-                "affected": ids,
-                "graph_valid": snapshot.valid,
-                "analysis_complete": snapshot.complete,
-            },
-            snapshot.diagnostics,
-            as_json=as_json,
-            text=lambda r: (
-                f"Dependents of {r['id']} (potential structural scope):\n"
-                + "\n".join(f"  {i}  {title(graph.nodes[i].to_dict())}" for i in ids)
-            ),
-        )
-    else:
-        emit(
-            {"node": node.to_dict()},
-            snapshot.diagnostics,
-            as_json=as_json,
-            text=lambda r: render_node(r["node"]),
-        )
-
-
-@main.command(context_settings={"ignore_unknown_options": True})
-@click.argument("node_id", required=False)
-@click.option("--base", help="Base commit/ref (default: fresh HEAD).")
-@click.option("--target", help="Target commit/ref or workspace (default).")
-@click.option("--min-distance", help="Inclusive maximum shortest path, or population percentage.")
-@click.option("--max-distance", help="Inclusive maximum longest path, or population percentage.")
-@click.option(
-    "--influence", help="Inclusive minimum self-inclusive influence, or population percentage."
+    "--base", help="Comparison's earlier commit/branch; default: fresh HEAD. Not used with --raw."
 )
 @click.option(
-    "--human", is_flag=True, help="Preserve multiline bodies and list sources individually."
+    "--target", help="Comparison/raw target commit/branch or workspace; default: saved workspace."
 )
 @click.option(
-    "--with-ancestors", is_flag=True, help="Add every ancestor after selecting the matched nodes."
+    "--raw",
+    is_flag=True,
+    help="Read literal document text/bytes, including malformed nodes; select ID or --path.",
+)
+@click.option("--path", help="With --raw, read this direct _specspec/ID.md path instead of an ID.")
+@click.option(
+    "--staged",
+    is_flag=True,
+    help="With --raw, read exact Git-index bytes instead of saved files; not a graph comparison.",
 )
 @click.option(
-    "--issues", is_flag=True, help="Select structural issues and their potential descendants."
+    "--min-distance",
+    help="Shortest-path cutoff N (distance <= N), or nearest P% of reachable nodes.",
+)
+@click.option(
+    "--max-distance",
+    help="Longest-path cutoff N (distance <= N), or nearest P%; 0 selects only the root.",
+)
+@click.option(
+    "--influence",
+    help="Include nodes reaching at least N nodes including themselves, or the highest P%.",
+)
+@click.option(
+    "--human",
+    is_flag=True,
+    help="Preserve logical body lines and list sources separately; JSON records are unchanged.",
+)
+@click.option(
+    "--with-ancestors",
+    is_flag=True,
+    help="Add every selected node's parent paths after selection, outside percentage quotas.",
+)
+@click.option(
+    "--issues",
+    is_flag=True,
+    help="Inspect structural faults and potential descendants; use without metric filters.",
 )
 @click.option("--max-bytes", type=click.IntRange(min=1), hidden=True)
 @json_option
@@ -619,10 +602,69 @@ def query(
     issues,
     max_bytes,
     as_json,
+    raw,
+    path,
+    staged,
 ):
     """Read complete bindings or a rooted subgraph; default HEAD to workspace."""
+    project = root_path(root)
+    if raw:
+        if (
+            node_id is None
+            and path is None
+            or node_id is not None
+            and path is not None
+            or base is not None
+            or human
+            or with_ancestors
+            or issues
+            or any(v is not None for v in (min_distance, max_distance, influence))
+        ):
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "ARGUMENT",
+                        "Raw reads need an ID or --path and cannot use "
+                        "comparison/selection/presentation options.",
+                    )
+                ],
+                2,
+            )
+        if target is not None and (not target or len(target) > 1024):
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "ARGUMENT", "Supply a nonempty target revision of at most 1024 characters."
+                    )
+                ],
+                2,
+            )
+        if staged and target not in (None, "workspace"):
+            raise SpecError(
+                [Diagnostic("ARGUMENT", "Choose --staged or a committed --target, not both.")], 2
+            )
+        snapshot = target_graph(project, None if target in (None, "workspace") else target, staged)
+        value = raw_document(snapshot, node_id, path)
+        emit(
+            value,
+            snapshot.diagnostics,
+            as_json=as_json,
+            max_bytes=max_bytes,
+            text=lambda r: r.get("text", json_text(r)),
+        )
+        return
+    if path is not None or staged:
+        raise SpecError(
+            [
+                Diagnostic(
+                    "ARGUMENT",
+                    "--path and --staged require --raw; use check --staged for graph validation.",
+                )
+            ],
+            2,
+        )
     comparison = read_query(
-        root_path(root),
+        project,
         base,
         target,
         node_id=node_id,
@@ -643,15 +685,27 @@ def query(
         raise click.exceptions.Exit(1)
 
 
-@main.command(context_settings={"ignore_unknown_options": True})
+@main.command(
+    context_settings={"ignore_unknown_options": True},
+    help=HELP["check"],
+    short_help="Validate the whole graph and optional source mappings.",
+)
 @click.argument("node_id", required=False)
-@click.option("--staged", is_flag=True, help="Validate exact index bytes, not working files.")
+@click.option(
+    "--staged",
+    is_flag=True,
+    help="Validate exact Git-index graph/code bytes, including partial staging; not working files.",
+)
 @click.option(
     "--sources", "check_sources", is_flag=True, help="Also check source mappings and Git retention."
 )
 @click.option("--ref", help="Validate an immutable graph/code revision.")
 @click.option("--graph-ref", hidden=True)
-@click.option("--warnings-as-errors", is_flag=True, hidden=True)
+@click.option(
+    "--warnings-as-errors",
+    is_flag=True,
+    help="Fail when any warning is reported, not only on errors.",
+)
 @json_option
 @click.pass_obj
 @guarded
@@ -700,7 +754,11 @@ def check(root, node_id, staged, check_sources, ref, graph_ref, warnings_as_erro
         raise click.exceptions.Exit(1)
 
 
-@main.command(context_settings={"ignore_unknown_options": True})
+@main.command(
+    context_settings={"ignore_unknown_options": True},
+    help=HELP["diff"],
+    short_help="Review exact specification-file and relationship changes.",
+)
 @click.argument("base", default="HEAD")
 @click.argument("target", required=False)
 @click.option(
@@ -782,7 +840,11 @@ def write_edits(root, edits, *, dry_run, yes, require_valid, as_json):
     )
 
 
-@main.command(name="recover")
+@main.command(
+    name="recover",
+    help=HELP["recover"],
+    short_help="Restore original files after an interrupted managed write.",
+)
 @click.option(
     "--force-lock",
     is_flag=True,
@@ -796,7 +858,7 @@ def recover_command(root, force_lock, as_json):
     emit(recover(root_path(root), force_lock=force_lock), as_json=as_json)
 
 
-@main.command(hidden=True)
+@main.command(hidden=True, help=HELP["api"])
 @click.option("--stream", is_flag=True, help="Serve bounded newline-delimited API requests.")
 @click.pass_obj
 @guarded
@@ -814,3 +876,4 @@ def api(root, stream):
 
 register_sources(main, root_path, emit, guarded, json_option)
 register_annotations(main, root_path, emit, guarded, json_option)
+install_help(main)

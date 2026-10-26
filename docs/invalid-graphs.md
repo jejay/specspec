@@ -36,10 +36,9 @@ A historical record is context, not a restored current justification.
 
 ```sh
 specspec check --json
-specspec show
-specspec show <child-id>
-specspec show <child-id> --dependents
 specspec query
+specspec query <child-id> --max-distance 0
+specspec query <child-id>
 specspec query --issues --with-ancestors
 specspec query <child-id> --max-distance 0 --with-ancestors
 ```
@@ -50,10 +49,11 @@ completeness. It does not mark those descendants for deletion or approval.
 `check --sources` also resolves usable implementation mappings when other graph
 errors exist; `check --staged --sources` checks the exact index.
 
-`show` reads identifiable current-format nodes without requiring the rest of the
-graph to be valid. An unsafe canonical directory, unsupported format, runtime lock
-or unfinished transaction still blocks interpreted managed operations. Missing or
-unreadable manifesto/schema information needs raw repair rather than guessed parsing.
+Query reads parsed current-format graphs without requiring structural validity.
+Use `query --raw ID` for an identifiable document when malformed surrounding records
+make rooted scope unavailable. An unsafe canonical directory, unsupported format,
+runtime lock or unfinished transaction still blocks interpreted managed operations.
+Missing manifesto/schema information needs raw repair rather than guessed parsing.
 
 `query` preserves current and deleted bindings, disconnected components and finite
 cycle-safe readings. Missing identities have explicit display placeholders. Those
@@ -72,10 +72,10 @@ continue to use the individual original revisions and known relationships.
 ### Raw, staged and historical reads
 
 ```sh
-specspec show <node-id> --raw
-specspec show --raw --path _specspec/<node-id>.md
-specspec show <node-id> --staged
-specspec show <node-id> --ref <revision>
+specspec query <node-id> --raw
+specspec query --raw --path _specspec/<node-id>.md
+specspec query <node-id> --raw --staged
+specspec query <node-id> --raw --target <revision>
 specspec query <deleted-id> --base <before> --target <before> --with-ancestors
 ```
 

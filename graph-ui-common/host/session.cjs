@@ -381,7 +381,7 @@ class GraphSession {
     // Always validate actual current files, including changes whose watcher event was missed.
     let current;
     try {
-      current = (await this.cli(['show', '--json'])).result;
+      current = (await this.cli(['api'], JSON.stringify({ api_version: 7, op: 'read' }))).result.snapshot;
       if (current?.format_version !== 7) throw new Error('Current-format graph unavailable.');
     } catch (error) { await this.invalid(error); throw error; }
     this.snapshot = current;

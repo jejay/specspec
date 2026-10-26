@@ -32,7 +32,7 @@ sources:
 The snapshot/graph layer retains file inventory, parsed records, declared references,
 resolved traversals and structured diagnostics. Shared inspection computes broken
 reference scope, finite cause witnesses and contextual historical/current readings.
-CLI show/query/diff/check and API reads consume that evidence without a global valid-
+CLI query/diff/check and API reads consume that evidence without a global valid-
 starting-graph gate. The writer/batch planner retains byte-safe journaled transactions
 and optional complete candidate validation; recovery can restore invalid originals.
 

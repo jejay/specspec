@@ -1,7 +1,7 @@
 # SpecSpec
 
 Tool-managed Markdown specification graphs, with a compact Python CLI and shared VS Code/Electron graph editor.
-[Command guide](docs/cli.md): eight everyday commands, readable defaults, compact JSON and full node-aware diffs.
+[Command guide](docs/cli.md): seven everyday commands, readable defaults, compact JSON and full node-aware diffs.
 [Graph structure](docs/graph-structure.md): immediate justifications form a shortcut-free DAG;
 node format 7 and API 7 are the current contracts.
 
@@ -70,13 +70,18 @@ python -m pytest
 python -m ruff check .
 ```
 
+Every command's `--help` includes a plain-language task guide, arguments, defaults,
+examples and safety notes. Start with `specspec --help`, then try
+`specspec query --help` or `specspec sources capture --help`. Query is the single
+specification inspection command; `query ID --max-distance 0` reads one node,
+`query ID` reads its descendants, and `query ID --raw` reads repair text.
+
 ## Explore this repository's graph
 
 After installation, from this repository root:
 
 ```sh
 specspec check --warnings-as-errors
-specspec show
 specspec query
 specspec query --base HEAD --target workspace
 specspec query --human
@@ -117,7 +122,7 @@ supply literal binding text directly as arguments:
 
 ```sh
 specspec init -m "# Product intention" -m "Help people understand their plan."
-specspec show
+specspec query
 specspec add --parent <manifesto-id> -m "# Readable timeline" -m "Show the timing clearly."
 specspec check
 specspec update <requirement-id> -m "# Readable timeline" -m "Show timing and dependencies."

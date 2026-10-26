@@ -241,7 +241,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     assert result.exit_code == 1
     assert json.loads(result.output)["diagnostics"][0]["code"] == "BUDGET"
     assert runner.invoke(main, [*prefix, "export", "--format", "mermaid"]).exit_code == 2
-    assert "Child" in runner.invoke(main, [*prefix, "show"]).output
+    assert "Child" in runner.invoke(main, [*prefix, "query"]).output
     assert runner.invoke(main, [*prefix, "update", node_id, "--json"]).exit_code == 2
 
 

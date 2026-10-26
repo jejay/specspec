@@ -116,7 +116,7 @@ def read_query(
                         Diagnostic(
                             "QUERY",
                             "Metric/rooted scope is incomplete; inspect --issues, "
-                            "show --raw or an unfiltered query.",
+                            "query --raw or an unfiltered query.",
                         )
                     ]
                 )

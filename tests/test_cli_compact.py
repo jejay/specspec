@@ -46,7 +46,6 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
     root, node_id = workspace
     assert {n for n, c in main.commands.items() if not c.hidden} == {
         "init",
-        "show",
         "query",
         "add",
         "update",
@@ -63,6 +62,8 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
     assert "Everyday commands:" in help_text and "Advanced tools:" in help_text
     assert "api" not in help_text and "editor" not in help_text
     for args in [
+        ("show",),
+        ("show", "--help"),
         ("context", node_id),
         ("list",),
         ("export",),
@@ -94,12 +95,12 @@ def test_plain_outputs_are_readable_and_mutations_are_small(tmp_path):
     assert receipt["nodes"][0]["path"] == f"_specspec/{child}.md"
     assert set(receipt["nodes"][0]) == {"id", "path"}
     assert len(result.stdout) < 1000 and '"body"' not in result.stdout
-    listing = call(root, "show").stdout
-    assert "2 nodes" in listing and "Useful heading" in listing and not listing.startswith("{")
-    record = call(root, "show", parent).stdout
-    assert "Type: manifesto" in record and "# Manifesto 🐕" in record
+    listing = call(root, "query").stdout
+    assert "manifesto" in listing and "Useful heading" in listing and not listing.startswith("{")
+    record = call(root, "query", parent, "--max-distance", "0").stdout
+    assert "manifesto" in record and "# Manifesto 🐕" in record
     assert call(root, "check").stdout.startswith("OK · 2 nodes")
-    assert "\\ud83d" not in call(root, "show", "--json").stdout
+    assert "\\ud83d" not in call(root, "query", "--json").stdout
 
 
 def test_required_context_is_complete_without_optional_body_dump(workspace):
@@ -123,9 +124,11 @@ def test_required_context_is_complete_without_optional_body_dump(workspace):
 def test_human_controls_are_literal_but_machine_body_is_unchanged(workspace):
     root, parent = workspace
     update_node(root, parent, body="# Title\nESC: \x1b[2J\n")
-    text = call(root, "show", parent).stdout
+    text = call(root, "query", parent, "--max-distance", "0").stdout
     assert "\x1b" not in text and "\\u001b[2J" in text
-    node = json.loads(call(root, "show", parent, "--json").stdout)["result"]["node"]
+    node = json.loads(call(root, "query", parent, "--max-distance", "0", "--json").stdout)[
+        "result"
+    ]["target"]["nodes"][0]
     assert "\x1b[2J" in node["body"]
 
 

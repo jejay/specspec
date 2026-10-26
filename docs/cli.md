@@ -5,13 +5,18 @@ One CLI serves people and coding agents. Default output is readable text/Markdow
 format. Canonical node format is **7**; upgrade the CLI and both host builds
 together. The CLI does not supply old command aliases or old protocol readers.
 
-## Eight everyday commands
+Every root, command and subgroup `--help` supplies detailed task explanations,
+complete examples, defaults, input meanings and effects. Help is static: it opens
+no project and consumes no stdin. Source/spotlight groups keep their own inspection
+subcommands; the sole top-level specification-reading command is query.
+
+## Seven everyday commands
 
 ```sh
 specspec init -m "# Product intention" -m "Explain the goal." # New project only
-specspec show                              # IDs/types/headings, not every body
-specspec show <full-id>                     # Complete node metadata and binding text
-specspec show <full-id> --dependents        # Structural potential impact
+specspec query <full-id> --max-distance 0   # One complete binding
+specspec query <full-id>                    # Its complete descendant scope
+specspec query <full-id> --raw --json       # Literal document for repair
 specspec query                            # Complete HEAD → workspace tree comparison
 specspec query --base main~2 --target main # Explicit versions, like spotlights
 specspec query --human                   # Original body lines, individual sources
@@ -140,7 +145,7 @@ specspec delete OLD_ID \
   per-step states. Preview IDs are not reserved; re-running creates fresh IDs.
 - All steps are parsed before body-file/stdin reads or writes. Read/init/source/
   spotlight/recovery/API commands cannot join an editing invocation. For example,
-  `update ID -m "..." show ID delete OTHER_ID` fails without partial edits.
+  `update ID -m "..." query ID delete OTHER_ID` fails without partial edits.
   Command names supplied as option values, such as `-m "delete"`, remain literal.
 - A singleton `add --as NAME` returns its alias too. `add` and `update` now support
   `--dry-run` as well as `delete`. Existing ordinary single-edit result contracts
@@ -191,9 +196,11 @@ Human diagnostics go to stderr; JSON diagnostics are structured in its one envel
 Terminal control characters in project text are displayed visibly, not executed.
 Read-only exploration does not stage, commit, install hooks or fetch source objects.
 
-Current-format `show` and `query` remain usable with graph errors. `show --raw` (with
-an ID or direct `--path`) reads literal malformed documents; `--ref` and `--staged`
-select historical/index reads. `query --issues` selects structural findings and their
+Query remains usable with graph errors. `query --raw` (with an ID or direct
+`--path`) reads literal malformed documents; `--target REV` selects committed bytes
+and `--staged` selects exact index bytes. Raw mode is separate from a parsed graph
+comparison: reject `--base`, metrics, ancestors, issues or human presentation there.
+`--path` and `--staged` require `--raw`. `query --issues` selects structural findings and their
 potential descendants, optionally completed by `--with-ancestors`; use it without
 metric criteria. Cycles/disconnected components remain visible and finite. Undefined
 cyclic maximum-distance requests fail explicitly. Partial parsed scope is not a
@@ -225,7 +232,7 @@ justification. Full canonical patches remain present unless --summary is explici
 {"api_version":7,"ok":true,"result":{"node_count":22},"diagnostics":[]}
 ```
 
-Show without an ID returns complete normalized node records in JSON; parents encode
+Query JSON returns complete normalized selected target/before records; parents encode
 relationships without a redundant edges array. Mutation receipts return changed IDs,
 ID/path nodes and affected IDs. Delete additionally retains its complete assessed plan.
 Node-record bodies use LF normalization; canonical files and native before/after plans

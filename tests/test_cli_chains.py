@@ -171,7 +171,10 @@ def test_non_editing_commands_are_rejected_before_input_reads(workspace, monkeyp
 
     monkeypatch.setattr(cli, "read_body", forbidden)
     result = invoke(root, "update", id, "--body", "-", command, "delete", id)
-    assert result.exit_code == 2 and "Only add, update and delete" in result.stderr
+    assert result.exit_code == 2
+    assert (
+        "unexpected extra argument" if command == "show" else "Only add, update and delete"
+    ) in result.stderr
     assert load_snapshot(root).files == before
 
 

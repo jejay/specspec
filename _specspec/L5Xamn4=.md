@@ -11,8 +11,8 @@ from absent, unreadable or ambiguous endpoints. Known raw parent declarations re
 available independently of resolved traversal edges. Diagnose current-format inputs;
 unsupported schemas remain unsupported and raw reads never normalize them.
 
-show reads identifiable nodes independently of global errors and supports raw,
-staged and immutable reads. query --issues selects structural findings and potential
+query --raw reads actual canonical documents independently of global errors, using
+saved, staged or immutable bytes. Parsed query --issues selects structural findings and potential
 descendants with optional complete ancestor context. Cycle-safe walks include
 unreachable components. Defined metrics use known relationships; unavailable scope
 or cyclic longest paths receive explicit errors rather than fabricated selections.

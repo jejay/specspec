@@ -103,7 +103,7 @@ is unrelated to obsolete SpecSpec node schemas.
 From the clone:
 
 ```sh
-python -m specspec show
+python -m specspec query
 python -m specspec diff
 python -m specspec query <full-id> --max-distance 0 --with-ancestors
 npm test

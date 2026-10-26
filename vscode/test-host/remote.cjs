@@ -22,7 +22,7 @@ exports.run = async () => {
     assert.equal(extension.extensionKind, vscode.ExtensionKind.Workspace);
     assert.equal(extension.extensionUri.scheme, 'file');
     const cli = args => JSON.parse(execFileSync(config.python, ['-m','specspec','--root',root.fsPath,...args], {encoding:'utf8',timeout:120000})).result;
-    const saved = cli(['show','--json']);
+    const saved = cli(['query','--json']).target;
     const started = Date.now();
     const graph = await vscode.commands.executeCommand('specspec.openGraph', root);
     assert.equal(graph.valid,true);assert.deepEqual(graph.nodes.map(n=>n.id),saved.nodes.map(n=>n.id));

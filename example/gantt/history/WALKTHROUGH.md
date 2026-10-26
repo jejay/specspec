@@ -130,7 +130,9 @@ the maintained history. Command/protocol cutovers refresh actual receipts, teach
 text, ledgers, refs, source retention, bundle and snapshot together; runnable
 application code and historical node identities remain stable. Old manual clones
 remain preserved. Agent readings use `query ID --max-distance 0 --with-ancestors`.
-Actual query receipts retain match/ancestor/neighbor provenance; the verifier checks
+All 65 actual query receipts replace separate specification-read commands: 43 retain
+match/ancestor/neighbor provenance and 22 inspect descendant scope. Every command's
+--help supplies purpose, arguments, defaults and examples. The verifier checks
 it against the reconstructed working and prior committed graphs. All maintained
 refs and the tracked snapshot use the same current command vocabulary.
 

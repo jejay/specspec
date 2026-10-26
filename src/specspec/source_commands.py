@@ -2,6 +2,7 @@
 
 import click
 
+from .cli_help import HELP
 from .git import git_snapshot
 from .model import Diagnostic, SpecError
 from .source_schema import validate_source
@@ -99,20 +100,35 @@ def capture_source(
 def register(main, root_path, emit, guarded, json_option):
     from .output import render_sources
 
-    @main.group(name="sources")
+    @main.group(
+        name="sources",
+        help=HELP["sources"],
+        short_help="Inspect and maintain implementation-to-code links.",
+    )
     def group():
         """Advanced: inspect, capture and deliberately reanchor source regions."""
 
     def target_options(function):
         for decorator in [
-            click.option("--ref", help="Code revision; also graph revision unless overridden."),
-            click.option("--staged", is_flag=True),
+            click.option(
+                "--ref", help="Committed code and declaration revision; default: saved workspace."
+            ),
+            click.option(
+                "--staged",
+                is_flag=True,
+                help="Read declarations and code from the exact Git index, not working files.",
+            ),
             click.option("--graph-ref", hidden=True),
         ]:
             function = decorator(function)
         return function
 
-    @group.command(name="show", context_settings={"ignore_unknown_options": True})
+    @group.command(
+        name="show",
+        context_settings={"ignore_unknown_options": True},
+        help=HELP["sources show"],
+        short_help="Inspect links or preview a numbered source region.",
+    )
     @click.argument("node_id", required=False)
     @click.option(
         "--source",
@@ -140,7 +156,12 @@ def register(main, root_path, emit, guarded, json_option):
             }
         emit(result, as_json=as_json, text=render_sources)
 
-    @group.command(name="capture", context_settings={"ignore_unknown_options": True})
+    @group.command(
+        name="capture",
+        context_settings={"ignore_unknown_options": True},
+        help=HELP["sources capture"],
+        short_help="Add a Git-anchored source reference to a current implementation.",
+    )
     @click.argument("node_id")
     @click.argument("path")
     @click.option(
@@ -150,10 +171,19 @@ def register(main, root_path, emit, guarded, json_option):
         required=True,
         help="Inclusive START:END; repeat for separate regions.",
     )
-    @click.option("--mode", type=click.Choice(["strict", "expanding"]), required=True)
+    @click.option(
+        "--mode",
+        type=click.Choice(["strict", "expanding"]),
+        required=True,
+        help="Tracking: strict reports internal edits; expanding absorbs contained growth.",
+    )
     @click.option("--symbol", hidden=True)
     @click.option("--ref", help="Committed source; default HEAD.")
-    @click.option("--staged", is_flag=True)
+    @click.option(
+        "--staged",
+        is_flag=True,
+        help="Capture immutable code bytes from the Git index instead of HEAD/--ref.",
+    )
     @click.option("--replace", "replace_number", type=click.IntRange(min=1), hidden=True)
     @click.option("--dry-run", is_flag=True, help="Preview metadata without writing the node.")
     @json_option
@@ -176,9 +206,20 @@ def register(main, root_path, emit, guarded, json_option):
         )
         emit(result, as_json=as_json, text=render_sources)
 
-    @group.command(name="reanchor", context_settings={"ignore_unknown_options": True})
+    @group.command(
+        name="reanchor",
+        context_settings={"ignore_unknown_options": True},
+        help=HELP["sources reanchor"],
+        short_help="Deliberately move an existing region's Git anchor.",
+    )
     @click.argument("node_id")
-    @click.option("--source", "number", type=click.IntRange(min=1), required=True)
+    @click.option(
+        "--source",
+        "number",
+        type=click.IntRange(min=1),
+        required=True,
+        help="Existing region reference number on this node, starting at 1.",
+    )
     @click.option(
         "--range",
         "ranges",
@@ -186,8 +227,16 @@ def register(main, root_path, emit, guarded, json_option):
         help="Explicit replacement ranges for uncertain mappings.",
     )
     @click.option("--ref", help="Committed target; default HEAD.")
-    @click.option("--staged", is_flag=True)
-    @click.option("--dry-run", is_flag=True)
+    @click.option(
+        "--staged",
+        is_flag=True,
+        help="Use exact Git-index code instead of HEAD/--ref; the node edited remains current.",
+    )
+    @click.option(
+        "--dry-run",
+        is_flag=True,
+        help="Resolve and preview replacement metadata without saving the node.",
+    )
     @json_option
     @click.pass_obj
     @guarded

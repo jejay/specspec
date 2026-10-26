@@ -152,7 +152,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 del records[node_id]
         graph, diagnostics = build_graph(list(records.values()))
         assert not diagnostics, diagnostics
-        if action == "query":
+        if action == "query" and "--with-ancestors" in argv:
             selected = argv[3]
             assert argv[4:] == ["--max-distance", "0", "--with-ancestors", "--json"]
             selection = result["selection"]
@@ -193,9 +193,38 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
                 )
             assert selection["source_evidence_ids"] == sorted(evidence)
             assert selection["boundary_parents"] == sorted(boundary - required)
-        elif action == "show" and "--dependents" in argv:
-            assert result["id"] == argv[3]
-            assert set(result["affected"]) == graph.closure(argv[3])
+        elif action == "query":
+            selected = argv[3]
+            assert argv[4:] == ["--json"]
+            current_records = {key: node.to_dict() for key, node in records.items()}
+            projection = baseline | current_records
+            required = reachable_records(projection, [selected])
+            selection = result["selection"]
+            assert selection["root"] == selected
+            assert selection["population"] == len(required)
+            assert set(selection["ids"]) == required
+            assert selection["queries"] == []
+            assert not selection.get("with_ancestors", False)
+            assert selection["partial"] == (required != projection.keys())
+            assert selection["edges"] == sorted(
+                [parent, key]
+                for key in required
+                for parent in projection[key]["parents"]
+                if parent in required
+            )
+            evidence, boundary = set(), set()
+            for revision in (baseline, current_records):
+                evidence.update(
+                    key for key in reachable_records(revision, required) if revision[key]["sources"]
+                )
+                boundary.update(
+                    parent
+                    for key, record in revision.items()
+                    if key in required
+                    for parent in record["parents"]
+                )
+            assert set(selection["source_evidence_ids"]) == evidence
+            assert set(selection["boundary_parents"]) == boundary - required
         elif action == "check":
             assert result["node_count"] == len(records)
         assert action in {
@@ -204,7 +233,6 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             "update",
             "delete",
             "query",
-            "show",
             "check",
         }
         recorded_graphs[ordinal] = {key: node.to_dict() for key, node in records.items()}

@@ -13,18 +13,20 @@ function fixture(source, python) {
     // Keep all real stage tags/ancestry; do not copy a graph and invent a one-commit history.
     execFileSync(python, [join(source, 'history/checkout.py'), root], { encoding: 'utf8' });
     const cli = (args, input) => expandResult(JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', root, ...args], { input, encoding: 'utf8' })).result);
-    let s = cli(['show', '--json']);
+    const saved = () => cli(['api'], JSON.stringify({ api_version: 7, op: 'read' })).snapshot;
+    const node = id => saved().nodes.find(n => n.id === id);
+    let s = saved();
     const manifesto = s.nodes.find(n => n.type === 'manifesto');
     const modified = s.nodes.find(n => n.type === 'requirement' && n.parents.includes(manifesto.id));
     if (!modified) throw new Error('The UI fixture needs a current manifesto-child requirement.');
     cli(['update', modified.id, '--body', '-', '--json'], '# Modified UI fixture intention\n\nDisposable test content, not the real project.\n');
     const added = cli(['add', '--parent', manifesto.id, '--body', '-', '--json'], '# Added UI fixture intention\n\nDisposable test content.\n').changed_ids[0];
-    s = cli(['show', '--json']);
+    s = saved();
     const removed = s.nodes.find(n => n.type === 'implementation');
     // A managed physical deletion exercises D; this disposable terminal node only.
     cli(['delete', removed.id, '--json']);
     cli(['check', '--warnings-as-errors', '--json']);
-    return { root, added, modified: modified.id, removed: removed.id, cli, cleanup };
+    return { root, added, modified: modified.id, removed: removed.id, cli, saved, node, cleanup };
   } catch (error) { cleanup(); throw error; }
 }
 module.exports = { fixture };

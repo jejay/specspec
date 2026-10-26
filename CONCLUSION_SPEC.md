@@ -19,7 +19,7 @@ addressable choices, with human review assessing remaining uncertainty.
 
 ## Domain library, CLI and hosts
 
-Use Python 3.11+, Hatchling, Click, ruamel.yaml and pytest. The importable domain
+Use Python 3.11+, Hatchling, Click, ruamel.yaml, markdown-it-py and pytest. The importable domain
 library and console/module CLI serve all hosts. Support pipx/uvx isolation and local/
 Git installation; publication is separately authorized.
 
@@ -39,7 +39,10 @@ src/specspec/
   annotations.py           # Comparison spotlights and sparse workspace drift summaries
   annotation_commands.py   # Public spotlight add/show/flush
   application.py / wire.py # Shared reads/plans and compact comparison projection
-  output.py / cli.py       # Readable review presentation and API-6 envelopes
+  output.py / cli.py       # Readable review presentation and API-7 envelopes
+  cli_help.py              # Task-oriented static help for every command/group
+  replacement_matching.py  # Source-mapped newline/prose comparison
+  body_replacements.py     # Disjoint original-body passages plus literal NEW
 graph-ui-common/            # One DOM/SVG renderer, session, camera, build/template
 vscode/                     # Document/project/view adapter and native facilities
 electron/                   # Authorized main/preload/renderer and local storage
@@ -47,24 +50,32 @@ electron/                   # Authorized main/preload/renderer and local storage
 
 Adapters call the CLI with argument arrays, bounded UTF-8 stdin/output and a fixed
 trusted executable. The Python library owns graph/schema/serialization rules.
-API 6 structured stdout is one `{api_version, ok, result, diagnostics}` envelope; exit 0 means
+API 7 structured stdout is one `{api_version, ok, result, diagnostics}` envelope; exit 0 means
 success, 1 validation/rejected operation, 2 invocation/I/O failure. Diagnostics have
-stable codes, severity, path/optional ID and actionable text. Body input supports files
-or `-` stdin. Full-parent updates explicitly replace the supplied set.
+stable codes, severity, path/optional ID and actionable text. Ordinary bodies use
+literal repeatable -m paragraphs; explicit integration --body FILE|- supplies UTF-8
+files/stdin. Full-parent updates replace the supplied set. Repeated --replace OLD NEW
+selects unique disjoint original passages with default line-ending/prose tolerance;
+NEW and unselected text remain literal. Only add/update/delete compose into one
+candidate, consent decision and recoverable transaction, with local parent aliases.
 
-The [compact command guide](docs/cli.md) defines eight everyday verbs with readable
+The [compact command guide](docs/cli.md) defines seven everyday verbs with readable
 text/Markdown defaults and explicit compact JSON. Full review diffs show all canonical
 file hunks, semantic node/relationship changes and separate linked-source impact.
 Comparison transport shares unchanged records; both hosts use the same read coordinator
 with optional native overlays and working-first loading. Native persistence stays
-separate from managed writes. Node format is **7** and protocol is **6**.
+separate from managed writes. Node format and protocol are **7**. Detailed static
+--help explains every root/command/subgroup purpose, inputs, defaults, examples and
+safety; ordinary result verbosity stays independent. Query is the specification
+inspection vocabulary. Raw query reads saved, exact-index or committed documents
+for repair; parsed graph readings retain their revision comparison.
 
-[`query`](docs/query.md) always compares revisions, defaulting to fresh HEAD versus
+Parsed graph [`query`](docs/query.md) compares revisions, defaulting to fresh HEAD versus
 saved workspace with spotlight-style --base/--target selection. Iterative ordered
 last-occurrence walks print a selected-record overlay: current parents/text for
-current nodes, former parents/text for nodes marked deleted. Current records have
-no deleted parents, so the projection is acyclic without a full edge union. It is a
-reading, not a new canonical graph. Compact rails and full parent headers remain.
+current nodes, former parents/text for nodes marked deleted. Valid revisions yield
+an acyclic projection; invalid declared references retain missing endpoints and
+finite cycle-safe readings. It is a reading, not a new canonical graph. Compact rails and full parent headers remain.
 Default bodies occupy one line: single newlines become spaces and longer runs
 become ` ¶ `. Types/change hints use lowercase words without a legend, and root
 content has no extra indent. Parents use comma-space separators in every mode.
@@ -127,7 +138,10 @@ effects against both old and new graphs; implementation realization remains boun
 
 ## Transactions, deletion and native persistence
 
-Managed operations validate saved and candidate graphs under a workspace lock,
+Managed operations diagnose saved and candidate graphs under a workspace lock,
+allow graph-invalid intermediates and optionally require a valid complete result
+with --require-valid. Safe identifiable target schemas and physical safeguards stay
+enforced independently. They
 stage same-filesystem bytes, journal originals/replacements outside `_specspec`,
 byte-check targets, replace and validate again. Null replacement states mean physical
 deletion. Interrupted writes block further mutations until recovery. Recovery accepts
@@ -135,10 +149,12 @@ known original/replacement/absence states and preserves intervening external tex
 Its protection is bounded to cooperating writers/process interruption with explicit
 filesystem-race and power-loss limitations.
 
-Managed `delete` unions requested nodes and **all** directed descendants, including
-shared/partial children. Protect the manifesto and validate the remainder. Outside
-parents and linked code files remain unchanged. Preview with `--dry-run`; assess every
-affected path for untracked/ignored/staged/unstaged/comment/rename/mode/conflict changes.
+Managed `delete` removes exactly selected node files, protecting the manifesto.
+Surviving conclusions retain their body text and parent declarations, including
+missing references, for deliberate reconsideration. Linked code remains unchanged.
+Preview selected files, retained faults, potential downstream scope and final validity
+with --dry-run. Assess only selected paths for untracked/ignored/staged/unstaged/
+comment/rename/mode/conflict changes.
 Unavailable Git assessment warns explicitly. Warnings precede unlinking; warned
 noninteractive actions need `--yes`. Hosts confirm the backend scope/warnings and
 submit a reviewed plan for direct locked rechecking. Success reports every removed ID.
@@ -180,12 +196,13 @@ Watchers coalesce hints and retry transient reads, directly compare records and 
 native form/caret/cameras. Superseded generation/text reads have a distinct error;
 bounded attempts coalesce a fresh automatic refresh without misdiagnosing invalid
 files. Explicit working reads report retry and request a follow-up. Actual invalid
-reloads retain a marked last valid graph with diagnostics. Same-node overwrites
+reloads show fresh diagnosable invalid graphs; unavailable transport/schema results
+retain marked last-usable context. Same-node overwrites
 require confirmation. Explicit Refresh and configurable
 polling (default 0/off) remain. Watcher delivery depends on the filesystem.
 
 Project-scoped bounded API channels reuse interpreter lifetime, with a separately
-warmed read-only source channel. Each API-6 frame performs current validation and
+warmed read-only source channel. Each API-7 frame performs current validation and
 file/ref/index reads. Ordinary CLI commands retain one-shot execution. Closing or
 reconfiguring a project disposes its channels; failed mutations receive no automatic
 replay. Preview replies match the published render and displayed commit. Native
@@ -240,8 +257,8 @@ target/base context, shared lazy raw ranges, green tied cohorts and a neutral gr
 manifesto. Git theme titles/corners and edge patterns
 retain independent meaning.
 
-Actual-size tints are 15% rest / 24% hover. As zoom decreases from 100% to 12%,
-linearly blend those base fills to the painted border, reaching solid node shapes.
+Actual-size tints are 15% rest / 24% hover. As zoom decreases below 40%,
+linearly blend those base fills to the painted border, reaching solid shapes at 16%.
 High-contrast cards start from the theme canvas background. The white hovered
 manifesto and strengthened colored borders are exact fill endpoints. Colored hovered borders/incident inks use
 OKLCH L+.10 (cap .95), C×1.30, same H; neutral distance/type/influence root hover is white.
@@ -262,7 +279,7 @@ without suppressing useful rings. One --spotlight-color CSS variable starts whit
 ring width max(5, 3 / k) follows graph scale with a 3px screen minimum and equal inset.
 Shift-click toggles, Ctrl/Command+Shift removes, and Clear highlight clears the shared
 manual/spotlight ID set. A message modal captures the current comparison and trusted
-native overlays without saving documents or managed drafts. CLI show reports each
+native overlays without saving documents or managed drafts. Spotlight show reports each
 record's A/M/D/= statuses, missing/unavailable members and advisory warnings.
 
 The dropdown, active identity and highlight IDs are per view. A round red badge
