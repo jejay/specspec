@@ -484,9 +484,9 @@ def test_readable_receipt_includes_the_actual_alias_mapping(workspace):
         "-m",
         "# Detail",
     )
-    assert result.exit_code == 0 and result.stdout.count("Changed:") == 1
+    assert result.exit_code == 0 and result.stdout.count("Added:") == 1
     goal = next(n for n in load_snapshot(root).nodes if n.body == "# Goal")
-    assert f"  $goal -> {goal.id}" in result.stdout
+    assert f"Aliases: $goal -> {goal.id}" in result.stdout
 
 
 def test_cancelling_deletion_cancels_unrelated_adds_too(workspace, monkeypatch):

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Group mutation feedback by Added/Modified/Deleted/Unchanged with unpadded,
+  comma-separated full node IDs. Init reports Added; previews use Would add/modify/
+  delete. Classification compares stored bytes within the transaction, independently
+  of Git status. Preserve diagnostics, explicit aliases and API-7 JSON records.
+
 ## 0.1.0 — initial release preparation
 
 SpecSpec connects intentions, separately revisable choices and implementation in a

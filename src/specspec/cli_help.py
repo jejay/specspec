@@ -80,7 +80,10 @@ HELP = {
     --dry-run, --require-valid, --yes and --json then apply to the whole invocation.
     Other commands are standalone.
 
-    Default results are readable text. Add --json for structured API-7 output.
+    Default results are readable text. Editing receipts group full node IDs under
+    Added, Modified, Deleted or Unchanged, with comma-separated IDs and no padding.
+    Previews use Would add/modify/delete. These are invocation effects, not Git status.
+    Add --json for structured API-7 output.
     Editing can succeed while reporting an invalid intermediate graph; check is
     strict, and --require-valid checks the whole final candidate before writes.
     Run COMMAND --help for arguments, examples, defaults and safety details.
@@ -104,7 +107,7 @@ HELP = {
       specspec init -m "# Plan a trip" -m "Help friends agree on a schedule."
       specspec --root ./my-project init -m "# Product goal"
 
-    Output identifies the new manifesto ID and file. Keep the full ID, including
+    Output reports Added: NODE_ID for the first node. Keep the full ID, including
     '=', for future --parent arguments. Creation validates the complete initial
     graph and does not stage, commit or install hooks.
 
@@ -202,8 +205,9 @@ HELP = {
     a structurally invalid intermediate graph can be saved with diagnostics;
     document schema, path safety and transaction safeguards still apply.
 
-    Output gives generated IDs/paths, alias mappings when requested and potential
-    affected scope. Git staging/commits and linked code are untouched.
+    Output groups generated full IDs under Added (Would add for previews), with
+    alias mappings when requested and potential affected scope.
+    Git staging/commits and linked code are untouched.
     Integration --body FILE|- is an alternative UTF-8 file/stdin body source;
     --parents-json and --sources are advanced complete-field inputs. At most one
     chained body can consume stdin. Node files stay within 1 MiB; supplied body
@@ -243,7 +247,9 @@ HELP = {
     several passages. --dry-run writes nothing; --require-valid checks the entire
     final graph. Invalid intermediate graphs remain editable with diagnostics,
     while schema, locks, original-byte checks and recovery stay enforced.
-    Output is a small receipt, not the whole graph. No Git staging or commit.
+    Output groups full IDs under Modified, or Unchanged when stored bytes match.
+    Previews use Would modify; Unchanged stays Unchanged. These describe this
+    invocation relative to saved contents, not Git status. No Git staging or commit.
 
     Integration: --body FILE|- reads UTF-8 instead of messages/replacements;
     --parents-json '[]' explicitly clears parents for an invalid intermediate;
@@ -266,8 +272,9 @@ HELP = {
       specspec query --issues --with-ancestors
       specspec diff --with-context
 
-    Preview distinguishes selected files, unresolved parent references, potentially
-    affected survivors and resulting graph validity/completeness. Affected scope is
+    Preview lists selected full IDs under Would delete; successful deletion uses
+    Deleted. Unresolved parent references, potentially affected survivors and
+    resulting graph validity/completeness remain explicit. Affected scope is
     evidence for reconsideration, not permission to delete surviving conclusions.
 
     Selected uncommitted files (including staged changes) or unavailable Git status

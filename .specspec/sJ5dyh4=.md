@@ -13,8 +13,8 @@ include required ancestors in deterministic graph order and clearly identifies
 optional surrounding IDs without unexpectedly dumping their bodies. Explicit byte
 budgets count the actual representation and fail rather than truncate required text.
 
-Mutations report changed IDs/paths, affected scope and warnings; checks report counts
-and diagnostics. Keep stdout for results and stderr for human diagnostics. Escape
+Mutations identify changed nodes by full ID and report affected scope and warnings;
+checks report counts and diagnostics. Keep stdout for results and stderr for human diagnostics. Escape
 terminal control characters visibly without executing project text. Preserve original
 UTF-8/body/EOL bytes in canonical files and native before/after plans. Normalized
 node records use LF; literal review patches identify file-only EOL changes. Machine mode is explicit

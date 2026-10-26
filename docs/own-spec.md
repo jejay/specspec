@@ -210,6 +210,10 @@ raw repair reads under query. [Understandable help](../.specspec/DOqGIio=.md) an
 [task guides](../.specspec/ivvUgP4=.md) explain arguments, defaults, examples and
 safety in every help output. [Evidence](investigations/cli-help.md) records the
 host preflight and maintained-history coordination.
+[Grouped mutation feedback](../.specspec/6p7T7CY=.md) reports Added, Modified,
+Deleted and Unchanged as unpadded comma-separated full IDs, with hypothetical preview
+labels. The writer classifies locked original/candidate bytes independently of Git
+status; init adds its first node. Structured ID/path receipts retain API 7.
 [CLI/review implementation](../.specspec/SF12qpA=.md)
 and [shared host implementation](../.specspec/GG_koyg=.md)
 map the code and verification seams.

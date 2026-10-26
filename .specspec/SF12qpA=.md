@@ -2,7 +2,7 @@
 id: SF12qpA=
 type: implementation
 parents:
-- sJ5dyh4=
+- 6p7T7CY=
 - 7kYVG_E=
 - cpFRqIM=
 - nIj9fmE=
@@ -33,6 +33,8 @@ sources:
 - path: docs/investigations/cli-help.md
 - path: graph-ui-common/test-host/fixture.cjs
 - path: graph-ui-common/test-host/platform.cjs
+- path: src/specspec/workspace.py
+- path: tests/test_cli_receipts.py
 ---
 # Implement the compact command surface and complete review projection
 
@@ -43,9 +45,16 @@ Host managed preflights use the existing saved API read. Ordinary authoring uses
 literal message paragraphs and
 combinable add/update/delete steps; explicit body integration inputs and existing UI
 stdin remain separate.
-Output rendering separates readable text/Markdown from explicit
-compact API-7 envelopes. Mutation receipts retain IDs/paths/scope and warnings rather
-than full graphs. Node format 7 and canonical identities/source grammar remain stable.
+Output rendering separates readable text/Markdown from explicit compact API-7
+envelopes. Structured mutation receipts retain IDs/paths/scope and warnings rather
+than full graphs. Readable receipts group full node IDs by Added, Modified, Deleted
+and Unchanged, with hypothetical preview labels and explicit alias associations.
+The writer records transient invocation actions from locked original/candidate
+bytes; output uses the verified transaction result independently of Git status.
+Tests cover init, singleton and composed mutations, no-op body/parent/source and
+replacement edits, byte-only changes, fresh locked originals, post-write external
+edits, preview/refusal, invalid/incomplete context and unchanged protocol fields.
+Node format 7 and canonical identities/source grammar remain stable.
 
 Full review output combines stable-ID classification, every canonical-file hunk,
 relationship labels and separate linked-source context. Comment/whitespace/newline

@@ -11,8 +11,9 @@ Select exactly a nonempty distinct set of current identifiable node IDs. Protect
 the manifesto and reject unknown or ambiguous targets. Preserve all unselected
 files byte-for-byte, including their declarations of deleted parents. Plan from
 actual saved files even when the surrounding graph is invalid. Preview selected
-ID/path records, resulting missing references, potential surviving descendant scope,
-resulting validity and analysis completeness separately.
+full IDs, resulting missing references, potential surviving descendant scope,
+resulting validity and analysis completeness separately. Structured plans retain
+selected ID/path records.
 
 Assess only selected paths with NUL-delimited literal Git status, disabled optional
 index refresh/fsmonitor, and clean-filter/EOL semantics. Staged/new/ignored/comment/

@@ -306,7 +306,7 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
         },
         snapshot.diagnostics,
         as_json=as_json,
-        text=render_receipt,
+        text=lambda r: render_receipt(r, snapshot.mutation_actions),
     )
 
 
@@ -540,7 +540,7 @@ def delete(root, ids, dry_run, yes, reviewed_plan, require_valid, as_json):
         },
         diagnostics,
         as_json=as_json,
-        text=lambda r: render_receipt(r, "Deleted"),
+        text=lambda r: render_receipt(r, snapshot.mutation_actions),
     )
 
 
@@ -846,7 +846,7 @@ def write_edits(root, edits, *, dry_run, yes, require_valid, as_json):
         receipt,
         [*snapshot.diagnostics, *warnings],
         as_json=as_json,
-        text=lambda r: render_receipt(r, "Planned" if dry_run else "Changed"),
+        text=lambda r: render_receipt(r, snapshot.mutation_actions, dry_run=dry_run),
     )
 
 

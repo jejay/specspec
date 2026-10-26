@@ -83,15 +83,30 @@ def render_listing(snapshot):
     )
 
 
-def render_receipt(result, verb="Changed"):
-    lines = [f"{verb}: " + ", ".join(result["changed_ids"])]
-    lines += [f"  {n['id']}  {n['path']}" for n in result.get("nodes", [])]
+def action_lines(actions, *, dry_run=False):
+    labels = [
+        ("added", "Added", "Would add"),
+        ("modified", "Modified", "Would modify"),
+        ("deleted", "Deleted", "Would delete"),
+        ("unchanged", "Unchanged", "Unchanged"),
+    ]
+    return [
+        f"{preview if dry_run else actual}: " + ", ".join(actions[action])
+        for action, actual, preview in labels
+        if actions.get(action)
+    ]
+
+
+def render_receipt(result, actions, *, dry_run=False):
+    lines = action_lines(actions, dry_run=dry_run)
     if instructions := result.get("agent_instructions"):
         status = "created" if instructions["created"] else "existing entry preserved"
         lines.append(f"Agent instructions: {instructions['path']} ({status})")
     if result.get("aliases"):
-        lines.append("Aliases:")
-        lines += [f"  ${name} -> {id}" for name, id in sorted(result["aliases"].items())]
+        lines.append(
+            "Aliases: "
+            + ", ".join(f"${name} -> {id}" for name, id in sorted(result["aliases"].items()))
+        )
     lines.append(
         f"Affected: {len(result.get('affected', []))} nodes "
         "(potential scope, not proof of invalidity)"
@@ -100,7 +115,7 @@ def render_receipt(result, verb="Changed"):
         label = "Saved" if result.get("applied", True) else "Proposed"
         lines.append(f"{label} graph is INVALID. Surviving conclusions need reconsideration.")
         for ref in result.get("broken_references", []):
-            lines.append(f"  Unresolved: {ref['parent']} -> {ref['child']} ({ref['reason']})")
+            lines.append(f"Unresolved: {ref['parent']} -> {ref['child']} ({ref['reason']})")
     if result.get("analysis_complete") is False:
         lines.append("Analysis incomplete; unreadable material remains explicit.")
     return "\n".join(lines)
@@ -108,13 +123,12 @@ def render_receipt(result, verb="Changed"):
 
 def render_plan(plan):
     lines = [
-        f"Delete exactly {len(plan['deleted_ids'])} selected nodes; "
-        "keep descendants and their declarations:"
+        *action_lines({"deleted": plan["deleted_ids"]}, dry_run=True),
+        "Descendants and their parent declarations remain.",
     ]
-    lines += [f"  {n['id']}  {n['path']}" for n in plan["nodes"]]
     for ref in plan.get("broken_references", []):
         lines.append(
-            f"  Retained unresolved reference: {ref['parent']} -> {ref['child']} ({ref['reason']})"
+            f"Retained unresolved reference: {ref['parent']} -> {ref['child']} ({ref['reason']})"
         )
     lines.append(
         "Potential surviving downstream scope: "

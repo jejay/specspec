@@ -32,6 +32,8 @@ class Snapshot:
     commit: str | None = None
     declared_version: int | None = None
     created_instructions: bool | None = None
+    # Transient invocation outcomes; excluded from snapshots' protocol/canonical data.
+    mutation_actions: dict[str, list[str]] | None = None
 
     @property
     def valid(self) -> bool:
@@ -387,6 +389,7 @@ def initialize(root: Path, body: str) -> Snapshot:
         result = load_snapshot(root, ignore_state=True)
         result.require_valid()
         result.created_instructions = create_instructions
+        result.mutation_actions = {"added": [node.id]}
         cleanup(state)
     return result
 
@@ -405,6 +408,7 @@ def mutate(
         if not changes:
             if require_valid:
                 before.require_valid()
+            before.mutation_actions = {}
             return before
         for path, raw in changes.items():
             pure = PurePosixPath(path)
@@ -434,6 +438,19 @@ def mutate(
                 require_node(candidate, PurePosixPath(path).stem)
         if require_valid:
             candidate.require_valid()
+        actions: dict[str, list[str]] = {}
+        for path, raw in changes.items():
+            original = before.files.get(path)
+            if raw == original:
+                action = "unchanged"
+            elif original is None:
+                action = "added"
+            elif raw is None:
+                action = "deleted"
+            else:
+                action = "modified"
+            actions.setdefault(action, []).append(PurePosixPath(path).stem)
+        candidate.mutation_actions = actions
         if dry_run:
             return candidate
         if state.stat().st_dev != (root / SPEC_DIR).stat().st_dev:
@@ -491,6 +508,7 @@ def mutate(
                     )
                 ]
             )
+        result.mutation_actions = actions
         cleanup(state)
     return result
 

@@ -227,6 +227,37 @@ Repeated `--node ID` focuses it; advanced `--max-bytes N` bounds the actual enco
 result. Context supplies evidence, never a determination of owner motive or semantic
 justification. Full canonical patches remain present unless --summary is explicit.
 
+## Mutation receipts
+
+Default mutation output identifies nodes, rather than their backing Markdown files.
+Each nonempty action group occupies one unpadded line, with full IDs separated by
+comma-space:
+
+```text
+Added: kPmrkZI=, AbcDefA=
+Modified: LmnOpqA=
+Deleted: RstUvwA=
+```
+
+`init` reports its first node under `Added` too. Updates whose proposed stored bytes
+match the saved bytes report `Unchanged`. Body, parent, source and selected-passage
+updates use the same rule, including physical layout-only changes. These labels
+compare the invocation's locked original and candidate contents, independently of
+Git status against HEAD. Groups appear in Added/Modified/Deleted/Unchanged order;
+IDs retain the writer's target order within each group.
+
+Dry runs use `Would add`, `Would modify` and `Would delete`; identical bytes still
+report `Unchanged`. Generated preview IDs remain unreserved. A rejected operation
+prints diagnostics rather than a completed-change summary. A deletion requiring
+consent can show its `Would delete` proposal while refusing to remove anything.
+
+Requested `--as` aliases have one unpadded, comma-separated `Aliases` line mapping
+local names to full IDs. Those associations, structural references, instruction
+creation/preservation, potential affected scope, validity and completeness add
+meaningful context separately. Diagnostics can still identify actual file paths.
+JSON retains its existing ID/path records and selected `changed_ids`, including
+no-op update targets; the text action groups do not add protocol fields.
+
 ## Structured results
 
 ```json
