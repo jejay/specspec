@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from test_git import git
+from test_git import git, setup_repository
 
 from specspec.cli import main
 from specspec.editor import editor_request
@@ -15,13 +15,23 @@ from specspec.wire import expand_comparison
 from specspec.workspace import add_node, delete_nodes, load_snapshot, recover
 
 
-def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(workspace):
+@pytest.fixture
+def unconfigured_git(tmp_path, monkeypatch):
+    """These commit fixtures must work without the owner's identity or Git setup."""
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "absent-global-gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+    for role in ["AUTHOR", "COMMITTER"]:
+        for field in ["NAME", "EMAIL"]:
+            monkeypatch.delenv(f"GIT_{role}_{field}", raising=False)
+    monkeypatch.delenv("EMAIL", raising=False)
+
+
+def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(
+    workspace, unconfigured_git
+):
     root, manifesto = workspace
     snapshot, child = add_node(root, "requirement", [manifesto], "# Earlier rationale\n")
-    git(root, "init")
-    git(root, "config", "core.autocrlf", "false")
-    git(root, "add", ".specspec")
-    git(root, "commit", "-m", "Record an experiment")
+    setup_repository(root)
     path = root / snapshot.graph.nodes[child].path
     delete_nodes(root, [child])
     assert not path.exists()
@@ -61,11 +71,9 @@ def test_unborn_head_is_known_empty_non_git_is_incomplete_and_bad_refs_fail(work
     assert runner.invoke(main, ["--root", str(root), "diff", "missing", "--json"]).exit_code == 2
 
 
-def test_uncommitted_created_then_deleted_node_has_no_head_ghost(workspace):
+def test_uncommitted_created_then_deleted_node_has_no_head_ghost(workspace, unconfigured_git):
     root, manifesto = workspace
-    git(root, "init")
-    git(root, "add", ".specspec")
-    git(root, "commit", "-m", "Root")
+    setup_repository(root)
     _, child = add_node(root, "requirement", [manifesto], "# Trial\n")
     delete_nodes(root, [child], allow_uncommitted=True)
     assert semantic_diff(git_snapshot(root, "HEAD"), load_snapshot(root))["changes"] == []

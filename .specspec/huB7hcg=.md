@@ -35,6 +35,7 @@ sources:
 - path: docs/architecture.svg
 - path: docs/own-spec.md
 - path: graph-ui-common/test/host-ui.test.cjs
+- path: tests/test_git.py
 ---
 # Execute reviewed exact-file deletion and report retained dependency faults
 
@@ -51,3 +52,7 @@ unmerged warnings, cancellation, changed plans, byte races and recovery. Histori
 D context remains distinct from current missing endpoints through stage/commit.
 Native dirty resources and linked code are protected. Shared host probes use the
 independent maintained current-schema Gantt history and exact fixture indexes.
+
+Git deletion regressions configure identities only in their disposable repositories.
+Commit fixtures run with global/system configuration excluded and inherited
+author/committer identities cleared, independently of an owner account.

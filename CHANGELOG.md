@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Terminate complete tool-written/native-planned node Markdown with a newline,
+  appending only when missing and preserving local style and trailing blank lines.
+  Reads, raw-editor saves and Git configuration remain untouched.
+
 - Compare node text independently of LF/CRLF/CR encoding, without changing any Git
   configuration or attributes. Existing-document writes/native plans retain local
   newline style; new nodes use LF. Normal diffs omit encoding-only changes and

@@ -15,7 +15,8 @@ newline presence stay meaningful. Physical newline encoding alone is equivalent.
 Raw query documents, native before/after plans, canonical files, immutable Git
 blobs, transaction guards and recovery retain exact bytes. New nodes use LF;
 existing-document writes adapt body input and replacement NEW to that document's
-newline style. Git configuration, attributes and linked source files remain under
+newline style and append a missing file terminator. Existing trailing blank lines
+remain unchanged. Git configuration, attributes and linked source files remain under
 their existing owners. Verify logical behavior and physical safety separately.
 
 Application API and canonical node fields remain version 7. Representation policy

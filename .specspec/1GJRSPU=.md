@@ -15,7 +15,8 @@ pairs refer to that same original body, have disjoint matched ranges and produce
 one candidate without cascading into inserted text. NEW may be empty to remove a
 passage, and retains literal content with newline encoding adapted to the document.
 
-Preserve untouched logical body characters and final-newline state. Words, case,
+Preserve untouched logical body characters and trailing blank lines, applying the
+tool-written document terminator at EOF. Words, case,
 Unicode, indentation and blank lines remain exact. OLD comparison tolerates standard
 line endings and Markdown prose soft breaks; storage adapts newline encoding only. Match and transform under the existing
 writer lock against the fresh identified node. Parents, sources and other metadata

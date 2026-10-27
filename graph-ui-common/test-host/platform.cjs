@@ -228,6 +228,7 @@ function platformChecks(fixture, host) {
       for(let i=0;i<300;i++){if(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`))break;await delay(100);}
       assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`));
       assert.ok(fixture.node(modified).body.includes('Saved from real Electron UI'));
+      assert.ok(fixture.node(modified).body.endsWith('\n'), 'Managed save appends the missing file terminator.');
       await evaluate(`document.getElementById('body').value='# Retained stale desktop draft';document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
       const old = await evaluate(`window.SpecSpecHost.getState().originalNode`);
       fixture.cli(['update',modified,'--body','-','--json'],'# External fixture update\n');

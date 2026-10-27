@@ -125,7 +125,12 @@ code mapping/retention. Hook files and Git operations remain under owner control
 [logical/newline-storage policy](../.specspec/qTT_OhY=.md) separate node content from
 LF/CRLF/CR encoding without configuring Git or adding attributes. Existing-document
 writes and native plans retain the opening delimiter's convention; new nodes use LF.
-Words, indentation, spaces, blank lines and EOF termination remain meaningful.
+Words, indentation, spaces and blank lines remain meaningful. The
+[tool-written terminator choice](../.specspec/Pek6TGE=.md) appends only a missing
+final newline to complete managed/native-plan documents in their local style.
+Existing trailing blank lines remain intact; raw reads retain actual EOF evidence.
+[Final-newline verification](investigations/final-newline.md) records the write/read
+boundary, executed POSIX permission test and self-contained Git-fixture correction.
 Normal diffs and query hints ignore encoding-only differences and use logical LF
 patches without newline-counter dumps. Raw reads, guards, journals/recovery, Git
 objects and cache verification remain byte-exact. Linked source files retain their

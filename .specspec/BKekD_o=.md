@@ -12,7 +12,8 @@ init/add/update expose repeatable -m/--message arguments. One message is preserv
 literally; repeated values are joined with exactly two LF characters, preserving
 all supplied content whitespace and Markdown headings. Newline encoding follows
 the target document: existing style for updates and LF for new nodes. Values such as dash
-or a filename are text. Omitting all body-edit inputs on update retains its logical body;
+or a filename are text. Omitting all body-edit inputs on update retains its logical body content, subject
+to the tool-written document terminator;
 explicit empty text remains an explicit schema-checked edit. Combined message and
 integration body sources fail before reads or writes. Document size checks apply.
 

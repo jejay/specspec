@@ -27,7 +27,8 @@ editing-command frontend prepares explicit bounded steps for the domain writer.
 Alias allocation, deletion consent, optional validity boundary and API-7 envelopes
 retain their existing owners. Managed serialization adapts message/file/stdin
 newline encoding to the existing document, using LF for new nodes while preserving
-content whitespace, paragraph layout and final-newline presence.
+content whitespace and paragraph layout. Serialization appends a missing file
+terminator while retaining existing trailing blank lines.
 
 The UI session, one-shot bridge and persistent API channels retain their current
 argv/stdin contracts. Tests cover literal filenames/dashes/Markdown/control text,

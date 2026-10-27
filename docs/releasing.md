@@ -46,6 +46,12 @@ semantic correctness or deterministic identical bytes across build machines.
 2. Run the working graph/source, Ruff, formatting, Python and npm checks in
    [contributing](../CONTRIBUTING.md). Verify every maintained Gantt ref and runnable
    stage; do not use obsolete SpecSpec development schemas as compatibility fixtures.
+   Inspect skip reasons with `python -m pytest -ra`. Permission-sensitive Linux
+   archive tests need a POSIX filesystem: use native Linux or an isolated WSL
+   checkout on its Linux filesystem, not `/mnt/c`. A Windows skip leaves that
+   contract unverified until the unchanged case runs there. Disposable Git tests
+   configure their own identities; do not set an owner's global identity to pass
+   tests. See the [permission-test investigation](investigations/final-newline.md).
 3. Run a clean root `npm ci`; inspect `npm audit` and the actual built dependency
    notices. Record findings and mitigations, not a timeless “secure” claim.
 4. Build all local artifacts, run `verify:packages`, and retain its manifest/digests.

@@ -463,7 +463,10 @@ def test_body_presentation_flattens_only_the_default_and_preserves_human_lines(
     original_body = query.target.graph.nodes[identity(0)].body
     text = render_query(query, human=human)
     assert body_line(body) == expected and "\n" not in expected
-    body_rows = logical_text(body).split("\n") if human else [expected]
+    # The comparison fixture serializes nodes through the tool, which supplies
+    # a missing file terminator; direct body_line inputs above can still lack one.
+    expected_render = expected + (" " if not logical_text(body).endswith("\n") else "")
+    body_rows = logical_text(original_body).split("\n") if human else [expected_render]
     assert text.split("\n") == [
         "HEAD → workspace",
         f"manifesto {identity(0)}",

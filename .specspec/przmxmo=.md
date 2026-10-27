@@ -41,6 +41,7 @@ sources:
 - path: branding/app-icon.ico
 - path: .github/workflows/ci.yml
 - path: .github/workflows/release-build.yml
+- path: docs/investigations/final-newline.md
 ---
 # Build and qualify independent local CLI and visual-host artifacts
 
@@ -67,3 +68,8 @@ complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
 spotlight and reload suites retain their assertions and production safeguards.
 Current platform/audit/evidence scope stays in the release investigation; build
 workflows upload artifacts without publication, tags, owner installs or Git writes.
+
+Permission-sensitive Linux archive verification executes on a POSIX filesystem.
+Qualification records distinguish the executed Python/archive environment from
+unexecuted graphical hosts. The final-newline investigation records the terminator
+boundary, filesystem evidence and self-contained Git regression fixtures.

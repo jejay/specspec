@@ -9,7 +9,8 @@ parents:
 Represent logical UTF-8 node text with LF: CRLF and bare CR encode the same line
 boundaries. Compare node records, canonical-text changes, patch text, query hints
 and mutation outcomes using this representation. Preserve other characters,
-indentation, trailing spaces, blank-line counts and final-newline presence.
+indentation, trailing spaces and blank-line counts. Reads and comparison retain
+EOF termination facts independently of write-side document conventions.
 Unreadable binary material retains explicit literal/unavailable evidence.
 
 Managed updates and native edit plans use the opening frontmatter delimiter's

@@ -37,6 +37,8 @@ sources:
 - path: tests/test_cli_receipts.py
 - path: src/specspec/node_text.py
 - path: tests/test_node_newlines.py
+- path: tests/test_final_newline.py
+- path: vscode/test-host/documents.cjs
 ---
 # Implement the compact command surface and complete review projection
 
@@ -63,7 +65,10 @@ text hunk, relationship labels and separate linked-source context. Comments,
 whitespace and EOF changes remain represented while encoding-only changes stay
 quiet. node_text.py shares logical normalization and existing-document EOL selection
 across comparison, serialization, native planning and action receipts. Raw bytes
-remain authoritative for safety, recovery, Git objects and explicit raw reads. API comparisons carry one target plus previous differing/
+remain authoritative for safety, recovery, Git objects and explicit raw reads.
+Complete managed/native-plan serialization appends only a missing file terminator
+and includes its bytes in limits, preserving trailing blank lines and empty repair
+bodies. tests/test_final_newline.py covers the convention and its read/write boundary. API comparisons carry one target plus previous differing/
 deleted records and ID-based metadata; projections reconstruct both complete revisions.
 Query ancestor completion preserves every chosen parent path. The shared emitter
 formats once and budgets actual encoded query output, including envelopes and

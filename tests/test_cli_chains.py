@@ -155,9 +155,9 @@ def test_command_words_as_message_values_are_not_boundaries(workspace, name, for
     )
     assert result.exit_code == 0, result.output
     saved = load_snapshot(root)
-    assert saved.graph.nodes[data["result"]["aliases"]["show"]].body == name
+    assert saved.graph.nodes[data["result"]["aliases"]["show"]].body == name + "\n"
     detail = data["result"]["changed_ids"][1]
-    assert saved.graph.nodes[detail].body == "--json"
+    assert saved.graph.nodes[detail].body == "--json\n"
 
 
 @pytest.mark.parametrize(
@@ -467,7 +467,7 @@ def test_source_fields_and_literal_alias_text_stay_associated_with_their_step(wo
     saved, aliases = load_snapshot(root), data["result"]["aliases"]
     assert saved.graph.nodes[aliases["impl"]].sources == sources
     assert saved.graph.nodes[aliases["goal"]].sources == []
-    assert saved.graph.nodes[aliases["goal"]].body == "# Keep $goal literal"
+    assert saved.graph.nodes[aliases["goal"]].body == "# Keep $goal literal\n"
 
 
 def test_readable_receipt_includes_the_actual_alias_mapping(workspace):
@@ -488,7 +488,7 @@ def test_readable_receipt_includes_the_actual_alias_mapping(workspace):
         "# Detail",
     )
     assert result.exit_code == 0 and result.stdout.count("Added:") == 1
-    goal = next(n for n in load_snapshot(root).nodes if n.body == "# Goal")
+    goal = next(n for n in load_snapshot(root).nodes if n.body == "# Goal\n")
     assert f"Aliases: $goal -> {goal.id}" in result.stdout
 
 

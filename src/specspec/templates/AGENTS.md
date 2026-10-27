@@ -186,7 +186,7 @@ specspec diff --with-context --node ID
 specspec check --sources --warnings-as-errors
 ```
 
-Node reads/diffs compare logical LF text independently of Git settings. Existing-document writes/native plans retain local newline style; new nodes use LF. Spaces, blank lines and final-newline presence stay meaningful. Raw query, byte guards and recovery retain exact physical evidence. Leave repository Git settings and attributes under owner control.
+Node reads/diffs compare logical LF text independently of Git settings. Existing-document writes/native plans retain local newline style; new nodes use LF. Spaces and blank lines stay meaningful. Complete tool-written/planned node documents receive a final newline only when missing, using local style and preserving existing trailing blank lines. Reads and raw-editor saves do not impose formatting; raw query, byte guards and recovery retain exact physical evidence. Leave repository Git settings and attributes under owner control.
 
 Inspect full logical canonical hunks with `diff` and artifact patches with Git; query hints are orientation, not a patch review. Deleted HEAD nodes remain D through staging and vanish from the default comparison after commit. Earlier text remains available through explicit historical comparisons. There are no stored approval statuses, confidence scores or parent-review gates.
 

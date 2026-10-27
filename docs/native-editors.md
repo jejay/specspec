@@ -58,7 +58,9 @@ coalesced to the latest form. The backend plans changes against current document
 text. The host applies a minimal `WorkspaceEdit`, without splitting CRLF or UTF-16
 surrogate pairs, respecting the native document's line-ending convention. The Python
 planner also adapts incoming body encoding to that bound document's convention,
-without configuring Git or taking over native persistence. Body-only changes leave frontmatter bytes intact; equivalent
+without configuring Git or taking over native persistence. Complete planned Markdown
+receives a final newline only when missing, preserving trailing blank lines; the
+empty repair body stays empty because its frontmatter already terminates the file. Body-only changes leave frontmatter bytes intact; equivalent
 unordered parent/source lists do not rewrite untouched comments/order. Sequence
 acknowledgements prevent an older result from clearing newer input. A native save
 waits for already-received form edits; this is not a guaranteed save veto.

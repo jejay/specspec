@@ -141,7 +141,7 @@ def test_both_option_values_remain_literal_in_chains(workspace, form, old, new):
     )
     assert result.exit_code == 0, result.output
     saved = load_snapshot(root)
-    assert saved.graph.nodes[id].body == new
+    assert saved.graph.nodes[id].body == new + "\n"
     assert saved.graph.nodes[data["result"]["aliases"]["detail"]].parents == [id]
 
 
@@ -303,7 +303,7 @@ def test_replacements_can_change_parents_and_sources_with_their_existing_owners(
     result, _ = call(root, "update", id, "--replace", "Old", "New", "--parent", second)
     assert result.exit_code == 0
     node = load_snapshot(root).graph.nodes[id]
-    assert node.body == "# New" and node.parents == [second] and node.sources == sources
+    assert node.body == "# New\n" and node.parents == [second] and node.sources == sources
     replacement_sources = [{"path": "main.py", "symbol": "literal new"}]
     result, _ = call(
         root,
@@ -536,9 +536,11 @@ def test_canonical_ids_cannot_become_message_options_and_option_values_stay_lite
     )
     assert result.exit_code == 0 and data["result"]["graph_valid"], result.output
     saved = load_snapshot(root)
-    assert all(saved.graph.nodes[changed].body == id for changed in data["result"]["changed_ids"])
+    assert all(
+        saved.graph.nodes[changed].body == id + "\n" for changed in data["result"]["changed_ids"]
+    )
     result, _ = call(root, "update", "-m", "# Updated", id)
-    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[id].body == "# Updated"
+    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[id].body == "# Updated\n"
 
 
 def test_help_exposes_replacements_only_on_update():
@@ -577,4 +579,4 @@ def test_real_process_preserves_unicode_multiline_replacement_arguments(workspac
     )
     assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
     assert json.loads(result.stdout)["api_version"] == 7
-    assert load_snapshot(root).graph.nodes[id].body == "# Body\r\n" + new
+    assert load_snapshot(root).graph.nodes[id].body == "# Body\r\n" + new + "\r\n"

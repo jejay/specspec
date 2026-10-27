@@ -10,7 +10,7 @@ from click.testing import CliRunner
 
 from specspec import cli
 from specspec.model import API_VERSION, FORMAT_VERSION
-from specspec.node_text import logical_text
+from specspec.node_text import logical_text, terminated_document
 from specspec.workspace import load_snapshot
 
 
@@ -37,11 +37,12 @@ def test_single_message_is_literal_for_init_add_and_update(tmp_path, monkeypatch
         pytest.fail("Message arguments must not read a body file or stdin.")
 
     monkeypatch.setattr(cli, "read_body", forbidden)
+    expected = terminated_document(logical_text(body), "\n")
     result, data = call(tmp_path, "init", "--message=" + body)
     assert result.exit_code == 0, result.output
     assert data["api_version"] == API_VERSION == 7
     root_id = data["result"]["changed_ids"][0]
-    assert load_snapshot(tmp_path).graph.nodes[root_id].body == logical_text(body)
+    assert load_snapshot(tmp_path).graph.nodes[root_id].body == expected
     result, data = call(tmp_path, "add", "--parent", root_id, "--message=" + body)
     assert result.exit_code == 0, result.output
     id = data["result"]["changed_ids"][0]
@@ -49,12 +50,8 @@ def test_single_message_is_literal_for_init_add_and_update(tmp_path, monkeypatch
     assert result.exit_code == 0, result.output
     saved = load_snapshot(tmp_path)
     assert saved.format_version == FORMAT_VERSION == 7 and saved.valid
-    assert saved.graph.nodes[id].body == logical_text(body)
-    assert (
-        (tmp_path / saved.graph.nodes[id].path)
-        .read_bytes()
-        .endswith(logical_text(body).encode("utf8"))
-    )
+    assert saved.graph.nodes[id].body == expected
+    assert (tmp_path / saved.graph.nodes[id].path).read_bytes().endswith(expected.encode("utf8"))
 
 
 def test_repeated_messages_join_without_cleanup_and_omission_keeps_body(workspace):
@@ -147,7 +144,7 @@ def test_chained_subgraph_forward_aliases_and_dry_run(workspace):
     aliases = data["result"]["aliases"]
     saved = load_snapshot(root)
     assert saved.graph.nodes[aliases["detail"]].parents == [aliases["goal"]]
-    assert saved.graph.nodes[aliases["detail"]].body == "node.md"
+    assert saved.graph.nodes[aliases["detail"]].body == "node.md\n"
     assert all(b"$goal" not in raw for raw in saved.files.values())
 
 
@@ -222,4 +219,4 @@ def test_large_integration_stdin_does_not_move_into_argv(tmp_path):
         capture_output=True,
     )
     assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
-    assert load_snapshot(tmp_path).nodes[0].body == body
+    assert load_snapshot(tmp_path).nodes[0].body == body + "\n"

@@ -16,7 +16,7 @@ from .format import json_value, read_document, yaml_parser
 from .git import git_snapshot, semantic_diff, source_change_impact
 from .git_objects import OBJECT_ID
 from .model import FORMAT_VERSION, ID_RE, MAX_FILE_BYTES, NODE_TYPES, Diagnostic, SpecError
-from .node_text import document_eol, logical_text, stored_text
+from .node_text import document_eol, logical_text, stored_text, terminated_document
 from .workspace import SPEC_DIR, read_files, runtime_diagnostics, snapshot_from_files
 
 MAX_REQUEST_BYTES = 16 * 1024 * 1024
@@ -165,6 +165,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
         else:
             # Ordinary typing leaves the entire frontmatter byte-for-byte intact.
             after = before[: len(before) - len(original_body)] + body
+        after = terminated_document(after, eol)
         if len(after.encode("utf-8")) > MAX_FILE_BYTES:
             fail("Planned document exceeds the 1 MiB limit.", path)
         files[path] = after.encode("utf-8")

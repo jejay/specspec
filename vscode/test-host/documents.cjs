@@ -56,8 +56,8 @@ exports.documentChecks = async function documentChecks(port, project, paths) {
     const evaluate = code => view.client.evaluate(view.context, code);
     const node = project.cli(['query', project.modified, '--max-distance', '0', '--json']).target.nodes.find(n => n.id === project.modified);
     const path = join(project.root, node.path), before = readFileSync(path, 'utf8');
-    const draft = '# Native VS Code draft 🐕\n';
-    await evaluate(`document.getElementById('body').value=${JSON.stringify(draft)};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
+    const typedDraft = '# Native VS Code draft 🐕', draft = typedDraft + '\n';
+    await evaluate(`document.getElementById('body').value=${JSON.stringify(typedDraft)};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
     await waitFor(async () => { const d = await request(); return d.dirty && d.text.endsWith(draft); }, 'native dirty buffer');
     assert.equal(readFileSync(path, 'utf8'), before, 'Typing must not write the file through the CLI.');
     await waitFor(() => evaluate(`!window.SpecSpecHost.getState().dirty`), 'form acknowledgement');

@@ -12,7 +12,7 @@ from specspec.body_replacements import replace_body
 from specspec.editor import editor_request
 from specspec.git import git_snapshot, semantic_diff
 from specspec.model import MAX_FILE_BYTES, SpecError
-from specspec.node_text import document_eol, logical_bytes, logical_text
+from specspec.node_text import document_eol, logical_bytes, logical_text, terminated_document
 from specspec.workspace import add_node, load_snapshot, recover
 
 
@@ -94,12 +94,13 @@ def test_git_policy_does_not_control_logical_diff_or_get_modified(
 
 
 @pytest.mark.parametrize("body", ["one\r\ntwo", "one\rtwo", "one\r\n\n  \tlast\r\n\r\n"])
-def test_new_nodes_use_lf_without_changing_content_or_final_newline(workspace, body):
+def test_new_nodes_use_lf_and_append_only_a_missing_final_newline(workspace, body):
     root, parent = workspace
     snapshot, target = add_node(root, "requirement", [parent], body)
     raw = snapshot.files[f".specspec/{target}.md"]
-    assert b"\r" not in raw and raw.endswith(logical_text(body).encode())
-    assert snapshot.graph.nodes[target].body == logical_text(body)
+    expected = terminated_document(logical_text(body), "\n")
+    assert b"\r" not in raw and raw.endswith(expected.encode())
+    assert snapshot.graph.nodes[target].body == expected
 
 
 @pytest.mark.parametrize(

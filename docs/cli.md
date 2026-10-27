@@ -238,13 +238,17 @@ trailing spaces, blank-line counts and EOF termination remain significant; EOF
 changes use ordinary patch markers. `query --raw` supplies exact physical bytes.
 
 Existing-document managed writes and native plans retain the newline convention
-of the opening frontmatter delimiter; new nodes use LF. This also applies to
-message/file/stdin body inputs and replacement NEW. Actual serialized byte limits
+of the opening frontmatter delimiter; new nodes use LF. Every complete node written
+or planned by these tools ends with a newline: append one in the document's style
+only when missing, preserving existing trailing spaces and blank lines. This also
+applies to message/file/stdin body inputs, replacement NEW and metadata-only edits. Actual serialized byte limits
 still apply. Original-byte checks, journals, recovery and immutable Git objects
 remain byte-exact. Linked source files keep their own formatting and contracts.
 
-No Git settings, attributes, hooks or index entries are installed or changed to
-implement this policy. It works with repository/user checkout settings as they are;
+Unterminated manual/historical nodes remain readable and valid; reads and raw-editor
+saves are not formatting passes. An explicit tool write adds a missing terminator,
+which remains visible as an EOF change. No Git settings, attributes, hooks or index
+entries are installed or changed to implement this policy. It works with repository/user checkout settings as they are;
 no repo-specific clean/smudge filters run for application text normalization.
 
 ## Mutation receipts

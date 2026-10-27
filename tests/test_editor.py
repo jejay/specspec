@@ -93,7 +93,7 @@ def test_body_typing_does_not_reorder_or_reformat_untouched_frontmatter(workspac
             },
         },
     )
-    assert planned["changes"][0]["after"] == raw.removesuffix("# Impl") + "# Typed"
+    assert planned["changes"][0]["after"] == raw.removesuffix("# Impl\n") + "# Typed\n"
     noop = request(
         root,
         {

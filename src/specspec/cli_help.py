@@ -85,7 +85,9 @@ HELP = {
     Previews use Would add/modify/delete. These are invocation effects, not Git status.
     Add --json for structured API-7 output. Node comparisons ignore newline encoding;
     existing-document writes retain local style and new nodes use LF. Git settings
-    and attributes stay untouched. Spaces, blank lines and EOF termination matter.
+    and attributes stay untouched. Tool-written/planned nodes receive a missing final
+    newline in their local style; existing trailing blank lines are preserved.
+    Reads stay non-writing; manual EOF differences remain visible.
     Editing can succeed while reporting an invalid intermediate graph; check is
     strict, and --require-valid checks the whole final candidate before writes.
     Run COMMAND --help for arguments, examples, defaults and safety details.

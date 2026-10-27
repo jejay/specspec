@@ -25,3 +25,8 @@ def document_eol(original: bytes | None) -> str:
 
 def stored_text(text: str, eol: str) -> str:
     return logical_text(text).replace("\n", eol)
+
+
+def terminated_document(text: str, eol: str) -> str:
+    """Add only a missing file terminator; never trim or add trailing blank lines."""
+    return text if text.endswith(("\n", "\r")) else text + eol
