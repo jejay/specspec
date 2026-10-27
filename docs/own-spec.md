@@ -463,7 +463,10 @@ python example/gantt/history/checkout.py ../specspec-examples/gantt-current
 [The checkout choice](../.specspec/83D9YWw=.md) refuses
 existing/development-worktree destinations and preserves partial/experimental clones.
 Serious Git/host/app tests use the complete bundle; small generated graphs are focused
-unit fixtures. Optional [STORY.md](../example/gantt/STORY.md) supplies labeled illustration.
+unit fixtures. [Tracked fixture comparison](../.specspec/iBpoO_I=.md) uses the
+owning checkout's existing Git clean semantics while keeping expected blobs,
+physical evidence, source bytes, index and Git configuration unchanged. Optional
+[STORY.md](../example/gantt/STORY.md) supplies labeled illustration.
 
 ## 0.0.1 delivery, PyPI and project guidance
 

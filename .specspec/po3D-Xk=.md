@@ -52,3 +52,9 @@ The release procedure explains the signed-identity boundary, exact publisher
 settings, dispatch, upgrades, failure/partial-upload inspection and public-index
 verification. Executed qualification and actual publication are recorded separately
 from workflow declarations in the PyPI release investigation.
+
+The 0.0.1 CLI wheel and source distribution are available from PyPI through the
+declared workflow publisher, with public provenance binding their file hashes.
+Fresh isolated index and source-distribution installations confirm the shipped CLI
+and guide contracts. The release investigation retains exact artifacts, source
+revision, run evidence, platform coverage and separate CI-oracle corrections.

@@ -16,6 +16,31 @@ from specspec.workspace import add_node, load_snapshot, update_node
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.parametrize("algorithm", ["sha1", "sha256"])
+@pytest.mark.parametrize("autocrlf", ["true", "false"])
+def test_runtime_fixture_comparison_obeys_existing_git_policy_without_writes(
+    tmp_path, gantt_verifier, algorithm, autocrlf
+):
+    git(tmp_path, "init", f"--object-format={algorithm}")
+    git(tmp_path, "config", "core.autocrlf", autocrlf)
+    expected = b"const value = 'saved source';\n\n"
+    path = tmp_path / "app.js"
+    raw = expected.replace(b"\n", b"\r\n")
+    path.write_bytes(raw)
+    config = (tmp_path / ".git/config").read_bytes()
+    result = gantt_verifier.same_runtime_content(tmp_path, "app.js", expected)
+    assert result is (autocrlf == "true")
+    assert path.read_bytes() == raw
+    assert (tmp_path / ".git/config").read_bytes() == config
+    assert not (tmp_path / ".git/index").exists()
+    for changed in [raw.replace(b"saved", b"changed"), raw + b"\r\n", raw.rstrip(b"\r\n")]:
+        path.write_bytes(changed)
+        assert not gantt_verifier.same_runtime_content(tmp_path, "app.js", expected)
+        assert path.read_bytes() == changed
+    assert (tmp_path / ".git/config").read_bytes() == config
+    assert not (tmp_path / ".git/index").exists()
+
+
 def test_gantt_index_reads_staged_corruption_not_repaired_worktree(gantt_history):
     root = gantt_history
     before = load_snapshot(root)

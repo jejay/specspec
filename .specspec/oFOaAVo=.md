@@ -3,6 +3,7 @@ id: oFOaAVo=
 type: implementation
 parents:
 - 83D9YWw=
+- iBpoO_I=
 sources:
 - path: .github/workflows/ci.yml
 - path: AGENTS.md
@@ -36,3 +37,8 @@ path. They preserve refs/ancestry/index and add only disposable worktree cues.
 Focused native/nested tests retain their small graphs. The history verifier checks
 all revisions and final runtime/graph agreement; browser reload checks wait for a
 fresh fully loaded document. Current recipe/commands are in the example guides.
+
+The final tracked runtime comparison honors the owning Git checkout's clean
+semantics without changing its bytes, configuration or index. Explicit SHA-1/SHA-256
+and LF/CRLF regressions preserve content, blank-line and EOF rejection and exact
+raw expected blobs. Historical clones retain their explicit LF checkout contract.

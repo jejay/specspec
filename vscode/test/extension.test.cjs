@@ -510,7 +510,11 @@ test('native spotlight creation includes actual dirty buffers without invoking S
 });
 
 test('external annotation shots notify all project views without reloading their graphs', async t => {
-  const options = { shots: [] }, f = fixture(t, options);
+  // Isolate Spotlight events from the independent startup Git-discovery hint.
+  // Its legitimate late graph refresh has separate controlled-clock regressions.
+  let rejectDiscovery;
+  const options = { shots: [], gitExecute: () => new Promise((_, reject) => { rejectDiscovery = reject; }) };
+  const f = fixture(t, options); t.after(() => rejectDiscovery?.(nonGit()));
   await f.calls.commands.get('specspec.openGraph')(); await f.calls.commands.get('specspec.openGraph')();
   const reads = f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length;
   const path = join(f.root, '.specspec/local', 'annotations');

@@ -52,3 +52,8 @@ leave working presentation unchanged; explicit staged operations remain fresh.
 
 Project-scoped bounded API channels reuse interpreter lifetime, with independent
 source previews, current per-request reads and guarded disposal/failure semantics.
+
+Spotlight-specific adapter read-count tests hold independent initial Git discovery
+pending until teardown. Separate controlled-clock regressions exercise that valid
+late discovery hint and its graph refresh. This isolates event causes without
+suppressing production notifications or extending debounce/deadline budgets.

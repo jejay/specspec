@@ -7,6 +7,7 @@ No checkout/index changes are made in this repository; history uses a temporary 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -39,6 +40,20 @@ def clone_history(root: Path, destination: Path) -> Path:
         capture_output=True,
     )
     return destination.resolve()
+
+
+def same_runtime_content(root: Path, path: str, expected: bytes) -> bool:
+    """Compare saved fixture content through its existing Git clean policy."""
+    actual = (root / path).read_bytes()
+    if actual == expected:
+        return True
+    # Checkout EOL/filter output is not a literal Git blob. Hash the saved file
+    # through its owning repository without changing bytes, config or the index.
+    algorithm = run_git(root, "rev-parse", "--show-object-format").decode().strip()
+    header = b"blob " + str(len(expected)).encode() + b"\0"
+    expected_id = hashlib.new(algorithm, header + expected, usedforsecurity=False).hexdigest()
+    actual_id = run_git(root, "hash-object", "--path", path, path).decode().strip()
+    return actual_id == expected_id
 
 
 def contents(snapshot):
@@ -292,7 +307,7 @@ def verify(root: Path = ROOT, *, history: bool = False) -> dict:
             assert git_snapshot(fixture, staged=True).valid
             assert contents(load_snapshot(fixture)) == contents(current)
             for path in RUNTIME_PATHS:
-                assert run_git(fixture, "show", f"HEAD:{path}") == (root / path).read_bytes(), (
+                assert same_runtime_content(root, path, run_git(fixture, "show", f"HEAD:{path}")), (
                     f"The tracked runtime/test snapshot differs from the bundle: {path}"
                 )
             previous_implementation = None

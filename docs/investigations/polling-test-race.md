@@ -51,7 +51,7 @@ Product scheduling, debounce/retry intervals, operation deadlines, mutation/save
 ownership and disposal behavior are unchanged. The fix neither suppresses legitimate
 watcher updates nor extends sleeps to make the assertion less likely to fail.
 
-## Verification
+## Original verification
 
 Run the causal tests directly:
 
@@ -70,3 +70,24 @@ Complete shared, adapter and Electron suites retain their normal test commands.
 The Node test runner's virtual timers are test-only; real watchers keep their own
 bounded asynchronous integration coverage. No production or canonical schema/API
 change is involved.
+
+## Spotlight-only read-count follow-up
+
+The 0.0.1 general CI run exposed the same independent event boundary in another
+adapter test. It recorded graph reads after opening two views, created an external
+Spotlight and expected no additional graph reads. Real startup Git discovery could
+complete during that interval and correctly refresh one or both views. CI observed
+5 versus 4; this did not establish that the Spotlight event caused a graph reload.
+
+A retained controlled reproduction uses the original test, holds the real watcher's
+Git executor pending until after its baseline, then completes it. The ordinary
+200 ms watcher debounce produces the assertion failure (6 versus 4 locally) without
+changing production code. The observed count depends on coalescing across the two
+views; the causal independent hint is explicit rather than inferred from a rerun.
+
+The Spotlight-specific test now holds that unrelated discovery pending until
+teardown. It retains the strict unchanged graph-read count, real filesystem
+Spotlight watching and notifications to every view. Existing controlled-clock
+late-discovery tests still prove the real graph refresh/disposal behavior. The
+correction adds no sleeps, longer deadlines or production event suppression.
+[Release evidence](pypi-0.0.1.md) records the remote failure and final follow-up scope.
