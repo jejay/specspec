@@ -47,7 +47,7 @@ test('malformed, incompatible and unsolicited frames fail the channel rather tha
   for(const bad of ['not json\n','{"api_version":5,"ok":true,"diagnostics":[]}\n',JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{}})+'\n{}\n']){
     const p=f.call({op:'read',bad});
     if(bad.endsWith('{}\n')){await p;await new Promise(r=>setImmediate(r));assert.equal(f.client.channels.get('main').closed,true);}
-    else await assert.rejects(p,/Invalid SpecSpec API response/);
+    else await assert.rejects(p,/Invalid specspec API response/);
     assert.equal((await f.call({op:'read'})).result.count,1);
   }
 });

@@ -13,7 +13,7 @@ exports.checkInline = async ({ evaluate, screenshot, delay }) => {
   assert.ok(await evaluate(`document.execCommand('insertText',false,'Inline typing <script>literal</script>.')`));
   await delay(150);
   assert.equal(await evaluate(`document.getElementById('body').value`), original.value + 'Inline typing <script>literal</script>.');
-  assert.ok(await evaluate(`window.SpecSpecHost.getState().dirty&&!document.querySelector('#body script')`));
+  assert.ok(await evaluate(`window.specspecHost.getState().dirty&&!document.querySelector('#body script')`));
   const painted = await evaluate(`(() => {
     const root=document.documentElement;root.style.setProperty('--vscode-diffEditor-insertedTextBackground','rgb(10, 70, 20)');root.style.setProperty('--vscode-diffEditor-removedTextBackground','rgb(80, 10, 20)');
     const result=[getComputedStyle(document.querySelector('#body .cm-changedText')).backgroundColor,getComputedStyle(document.querySelector('#body .cm-deletedText')).backgroundColor];

@@ -52,6 +52,8 @@ def products(tmp_path):
 
 def make_ui(root, platform):
     metadata = {
+        "name": "specspec-vscode",
+        "displayName": "specspec-vscode",
         "version": "0.1.0",
         "contributes": {
             "customEditors": [{"selector": [{"filenamePattern": "**/.specspec/???????=.md"}]}]
@@ -65,6 +67,7 @@ def make_ui(root, platform):
             "extension/LICENSE.txt",
             "extension/out/extension.js",
             "extension/out/common/host/session.cjs",
+            "extension/out/common/host/startup.cjs",
             "extension/media/graph.js",
         ]:
             package.writestr(name, "content")
@@ -75,7 +78,9 @@ def make_ui(root, platform):
             "extension/media/vendor/THIRD_PARTY_NOTICES.txt", "@codemirror/view\nd3-shape"
         )
     directory, _ = release.desktop_paths(root, platform, "x64")
-    executable = put(directory, "SpecSpec.exe" if platform == "win32" else "SpecSpec", "binary")
+    executable = put(
+        directory, "specspec-desktop.exe" if platform == "win32" else "specspec-desktop", "binary"
+    )
     executable.chmod(0o755)
     put(directory, "LICENSES.chromium.html", "Chromium licenses")
     for name in [
@@ -87,12 +92,17 @@ def make_ui(root, platform):
         "build/LICENSE",
         "build/app-icon.png",
         "build/common/host/session.cjs",
+        "build/common/host/startup.cjs",
         "build/media/graph.js",
         "build/media/specspec.svg",
         "build/media/vendor/THIRD_PARTY_NOTICES.txt",
     ]:
         put(directory / "resources/app", name, "content")
-    put(directory / "resources/app", "package.json", '{"version":"0.1.0"}')
+    put(
+        directory / "resources/app",
+        "package.json",
+        '{"version":"0.1.0","name":"specspec-desktop","productName":"specspec-desktop"}',
+    )
     release.archive(root, platform, "x64")
     return directory
 
@@ -160,6 +170,13 @@ def test_package_paths_cannot_escape(name):
 def test_real_monorepo_versions_and_packaged_resource_are_aligned():
     root = Path(__file__).resolve().parents[1]
     assert release.version(root) == "0.1.0"
+    import tomllib
+
+    assert tomllib.loads((root / "pyproject.toml").read_text())["project"]["name"] == "specspec"
+    vscode = json.loads((root / "vscode/package.json").read_text())
+    assert vscode["name"] == vscode["displayName"] == "specspec-vscode"
+    desktop = json.loads((root / "electron/package.json").read_text())
+    assert desktop["name"] == desktop["productName"] == "specspec-desktop"
     assert (root / "src/specspec/templates/AGENTS.md").is_file()
     metadata = json.loads((root / "package.json").read_text())
     assert metadata["private"] is True

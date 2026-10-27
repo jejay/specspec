@@ -1,6 +1,6 @@
 # Native node-file editors and portable graph views
 
-Opening `**/.specspec/???????=.md` defaults to **SpecSpec Graph** in VS Code's main
+Opening `**/.specspec/???????=.md` defaults to **specspec Graph** in VS Code's main
 editor area. The filename glob is discovery only: Python resolves/validates the
 actual node. **Reopen Editor With → Text Editor** remains available, and user
 editor associations can override the default. There is no Activity Bar container.
@@ -88,7 +88,7 @@ the fresh diagnosable graph visible with structural findings while the bound for
 remains editable for repair; unavailable loads retain marked last-usable context. Incomplete sources JSON is retained as an invalid frontmatter value until
 completed. A wholly unparseable node can be repaired in Text Editor. Native Save
 can persist invalid text: validate before committing. Project-wide CLI writes
-refuse dirty open SpecSpec documents; they retain the existing validation, locks,
+refuse dirty open specspec documents; they retain the existing validation, locks,
 original-byte checks, journal/recovery and do not silently overwrite buffers.
 
 **Important choice:** native text-document saves are not Python-journaled graph
@@ -100,7 +100,7 @@ format metadata, hashes, approval stages, Git staging, or commits are introduced
 
 ## Non-writing Python API
 
-The hidden `specspec api` integration adapter consumes bounded API-7 JSON on stdin:
+The hidden `specspec api` integration adapter consumes bounded application protocol JSON on stdin:
 
 ```json
 {
@@ -123,7 +123,7 @@ plan is JSON text for implementation nodes; shared forms may send neutral
 `[]` for other types without adding a sources field. The backend uses the current
 text's type, including raw-editor changes, not an initial tab type. No `retired`
 field/edit exists. Delete is a confirmed managed project-file operation requiring
-clean SpecSpec documents, not a native metadata change pending Save. The result has `snapshot`, `changes` (`path`, exact `before`/`after` text), optional
+clean specspec documents, not a native metadata change pending Save. The result has `snapshot`, `changes` (`path`, exact `before`/`after` text), optional
 compact `diff`, and `note`; structured diagnostics are in the envelope.
 Invalid buffers are successful reads/plans with `snapshot.valid: false` and
 explicit diagnostics, not successful graph validation. Bounded `repair_forms` holds
@@ -139,7 +139,7 @@ selected-file warnings (staged is not committed), then
 rechecks the reviewed scope under the writer lock. Dirty descendant documents
 remain protected by the project-wide save/revert guard. Reads skip overlays for already deleted files, so retained open
 buffers do not resurrect nodes. The planner never writes files or recreates a
-deleted node. The current application protocol is API 7 with shortcut-free node format 7;
+deleted node. The current application protocol is application protocol with shortcut-free current node format;
 upgrade the CLI and both host builds together. See [compact commands](cli.md).
 
 ## Verification

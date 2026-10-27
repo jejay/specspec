@@ -32,5 +32,5 @@ remain independently visible.
 Requested alias associations remain available on one unpadded comma-separated
 Aliases line. They add local-name mappings rather than another action summary.
 Structural references and diagnostics retain the IDs needed for their own meaning.
-Structured API-7 receipts keep their existing fields, IDs and paths. Outcome
-classification is transient Python result metadata; canonical nodes retain format 7.
+Structured application protocol receipts keep their existing fields, IDs and paths. Outcome
+classification is transient Python result metadata; canonical nodes retain their current fields.

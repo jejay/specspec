@@ -52,7 +52,7 @@ exports.checkCanvas = async function checkCanvas({ evaluate, input, screenshot }
     p('pointerdown',100,100,true);p('pointermove',300,260,true,window);window.dispatchEvent(new KeyboardEvent('keyup',{key:'Control'}));
     const latched=getComputedStyle(v).cursor==='crosshair'&&!document.getElementById('frame-selection').hidden;
     p('pointerup',300,260,false,window);
-    const bounds=window.SpecSpecCamera.rectangleBounds({x:100,y:100},{x:300,y:260},before),expected=window.SpecSpecCamera.frameTransform(bounds,v.clientWidth,v.clientHeight,2.5);
+    const bounds=window.specspecCamera.rectangleBounds({x:100,y:100},{x:300,y:260},before),expected=window.specspecCamera.frameTransform(bounds,v.clientWidth,v.clientHeight,2.5);
     return {hover,released,latched,finished:document.getElementById('frame-selection').hidden&&document.getElementById('frame-area').getAttribute('aria-pressed')==='false',actual:pose(),expected,world:world()===geometry};})()`);
   assert.ok(gesture.hover&&gesture.released&&gesture.latched&&gesture.finished&&gesture.world);
   for(const k of ['x','y','k']) assert.ok(Math.abs(gesture.actual[k]-gesture.expected[k])<0.001);
@@ -70,10 +70,10 @@ exports.checkCanvas = async function checkCanvas({ evaluate, input, screenshot }
 
   const native=await evaluate(`(() => {
     document.querySelector('.card.manifesto').click();const body=document.getElementById('body');body.focus();body.setSelectionRange(2,6);
-    const before=JSON.stringify(window.SpecSpecHost.getState().cameras),value=body.value;
+    const before=JSON.stringify(window.specspecHost.getState().cameras),value=body.value;
     body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,button:0,pointerId:7,pointerType:'mouse',ctrlKey:true,clientX:100,clientY:100}));
     const result={buttons:[...document.querySelectorAll('.framing-controls button')].filter(b=>!b.hidden).map(b=>b.getAttribute('aria-label')),
-      retained:body===document.getElementById('body')&&value===body.value&&body.selectionStart===2&&body.selectionEnd===6&&before===JSON.stringify(window.SpecSpecHost.getState().cameras)&&document.getElementById('frame-selection').hidden};
+      retained:body===document.getElementById('body')&&value===body.value&&body.selectionStart===2&&body.selectionEnd===6&&before===JSON.stringify(window.specspecHost.getState().cameras)&&document.getElementById('frame-selection').hidden};
     window.dispatchEvent(new KeyboardEvent('keyup',{key:'Control'}));document.getElementById('back').click();document.getElementById('color-mode').value=window.__canvasPaint.mode;document.getElementById('color-mode').dispatchEvent(new Event('change'));document.getElementById('zoom-reset').click();delete window.__canvasPaint;return result;})()`);
   assert.deepEqual(native,{buttons:['Frame graph','Frame node','Frame rectangle'],retained:true});
   console.log('Canvas framing: floating/contextual icons, Ctrl latch/release, one-shot completion, real pointer capture and native editing passed.');

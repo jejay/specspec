@@ -1,5 +1,9 @@
 # One inspection command and task-oriented terminal help
 
+> Historical help-expansion evidence. [Current help and startup](owner-experience.md)
+> shortens those bodies, hides host-only switches/versions and uses automatic stdin.
+> Recorded run outcomes below remain evidence for the earlier checkpoint.
+
 The owner requested removal of the top-level `show` command and substantially
 more useful help for every command. [Inspection intention](../../.specspec/2FfVd-Y=.md)
 and [help intention](../../.specspec/DOqGIio=.md) separate these outcomes from the
@@ -60,7 +64,7 @@ Existing CLI, graph, transaction and application suites remain applicable.
 The maintained Gantt corpus is refreshed through actual current CLI executions at
 all retained revisions, substituting descendant queries for removed-command reads.
 Its independent oracle checks ancestor and descendant selection separately. IDs,
-application bytes, redirects, ordering, manual experiments and unrelated SpecSpec
+application bytes, redirects, ordering, manual experiments and unrelated specspec
 history are preserved. The tracked fixture remains free of nested Git metadata.
 
 Final verification passes **881 Python tests**, including 72 help/raw-inspection
@@ -92,7 +96,7 @@ against the actual index before commit. All 204 original canonical files outside
 the deliberately updated bindings retain their exact bytes.
 
 Logs, original-byte snapshots and external reconstruction locations are retained in
-`.specspec-local/cli-help/`: `python-final.log`, `python-before-fixture-fix.log`,
+`.specspec/local/cli-help/`: `python-final.log`, `python-before-fixture-fix.log`,
 `help-final.log`, the three npm `*-final.log` files, `electron-host.log`,
 `vscode-host.log`, `history-rebuild.log` and final review/candidate reports.
 Physical Linux/macOS and remote SSH/tunnel execution were not rerun for this slice.

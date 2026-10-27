@@ -31,8 +31,8 @@ class GraphWatcher {
     this.nodes?.close(); this.nodes = undefined; this.key = key;
     if (!key) return;
     try {
-      const watcher = this.fs.watch(this.directory, event => {
-        if (this.closed) return;
+      const watcher = this.fs.watch(this.directory, (event, name) => {
+        if (this.closed || (name != null && String(name) === 'local')) return;
         if (event === 'rename') this.reconcile();
         this.changed();
       });

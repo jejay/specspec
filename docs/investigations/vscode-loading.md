@@ -254,7 +254,7 @@ Do not infer those equivalences from faster code or passing ordinary fixture tes
 ## Evidence and next action
 
 All probe code, original samples and profiles are retained under
-`.specspec-local/vscode-loading-investigation/`:
+`.specspec/local/vscode-loading-investigation/`:
 
 - `measure.py`, `measure.log`, `measurements.json`, `editor-head.pstats`;
 - `child-profile.py`, `stdio-probes.json`, `pipe*.pstats`, `file.pstats`;

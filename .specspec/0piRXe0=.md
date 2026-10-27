@@ -20,7 +20,7 @@ in one recoverable transaction, with non-writing --dry-run and optional final
 validity. Aliases create no canonical metadata, identity reservation or approval
 gate. Deletion consent and physical transaction checks remain effective in chains.
 
-API 7 coordinates these semantics across CLI and hosts while node format 7 stays
+application protocol coordinates these semantics across CLI and hosts while current node format stays
 unchanged. Exit zero means an operation/read was delivered, one means failed check
 or rejected request, and two means invocation/I/O failure. Explicit incomplete reads
 retain available evidence with nonzero status; diagnostics never conceal saved edits.

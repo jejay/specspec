@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run SpecSpec on this repository",
+      "name": "Run specspec on this repository",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -12,7 +12,7 @@
         "${workspaceFolder}/specspec-dev.code-workspace"
       ],
       "outFiles": ["${workspaceFolder}/vscode/out/**/*.js"],
-      "preLaunchTask": "SpecSpec: compile extension",
+      "preLaunchTask": "specspec: compile extension",
       "env": {
         "SPECSPEC_PYTHON": "${workspaceFolder}/.venv/bin/python"
       },

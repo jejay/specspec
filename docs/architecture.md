@@ -6,7 +6,7 @@ owners; **03** follows agent work back to owner review. The live-feedback strip
 connects file/document/Git changes to refreshed views. The source map below expands
 these boundaries without putting every module into the overview.
 
-![SpecSpec: owner and agent entry points, shared Python authority, two Save paths and review loop](architecture.svg)
+![specspec: owner and agent entry points, shared Python authority, two Save paths and review loop](architecture.svg)
 
 This is descriptive documentation of the current implementation. The
 [specification tour](own-spec.md) and tool-managed [`.specspec/`](../.specspec/)
@@ -23,7 +23,7 @@ that same CLI contract, or imports the library into its own Python process.
 - **Canonical data is a Markdown DAG, not a database.** Each direct
   `.specspec/<id>.md` file has strict YAML frontmatter and a binding body.
   `parents` stores incoming links; the graph has one manifesto, requirements with
-  potentially multiple parents, and terminal implementations. Only shortcut-free node format 7, API 7
+  potentially multiple parents, and terminal implementations. Only shortcut-free current node format, application protocol
   and padded five-byte Base64url IDs, including the final `=`, are supported.
 - **Python owns domain meaning.** Schema, graph rules, physical deletion, Markdown plans,
   managed transactions and Git comparisons are shared by the CLI and both UIs.
@@ -47,9 +47,9 @@ that same CLI contract, or imports the library into its own Python process.
 | Owner in VS Code | Open a canonical node file for a native graph/text-document editor; use **Open Graph** for project actions or **Compare Revisions** for independent comparisons. Browse relationships, edit forms, inspect source previews and review Git differences. |
 | Owner in Electron | **Trust and Open** a local project, then use the same canvas, forms and comparisons. Saves use Python-managed commands rather than VS Code documents. |
 | Agent in its own harness | Invoke `specspec query` from the shell (readable by default, explicit `--json` for structured processing), or use the Python library. Complete selected readings with `--with-ancestors` and inspect dependents, deepen conclusions, link implementation sources and validate changes. People can use this CLI too. |
-| Direct Markdown and Git | Manual node edits are allowed. Ordinary editor/Git tools own raw text, staging, commits and branch selection. SpecSpec supplies graph-aware diagnostics, diffs and opt-in exact-index checks. |
+| Direct Markdown and Git | Manual node edits are allowed. Ordinary editor/Git tools own raw text, staging, commits and branch selection. specspec supplies graph-aware diagnostics, diffs and opt-in exact-index checks. |
 
-The **owner–agent conversation is outside SpecSpec**. The current product does not
+The **owner–agent conversation is outside specspec**. The current product does not
 embed an agent or provide a Claude Code/Codex connector. `AGENTS.md` describes the
 working process, not an orchestration service. Requested planning and implementation
 use the same tools as other CLI clients; meaningful choices remain revisable.
@@ -80,7 +80,7 @@ coordinates with open documents; Python still enforces domain and managed-writer
 
 | Layer | Start reading here | Responsibility |
 | --- | --- | --- |
-| Browser canvas | [`graph.js`](../graph-ui-common/media/graph.js), [`graph-annotations.js`](../graph-ui-common/media/graph-annotations.js), [`graph-model.js`](../graph-ui-common/media/graph-model.js), [`graph-camera.js`](../graph-ui-common/media/graph-camera.js), [`view.cjs`](../graph-ui-common/view.cjs) | Literal DOM text/native forms, SVG curves, revision overlays, metrics, Dagre layout and D3 navigation. Calls `window.SpecSpecHost`; cannot access project files or spawn tools. |
+| Browser canvas | [`graph.js`](../graph-ui-common/media/graph.js), [`graph-annotations.js`](../graph-ui-common/media/graph-annotations.js), [`graph-model.js`](../graph-ui-common/media/graph-model.js), [`graph-camera.js`](../graph-ui-common/media/graph-camera.js), [`view.cjs`](../graph-ui-common/view.cjs) | Literal DOM text/native forms, SVG curves, revision overlays, metrics, Dagre layout and D3 navigation. Calls `window.specspecHost`; cannot access project files or spawn tools. |
 | Shared host coordination | [`session.cjs`](../graph-ui-common/host/session.cjs), [`documents.cjs`](../graph-ui-common/host/documents.cjs), [`cli.cjs`](../graph-ui-common/host/cli.cjs), [`client.cjs`](../graph-ui-common/host/client.cjs) | Per-view `GraphSession`, project-level `ProjectDocuments`, serialized mutations, independent read-only previews, conflict guards, render handshakes and bounded project-scoped API channels. No VS Code/Electron SDK imports. |
 | Host adapters | [`vscode/src/extension.ts`](../vscode/src/extension.ts), [`electron/main.cjs`](../electron/main.cjs), [`electron/preload.cjs`](../electron/preload.cjs) | Trust, project discovery, dialogs, file/Git notifications, assets, messaging and presentation storage; VS Code also supplies native documents. |
 | Python backend | [`cli.py`](../src/specspec/cli.py), [`workspace.py`](../src/specspec/workspace.py), [`format.py`](../src/specspec/format.py), [`model.py`](../src/specspec/model.py), [`graph.py`](../src/specspec/graph.py) | Click dispatch, byte snapshots, version bootstrap, strict schema/round-trip YAML, normalized records, adjacency maps, deterministic ordering and iterative traversals. |
@@ -106,7 +106,7 @@ Ordinary people/agent authoring supplies literal `-m/--message` body arguments a
 can combine add/update/delete steps with local `--as` / `$name` parent aliases.
 The complete editing invocation is parsed before input reads/writes and becomes one
 candidate/consent/recovery scope; other commands stay standalone. Hidden
-`--body FILE|-` accommodates bulk bodies. Repeatable `update --replace OLD NEW`
+Without messages, bounded UTF-8 stdin accommodates bulk bodies and shell redirection. Repeatable `update --replace OLD NEW`
 selects unique, disjoint original-body passages under the writer lock;
 [`replacement_matching.py`](../src/specspec/replacement_matching.py) maps line-ending
 and paragraph-soft-break comparison views back to original spans. Its bounded
@@ -129,9 +129,9 @@ child processes with bounded pipes.
 Query supplies one binding at --max-distance 0, descendant scope with an ID, and raw
 saved/staged/historical document inspection with --raw. cli_help.py supplies static,
 task-oriented root and subcommand guides without changing normal result verbosity.
-Fresh managed mutation context uses the existing saved API-7 read without overlays
+Fresh managed mutation context uses the existing saved application protocol read without overlays
 or comparison/cache hints; canonical writes retain their argv/stdin owners. Text/Markdown is default; explicit `--json` selects
-compact API 7. Query's `--with-ancestors` completes selected bindings through every
+compact application protocol. Query's `--with-ancestors` completes selected bindings through every
 parent path and identifies omitted surrounding child/sibling IDs without their
 bodies. The shared emitter formats once and applies an optional `--max-bytes` to
 the actual UTF-8 result plus final newline, including envelopes/control escaping;
@@ -151,7 +151,7 @@ with --json. Original bodies remain exact in JSON and diff.
 reverse self-inclusive influence bitsets. Last-consumer release avoids retaining
 closure rows on chains and leaf fans. Inclusive thresholds or exact ceil-percentage
 quotas select each metric independently and union the resulting IDs. Full parent
-metadata stays intact; the induced display and scoped API-7 comparison identify
+metadata stays intact; the induced display and scoped application protocol comparison identify
 boundary IDs. Optional ancestor completion uses one multi-source parent walk after
 selection and before the final induced view/source work. JSON distinguishes matches
 from additional ancestors, without changing the original quotas/population. Neighbor
@@ -159,7 +159,7 @@ IDs come only from matches, with each shared parent's children scanned once.
 Complete unfiltered reads need no extra view. Original snapshots remain validated.
 `query_sources.py` reuses one cached SourceReader per distinct code version and interprets strict/expanding/
 path-only contracts: permitted changes stay quiet; known transitions drive source-changed and
-ancestors in both original graphs. Broken/unknown mappings stay explicit. API-7 JSON
+ancestors in both original graphs. Broken/unknown mappings stay explicit. application protocol JSON
 retains complete selected revision records, required raw source facts and separate
 contract classifications. Source evidence includes old/new descendants of selected
 nodes, keeping badges stable when an excluded owner affects a visible ancestor;
@@ -192,7 +192,7 @@ IPC API. VS Code requires workspace trust before invoking the tool.
    normal comparison refresh uses one request with bounded verified baseline hints.
    Historical targets use Git trees and ignore working buffers. A valid workspace
    remains usable with a **diff-unavailable** note when its baseline cannot be read.
-   API 7 sends one target plus previous records only for differing/deleted nodes;
+   application protocol sends one target plus previous records only for differing/deleted nodes;
    the shared adapter reconstructs both complete revision graphs for rendering.
 3. Identical automatic-refresh payloads do not redraw. Graph-invalid reads publish
    fresh relationships and diagnostics while retaining safe current-form editing.
@@ -234,7 +234,7 @@ See [deletion](deletion.md) for warning, native-document and Git-status limitati
 
 `workspace.mutate()` acquires the managed-writer lock, reads/validates the current
 snapshot, constructs and diagnoses a candidate, stages explicit replacements and journals
-old/new bytes in **`.specspec-local/`**, outside the canonical directory. It compares
+old/new bytes in **`.specspec/local/`**, outside the canonical directory. It compares
 original bytes before replacement, calls `os.replace()` for replacement bytes or
 unlinks exactly selected files with `new: null`, verifies the resulting bytes and
 cleans transaction state even for a graph-invalid intermediate result. Local schema,
@@ -263,7 +263,7 @@ native save; that is not a schema veto. Unapplied/rejected forms have a separate
 per-view/resource `workspaceState` backup, not a silently diverging second document.
 
 **Native Save can persist invalid text and acquires no Python writer lock/journal.**
-Managed VS Code project mutations refuse dirty open SpecSpec documents. See
+Managed VS Code project mutations refuse dirty open specspec documents. See
 [native editor semantics](native-editors.md) for repair, conflict and recovery limits.
 Electron intentionally retains the managed-save path.
 
@@ -272,7 +272,7 @@ Electron intentionally retains the managed-save path.
 [`git.py`](../src/specspec/git.py) reads commit trees or the **exact staged blobs**
 through Git, then passes those bytes into the same snapshot engine. `check --staged`
 validates the index, not repaired/unstaged working files. Owner-controlled hook/CI
-setup preserves existing commands; SpecSpec does not install or replace hooks. Ordinary exploration never stages, commits or
+setup preserves existing commands; specspec does not install or replace hooks. Ordinary exploration never stages, commits or
 switches branches.
 
 Semantic diffs match full IDs, distinguishing body/parent/metadata
@@ -300,7 +300,7 @@ pinned Dagre/D3 dependencies and license notices and copies shared runtime sourc
 The VS Code and Electron build wrappers add their small adapters. **Edit common
 sources, not generated `vscode/media`, `vscode/out` or `electron/build` copies.**
 Immutable metadata-only owner/agent spotlights live in the Git-excluded project-local
-`.specspec-local/annotations/` store, shared by CLI and both hosts.
+`.specspec/local/annotations/` store, shared by CLI and both hosts.
 [`annotations.py`](../src/specspec/annotations.py) validates/publishes message/ID/
 comparison records; `spotlight add/show/flush` supplies the color-free interface.
 Explicit Git refs pin commits; workspace targets retain sparse dirty-only checksum/
@@ -355,9 +355,9 @@ npm --prefix electron run test:host
 To render this diagram locally (the SVG itself has no external dependencies):
 
 ```sh
-mkdir -p .specspec-local
-resvg --width 1840 docs/architecture.svg .specspec-local/architecture-preview.png
-resvg --width 2000 docs/architecture-interfaces.svg .specspec-local/interfaces-preview.png
+mkdir -p .specspec/local
+resvg --width 1840 docs/architecture.svg .specspec/local/architecture-preview.png
+resvg --width 2000 docs/architecture-interfaces.svg .specspec/local/interfaces-preview.png
 ```
 
 ### Canonical reasoning behind these boundaries

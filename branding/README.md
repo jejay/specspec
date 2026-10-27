@@ -1,4 +1,4 @@
-# SpecSpec identity
+# specspec identity
 
 The application uses the owner's selected **W / Spectrum flow + Q / Shorter runs
 + M / Mirrored Prism** identity from `../specspec-branding/final/` (Identity 1.0).
@@ -9,7 +9,7 @@ local copies and need no sibling checkout or network access.
   `final/icons/specspec-icon-24.svg`: the optical 24×24 circle → S → square symbol.
   The shared 24px header uses its alpha mask, colored by the host foreground.
   This single-ink treatment follows native theme and contrast
-  conventions. The symbol has the accessible name “SpecSpec”; the header shows
+  conventions. The symbol has the accessible name “specspec”; the header shows
   only the symbol followed by the live revision label.
 - [`app-icon.png`](app-icon.png) is a byte-identical copy of
   `final/png/specspec-app-icon-512.png`, the supplied spectrum launcher tile for

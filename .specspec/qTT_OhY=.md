@@ -30,5 +30,5 @@ Reads and comparisons leave files unchanged. Git configuration, attributes, inde
 hooks and filters remain owner-controlled; application normalization needs no
 repository setup or filter execution. Native Save/undo remains VS Code-owned.
 Original-byte checks, journals, recovery, immutable Git blobs and cache verification
-remain byte-exact. Current node fields, accepted encodings and API-7 field grammar
+remain byte-exact. Current node fields, accepted encodings and application protocol field grammar
 retain their existing schema; maintained LF examples keep their actual receipts.

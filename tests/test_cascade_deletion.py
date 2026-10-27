@@ -105,7 +105,7 @@ def test_selected_file_warnings_preserve_git_and_line_ending_semantics(workspace
     refused, response = invoke(root, target)
     assert refused.exit_code == 1 and response["result"] == preview["result"]
     assert load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
     allowed, response = invoke(root, target, "--yes")
     assert allowed.exit_code == 0 and target not in load_snapshot(root).graph.nodes
     assert target in {d["node_id"] for d in response["diagnostics"] if d["severity"] == "warning"}
@@ -123,7 +123,7 @@ def test_dirty_surviving_descendants_are_evidence_not_destructive_action_warning
     assert load_snapshot(root).graph.nodes[d].body == "# Pending survivor\n"
 
 
-def test_no_git_or_unborn_head_never_claims_selected_nodes_are_committed(workspace):
+def test_no_git_or_unborn_head_never_claims_selected_nodes_are_committed(workspace, without_git):
     root, manifesto = workspace
     _, child = add_node(root, "requirement", [manifesto], "# New\n")
     result, preview = invoke(root, child, "--dry-run")
@@ -154,7 +154,7 @@ def test_whole_action_human_consent_keeps_descendants(workspace, monkeypatch, an
         }
     else:
         assert result.exit_code == 1 and load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 @pytest.mark.parametrize("change", ["descendant", "selected-warning", "selected-rename"])
@@ -176,7 +176,7 @@ def test_reviewed_consequences_are_rechecked_under_lock(workspace, change):
     result, response = invoke(root, a, "--yes", "--reviewed-plan", "-", input=json.dumps(plan))
     assert result.exit_code == 1 and load_snapshot(root).files == current
     assert response["diagnostics"][0]["code"] in {"DELETE_PLAN_CHANGED", "NODE"}
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_unmerged_and_unavailable_git_assessment_warn_for_selected_files(workspace, monkeypatch):
@@ -251,7 +251,7 @@ def test_warning_delivery_precedes_unlink_and_external_changes_are_preserved(
     with pytest.raises(SpecError, match="Files changed"):
         delete_nodes(root, [child], confirm=confirm)
     assert path.read_bytes().endswith(b"External text\n")
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_long_chain_exact_scope_and_invalid_requests_are_non_writing(workspace):

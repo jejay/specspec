@@ -1,7 +1,7 @@
 # Rainbow playground
 
 Open [`index.html`](index.html) directly in a recent browser (double-click it).
-No server, installation, network connection or SpecSpec project is needed.
+No server, installation, network connection or specspec project is needed.
 Keep `index.html`, `palette.js` and `app.js` together.
 
 Adjust:
@@ -18,7 +18,7 @@ targets are unchanged. Requirement receives an unused swatch nearest hue 165°
 after the other roles; if none remains, it reuses the nearest swatch. At the
 defaults, Added is color 4 (#37b390) and Requirement color 5 (#92a64b).
 Small/narrow palettes may map several meanings to the same color. The fixed
-reference is not live host-theme matching. These suggestions do not change SpecSpec.
+reference is not live host-theme matching. These suggestions do not change specspec.
 
 Choose **Parameters JSON** (enough), **Full palette JSON**, or **CSS variables**,
 then **Copy result** and paste it back to the assistant. If clipboard access is

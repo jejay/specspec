@@ -50,13 +50,13 @@ def target() -> tuple[str, str]:
 def desktop_paths(root: Path, platform: str, arch: str) -> tuple[Path, Path]:
     suffix = ".zip" if platform == "win32" else ".tar.gz"
     return (
-        root / "dist/desktop" / f"SpecSpec-{platform}-{arch}",
-        root / "dist" / f"SpecSpec-{version(root)}-{platform}-{arch}{suffix}",
+        root / "dist/desktop" / f"specspec-desktop-{platform}-{arch}",
+        root / "dist" / f"specspec-desktop-{version(root)}-{platform}-{arch}{suffix}",
     )
 
 
 def runtime_check(directory: Path, platform: str):
-    executable = directory / ("SpecSpec.exe" if platform == "win32" else "SpecSpec")
+    executable = directory / ("specspec-desktop.exe" if platform == "win32" else "specspec-desktop")
     if not executable.is_file():
         raise ValueError(f"Missing portable executable: {executable}")
     application = directory / "resources/app"
@@ -75,6 +75,7 @@ def runtime_check(directory: Path, platform: str):
         "build/LICENSE",
         "build/app-icon.png",
         "build/common/host/session.cjs",
+        "build/common/host/startup.cjs",
         "build/media/graph.js",
         "build/media/specspec.svg",
         "build/media/vendor/THIRD_PARTY_NOTICES.txt",
@@ -155,6 +156,7 @@ def check(root: Path, platform: str, arch: str) -> dict:
             "extension/LICENSE.txt",
             "extension/out/extension.js",
             "extension/out/common/host/session.cjs",
+            "extension/out/common/host/startup.cjs",
             "extension/media/graph.js",
             "extension/media/specspec.svg",
             "extension/media/app-icon.png",
@@ -164,13 +166,18 @@ def check(root: Path, platform: str, arch: str) -> dict:
             raise ValueError(f"VSIX is missing runtime files: {sorted(missing)}")
         if any(
             any(
-                part in {"node_modules", "src", "test", "test-host", ".specspec-local"}
+                part in {"node_modules", "src", "test", "test-host", ".specspec"}
                 for part in PurePosixPath(name).parts
             )
             for name in names
         ):
             raise ValueError("VSIX contains development-only material.")
         metadata = json.loads(package.read("extension/package.json"))
+        if (
+            metadata.get("name") != "specspec-vscode"
+            or metadata.get("displayName") != "specspec-vscode"
+        ):
+            raise ValueError("VSIX product naming differs from the current release.")
         if metadata["version"] != release or metadata["contributes"]["customEditors"][0][
             "selector"
         ] != [{"filenamePattern": "**/.specspec/???????=.md"}]:
@@ -189,6 +196,11 @@ def check(root: Path, platform: str, arch: str) -> dict:
     metadata = json.loads((application / "package.json").read_text(encoding="utf8"))
     if metadata["version"] != release:
         raise ValueError("Desktop version differs from the current release.")
+    if (
+        metadata.get("name") != "specspec-desktop"
+        or metadata.get("productName") != "specspec-desktop"
+    ):
+        raise ValueError("Desktop product naming differs from the current release.")
     if platform == "win32":
         with zipfile.ZipFile(portable) as package:
             safe_names(package.namelist())
@@ -200,7 +212,7 @@ def check(root: Path, platform: str, arch: str) -> dict:
     else:
         with tarfile.open(portable) as package:
             safe_names(package.getnames())
-            member = package.getmember(f"{directory.name}/SpecSpec")
+            member = package.getmember(f"{directory.name}/specspec-desktop")
             if not member.mode & 0o111:
                 raise ValueError("Linux portable archive lost executable permissions.")
     artifacts = {}

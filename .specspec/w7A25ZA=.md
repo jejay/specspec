@@ -11,7 +11,7 @@ encoding supplied by their operating system, editor or Git checkout. Ordinary
 reads, comparisons and mutation feedback describe meaningful node content.
 Spaces, indentation, wording and intentional blank lines keep their meaning.
 
-SpecSpec works with each repository's existing Git settings and attributes while
+specspec works with each repository's existing Git settings and attributes while
 leaving those files and settings under owner control. Existing documents and
 native editors retain their local newline convention. Raw inspection and physical
 transaction safeguards retain exact bytes. Linked implementation files retain

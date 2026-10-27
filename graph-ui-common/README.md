@@ -16,7 +16,7 @@ canonical data. No host SDK is imported by these files. `host/documents.cjs`
 provides portable project-level document coordination and minimal text edits;
 per-view sessions optionally use a native-document port rather than CLI saves.
 
-Renderer adapters supply `window.SpecSpecHost` with `getState`, `setState`,
+Renderer adapters supply `window.specspecHost` with `getState`, `setState`,
 `postMessage`, and `onMessage`. Host sessions supply CLI invocation, authorization,
 confirmation, revision selection, posting/logging, and the shared `renderMatches`
 and `sameNode` contracts. Watchers call `scheduleRefresh`; `configurePolling(ms)`

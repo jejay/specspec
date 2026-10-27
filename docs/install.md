@@ -1,4 +1,4 @@
-# Install SpecSpec 0.1
+# Install specspec 0.1
 
 Choose the global CLI, the VS Code extension, the desktop, or all three. This is one
 source monorepo with independently usable products. Local builds do not publish
@@ -8,9 +8,9 @@ anything or install an extension into your editor automatically.
 
 | Product | Runtime | Building from source |
 | --- | --- | --- |
-| CLI | Python 3.11+; Git for history, source anchors and comparisons | uv or pipx |
-| VS Code | VS Code 1.90+, global CLI and Git in the workspace's environment | Node 22.12+, npm 10+ |
-| Electron | Windows/Linux, global CLI and Git | Node 22.12+, npm 10+; developer Python for release archives |
+| CLI (`specspec`) | Python 3.11+ and Git, including initialization | uv or pipx |
+| VS Code (`specspec-vscode`) | VS Code 1.90+, global CLI and Git on the workspace host | Node 22.12+, npm 10+ |
+| Desktop (`specspec-desktop`) | Windows/Linux, global CLI and Git | Node 22.12+, npm 10+; developer Python for release archives |
 
 The CLI does not need Node. Portable desktop archives include Electron, not Python
 or Git. The extension includes its JavaScript/assets, not the CLI. Installation may
@@ -72,7 +72,7 @@ If an editor still cannot find it, configure an **absolute executable path**:
 
 Use your actual tool-bin path (`uv tool dir --bin` reports uv's). Settings are
 machine-overridable: set them on the machine hosting the workspace, not in untrusted
-project text. An alternative is an absolute Python interpreter that has SpecSpec
+project text. An alternative is an absolute Python interpreter that has specspec
 installed, with `specspec.args` set to `["-m", "specspec"]`.
 
 Electron defaults to `specspec` on PATH too. Set trusted launch environment
@@ -92,7 +92,7 @@ code --install-extension dist/specspec-vscode-0.1.0.vsix
 
 If the `code` shell command is unavailable, use VS Code's **Extensions → … → Install
 from VSIX…**, choose that exact file and reload the window. Open your product folder,
-trust it if appropriate, then run **SpecSpec: Open Graph**. Files under
+trust it if appropriate, then run **specspec: Open Graph**. Files under
 `.specspec/` default to the graph custom editor. **Reopen Editor With → Text Editor**
 retains access to ordinary Markdown.
 
@@ -123,9 +123,9 @@ project arguments. [Desktop guide](../electron/README.md)
 
 For a portable build, set up and activate the [developer Python environment](../CONTRIBUTING.md),
 then run `npm run package:electron`. Unpacked output is under `dist/desktop/`;
-`dist/SpecSpec-0.1.0-win32-x64.zip` or the corresponding Linux `.tar.gz` is the
+`dist/specspec-desktop-0.1.0-win32-x64.zip` or the corresponding Linux `.tar.gz` is the
 portable archive (architecture follows your Node runtime). Extract it as a whole,
-keep its resources/licenses together and run `SpecSpec.exe` or `./SpecSpec`.
+keep its resources/licenses together and run `specspec-desktop.exe` or `./specspec-desktop`.
 End users need the global CLI and Git, not Node/npm. Linux tar archives preserve
 executable permissions. Keep Chromium's sandbox enabled; OS sandbox support is a
 prerequisite. Builds are unsigned, without installers or auto-updates. Cross-building
@@ -136,20 +136,26 @@ is not platform qualification; Windows/Linux are the current desktop targets.
 ```sh
 mkdir my-project
 cd my-project
-git init
-specspec init -m "# Product purpose" -m "Explain the intended outcome."
+specspec init -m "Test"
 specspec query --max-distance 2
 ```
 
-`init` requires an existing directory and a nonempty manifesto. It creates
-`.specspec/<id>.md` and a root `AGENTS.md` with the [shipped guide](agents.md), unless
-that name is occupied. Existing files, directories and symlinks are preserved and
-reported, not merged. Add `.specspec-local/` to your own `.gitignore`. SpecSpec does
-not initialize Git, stage, commit or install hooks for you.
+`init` requires Git, an existing directory and a nonempty manifesto. It initializes
+Git when needed, creates `.specspec/<id>.md`, and creates root `AGENTS.md` or appends
+the [shipped guide](agents.md) after its existing bytes. Unsafe instruction targets
+are rejected. It protects `.specspec/local/` with a checkout-local Git exclusion;
+it does not stage, commit, configure identity or install hooks. Choose a meaningful
+product goal instead of the minimal smoke-test text above.
 
-Now open the project in VS Code or select it in Electron. For a project without
-Git, ordinary current reads/edits remain available; comparison availability is
-reported explicitly. Node IDs are full and case-sensitive, including the final `=`.
+Both graph UIs immediately check for the CLI. If missing, a blocking screen explains
+installation and offers Retry. Opening an authorized directory without a graph
+shows a centered manifesto form and **Initialize specspec** action. This explicitly
+runs the same initialization in that directory; opening a folder alone never writes
+a graph. Existing broken specifications remain repair cases. Electron has no menu
+bar; use its visible project picker or Ctrl/Command+O.
+
+Existing graphs remain inspectable if Git is later removed, with comparison limits
+reported. Full IDs remain case-sensitive and include their final `=`.
 
 ## Upgrade and uninstall
 
@@ -163,7 +169,7 @@ state. Check the changelog before replacing an early-version tool.
 `uv tool uninstall specspec` or `pipx uninstall specspec` removes the CLI, not your
 projects. Uninstall the VS Code extension through Extensions; delete an unpacked
 portable app to remove its executable files. Neither action implies deleting your
-specifications, Electron user-data drafts or `.specspec-local/` recovery records.
+specifications, Electron user-data drafts or `.specspec/local/` recovery records.
 
 ## Upgrading pre-release workspaces
 
@@ -182,27 +188,35 @@ Do not overwrite an existing destination. Update your own documentation/source p
 references and editor setup, install matching 0.1 CLI/UI builds, and run
 `specspec check --sources`. Review the resulting Git changes deliberately.
 
-There is one current canonical location, not a fallback/dual reader or permanent
-migration command. Current node fields and API remain 7. Historical trees with the
+Runtime data now belongs under `.specspec/local/`. Before upgrading an existing
+checkout, finish/recover old interrupted writes with its matching CLI and save
+buffers. Preserve the old runtime directory, then explicitly move it into the
+reserved `local/` path without overwriting an existing destination. Do not discard
+journals, spotlights or diagnostics. There is no automatic legacy-state fallback.
+
+There is one current canonical location, not a fallback reader or permanent
+migration command. Internal schema and protocol fields remain machine details. Historical trees with the
 old directory may appear absent or be unavailable in current comparisons; renaming
-the working tree does not rewrite your history. SpecSpec's maintained Gantt corpus
+the working tree does not rewrite your history. specspec's maintained Gantt corpus
 is independently reconstructed throughout; arbitrary user histories are not silently
 rewritten and existing manual example clones are not reset.
 
 ## Troubleshooting
 
-- **No project found:** create a graph in the right folder, or put `--root PROJECT`
-  before the command. Discovery selects the nearest `.specspec` entry, even if invalid.
+- **No project found:** change into the intended directory and initialize there,
+  or use the UI's initialization action. Discovery selects the nearest `.specspec`
+  entry, even if invalid.
 - **CLI failed to launch:** check PATH/version in the host's environment and the
-  absolute executable setting. In VS Code, use **View → Output → SpecSpec**.
+  absolute executable setting. In VS Code, use **View → Output → specspec**.
 - **Graph invalid:** use `query --issues --with-ancestors`, `query ID --raw` and
   `diff --with-context`. Read the [repair guide](invalid-graphs.md); invalidity does
   not authorize deleting descendants or automatic changes to relationships.
-- **Interrupted initialization/edit:** retain `.specspec-local/` and run
-  `specspec --root PROJECT recover`. Do not remove its journal. Clear a stale lock
+- **Interrupted initialization/edit:** retain `.specspec/local/` and run
+  `specspec recover` from the project directory. Do not remove its journal. Clear a stale lock
   with `--force-lock` only after confirming no writer is running. New instruction
   publication uses a same-filesystem exclusive link; filesystems that cannot create
-  it report failure and retain recoverable state. Existing instructions are untouched.
+  it report failure and retain recoverable state. Recognized amended instructions
+  restore their exact original bytes; intervening edits remain protected.
 - **Changes do not appear:** save editor buffers first for CLI reads. Use Refresh;
   filesystem watchers are hints. See [loading diagnostics](loading.md).
 - **A VSIX/build looks stale:** run root `npm ci`, rebuild and reinstall the resulting

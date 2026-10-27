@@ -18,27 +18,16 @@ sources:
 - path: tests/test_invalid_workflow.py
 - path: docs/investigations/argument-authoring.md
 ---
-# Implement direct argument authoring with an unchanged host seam
+# Implement message and automatic-stdin authoring through the shared writer
 
-cli.py shares literal message parsing across init/add/update and bounds encoded body
-bytes before joining paragraphs. The argument source is distinct from hidden bulk
-body input; missing/conflicting sources fail before filesystem mutation. The
-editing-command frontend prepares explicit bounded steps for the domain writer.
-Alias allocation, deletion consent, optional validity boundary and API-7 envelopes
-retain their existing owners. Managed serialization adapts message/file/stdin
-newline encoding to the existing document, using LF for new nodes while preserving
-content whitespace and paragraph layout. Serialization appends a missing file
-terminator while retaining existing trailing blank lines.
+The CLI shares bounded literal paragraph joining and automatic UTF-8 stdin input
+across init/add/update. It rejects obsolete body options. Body-mode selection happens
+after complete grammar/field preflight; replacements do not read stdin, empty metadata
+updates retain their body, and a nonempty stream cannot target multiple steps.
 
-The UI session, one-shot bridge and persistent API channels retain their current
-argv/stdin contracts. Tests cover literal filenames/dashes/Markdown/control text,
-Unicode/CRLF and exact whitespace, repeat/omit/empty/conflicting messages, byte
-bounds, primary help, chained forward aliases/dry-run/rejection, explicit bulk files,
-large stdin and real shell-free Unicode argv under legacy output encodings.
-
-Maintained example verification independently reconstructs bodies from literal
-message arguments. Every retained Gantt revision/ref is rebuilt through actual
-current CLI executions with refreshed receipts, source anchors, ledger and bundle.
-Historical identities, app bytes, redirects and existing manual clones retain
-their established roles. Native document persistence and managed writes remain
-separate. Guides distinguish OS argument limits from the unchanged bulk limits.
+The common UI session omits body options and sends complete managed body text on
+stdin. Native document planning/save ownership remains separate. Tests cover direct
+and redirected bodies, messages without reads, empty/invalid/oversized input,
+metadata preservation, replacement isolation, chain ambiguity and actual subprocess
+transport. Serialization retains document style, meaningful whitespace and EOF rules.
+Maintained receipts are real current CLI executions across the complete Gantt history.

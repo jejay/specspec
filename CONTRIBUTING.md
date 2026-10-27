@@ -1,4 +1,4 @@
-# Work on the SpecSpec monorepo
+# Work on the specspec monorepo
 
 Start with the [product introduction](README.md), [architecture](docs/architecture.md)
 and [current specification tour](docs/own-spec.md). The binding graph is `.specspec/`;
@@ -65,9 +65,9 @@ npm run desktop -- --python .venv/Scripts/python.exe --project .
 npm run desktop -- --python .venv/bin/python --project .
 ```
 
-VS Code F5 from this root runs **Run SpecSpec on this repository** in a separate
+VS Code F5 from this root runs **Run specspec on this repository** in a separate
 development window/profile using its tracked launch/task/workspace files. Opening
-`vscode/` and **Run SpecSpec Extension** is an alternative. Both require root
+`vscode/` and **Run specspec Extension** is an alternative. Both require root
 `npm ci` and the development Python environment. For actual user installation,
 build/install the [VSIX](vscode/README.md) instead; a development host is optional.
 The generated root `.vscode/settings.json` remains machine-local and ignored.

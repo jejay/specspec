@@ -58,7 +58,7 @@ test('managed edit preflight reads fresh saved state through the existing API, w
   assert.deepEqual(calls[0].args, ['api']);
   assert.deepEqual(JSON.parse(calls[0].input), { api_version: 7, op: 'read' });
   const update = calls.find(c => c.args[0] === 'update');
-  assert.ok(update.args.includes('--body') && update.args.includes('-'));
+  assert.ok(!update.args.includes('--body') && !update.args.includes('-') && !update.args.includes('-m'));
   assert.equal(update.input, '# Changed');
   assert.equal(calls.some(c => c.args[0] === 'show'), false);
 });

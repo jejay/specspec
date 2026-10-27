@@ -1,4 +1,4 @@
-"""Clone the maintained Gantt history outside the SpecSpec development worktree.
+"""Clone the maintained Gantt history outside the specspec development worktree.
 
 This is a fixture/workspace helper, not a production command or schema converter.
 Existing destinations are never reused, reset or deleted.
@@ -30,7 +30,7 @@ def clone_history(source: Path, destination: Path) -> Path:
         ).stdout.strip()
     ).resolve()
     if destination == development_root or development_root in destination.parents:
-        raise ValueError("Choose a destination outside the SpecSpec development worktree.")
+        raise ValueError("Choose a destination outside the specspec development worktree.")
     if requested.exists() or requested.is_symlink():
         raise ValueError(
             f"Destination already exists; preserve it and choose another: {destination}"

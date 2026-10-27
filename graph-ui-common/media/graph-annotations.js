@@ -192,5 +192,5 @@
       error(message) { error = message; render(); $('annotation-live').textContent = `Spotlight list needs refresh. ${message}`; },
     };
   }
-  window.SpecSpecAnnotations = { create };
+  window.specspecAnnotations = { create };
 })();

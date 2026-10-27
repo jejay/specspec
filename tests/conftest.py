@@ -12,6 +12,16 @@ def workspace(tmp_path: Path):
     return tmp_path, snapshot.nodes[0].id
 
 
+@pytest.fixture
+def without_git(workspace):
+    """Exercise deliberately non-Git states after init's required repository setup."""
+    import shutil
+
+    root, _ = workspace
+    shutil.rmtree(root / ".git")
+    assert not (root / ".git").exists()
+
+
 @pytest.fixture(scope="session")
 def gantt_verifier():
     source = Path(__file__).resolve().parents[1] / "example/gantt/history/verify.py"
@@ -27,6 +37,6 @@ def gantt_history(tmp_path, gantt_verifier):
 
     source = Path(__file__).resolve().parents[1] / "example/gantt"
     root = gantt_verifier.clone_history(source, tmp_path / "gantt")
-    git(root, "config", "user.name", "SpecSpec tests")
+    git(root, "config", "user.name", "specspec tests")
     git(root, "config", "user.email", "tests@example.invalid")
     return root

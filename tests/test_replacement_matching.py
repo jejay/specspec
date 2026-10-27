@@ -230,7 +230,7 @@ def test_budget_rejection_cancels_other_chained_edits_without_writes(workspace, 
     assert data["diagnostics"][0]["code"] == "REPLACE"
     assert data["diagnostics"][0]["path"] == f".specspec/{id}.md"
     assert load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_ambiguity_after_normalization_cancels_deletions_and_creation(workspace):
@@ -256,7 +256,7 @@ def test_ambiguity_after_normalization_cancels_deletions_and_creation(workspace)
     )
     assert result.exit_code == 1 and "more than once" in data["diagnostics"][0]["message"]
     assert load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_tolerant_matching_reuses_alias_chains_and_preserves_literal_new(workspace):

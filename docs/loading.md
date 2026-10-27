@@ -50,7 +50,7 @@ Explicit working reads report retry and schedule a follow-up. Graph-invalid curr
 reads remain inspectable/editable; unavailable loads enter the marked stale state. Disposal cancels pending work;
 this retry path introduces neither recurring polling nor longer operation deadlines.
 
-An optional API-7 application `read` with `cache: true` returns bounded `base_cache` byte hints, held
+An optional application protocol application `read` with `cache: true` returns bounded `base_cache` byte hints, held
 only in project memory and removed before sending display data to the renderer.
 They contain a resolved commit and at most 2 MiB of canonical Git file text. A later
 read may send those hints; Python freshly resolves the ref and lists current entries,
@@ -66,7 +66,7 @@ lock, replan reviewed deletion scope/warnings and compare original bytes. Exact-
 checks still assess exact staged objects. Caches do not authorize mutations. Polling
 remains default-off; notifications are hints, with explicit Refresh available.
 
-API 7 transports a single target snapshot plus previous records only for changed/
+application protocol transports a single target snapshot plus previous records only for changed/
 deleted nodes. The shared adapter reconstructs complete revision structures for the
 renderer; normal refreshes no longer run export followed by diff. Historical reads
 bypass workspace buffers. Native plans and managed writes retain separate owners.
@@ -76,7 +76,7 @@ See [command/protocol details](cli.md).
 
 The hosts reuse two bounded Python processes per project/executable configuration:
 one for application requests and one for read-only source previews. Both warm on
-the first authorized API call. `api --stream` accepts newline-delimited API-7 JSON
+the first authorized API call. `api --stream` accepts newline-delimited application protocol JSON
 and returns one ordinary envelope per frame. The one-shot CLI remains available.
 Each frame still validates current files, locks/journals, native text and Git state.
 Only interpreter lifetime and bounded derived caches persist between requests.
@@ -105,7 +105,7 @@ Enable this resource-scoped setting when measuring a project:
 { "specspec.traceLoading": true }
 ```
 
-The SpecSpec output channel records discovery/watch setup, CLI durations, readiness,
+The specspec output channel records discovery/watch setup, CLI durations, readiness,
 first-working-render, full-comparison-render and client render acknowledgement
 measurements. Phase records contain durations and counts, not body text/credentials.
 Host phases use host clocks and renderer durations use the client clock; compare

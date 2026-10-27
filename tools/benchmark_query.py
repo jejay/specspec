@@ -1,7 +1,7 @@
 """Benchmark fresh query processes and profile one invocation (no result cache).
 
 Run in the development environment, e.g.:
-  python tools/benchmark_query.py --root . --runs 3 --output .specspec-local/query-bench.json
+  python tools/benchmark_query.py --root . --runs 3 --output .specspec/local/query-bench.json
 OS caches are not flushed. Captured stdout excludes terminal rendering costs.
 """
 

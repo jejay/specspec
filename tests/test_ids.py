@@ -42,15 +42,13 @@ def test_creation_paths_depend_only_on_ids_and_edits_keep_them(tmp_path, monkeyp
     result = runner.invoke(main, [*prefix, "init", "-m", body, "--json"])
     assert result.exit_code == 0, result.output
     parent = json.loads(result.stdout)["result"]["changed_ids"][0]
-    result = runner.invoke(
-        main, [*prefix, "add", "--parent", parent, "--body", "-", "--json"], input=body
-    )
+    result = runner.invoke(main, [*prefix, "add", "--parent", parent, "--json"], input=body)
     assert result.exit_code == 0, result.output
     child = json.loads(result.stdout)["result"]["changed_ids"][0]
     snapshot = load_snapshot(tmp_path)
     assert {n.path for n in snapshot.nodes} == {f".specspec/{i}.md" for i in [parent, child]}
     result = runner.invoke(
-        main, [*prefix, "update", child, "--body", "-", "--json"], input="# Different heading\n"
+        main, [*prefix, "update", child, "--json"], input="# Different heading\n"
     )
     assert result.exit_code == 0, result.output
     current = load_snapshot(tmp_path)
@@ -124,7 +122,7 @@ def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monk
     calls = []
 
     def random_bytes(count):
-        assert (root / ".specspec-local/lock").is_file()
+        assert (root / ".specspec/local/lock").is_file()
         assert count == 5
         calls.append(count)
         return next(candidates)
@@ -138,7 +136,7 @@ def test_add_retries_existing_and_casefold_collisions_under_lock(workspace, monk
 
 def test_init_generates_inside_lock(tmp_path, monkeypatch):
     def random_bytes(count):
-        assert count == 5 and (tmp_path / ".specspec-local/lock").exists()
+        assert count == 5 and (tmp_path / ".specspec/local/lock").exists()
         return b"fooba"
 
     monkeypatch.setattr(module.secrets, "token_bytes", random_bytes)
@@ -231,7 +229,7 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     prefix = ["--root", str(root)]
     added = runner.invoke(
         main,
-        [*prefix, "add", "--parent", manifesto, "--body", "-", "--json"],
+        [*prefix, "add", "--parent", manifesto, "--json"],
         input="# Hyphen identity\n",
     )
     assert added.exit_code == 0, added.output
@@ -243,9 +241,7 @@ def test_ids_beginning_with_hyphens_are_full_cli_arguments(workspace, monkeypatc
     ]:
         result = runner.invoke(main, [*prefix, *command, node_id, "--json"])
         assert result.exit_code == 0, result.output
-    result = runner.invoke(
-        main, [*prefix, "update", node_id, "--body", "-", "--json"], input="# Updated\n"
-    )
+    result = runner.invoke(main, [*prefix, "update", node_id, "--json"], input="# Updated\n")
     assert result.exit_code == 0, result.output
     assert load_snapshot(root).graph.nodes[node_id].body == "# Updated\n"
     result = runner.invoke(main, [*prefix, "delete", node_id, "--yes", "--json"])

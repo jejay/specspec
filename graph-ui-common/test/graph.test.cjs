@@ -17,7 +17,7 @@ function fixture(t, options = {}) {
   Object.defineProperty(viewport, 'clientWidth', { get: () => viewportWidth });
   Object.defineProperty(viewport, 'clientHeight', { value: 650 });
   let saved = options.restored;
-  dom.window.SpecSpecHost = { postMessage: message => messages.push(message), getState: () => saved, setState: value => { saved = value; },
+  dom.window.specspecHost = { postMessage: message => messages.push(message), getState: () => saved, setState: value => { saved = value; },
     onMessage: listener => dom.window.addEventListener('message', event => listener(event.data)) };
   dom.window.confirm = () => true;
   dom.window.structuredClone = structuredClone; // Browser APIs not supplied by jsdom.
@@ -33,16 +33,37 @@ function fixture(t, options = {}) {
   const snapshot = { format_version: 7, valid: true, nodes: [root, child], edges: [['root', 'child']] };
   const send = message => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { data: message }));
   const $ = id => dom.window.document.getElementById(id);
-  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
+  if (!options.noSnapshot) send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
   return { dom, messages, snapshot, send, $, saved: () => saved, resize: width => {
     viewportWidth = width; dom.window.dispatchEvent(new dom.window.Event('resize'));
   } };
 }
 
+test('startup blocks graph controls, exposes installation/retry, and initializes with literal stdin text', t => {
+  const f = fixture(t, { noSnapshot: true });
+  assert.equal(f.$('startup').hidden, false); assert.equal(f.$('new').disabled, true);
+  f.send({ type: 'startup', stage: 'install', message: '<b>missing executable</b>' });
+  assert.match(f.$('startup-title').textContent, /Install the specspec CLI/);
+  assert.equal(f.$('startup-detail').textContent, '<b>missing executable</b>');
+  assert.equal(f.$('startup-detail').querySelector('b'), null);
+  assert.equal(f.$('initialize-form').hidden, true); assert.equal(f.$('compare').disabled, true);
+  f.$('startup-retry').click(); assert.equal(f.messages.at(-1).type, 'retry-startup');
+  f.send({ type: 'startup', stage: 'initialize', root: 'C:/selected-project' });
+  assert.equal(f.$('startup-detail').textContent, 'C:/selected-project');
+  assert.equal(f.$('initialize-form').hidden, false); assert.equal(f.$('initialize').disabled, true);
+  f.$('initialize-body').value = 'Test 🐕'; f.$('initialize-body').dispatchEvent(new f.dom.window.Event('input'));
+  f.$('initialize').click(); assert.deepEqual(JSON.parse(JSON.stringify(f.messages.at(-1))), { type: 'initialize', body: 'Test 🐕' });
+  const count = f.messages.length; f.$('initialize').click(); assert.equal(f.messages.length, count);
+  f.send({ type: 'startup', stage: 'error', message: 'Recover before retrying' });
+  assert.equal(f.$('initialize-body').value, 'Test 🐕', 'A failed startup never discards the entered purpose.');
+  f.send({ type: 'snapshot', snapshot: f.snapshot, diagnostics: [], readonly: false });
+  assert.equal(f.$('startup').hidden, true); assert.equal(f.$('new').disabled, false);
+});
+
 test('header uses only the optical brand symbol, adjacent revision and accessible refresh icon', t => {
   const { dom, $, send, snapshot, messages } = fixture(t, { html: { showProject: false } });
   const brand = dom.window.document.querySelector('.brand-icon');
-  assert.equal(brand.getAttribute('aria-label'), 'SpecSpec');
+  assert.equal(brand.getAttribute('aria-label'), 'specspec');
   assert.equal(brand.getAttribute('role'), 'img');
   assert.equal(brand.nextElementSibling, $('revision'));
   assert.equal(dom.window.document.querySelector('.toolbar strong'), null);
@@ -355,8 +376,8 @@ function annotationsFixture(t, baseline = [], autoApply = true) {
   const f = hoverFixture(t), originalSend = f.send;
   let shots = baseline;
   f.send = message => { if (message.type === 'annotations') shots = message.shots; return originalSend(message); };
-  const originalPost = f.dom.window.SpecSpecHost.postMessage;
-  f.dom.window.SpecSpecHost.postMessage = message => {
+  const originalPost = f.dom.window.specspecHost.postMessage;
+  f.dom.window.specspecHost.postMessage = message => {
     originalPost(message);
     if (autoApply && message.type === 'annotation-select') f.send({ type: 'annotation-applied', shot: shots.find(s => s.id === message.shot) });
   };
@@ -494,7 +515,7 @@ test('selecting a spotlight frames its union while retaining an edited focused d
   const boxes = ['root','sibling'].map(id => card(id)).map(c => ({ x: parseFloat(c.style.left), y: parseFloat(c.style.top), width: parseFloat(c.style.width), height: parseFloat(c.style.height) }));
   const x = Math.min(...boxes.map(b => b.x)), y = Math.min(...boxes.map(b => b.y));
   const bounds = { x, y, width: Math.max(...boxes.map(b => b.x+b.width))-x, height: Math.max(...boxes.map(b => b.y+b.height))-y };
-  const expected = dom.window.SpecSpecCamera.frameTransform(bounds,1000,650);
+  const expected = dom.window.specspecCamera.frameTransform(bounds,1000,650);
   assert.deepEqual({ x: Number($('viewport').dataset.cameraX), y: Number($('viewport').dataset.cameraY), k: Number($('viewport').dataset.scale) }, { ...expected });
   assert.equal($('resume').hidden, false); $('resume').click(); assert.equal(saved().view, 'focus'); assert.equal($('body'), body); assert.deepEqual([body.selectionStart,body.selectionEnd], [2,5]);
 });
@@ -529,7 +550,7 @@ test('selection frames after closing the dropdown at all widths, with unchanged 
     resize(width); $('annotations-toggle').click(); labels()[0].click();
     const bounds = { x: parseFloat(card('child').style.left), y: parseFloat(card('child').style.top), width: 264, height: 112 };
     assert.equal($('annotations-panel').hidden, true); assert.equal(saved().annotationPanelOpen, false);
-    assert.deepEqual(pose(), { ...dom.window.SpecSpecCamera.frameTransform(bounds, width, 650) });
+    assert.deepEqual(pose(), { ...dom.window.specspecCamera.frameTransform(bounds, width, 650) });
     assert.deepEqual([...$('cards').children].map(c => [c.style.left,c.style.top,c.style.width,c.style.height]), world);
   }
 });

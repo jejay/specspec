@@ -130,7 +130,7 @@ def test_managed_add_rejects_shortcuts_before_writing(workspace):
     with pytest.raises(SpecError, match="alternative path"):
         add_node(root, "requirement", [manifesto, parent], "# Child\n", require_valid=True)
     assert load_snapshot(root).files == before.files
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def independent_parents(workspace):

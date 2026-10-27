@@ -32,15 +32,18 @@ async function run() {
   // changes to the self-referencing design graph. Native lifecycle uses a compact graph.
   const nativeRoot = join(project.root, 'native-documents'); mkdirSync(nativeRoot);
   const nativeCli = (args, input) => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', nativeRoot, ...args], { input, encoding: 'utf8' })).result;
-  const manifesto = nativeCli(['init', '--body', '-', '--json'], '# Native document fixture\n').changed_ids[0];
-  const nativeNode = nativeCli(['add', '--parent', manifesto, '--body', '-', '--json'], '# Native node\n').changed_ids[0];
-  const nativeOther = nativeCli(['add', '--parent', nativeNode, '--body', '-', '--json'], '# Other node\n').changed_ids[0];
+  const manifesto = nativeCli(['init', '--json'], '# Native document fixture\n').changed_ids[0];
+  const nativeNode = nativeCli(['add', '--parent', manifesto, '--json'], '# Native node\n').changed_ids[0];
+  const nativeOther = nativeCli(['add', '--parent', nativeNode, '--json'], '# Other node\n').changed_ids[0];
   const nativeSnapshot = nativeCli(['query', '--json']).target;
   const otherPath = join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path);
   writeFileSync(otherPath, readFileSync(otherPath, 'utf8').replace(/\n/g, '\r\n'));
   const nativeProject = { root: nativeRoot, modified: nativeNode, cli: nativeCli };
   const profile = mkdtempSync(join(tmpdir(), 'specspec-vscode-host-'));
   const extensions = join(profile, 'extensions'), uiResult = join(profile, 'ui-result.json');
+  const startupRoot = mkdtempSync(join(tmpdir(), 'specspec-vscode-startup-project-'));
+  writeFileSync(join(startupRoot, 'AGENTS.md'), '# Existing owner instructions\n');
+  const startup = { request: join(profile, 'startup-request.json'), response: join(profile, 'startup-response.json') };
   mkdirSync(extensions);
   // Opt in only within this disposable profile; retain phase/CLI diagnostics on failure.
   const userData = join(profile, 'user-data');
@@ -61,6 +64,8 @@ async function run() {
   }
   const native = { request: join(profile, 'native-request.json'), response: join(profile, 'native-response.json'), result: join(profile, 'native-result.json') };
   const env = { ...process.env, SPECSPEC_PYTHON: python, SPECSPEC_TEST_PROJECT_ROOT: project.root, SPECSPEC_UI_RESULT: uiResult,
+    SPECSPEC_STARTUP_ROOT: startupRoot, SPECSPEC_STARTUP_REQUEST: startup.request, SPECSPEC_STARTUP_RESPONSE: startup.response,
+    SPECSPEC_STARTUP_MISSING: join(profile, 'missing-specspec.exe'),
     SPECSPEC_NATIVE_REQUEST: native.request, SPECSPEC_NATIVE_RESPONSE: native.response, SPECSPEC_NATIVE_RESULT: native.result, SPECSPEC_NATIVE_NODE: nativeNode,
     SPECSPEC_NATIVE_PATH: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeNode).path),
     SPECSPEC_NATIVE_OTHER: JSON.stringify({ id: nativeOther, path: join(nativeRoot, nativeSnapshot.nodes.find(n => n.id === nativeOther).path) }),
@@ -83,6 +88,18 @@ async function run() {
   });
   child.stderr.on('data', chunk => process.stderr.write(chunk));
   const ui = (async () => {
+    const startupCli = args => JSON.parse(execFileSync(python, ['-m', 'specspec', '--root', startupRoot, ...args], { encoding: 'utf8' })).result;
+    await require('../../graph-ui-common/test-host/startup.cjs').startupChecks(port, { root: startupRoot, cli: startupCli,
+      restore: async () => {
+        writeFileSync(startup.request, JSON.stringify({ action: 'restore' }));
+        const until = Date.now() + 30000;
+        while (Date.now() < until) {
+          try { if (JSON.parse(readFileSync(startup.response, 'utf8')).stage === 'restored') return; } catch {}
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        throw new Error('The disposable profile did not restore its CLI configuration.');
+      } });
+    writeFileSync(startup.request, JSON.stringify({ action: 'done' }));
     if (!process.env.SPECSPEC_NATIVE_ONLY) await checkUI(port, platformChecks(project, 'vscode'));
     writeFileSync(uiResult, JSON.stringify({ ok: true }));
     await documentChecks(port, nativeProject, native);
@@ -101,8 +118,8 @@ async function run() {
     clearTimeout(timer); await ui;
     process.exitCode = code === 0 && smokePassed && uiPassed ? 0 : 1;
     if (!smokePassed) console.error('The host did not confirm a successful rendering/UI smoke test.');
-    if (process.exitCode) { console.error(`Isolated diagnostic profile retained at ${profile}`); return; }
-    try { project.cleanup(); rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 200 }); }
+    if (process.exitCode) { console.error(`Isolated diagnostic profile retained at ${profile}; startup project ${startupRoot}`); return; }
+    try { project.cleanup(); rmSync(startupRoot, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }); rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 200 }); }
     catch (error) { console.warn(`Temporary VS Code profile retained at ${profile}: ${error.message}`); }
   });
 }

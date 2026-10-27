@@ -97,6 +97,8 @@ def git_snapshot(
         mode, second, third = metadata.decode().split()
         name = encoded_path.decode("utf-8", errors="surrogateescape")
         path = SPEC_DIR + name[len(prefix) :]
+        if path == f"{SPEC_DIR}/local" or path.startswith(f"{SPEC_DIR}/local/"):
+            continue
         object_id = second if staged else third
         if staged and third != "0":
             diagnostics.append(

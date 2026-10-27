@@ -68,7 +68,7 @@ all four cases along with the rest of the suite.
   tracked example before the authorized commit. Its tree must match that index.
 
 Logs, original bytes, failed diagnostics, the isolated Linux workspace location,
-JUnit results and artifact digests remain in `.specspec-local/final-newline/`.
+JUnit results and artifact digests remain in `.specspec/local/final-newline/`.
 Key files include `windows-mode-probe.json`, `windows-unskipped-diagnosis.log`,
 `posix-mode-case.log`, `posix-python-first.log`, `posix-python-final.log`,
 `posix-python-result.json`, `posix-python.xml`, `posix-environment.json`,

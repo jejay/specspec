@@ -374,8 +374,6 @@ def query_lines(comparison: QueryComparison, *, human: bool = False) -> Iterator
     def contents(node_id):
         node = after.get(node_id) or before.get(node_id) or projection.nodes[node_id]
         metadata = []
-        if node.format_version is not None:
-            metadata.append(f"format_version: {node.format_version}")
         if node.extensions:
             metadata.append("extensions: " + json_text(node.extensions))
         rows = sources[node_id]

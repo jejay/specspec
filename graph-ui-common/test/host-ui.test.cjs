@@ -1,6 +1,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { CDP, foreground } = require('../test-host/ui.cjs');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { committedRootSibling } = require('../test-host/platform.cjs');
 
 function connection() {
@@ -15,6 +17,11 @@ function connection() {
   return { client, socket };
 }
 const tick = () => new Promise(resolve => setImmediate(resolve));
+
+test('production managed calls and real-host fixture mutations use automatic stdin without body flags', () => {
+  for (const path of ['../host/session.cjs', '../test-host/fixture.cjs', '../test-host/platform.cjs', '../../vscode/test-host/run.cjs'])
+    assert.doesNotMatch(readFileSync(join(__dirname, path), 'utf8'), /--body/);
+});
 
 test('CDP correlates out-of-order replies and preserves the target session', async t => {
   const { client, socket } = connection(); t.after(() => client.close());

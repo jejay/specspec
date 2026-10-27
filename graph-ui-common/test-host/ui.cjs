@@ -91,7 +91,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         for (const client of clients.values()) {
           for (const candidate of client.contexts.values()) {
             try {
-              if (await client.evaluate(candidate, `typeof document !== 'undefined' && !!window.SpecSpecHost && !!document.querySelector('#cards .card.manifesto')`)) {
+              if (await client.evaluate(candidate, `typeof document !== 'undefined' && !!window.specspecHost && !!document.querySelector('#cards .card.manifesto') && (!${JSON.stringify(options.scope || '')} || String(document.querySelector('meta[name="specspec-project"]')?.content || '')${process.platform === 'win32' ? '.toLowerCase()' : ''} === ${JSON.stringify(process.platform === 'win32' ? (options.scope || '').toLowerCase() : options.scope || '')})`)) {
                 active = client; context = candidate; break;
               }
             } catch { /* Other frames are not the graph. */ }
@@ -222,7 +222,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     }
     async function checkSpotlight(id, selector, image) {
       const world=await positions(),pose=await camera();
-      const editing=()=>evaluate(`JSON.stringify((({selected,view,colorMode,dirty,creating,originalNode,draft})=>({selected,view,colorMode,dirty,creating,originalNode,draft}))(window.SpecSpecHost.getState()))`);
+      const editing=()=>evaluate(`JSON.stringify((({selected,view,colorMode,dirty,creating,originalNode,draft})=>({selected,view,colorMode,dirty,creating,originalNode,draft}))(window.specspecHost.getState()))`);
       const saved=await editing();
       const geometry=()=>evaluate(`JSON.stringify([...document.querySelectorAll('#edges path')].map(p=>[p.dataset.parent,p.dataset.child,p.classList.contains('arrow-head'),p.getAttribute('d'),getComputedStyle(p).strokeWidth,getComputedStyle(p).strokeDasharray]).sort((a,b)=>JSON.stringify(a.slice(0,3)).localeCompare(JSON.stringify(b.slice(0,3)))))`);
       const paths=await geometry();
@@ -246,8 +246,8 @@ exports.checkUI = async function checkUI(port, options = {}) {
       for(let index=0;index<answers.length;index++) {
         if(index) await evaluate(`document.getElementById('annotations-toggle').click()`);
         await evaluate(`document.querySelector('[data-shot-id="${answers[index].id}"]').click()`);
-        for(let i=0;i<300&&!await evaluate(`window.SpecSpecHost.getState().annotationActive===${JSON.stringify(answers[index].id)}`);i++) await delay(100);
-        assert.equal(await evaluate(`window.SpecSpecHost.getState().annotationActive`),answers[index].id,'Comparison loads before spotlight application.');
+        for(let i=0;i<300&&!await evaluate(`window.specspecHost.getState().annotationActive===${JSON.stringify(answers[index].id)}`);i++) await delay(100);
+        assert.equal(await evaluate(`window.specspecHost.getState().annotationActive`),answers[index].id,'Comparison loads before spotlight application.');
         const result=await evaluate(`(() => {
           const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)});
           const style=getComputedStyle(c),probe=document.createElement('span');
@@ -262,7 +262,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         if(index===0&&image) await screenshot(image);
         await evaluate(`document.getElementById('viewport').dispatchEvent(new PointerEvent('pointerleave'))`);
         assert.ok(await evaluate(`document.getElementById('annotations-panel').hidden`));
-        assert.equal(await evaluate(`window.SpecSpecHost.getState().view`),'overview');
+        assert.equal(await evaluate(`window.specspecHost.getState().view`),'overview');
         assert.ok(await evaluate(`(() => {const c=[...document.querySelectorAll('#cards .card')].find(c=>c.dataset.nodeId===${JSON.stringify(id)}),r=c.getBoundingClientRect(),v=document.getElementById('viewport').getBoundingClientRect();return Math.abs((r.left+r.right-v.left-v.right)/2)<1&&Math.abs((r.top+r.bottom-v.top-v.bottom)/2)<1;})()`),'Selection frames in the full canvas, without dropdown inset.');
       }
       const highlightPose=await camera(), highlightEditing=await editing();
@@ -273,7 +273,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         await clickHighlight('ctrlKey:false');
         assert.equal(await evaluate(`Boolean(document.querySelector('[data-node-id="${id}"]').dataset.annotationLabel)`),on);
       }
-      const highlights=await evaluate(`window.SpecSpecHost.getState().annotationHighlights`);
+      const highlights=await evaluate(`window.specspecHost.getState().annotationHighlights`);
       assert.deepEqual(highlights,[id]);
       const priorCount=await evaluate(`document.querySelectorAll('.annotation-label').length`);
       const ownerMessage=`Owner backchannel <img> ${id}`;
@@ -294,7 +294,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
       assert.deepEqual(created.comparison,{base:'HEAD',target:'workspace'});
       assert.deepEqual(created.nodes,highlights);
       assert.ok(created.workspace);assert.equal('groups' in created,false);
-      assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().annotationHighlights`),highlights);
+      assert.deepEqual(await evaluate(`window.specspecHost.getState().annotationHighlights`),highlights);
       assert.deepEqual(await camera(),highlightPose); assert.equal(await editing(),highlightEditing);
       console.log(`Real spotlight backchannel passed for ${id}: Shift/Ctrl+Shift toggles, compose/cancel, metadata-only comparison persistence and agent CLI readback.`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click()`);
@@ -369,7 +369,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
           results.push({label:kind+' probe',base,actual:oklch(getComputedStyle(p).stroke),paired:getComputedStyle(p).stroke===getComputedStyle(h).fill});
           p.remove();h.remove();
         }
-        for(const accent of ['#e5be32',...window.SpecSpecGraph.RAINBOW_COLORS,...Object.values(window.SpecSpecGraph.TYPE_COLORS).filter(c=>c!=='#d3d3d3')]) {
+        for(const accent of ['#e5be32',...window.specspecGraph.RAINBOW_COLORS,...Object.values(window.specspecGraph.TYPE_COLORS).filter(c=>c!=='#d3d3d3')]) {
           for(const kind of ['normal','changed','removed','added','source-changed']) for(const expanded of [false,true]) for(const type of ['requirement','implementation','manifesto revision-colored']) {
             const c=document.createElement('div');c.className='card '+type+' '+kind+(expanded?' expanded':'');
             c.style.setProperty('--node-accent',accent);document.getElementById('cards').append(c);
@@ -440,7 +440,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
           return {type:circle?'manifesto':c.classList.contains('implementation')?'implementation':'requirement',expanded,radius:s.borderRadius,w:c.offsetWidth,h:c.offsetHeight,
             square:Math.abs(r.width-r.height)<1,contentFits:!circle||content.every(e=>inside(e.getBoundingClientRect(),r,(form?12:4)*scale)),
             markerFits:!circle||!mark||inside(mark.getBoundingClientRect(),r,4*scale),
-            formWidth:form?.offsetWidth,expected:form?window.SpecSpecGraph.manifestoDiameter(822,Math.max(form.offsetHeight,form.scrollHeight)):undefined};
+            formWidth:form?.offsetWidth,expected:form?window.specspecGraph.manifestoDiameter(822,Math.max(form.offsetHeight,form.scrollHeight)):undefined};
         });
       })()`);
       for(const s of shapes) {
@@ -590,7 +590,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         await checkHover(rootId, undefined, theme==='vscode-dark'?'hover-gray-manifesto':undefined);
         await evaluate(`document.getElementById('zoom-reset').click();document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
         assert.ok(await evaluate(`(() => {
-          const model=window.SpecSpecGraph,root=document.querySelector('.card.manifesto');
+          const model=window.specspecGraph,root=document.querySelector('.card.manifesto');
           const legend=document.getElementById('legend').textContent;
           return root.style.getPropertyValue('--node-accent')===model.REVISION_COLORS.changed
             &&root.classList.contains('revision-colored')
@@ -756,7 +756,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
     await evaluate(`document.getElementById('color-mode').value='distance';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     await screenshot('distance-minimum');
     const influenceExpected=await evaluate(`(() => {
-      const all=[...document.querySelectorAll('#cards .card')],model=window.SpecSpecGraph;
+      const all=[...document.querySelectorAll('#cards .card')],model=window.specspecGraph;
       function reference(base){
         const cards=all.filter(c=>!c.classList.contains(base?'added':'removed')),ids=new Set(cards.map(c=>c.dataset.nodeId));
         const links=[...document.querySelectorAll(base?'#edges .link:not(.added)':'#edges .link:not(.removed)')]
@@ -786,7 +786,7 @@ exports.checkUI = async function checkUI(port, options = {}) {
         return [...document.querySelectorAll('#cards .card')].every(c=>c.style.getPropertyValue('--node-accent')===expected[c.dataset.nodeId][mode])
           &&getComputedStyle(gradient).backgroundImage.includes('linear-gradient')&&gradient.offsetWidth>=100
           &&document.querySelector('#legend .legend-help')===null;})()`),'Influence colors use independent full-revision descendant/cohort calculations and a painted continuous legend.');
-      assert.equal(await evaluate(`window.SpecSpecHost.getState().colorMode`),mode);
+      assert.equal(await evaluate(`window.specspecHost.getState().colorMode`),mode);
       assert.equal(await positions(),paletteWorld);assert.deepEqual(await camera(),paletteCamera);
       await screenshot(mode+'-colors');
       console.log(`${mode}: independent revision-local counts/scaling, continuous gradient, preference and unchanged world/camera passed.`);
@@ -794,10 +794,10 @@ exports.checkUI = async function checkUI(port, options = {}) {
     const statusWorld=await positions(),statusCamera=await camera();
     await evaluate(`document.getElementById('color-mode').value='git-revision';document.getElementById('color-mode').dispatchEvent(new Event('change'))`);
     assert.equal(await positions(),statusWorld);assert.deepEqual(await camera(),statusCamera);
-    assert.equal(await evaluate(`window.SpecSpecHost.getState().colorMode`),'git-revision');
+    assert.equal(await evaluate(`window.specspecHost.getState().colorMode`),'git-revision');
     await screenshot('git-revision-colors');
     await evaluate(`document.querySelector('#cards .card.manifesto').click()`);
-    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),await evaluate(`window.SpecSpecGraph.REVISION_COLORS.changed`));
+    assert.equal(await evaluate(`document.querySelector('.card.manifesto.expanded').style.getPropertyValue('--node-accent')`),await evaluate(`window.specspecGraph.REVISION_COLORS.changed`));
     await evaluate(`document.getElementById('frame-node').click()`);await delay(300);
     const expandedRoot=await evaluate(`document.querySelector('.card.manifesto').dataset.nodeId`);
     phase('expanded Spotlight');

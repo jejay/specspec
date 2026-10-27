@@ -24,9 +24,9 @@ npm workspaces. Output under ignored `dist/`:
 | `specspec-0.1.0-py3-none-any.whl` | Install the global CLI with uv tools or pipx |
 | `specspec-0.1.0.tar.gz` | Python source distribution, including the init guide |
 | `specspec-vscode-0.1.0.vsix` | Install into an ordinary VS Code instance locally |
-| `SpecSpec-0.1.0-win32-x64.zip` | Current Windows portable app, architecture-dependent |
-| `SpecSpec-0.1.0-linux-x64.tar.gz` | Current Linux portable app, architecture-dependent |
-| `desktop/SpecSpec-PLATFORM-ARCH/` | Unpacked current-platform Electron runtime |
+| `specspec-desktop-0.1.0-win32-x64.zip` | Current Windows portable app, architecture-dependent |
+| `specspec-desktop-0.1.0-linux-x64.tar.gz` | Current Linux portable app, architecture-dependent |
+| `desktop/specspec-PLATFORM-ARCH/` | Unpacked current-platform Electron runtime |
 | `release-manifest.json`, `SHA256SUMS` | Artifact versions, sizes and SHA-256 addresses |
 
 A local build makes **one** platform's desktop archive, not both. The source monorepo
@@ -45,7 +45,7 @@ semantic correctness or deterministic identical bytes across build machines.
    experiments, drafts and journals. Record the intended source revision and tools.
 2. Run the working graph/source, Ruff, formatting, Python and npm checks in
    [contributing](../CONTRIBUTING.md). Verify every maintained Gantt ref and runnable
-   stage; do not use obsolete SpecSpec development schemas as compatibility fixtures.
+   stage; do not use obsolete specspec development schemas as compatibility fixtures.
    Inspect skip reasons with `python -m pytest -ra`. Permission-sensitive Linux
    archive tests need a POSIX filesystem: use native Linux or an isolated WSL
    checkout on its Linux filesystem, not `/mnt/c`. A Windows skip leaves that

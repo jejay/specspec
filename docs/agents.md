@@ -24,29 +24,32 @@ The template is bundled in the wheel and source distribution and loaded through
 Python package resources. No sibling workspace, Git checkout, online download or
 working-directory-relative file is needed at runtime.
 
-Initialization validates the candidate, stages/journals bytes under the existing
-workspace lock, publishes the graph and exclusively creates the new root guide.
-It reports `Agent instructions: AGENTS.md (created)` in readable output; JSON has
-`agent_instructions: {"path": "AGENTS.md", "created": true}`. That is initialization
-information, not another graph node or approval field. Node format/API remain 7.
+Initialization validates the manifesto and instruction target, requires Git and
+initializes a repository when the directory is not already in a Git working tree.
+It stages/journals node and guide bytes under `.specspec/local/` and the workspace
+lock. An absent guide is exclusively created; an existing regular file keeps its
+exact bytes as the prefix and receives the template after a separating blank line
+when needed. Empty and non-UTF-8 prefixes are preserved literally. Directories and
+symlinks are rejected rather than followed or silently skipped.
 
-If **any entry** already occupies `AGENTS.md`, it is preserved, including empty or
-non-UTF-8 files, directories and symlinks. It is not merged, appended to, read as an
-instruction source by the CLI or replaced. Output reports preservation (`created:
-false`). Integrate the shipped guidance yourself where it fits your project's
-instructions. Later CLI upgrades do not overwrite owner-edited guides.
+Readable output reports `(created)` or `(template appended)`. Structured receipts
+retain `agent_instructions.path` and `created`. This is initialization information,
+not graph membership or approval. Re-running init never overwrites an existing
+graph; later upgrades do not automatically edit project instructions.
 
 Interrupted initialization uses the same explicit recovery boundary as managed
 node writes. A newly created guide is removed on rollback only when its bytes are
-still a recognized transaction state. Intervening owner changes block recovery
-before any files are changed. Existing guides are never journal-owned. New-file
-publication uses an exclusive same-filesystem hard link, then removes its staging
-link; unsupported filesystems report a recoverable initialization failure. Preserve
-`.specspec-local/` and use `specspec --root PROJECT recover`, rather than deleting it.
+still a recognized transaction state. An amended guide rolls back to its exact
+original bytes. Intervening owner changes block recovery before any files change.
+New-file publication uses exclusive same-filesystem links; existing files use
+original-byte checks and staged replacement. Preserve `.specspec/local/` and run
+`specspec recover` in the project rather than deleting its journal. Git metadata
+created by initialization remains; graph recovery does not remove repositories.
 
-The CLI never runs the guide or an agent, initializes Git, stages changes, commits,
-installs hooks or publishes artifacts. An agent reading the guide still follows its
-operating instructions and the owner's authorization.
+Initialization protects runtime data with a checkout-local Git exclusion, without
+changing project ignore rules. It never runs the guide or an agent, stages, commits,
+configures identity/hooks or publishes artifacts. Agents still follow the owner's
+authorization.
 
 ## Owner drafting inputs
 

@@ -13,14 +13,16 @@ const { GitWatcher } = require('./build/common/host/git-watch.cjs');
 const { AnnotationWatcher } = require('./build/common/host/annotations.cjs');
 const { CliClient } = require('./build/common/host/client.cjs');
 const { findProjectRoot } = require('./build/common/host/project.cjs');
+const { probeCli, inspectProject } = require('./build/common/host/startup.cjs');
 const { graphHtml } = require('./build/common/view.cjs');
 const { renderMatches, sameNode } = require('./build/media/graph-model.js');
 
+app.setName('specspec-desktop');
 protocol.registerSchemesAsPrivileged([{ scheme: 'specspec', privileges: { standard: true, secure: true, supportFetchAPI: false } }]);
 const option = name => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 if (option('--profile')) app.setPath('userData', resolve(option('--profile')));
 let window, root, graph, reads, client, store, watcher, gitWatcher, annotationWatcher, generation = randomBytes(16).toString('hex');
-let selection = Promise.resolve(); const prompts = new Map();
+let selection = Promise.resolve(), unselectedCheck; const prompts = new Map();
 const launchDirectory = process.cwd();
 const polling = pollInterval(Number(option('--poll-interval-ms') ?? process.env.SPECSPEC_POLL_INTERVAL_MS ?? 0));
 const pythonSetting = option('--python') || process.env.SPECSPEC_PYTHON;
@@ -51,12 +53,13 @@ async function loadProject(next) {
     const cli = async (args, input) => {
       console.log(`CLI: ${command} ${[...prefix, ...args].join(' ')}`);
       const result = await projectClient.invoke(command, prefix, scope, args, input);
-      if (['add', 'update', 'delete'].includes(args[0])) projectReads.changed();
+      if (['init', 'add', 'update', 'delete'].includes(args[0])) projectReads.changed();
       return result;
     };
     const projectReads = new ProjectReads({ cli });
     reads = projectReads;
     graph = new GraphSession({
+      startup: async () => { await probeCli(command, prefix, scope); return inspectProject(scope); },
       authorized: () => root === scope && !window.isDestroyed(),
       cli, initialGraph: () => projectReads.initial(), readGraph: (base, target) => projectReads.readGraph(base, false, target),
       post, log: text => console.log(text), renderMatches, sameNode, revisions,
@@ -69,19 +72,33 @@ async function loadProject(next) {
     watcher = new GraphWatcher(scope, changed, failure => session.warn(failure));
     gitWatcher = new GitWatcher(scope, changed, failure => session.warn(failure));
     annotationWatcher = new AnnotationWatcher(scope, () => session.scheduleAnnotationsRefresh(), failure => session.annotationWarning(failure));
-    window.setTitle(`SpecSpec — ${root}`);
-  } else { graph = undefined; window.setTitle('SpecSpec — Open a project'); }
+    window.setTitle(`specspec-desktop — ${root}`);
+  } else { graph = undefined; window.setTitle('specspec-desktop — Open a project'); }
   await window.loadURL(APP_URL);
   if (graph) await graph.open();
-  else post({ type: 'error', message: 'Choose Open project to authorize a local graph. Python CLI installation is required.' });
+  else await checkUnselectedStartup();
   if (store.error) error(new Error(store.error));
 }
+function checkUnselectedStartup() {
+  if (unselectedCheck) return unselectedCheck;
+  const current = generation;
+  unselectedCheck = (async () => {
+    post({ type: 'startup', stage: 'checking' });
+    try {
+      await probeCli(command, prefix, launchDirectory);
+      if (current === generation && !root) post({ type: 'startup', stage: 'select' });
+    } catch (failure) {
+      if (current === generation && !root) post({ type: 'startup', stage: failure.code === 'CLI_UNAVAILABLE' ? 'install' : 'error', message: failure.message });
+    }
+  })().finally(() => { unselectedCheck = undefined; });
+  return unselectedCheck;
+}
 async function chooseProject() {
-  const result = await dialog.showOpenDialog(window, { title: 'Open a SpecSpec project', properties: ['openDirectory'] });
+  const result = await dialog.showOpenDialog(window, { title: 'Open a specspec project', properties: ['openDirectory'] });
   if (result.canceled || !result.filePaths[0]) return;
   const next = await findProjectRoot(result.filePaths[0]);
   const answer = await dialog.showMessageBox(window, { type: 'question', message: 'Trust and open this local project?',
-    detail: `${next}\n\nSpecSpec will execute the configured Python CLI and can edit this managed graph. Only open projects and CLI executables you trust.`,
+    detail: `${next}\n\nspecspec will execute the configured Python CLI and can edit this managed graph. Only open projects and CLI executables you trust.`,
     buttons: ['Cancel', 'Trust and Open'], defaultId: 0, cancelId: 0, noLink: true });
   if (answer.response === 1) await loadProject(next);
 }
@@ -99,7 +116,7 @@ app.whenReady().then(async () => {
     const mime = name.endsWith('.css') ? 'text/css' : name.endsWith('.svg') ? 'image/svg+xml' : 'text/javascript';
     return new Response(readFileSync(join(__dirname, 'build/media', name)), { headers: { 'Content-Type': `${mime}; charset=utf-8` } });
   });
-  window = new BrowserWindow({ width: 1320, height: 920, minWidth: 660, minHeight: 500, title: 'SpecSpec',
+  window = new BrowserWindow({ width: 1320, height: 920, minWidth: 660, minHeight: 500, title: 'specspec-desktop',
     icon: join(__dirname, 'build/app-icon.png'), webPreferences: webPreferences(join(__dirname, 'preload.cjs')) });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event, url) => { if (url !== APP_URL) event.preventDefault(); });
@@ -118,6 +135,7 @@ app.whenReady().then(async () => {
   ipcMain.on('specspec:message', (event, payload) => {
     if (!sender(event, payload) || !validMessage(payload.value)) return;
     if (payload.value.type === 'select-project') selectProject();
+    else if (['ready', 'retry-startup'].includes(payload.value.type) && !graph) void checkUnselectedStartup();
     else if (graph) {
       graph.receive(payload.value);
       // A normal renderer reload must receive a fresh snapshot, not wait forever.
@@ -135,13 +153,13 @@ app.whenReady().then(async () => {
   });
   window.webContents.on('render-process-gone', (_event, details) => { cancelPrompts(); graph?.dispose(); console.error('Renderer exited:', details.reason); });
   window.on('closed', () => { cancelPrompts(); graph?.dispose(); reads?.dispose(); client?.dispose(); watcher?.close(); gitWatcher?.close(); annotationWatcher?.close(); try { store.flush(); } catch (failure) { console.error(failure); } });
-  Menu.setApplicationMenu(Menu.buildFromTemplate([
-    { label: 'Project', submenu: [{ label: 'Open project…', accelerator: 'CmdOrCtrl+O', click: selectProject },
-      { label: 'Refresh graph', accelerator: 'CmdOrCtrl+R', click: () => graph?.enqueue(() => graph.refresh()) },
-      { label: 'Compare revisions…', click: () => graph?.enqueue(() => graph.chooseRevisions()) }, { type: 'separator' }, { role: 'quit' }] },
-    { role: 'editMenu' },
-    { label: 'View', submenu: [{ role: 'togglefullscreen' }, { role: 'toggleDevTools' }] },
-  ]));
+  Menu.setApplicationMenu(null);
+  window.setMenu(null);
+  window.webContents.on('before-input-event', (event, input) => {
+    if ((input.control || input.meta) && !input.alt && !input.shift && !input.isAutoRepeat && input.type === 'keyDown' && input.key.toLowerCase() === 'o') {
+      event.preventDefault(); selectProject();
+    }
+  });
   // An explicit launch path is authorization by the local launcher, not project data.
   const initial = option('--project');
   await loadProject(initial ? await findProjectRoot(resolve(initial)) : undefined);

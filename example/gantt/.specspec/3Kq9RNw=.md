@@ -11,7 +11,7 @@ sources:
 - path: history/cli.jsonl
 - path: history/revisions.json
 - path: history/verify.py
-  blob: 5c6487c96e381ce0a2a15908315e39933125ed01
+  blob: 4c12e82dcef55b0ba9d7798856aaf601a6049ee6
   mode: expanding
   ranges:
   - - 1

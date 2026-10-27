@@ -20,7 +20,7 @@ Markdown edit plan with diagnostics. Logical bodies use LF while planned text
 retains the bound document's newline style and exact before bytes. Complete planned
 Markdown receives a missing final terminator while empty repair bodies stay empty. VS Code applies WorkspaceEdit and owns native
 save/autosave/undo/redo/dirty recovery. Graph-invalid text displays fresh diagnosable relationships and remains editable;
-unreadable targets retain raw Markdown repair access. Managed project actions require clean SpecSpec documents. Missing
+unreadable targets retain raw Markdown repair access. Managed project actions require clean specspec documents. Missing
 files reject edits and overlays skip absent buffers after validating their inputs.
 
 Electron uses the shared renderer/session and managed Python save adapter. Native

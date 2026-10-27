@@ -63,7 +63,7 @@ def test_native_unsaved_overlay_has_only_a_checksum_not_retained_text(workspace)
     assert "Native unsaved" not in json.dumps(shot)
     assert load_snapshot(root).files == saved.files
     assert "Workspace nodes changed" in " ".join(annotations.listing(root)["shots"][0]["warnings"])
-    assert not (root / ".specspec-local/annotations/blobs").exists()
+    assert not (root / ".specspec/local/annotations/blobs").exists()
 
 
 def test_historical_backchannel_selects_target_and_deleted_base_nodes(gantt_history):

@@ -15,7 +15,7 @@ from pathlib import Path, PurePosixPath
 from .git import git_snapshot, repository_paths, run_git, semantic_diff
 from .git_objects import OBJECT_ID
 from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError
-from .workspace import STATE_DIR, load_snapshot, snapshot_from_files, workspace_lock
+from .workspace import SPEC_DIR, STATE_DIR, load_snapshot, snapshot_from_files, workspace_lock
 
 SHOT_ID = re.compile(r"[0-9a-f]{32}\Z")
 TEMP_FILE = re.compile(r"\.shot-[0-9a-f]{32}\.tmp\Z")
@@ -152,7 +152,7 @@ def workspace_warnings(captured, current):
 
 def directory(root):
     path = root / STATE_DIR / "annotations"
-    for candidate in (root / STATE_DIR, path, path / "blobs"):
+    for candidate in (root / SPEC_DIR, root / STATE_DIR, path, path / "blobs"):
         if candidate.is_symlink() or (candidate.exists() and not candidate.is_dir()):
             fail(f"Spotlight storage must be real directories: {candidate}")
     return path
@@ -294,7 +294,7 @@ def ensure_ignored(root):
     exclude.parent.mkdir(parents=True, exist_ok=True)
     escaped = "".join("\\" + c if c in "\\!#[]*? " else c for c in relative)
     with exclude.open("a", encoding="utf-8") as stream:
-        stream.write(f"\n# SpecSpec checkout-local state\n/{escaped}/\n")
+        stream.write(f"\n# specspec checkout-local state\n/{escaped}/\n")
     if not ignored():
         fail("Local ignore rules override the spotlight exclusion; fix them before submitting.")
 

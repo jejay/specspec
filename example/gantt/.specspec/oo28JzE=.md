@@ -18,4 +18,4 @@ baseline bars and a text date table. Keep scrolling inside chart/table areas and
 retain form/caret during resize. Preview file/pasted JSON separately from saved data,
 cancel stale asynchronous file reads, and confirm discard of dirty task/settings
 input before replacement/navigation. Browser task prerequisites express scheduling;
-SpecSpec graph links express specification justification.
+specspec graph links express specification justification.

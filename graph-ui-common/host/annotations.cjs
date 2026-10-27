@@ -5,7 +5,7 @@ const { join } = require('node:path');
 class AnnotationWatcher {
   constructor(root, changed, failed, filesystem = fs) {
     this.root = root; this.changed = changed; this.failed = failed; this.fs = filesystem; this.watches = new Map();
-    this.paths = [root, join(root, '.specspec-local'), join(root, '.specspec-local', 'annotations')];
+    this.paths = [root, join(root, '.specspec'), join(root, '.specspec', 'local'), join(root, '.specspec', 'local', 'annotations')];
     this.reconcile();
   }
   report(error) {
@@ -15,7 +15,9 @@ class AnnotationWatcher {
     if (this.closed) return;
     this.paths.forEach((path, index) => {
       let key;
-      try { const stat = this.fs.lstatSync(path); if (stat.isDirectory() && !stat.isSymbolicLink()) key = `${stat.dev}:${stat.ino}`; }
+      try { if (index === 0 || this.watches.has(this.paths[index - 1])) {
+        const stat = this.fs.lstatSync(path); if (stat.isDirectory() && !stat.isSymbolicLink()) key = `${stat.dev}:${stat.ino}`;
+      } }
       catch (error) { if (error.code !== 'ENOENT') this.report(error); }
       const previous = this.watches.get(path);
       if (key && previous?.key === key) return;
@@ -24,7 +26,7 @@ class AnnotationWatcher {
       try {
         const watcher = this.fs.watch(path, (_event, name) => {
           if (this.closed) return;
-          const expected = index === 0 ? '.specspec-local' : index === 1 ? 'annotations' : undefined;
+          const expected = ['.specspec', 'local', 'annotations'][index];
           if (name != null && (expected ? String(name) !== expected : !String(name).endsWith('.json'))) return;
           this.reconcile(); this.changed();
         });

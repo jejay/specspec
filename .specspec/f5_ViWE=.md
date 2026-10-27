@@ -4,7 +4,7 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Maintain SpecSpec with its own specification graph
+# Maintain specspec with its own specification graph
 
 Keep this repository's active specification in `.specspec` and connect its
 implementation leaves to actual code and verification. Provide discoverable

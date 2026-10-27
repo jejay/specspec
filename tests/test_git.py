@@ -20,7 +20,7 @@ def git(root: Path, *args: str):
 
 def setup_repository(root):
     git(root, "init")
-    git(root, "config", "user.name", "SpecSpec tests")
+    git(root, "config", "user.name", "specspec tests")
     git(root, "config", "user.email", "tests@example.invalid")
     git(root, "config", "core.autocrlf", "false")
     git(root, "add", ".specspec")
@@ -101,7 +101,7 @@ def test_ancestor_changes_include_old_and_new_descendants(workspace):
 def test_empty_baseline(workspace):
     root, _ = workspace
     git(root, "init")
-    git(root, "config", "user.name", "SpecSpec tests")
+    git(root, "config", "user.name", "specspec tests")
     git(root, "config", "user.email", "tests@example.invalid")
     git(root, "-c", "core.hooksPath=/dev/null", "commit", "--allow-empty", "-m", "Before spec")
     base = git_snapshot(root, "HEAD", allow_empty=True)
@@ -156,7 +156,7 @@ def test_owner_configured_hook_calls_current_exact_index_check(workspace):
     path.write_text(f"#!/bin/sh\nexec {python} -m specspec check --staged\n", encoding="utf8")
     path.chmod(path.stat().st_mode | 0o111)
     original = path.read_bytes()
-    # Hook management is ordinary owner Git tooling, not a SpecSpec installer.
+    # Hook management is ordinary owner Git tooling, not a specspec installer.
     assert CliRunner().invoke(main, ["--root", str(root), "hook", "install"]).exit_code == 2
     assert path.read_bytes() == original
     git(root, "commit", "--allow-empty", "-m", "Hook passed")

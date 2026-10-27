@@ -13,8 +13,8 @@ in relationship context, ordered by last occurrence. Full headers retain all par
 
 Present all binding content once per selected node: target text for surviving/added nodes
 and base text for deleted nodes. The compact default body projection occupies one
-line; structured bodies retain logical layout with CRLF normalized to LF. Current version, extensions
-and source locations remain compact metadata above the body. Readable text uses
+line; structured bodies retain logical layout with CRLF normalized to LF. Extensions and source locations remain compact metadata above the body; internal
+format versions stay out of ordinary headers. Readable text uses
 shared terminal-control escaping.
 
 Show added/modified/deleted for semantic node changes, and
@@ -35,4 +35,4 @@ mode, description, both locations and diagnostics stay in comparison JSON.
 Query builds semantic/literal change summaries and complete source facts. Exact
 text modifications and canonical patches belong to specspec diff with the matching
 revisions. This division keeps query a current-state reading rather than a patch
-viewer while preserving reconstructible API-7 comparisons and canonical schema 7.
+viewer while preserving reconstructible application protocol comparisons and the current canonical schema.

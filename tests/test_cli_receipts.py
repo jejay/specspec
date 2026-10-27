@@ -69,7 +69,7 @@ def test_init_adds_the_first_node_once_without_a_storage_path(tmp_path, existing
     assert_compact(result)
     assert summaries(result) == [f"Added: {node.id}"]
     assert result.stdout.count(node.id) == 1
-    status = "existing entry preserved" if existing_guide else "created"
+    status = "template appended" if existing_guide else "created"
     assert f"Agent instructions: AGENTS.md ({status})" in result.stdout
     assert "Affected: 1 nodes" in result.stdout
 

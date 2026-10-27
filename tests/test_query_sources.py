@@ -264,7 +264,7 @@ def test_exact_historical_code_not_dirty_workspace_code_is_compared(project):
     assert query.result["base_commit"] == base and query.result["target_commit"] == target
 
 
-def test_empty_and_non_git_base_sources_are_distinguished(workspace):
+def test_empty_and_non_git_base_sources_are_distinguished(workspace, without_git):
     root, parent = workspace
     _, requirement = add_node(root, "requirement", [parent], "Behavior\n")
     (root / "code.py").write_text("one\n", encoding="utf8")

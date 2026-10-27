@@ -42,6 +42,7 @@ sources:
 - path: .github/workflows/ci.yml
 - path: .github/workflows/release-build.yml
 - path: docs/investigations/final-newline.md
+- path: docs/investigations/owner-experience.md
 ---
 # Build and qualify independent local CLI and visual-host artifacts
 
@@ -66,7 +67,8 @@ VSIX in a disposable extensions directory with a separate test controller, and r
 the unpacked desktop executable against the isolated global-style CLI. Existing
 complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
 spotlight and reload suites retain their assertions and production safeguards.
-Current platform/audit/evidence scope stays in the release investigation; build
+Current startup/naming qualification is recorded in the owner-experience
+investigation, with earlier release/audit evidence scoped to its checkpoint. Build
 workflows upload artifacts without publication, tags, owner installs or Git writes.
 
 Permission-sensitive Linux archive verification executes on a POSIX filesystem.

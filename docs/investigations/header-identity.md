@@ -30,7 +30,7 @@ failed the existing 250%-headline comparison with an empty computed font size
 versus 13px. The complete isolated rerun passed without code or assertion changes.
 This is recorded as an unresolved intermittent test observation, not evidence that
 concurrent host/DOM stability is guaranteed. Logs and its diagnostic profile remain
-preserved locally under `.specspec-local/` and the host-reported temporary directory.
+preserved locally under `.specspec/local/` and the host-reported temporary directory.
 
 These checks do not qualify physical macOS Command gestures or Linux execution.
 Command+S has synthetic-event coverage. No release installation or package

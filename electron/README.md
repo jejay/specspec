@@ -1,4 +1,4 @@
-# SpecSpec Desktop
+# specspec Desktop
 
 A standalone Windows/Linux graph editor using the **same renderer and guarded
 session as the VS Code extension**. Connect intentions, separately revisable choices
@@ -54,11 +54,11 @@ npm run package:electron
 
 Output follows the current Node platform/architecture:
 
-- `dist/desktop/SpecSpec-win32-x64/` and `dist/SpecSpec-0.1.0-win32-x64.zip`, or
-- `dist/desktop/SpecSpec-linux-x64/` and `dist/SpecSpec-0.1.0-linux-x64.tar.gz`
+- `dist/desktop/specspec-desktop-win32-x64/` and `dist/specspec-desktop-0.1.0-win32-x64.zip`, or
+- `dist/desktop/specspec-desktop-linux-x64/` and `dist/specspec-desktop-0.1.0-linux-x64.tar.gz`
   (other supported Node architectures use their own suffix).
 
-Extract the whole archive and run `SpecSpec.exe` or `./SpecSpec`. Keep resources,
+Extract the whole archive and run `specspec-desktop.exe` or `./specspec-desktop`. Keep resources,
 Chromium/Electron licenses and shared-library notices together. End users need
 **the global CLI and Git, not Node/npm**. Linux archives retain executable modes;
 keep the Chromium sandbox enabled and satisfy its OS prerequisites. macOS packaging
@@ -86,6 +86,16 @@ To explore Git comparisons, create the independent Gantt workspace with
 `python example/gantt/history/checkout.py` and select that clone. The tracked
 `example/gantt/` snapshot is not a standalone Git repository.
 
+## Opening and initializing projects
+
+The app checks the configured specspec CLI immediately, even before project selection.
+If it is unavailable, a blocking installation screen offers Retry; the app never
+installs it automatically. **Open project** and **Ctrl/Command+O** choose a trusted
+local directory. There is no application menu bar. An empty project offers a centered
+manifesto form and **Initialize specspec** action, which initializes Git when needed
+and creates or appends AGENTS.md through the CLI. Broken existing graphs remain
+repair cases, never initialization targets.
+
 ## Editing, local state and safety
 
 The shared UI supplies native forms, graph navigation, color modes, source previews,
@@ -105,9 +115,12 @@ Polling is off by default. `--poll-interval-ms 5000` or trusted launch environme
 filesystem-dependent hints and explicit Refresh remains available.
 
 Presentation and dirty drafts live by project in `graph-presentation.json` under
-Electron's normal user-data directory. Corrupt bytes are protected and storage is
+Electron's normal user-data directory. The renamed app defaults to the
+`specspec-desktop` profile name. Existing older profile directories are preserved;
+finish/save drafts before upgrading, or explicitly launch with `--profile PATH`
+to continue using that trusted existing profile. Corrupt bytes are protected and storage is
 bounded, with no silent eviction. A new portable executable does not migrate or
-remove that state. Preserve drafts and project `.specspec-local/` recovery data;
+remove that state. Preserve drafts and project `.specspec/local/` recovery data;
 `specspec recover` handles interrupted managed transactions, not arbitrary Undo.
 Process recovery is not guaranteed power-loss durability or backup.
 

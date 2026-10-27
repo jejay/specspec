@@ -32,7 +32,7 @@ links the owner intention, revisable choices and implementation mappings.
   API-7 CLI executions, retaining all eight commits/tags, historical identities,
   meaningful redirects, runnable app bytes and staged source retention. All retained
   revisions validate; snapshot, actual receipts, ledger and bundle match. Existing
-  manual clones and unrelated SpecSpec history were preserved.
+  manual clones and unrelated specspec history were preserved.
 - Working/exact-index graph and source checks, Ruff, format checks and Git whitespace
   checks validate the committed slice. Canonical node schema remains format 7.
 
@@ -54,7 +54,7 @@ Save and split behavior, rather than requiring a stale-view notice.
 
 All failed-run logs and isolated diagnostic profiles remain available locally;
 passing reruns are evidence of these specific corrections, not universal stability.
-Useful logs under `.specspec-local/` include `invalid-full-python-final-2.log`,
+Useful logs under `.specspec/local/` include `invalid-full-python-final-2.log`,
 `invalid-common-native-repair.log`, `invalid-vscode-host-final.log`,
 `invalid-electron-host-final.log`, `invalid-commit-python-final.log` and the
 `invalid-authoring-history/` reconstruction. Final focused follow-ups additionally

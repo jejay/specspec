@@ -105,7 +105,7 @@ def test_delete_add_add_update_with_shared_aliases_is_one_transaction(workspace,
     assert all(b"$goal" not in raw for raw in saved.files.values())
     assert len(journals) == 1 and len(journals[0]["files"]) == 4
     assert not (root / f".specspec/{old}.md").exists()
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 @pytest.mark.parametrize("flag_position", ["early", "late"])
@@ -192,7 +192,7 @@ def test_later_syntax_errors_do_not_read_or_commit_earlier_steps(workspace, monk
     root, id = workspace
     before = load_snapshot(root).files
     monkeypatch.setattr(cli, "read_body", lambda path: pytest.fail("Preflight must finish first."))
-    result = invoke(root, "update", id, "--body", "NEVER_OPEN.md", *suffix)
+    result = invoke(root, "update", id, *suffix)
     assert result.exit_code == 2, result.output
     assert load_snapshot(root).files == before
 
@@ -202,7 +202,21 @@ def test_later_body_source_conflict_is_rejected_before_any_input_read(workspace,
     before = load_snapshot(root).files
     monkeypatch.setattr(cli, "read_body", lambda path: pytest.fail("Conflicts precede all reads."))
     result, data = call(
-        root, "update", id, "--body", "-", "add", "--parent", id, "-m", "", "--body", "-"
+        root,
+        "update",
+        id,
+        "add",
+        "--parent",
+        id,
+        "-m",
+        "",
+        "update",
+        id,
+        "-m",
+        "replacement",
+        "--replace",
+        "old",
+        "new",
     )
     assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "ARGUMENT"
     assert load_snapshot(root).files == before
@@ -254,7 +268,7 @@ def test_whole_candidate_validity_rejects_every_change_without_a_journal(workspa
     assert result.exit_code == 1 and not data["ok"]
     assert any(d["code"] == "CYCLE" for d in data["diagnostics"])
     assert load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
     # Without the optional boundary the same explicit cyclic candidate can be saved.
     result, data = call(
         root,
@@ -317,7 +331,7 @@ def test_reviewed_plans_stay_single_delete_only_and_are_not_read_in_chains(works
     assert load_snapshot(root).files == before
 
 
-def test_hidden_body_files_and_one_stdin_body_can_join_a_chain(workspace, tmp_path):
+def test_messages_and_one_automatic_stdin_body_can_join_a_chain(workspace, tmp_path):
     root, parent = workspace
     body = "# Literal\r\n\r\nUnicode 🐕 and trailing spaces.  \r\n"
     path = tmp_path / "body.md"
@@ -329,13 +343,11 @@ def test_hidden_body_files_and_one_stdin_body_can_join_a_chain(workspace, tmp_pa
         "file",
         "--parent",
         parent,
-        "--body",
-        str(path),
+        "-m",
+        body,
         "add",
         "--parent",
         "$file",
-        "--body",
-        "-",
         "--require-valid",
         input=body.encode("utf8"),
     )
@@ -349,18 +361,15 @@ def test_hidden_body_files_and_one_stdin_body_can_join_a_chain(workspace, tmp_pa
         root,
         "update",
         parent,
-        "--body",
-        "-",
         "update",
         data["result"]["changed_ids"][0],
-        "--body",
-        "-",
+        input=body,
     )
-    assert result.exit_code == 2 and "one stdin body" in data["diagnostics"][0]["message"]
+    assert result.exit_code == 2 and "ambiguous" in data["diagnostics"][0]["message"]
     assert load_snapshot(root).files == before
 
 
-def test_bounded_argv_steps_and_aggregate_file_bodies(workspace, monkeypatch, tmp_path):
+def test_bounded_argv_steps_and_aggregate_message_stdin_bodies(workspace, monkeypatch, tmp_path):
     import specspec.batch as batch
 
     root, parent = workspace
@@ -373,24 +382,22 @@ def test_bounded_argv_steps_and_aggregate_file_bodies(workspace, monkeypatch, tm
     assert invoke(root, *args).exit_code == 2
     monkeypatch.setattr(edit_cli, "MAX_BATCH_BYTES", 16 * 1024 * 1024)
     monkeypatch.setattr(batch, "MAX_BATCH_BYTES", 15)
-    path = tmp_path / "body.md"
-    path.write_bytes(b"12345678")
     reads, original = [], cli.read_body
 
-    def bounded_read(path):
-        reads.append(path)
-        assert len(reads) <= 2, "Stop loading once the aggregate budget is exceeded."
-        return original(path)
+    def bounded_read():
+        reads.append(True)
+        assert len(reads) == 1, "Stdin must be consumed at most once."
+        return original()
 
     monkeypatch.setattr(cli, "read_body", bounded_read)
-    args = ["add", "--parent", parent, "--body", str(path)] * 3
-    result, data = call(root, *args)
+    args = ["add", "--parent", parent, "-m", "12345678", "add", "--parent", parent]
+    result, data = call(root, *args, input="12345678")
     assert result.exit_code == 2 and "16 MiB" in data["diagnostics"][0]["message"]
-    assert len(reads) == 2
+    assert len(reads) == 1
     assert load_snapshot(root).files == before
 
 
-def test_literal_bodies_charge_the_budget_before_body_file_reads(workspace, monkeypatch):
+def test_literal_bodies_charge_the_budget_before_stdin_reads(workspace, monkeypatch):
     import specspec.batch as batch
 
     root, parent = workspace
@@ -414,8 +421,6 @@ def test_literal_bodies_charge_the_budget_before_body_file_reads(workspace, monk
         "add",
         "--parent",
         parent,
-        "--body",
-        "NEVER_OPEN.md",
     )
     assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "BATCH"
     assert load_snapshot(root).files == before
@@ -432,7 +437,7 @@ def test_malformed_integration_arrays_fail_preflight_without_reading_bodies(
     args = ["add", "-m", "# Node", flag, encoded]
     if flag == "--sources":
         args += ["--parent", parent]
-    result, data = call(root, "update", parent, "--body", "-", *args)
+    result, data = call(root, "update", parent, *args)
     assert result.exit_code in {1, 2} and data["diagnostics"][0]["code"] == code
     assert load_snapshot(root).files == before
 
@@ -558,7 +563,7 @@ def test_recovery_rolls_back_mixed_creation_deletion_and_update(tmp_path, monkey
         "# Replacement",
         "--require-valid",
     )
-    assert result.exit_code == 2 and (tmp_path / ".specspec-local/journal.json").exists()
+    assert result.exit_code == 2 and (tmp_path / ".specspec/local/journal.json").exists()
     assert not (tmp_path / f".specspec/{removed}.md").exists()
     assert (tmp_path / f".specspec/{ids[-1]}.md").exists()
     monkeypatch.setattr(workspace_module.os, "replace", original)

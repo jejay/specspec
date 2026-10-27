@@ -7,7 +7,7 @@ parents:
 ---
 # Keep immutable spotlight metadata in a checkout-local store
 
-Store each complete addition in .specspec-local/annotations/<shot-id>.json. This
+Store each complete addition in .specspec/local/annotations/<shot-id>.json. This
 persistent local metadata is shared by the CLI and both hosts in one checkout.
 Git's local exclude protects the directory when project ignore rules require it;
 refuse writes over Git-tracked local-state files.

@@ -9,6 +9,7 @@ function committedRootSibling(current, base, manifestoId, excludedId) {
 function platformChecks(fixture, host) {
   const { added, modified, removed } = fixture;
   return {
+    scope: fixture.root,
     readSpotlights: () => fixture.cli(['spotlight', 'show', '--json']).shots,
     submitSpotlights: id => Array.from({length:6},(_,index) =>
       fixture.cli(['spotlight', 'add', id, `Answer ${index+1} for ${id}`, '--json']).shots[0]),
@@ -17,19 +18,22 @@ function platformChecks(fixture, host) {
         name:brand.getAttribute('aria-label'),revision:brand.nextElementSibling.id,
         wordmark:Boolean(document.querySelector('.toolbar strong')),project:Boolean(document.getElementById('project')),
         refreshText:refresh.textContent,refreshLabel:refresh.getAttribute('aria-label'),mask:getComputedStyle(brand).maskImage};})()`);
-      assert.equal(chrome.name,'SpecSpec');assert.equal(chrome.revision,'revision');assert.equal(chrome.wordmark,false);
+      assert.equal(chrome.name,'specspec');assert.equal(chrome.revision,'revision');assert.equal(chrome.wordmark,false);
       assert.equal(chrome.project,host==='electron');assert.equal(chrome.refreshText,'');assert.equal(chrome.refreshLabel,'Refresh graph');
       assert.match(chrome.mask,/specspec.svg/);
       const original=fixture.node(modified).body;
       const keyboardBody=original+'\nKeyboard save probe.\n';
-      await evaluate(`document.querySelector('[data-node-id="${modified}"]').click();const body=document.getElementById('body');body.value=${JSON.stringify(keyboardBody)};body.dispatchEvent(new Event('input'));body.focus()`);
+      await evaluate(`document.querySelector('[data-node-id="${modified}"]').click()`);
+      for(let i=0;i<300;i++){if(await evaluate(`!document.getElementById('save').disabled`))break;await delay(100);}
+      assert.ok(await evaluate(`!document.getElementById('save').disabled`),'The keyboard probe waits for the established editable state, not provisional loading.');
+      await evaluate(`const body=document.getElementById('body');body.value=${JSON.stringify(keyboardBody)};body.dispatchEvent(new Event('input'));body.focus()`);
       await key({type:'rawKeyDown',key:'s',code:'KeyS',windowsVirtualKeyCode:83,modifiers:2});
       await key({type:'keyUp',key:'s',code:'KeyS',windowsVirtualKeyCode:83,modifiers:2});
-      for(let i=0;i<300;i++) {if(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`))break;await delay(100);}
-      assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`),'Ctrl+S must finish the focused managed save in the real host.');
+      for(let i=0;i<300;i++) {if(await evaluate(`!document.getElementById('save').disabled&&!window.specspecHost.getState().dirty`))break;await delay(100);}
+      assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.specspecHost.getState().dirty`),'Ctrl+S must finish the focused managed save in the real host.');
       assert.equal(fixture.node(modified).body,keyboardBody);
       await screenshot(`${host}-brand-header-keyboard-save`);
-      fixture.cli(['update',modified,'--body','-','--json'],original);
+      fixture.cli(['update',modified,'--json'],original);
       for(let i=0;i<300;i++) {if(await evaluate(`document.getElementById('body').value===${JSON.stringify(original)}`))break;await delay(100);}
       assert.equal(await evaluate(`document.getElementById('body').value`),original);
       await evaluate(`document.getElementById('back').click()`);
@@ -69,7 +73,7 @@ function platformChecks(fixture, host) {
       // A real root change in the independent disposable clone exercises the new
       // revision-mode exception, not a synthetic renderer-only status injection.
       const root=fixture.saved().nodes.find(n=>n.type==='manifesto');
-      fixture.cli(['update',root.id,'--body','-','--json'],root.body+'\nRoot revision-color fixture.\n');
+      fixture.cli(['update',root.id,'--json'],root.body+'\nRoot revision-color fixture.\n');
       for(let i=0;i<300;i++) {
         if(await evaluate(`document.querySelector('#cards .card.manifesto.changed')!==null`)) break;
         await delay(100);
@@ -87,12 +91,12 @@ function platformChecks(fixture, host) {
       const drift=fixture.cli(['spotlight','add',modified,'Live workspace drift review','--json']).shots[0];
       await waitFor(`document.querySelector('[data-shot-id="${drift.id}"]')!==null`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.querySelector('[data-shot-id="${drift.id}"]').click()`);
-      await waitFor(`window.SpecSpecHost.getState().annotationActive==='${drift.id}'`);
-      fixture.cli(['update',modified,'--body','-','--json'],beforeDrift.body+'\nLive spotlight drift fixture.\n');
+      await waitFor(`window.specspecHost.getState().annotationActive==='${drift.id}'`);
+      fixture.cli(['update',modified,'--json'],beforeDrift.body+'\nLive spotlight drift fixture.\n');
       await waitFor(`!document.getElementById('annotation-warning').hidden&&/Workspace nodes changed/.test(document.getElementById('annotation-warning').textContent)`);
       assert.ok(await evaluate(`document.querySelector('[data-node-id="${modified}"]').dataset.annotationLabel==='highlight'`));
       assert.ok(fixture.cli(['spotlight','show',drift.id,'--json']).shots[0].warnings.some(w=>w.includes('Workspace nodes changed')));
-      fixture.cli(['update',modified,'--body','-','--json'],beforeDrift.body);
+      fixture.cli(['update',modified,'--json'],beforeDrift.body);
       await waitFor(`document.getElementById('annotation-warning').hidden`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click()`);
       // A real stored two-revision comparison must switch the graph, including
@@ -102,14 +106,14 @@ function platformChecks(fixture, host) {
       const spotlight=fixture.cli(['spotlight','add',...ids,'Historical added/deleted review','--base','stage/02-code','--target','stage/03-spec','--json']).shots[0];
       await waitFor(`document.querySelector('[data-shot-id="${spotlight.id}"]')!==null`);
       const originalDraft=await evaluate(`(() => {const body=document.getElementById('body');body.value+='\\nSpotlight comparison draft fixture.';body.dispatchEvent(new Event('input'));return body.value;})()`);
-      const selected=await evaluate(`window.SpecSpecHost.getState().selected`);
+      const selected=await evaluate(`window.specspecHost.getState().selected`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.querySelector('[data-shot-id="${spotlight.id}"]').click()`);
-      await waitFor(`window.SpecSpecHost.getState().annotationActive==='${spotlight.id}'`);
+      await waitFor(`window.specspecHost.getState().annotationActive==='${spotlight.id}'`);
       assert.ok(await evaluate(`document.getElementById('revision').textContent.includes(${JSON.stringify(spotlight.comparison.target)})`));
       assert.ok(await evaluate(`${JSON.stringify(ids)}.every(id=>document.querySelector('[data-node-id="'+id+'"]').dataset.annotationLabel==='highlight')`));
       assert.ok(await evaluate(`document.getElementById('save').disabled`));
       assert.equal(await evaluate(`document.getElementById('body').value`),originalDraft);
-      assert.equal(await evaluate(`window.SpecSpecHost.getState().dirty`),true);
+      assert.equal(await evaluate(`window.specspecHost.getState().dirty`),true);
       await evaluate(`document.getElementById('workspace').click()`);
       await waitFor(`document.getElementById('revision').textContent.startsWith('HEAD → ')&&document.getElementById('annotation-warning').hidden`);
       await evaluate(`document.getElementById('annotations-toggle').click();document.getElementById('annotation-clear').click();document.getElementById('discard').click()`);
@@ -131,7 +135,7 @@ function platformChecks(fixture, host) {
       await evaluate(`document.querySelector('[data-node-id="${removed}"]').click()`);
       assert.ok(await evaluate(`document.getElementById('save').disabled&&document.getElementById('delete').disabled&&document.getElementById('body').readOnly&&!document.getElementById('body').disabled`),'Deleted details are copyable but never editable.');
       await screenshot(`${host}-deleted-head-ghost`);
-      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Delete the disposable implementation because this test is checking HEAD-relative ghost lifetime');
+      git('-c','user.name=specspec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Delete the disposable implementation because this test is checking HEAD-relative ghost lifetime');
       await waitFor(`document.querySelector('[data-node-id="${removed}"]')===null&&document.getElementById('revision').textContent.startsWith('HEAD → ')`);
       assert.equal(existsSync(join(fixture.root,deletedPath)),false);
       console.log(`${host}: physical deletion D survives staging and vanishes after commit through Git watching without Refresh/polling.`);
@@ -144,7 +148,7 @@ function platformChecks(fixture, host) {
       const deeperOutside = committedRootSibling(current,base,manifesto.id,outside.id);
       assert.ok(deeperOutside,'The maintained HEAD needs a second committed manifesto-child requirement.');
       const deeperOutsideBytes = readFileSync(join(fixture.root,deeperOutside.path));
-      const add = (parents,heading) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--body','-','--json'],`# ${heading}\n\nDisposable exact-deletion regression.\n`).changed_ids[0];
+      const add = (parents,heading) => fixture.cli(['add',...parents.flatMap(p=>['--parent',p]),'--json'],`# ${heading}\n\nDisposable exact-deletion regression.\n`).changed_ids[0];
       const branch = add([manifesto.id],'removed-justification');
       const full = add([branch],'exclusive-conclusion');
       const partial = add([branch,outside.id],'shared-conclusion');
@@ -152,10 +156,10 @@ function platformChecks(fixture, host) {
       const committed = [branch,full,partial,deep];
       const files = fixture.saved().nodes.filter(n=>committed.includes(n.id)).map(n=>n.path);
       git('add','--',...files);
-      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable exclusive/shared justification branch');
+      git('-c','user.name=specspec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Record a disposable exclusive/shared justification branch');
       const fresh = add([deep],'never-committed-surviving-conclusion');
       const deepPath = fixture.node(deep).path;
-      fixture.cli(['update',deep,'--body','-','--json'],'# Staged but surviving descendant\n');
+      fixture.cli(['update',deep,'--json'],'# Staged but surviving descendant\n');
       git('add','--',deepPath);
       const survivors=fixture.saved().nodes.filter(n=>[full,partial,deep,fresh].includes(n.id));
       const survivorBytes=new Map(survivors.map(n=>[n.path,readFileSync(join(fixture.root,n.path))]));
@@ -174,7 +178,7 @@ function platformChecks(fixture, host) {
         await evaluate(`document.querySelector('[data-parent-id="${branch}"] button').click()`);
         if(id===full) await evaluate(`document.getElementById('parent-candidate').value='${outside.id}';document.getElementById('parent-candidate').dispatchEvent(new Event('change'));document.getElementById('add-parent').click()`);
         await evaluate(`document.getElementById('body').value+=${JSON.stringify('\nDeliberately retained under surviving justification.\n')};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('save').click()`);
-        await waitFor(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`);
+        await waitFor(`!document.getElementById('save').disabled&&!window.specspecHost.getState().dirty`);
         assert.deepEqual(fixture.node(id).parents,[outside.id]);
         await evaluate(`document.getElementById('back').click()`);
       }
@@ -183,7 +187,7 @@ function platformChecks(fixture, host) {
       assert.deepEqual(readFileSync(join(fixture.root,deeperOutside.path)),deeperOutsideBytes);
       git('add','-u','--',`.specspec/${branch}.md`,`.specspec/${full}.md`,`.specspec/${partial}.md`);
       await delay(500);assert.ok(await evaluate(`document.querySelector('[data-node-id="${branch}"].removed')!==null`));
-      git('-c','user.name=SpecSpec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Remove one justification and explicitly rewrite surviving conclusions under remaining intent');
+      git('-c','user.name=specspec host fixture','-c','user.email=fixture@specspec.invalid','commit','-m','Remove one justification and explicitly rewrite surviving conclusions under remaining intent');
       await waitFor(`document.querySelector('[data-node-id="${branch}"]')===null`);
       assert.ok(await evaluate(`${JSON.stringify([full,partial,deep,fresh])}.every(id=>document.querySelector('[data-node-id="'+id+'"]'))`));
       console.log(`${host}: exact deletion preserves exclusive/shared/deep/staged/new survivors; fresh invalid graph, actual UI repairs and exact-index commit passed.`);
@@ -196,15 +200,15 @@ function platformChecks(fixture, host) {
       await waitFor(`document.getElementById('body').value==='# Manual watcher-only update\\n'`);
       assert.ok(await evaluate(`Boolean(!document.getElementById('before-section')&&document.querySelector('#body .cm-deletedChunk')&&document.querySelector('#body .cm-changedLine'))`),'Both hosts display the comparison inside the binding editor.');
       await evaluate(`(() => {const body=document.getElementById('body');body.focus();body.setSelectionRange(0,body.value.length);document.execCommand('insertText',false,'# Retained external draft');})()`);
-      await waitFor(`document.getElementById('body').value==='# Retained external draft'&&window.SpecSpecHost.getState().dirty`);
+      await waitFor(`document.getElementById('body').value==='# Retained external draft'&&window.specspecHost.getState().dirty`);
       await evaluate(`document.getElementById('body').setSelectionRange(2,8)`);
       await screenshot(`${host}-editable-inline-diff`);
-      const baseline = await evaluate(`window.SpecSpecHost.getState().originalNode`);
+      const baseline = await evaluate(`window.specspecHost.getState().originalNode`);
       const external = Buffer.concat([prefix, Buffer.from('# External watcher update\n')]);
       writeFileSync(path, external);
       await waitFor(`/changed outside/.test(document.getElementById('message').textContent)`);
       assert.equal(await evaluate(`document.getElementById('body').value`), '# Retained external draft');
-      assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().originalNode`), baseline);
+      assert.deepEqual(await evaluate(`window.specspecHost.getState().originalNode`), baseline);
       assert.deepEqual(await evaluate(`[document.getElementById('body').selectionStart,document.getElementById('body').selectionEnd]`), [2,8]);
       const invalid = Buffer.from(external.toString().replace('parents:', 'broken:'));
       writeFileSync(path, invalid);
@@ -219,22 +223,22 @@ function platformChecks(fixture, host) {
       console.log(`${host}: watcher-only manual/invalid-file sync, native draft/caret preservation and recovery passed.`);
       if (host !== 'electron') return;
       assert.deepEqual(await evaluate(`[typeof require,typeof process]`),['undefined','undefined']);
-      assert.deepEqual(await evaluate(`Object.keys(window.SpecSpecNative).sort()`),['getState','onMessage','postMessage','revisionResult','setState']);
+      assert.deepEqual(await evaluate(`Object.keys(window.specspecNative).sort()`),['getState','onMessage','postMessage','revisionResult','setState']);
       assert.equal(await evaluate(`fetch('https://example.invalid/').then(()=>false,()=>true)`),true);
       assert.equal(await evaluate(`window.open('https://example.invalid/')`),null);
       await evaluate(`document.getElementById('back').click();document.querySelector('[data-node-id="${modified}"]').click();document.getElementById('body').value=${JSON.stringify('# Saved from real Electron UI\n\nLiteral <script>data</script>.')};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('save').click()`);
       // Wait for the host's completed-render acknowledgement before reading the
       // canonical files: the CLI intentionally rejects reads during an active journal.
-      for(let i=0;i<300;i++){if(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`))break;await delay(100);}
-      assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.SpecSpecHost.getState().dirty`));
+      for(let i=0;i<300;i++){if(await evaluate(`!document.getElementById('save').disabled&&!window.specspecHost.getState().dirty`))break;await delay(100);}
+      assert.ok(await evaluate(`!document.getElementById('save').disabled&&!window.specspecHost.getState().dirty`));
       assert.ok(fixture.node(modified).body.includes('Saved from real Electron UI'));
       assert.ok(fixture.node(modified).body.endsWith('\n'), 'Managed save appends the missing file terminator.');
       await evaluate(`document.getElementById('body').value='# Retained stale desktop draft';document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
-      const old = await evaluate(`window.SpecSpecHost.getState().originalNode`);
-      fixture.cli(['update',modified,'--body','-','--json'],'# External fixture update\n');
+      const old = await evaluate(`window.specspecHost.getState().originalNode`);
+      fixture.cli(['update',modified,'--json'],'# External fixture update\n');
       await waitFor(`/changed outside/.test(document.getElementById('message').textContent)`);
       assert.equal(await evaluate(`document.getElementById('body').value`),'# Retained stale desktop draft');
-      assert.deepEqual(await evaluate(`window.SpecSpecHost.getState().originalNode`),old);
+      assert.deepEqual(await evaluate(`window.specspecHost.getState().originalNode`),old);
       for(let i=0;i<100;i++){if(await evaluate(`!document.getElementById('save').disabled`))break;await delay(80);}
       assert.ok(await evaluate(`!document.getElementById('save').disabled`));
       // Actual overwrite dialogs are tested through the shared host session,

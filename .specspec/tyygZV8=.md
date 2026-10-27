@@ -23,7 +23,7 @@ sources:
 The common HTML shell groups an accessible optical symbol and revision label,
 renders an accessible SVG Refresh button and accepts an explicit project-picker
 option. The typed VS Code wrapper disables that picker for both project and native
-file views; Electron retains its default picker and existing Project menu.
+file views; Electron retains its picker and project shortcut without a menu bar.
 
 The shared renderer captures Ctrl/Command+S before editor keymaps and webview
 forwarding, submitting the same enabled Save control in focused editing. The form
@@ -45,6 +45,9 @@ VS Code adapter tests verify picker omission and native Save ownership. Shared
 installed-host probes check header chrome and actual Ctrl+S against independent
 Gantt history; macOS Command behavior retains synthetic-event coverage.
 
-The verification note records successful complete Windows host runs and the
-initial intermittent headline-probe failure without treating a passing rerun as
-a concurrency guarantee. Physical macOS and Linux execution remain unqualified.
+Installed-host keyboard probes wait for the established enabled Save state after
+provisional loading, then send one shortcut and verify exact persistence. They do
+not extend deadlines or bypass read-only/loading restrictions. Startup probes check
+CLI blocking, retry, explicit initialization, Git and appended instructions before
+the complete existing-graph suites. Current execution evidence remains scoped to
+Windows hosts; physical macOS and Linux graphical execution remain unqualified.

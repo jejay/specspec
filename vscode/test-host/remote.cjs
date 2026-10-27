@@ -17,7 +17,7 @@ exports.run = async () => {
   try {
     assert.equal(vscode.env.remoteName, config.remoteName);
     const extension = vscode.extensions.getExtension('specspec-dev.specspec-vscode');
-    assert.ok(extension, 'Install/develop SpecSpec in this remote host');
+    assert.ok(extension, 'Install/develop specspec in this remote host');
     await extension.activate();
     assert.equal(extension.extensionKind, vscode.ExtensionKind.Workspace);
     assert.equal(extension.extensionUri.scheme, 'file');

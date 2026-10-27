@@ -5,23 +5,20 @@ parents:
 - DOqGIio=
 - 7tMgRa8=
 ---
-# Explain commands as task-oriented terminal guides
+# Explain ordinary commands with concise static terminal help
 
-Root, command, subgroup and explicitly invoked private-transport help describe
-purpose, arguments, option behavior, defaults, output and effects in plain language.
-Give complete shell examples and explain placeholders, full IDs and root selection.
-Explain literal versus file input, update replacement versus parent-list replacement,
-editing-chain flag scope, deletion consent, preview, validity and recovery boundaries.
+Keep root, command and subgroup help task-oriented, ASCII-safe and project-independent.
+Reduce explanatory bodies to 50–70 percent of their prior length while retaining
+purpose, defaults, complete useful examples and critical safety distinctions. Option
+descriptions can carry local detail. Help does not read stdin, payloads or projects.
 
-Query help distinguishes one node, its descendants and added ancestors; explains
-shortest/longest path cutoffs, self-inclusive influence, percentage quotas, union
-selection and invalid/unavailable evidence. Source help explains ranges, tracking
-modes, selected graph/code versions and deliberate metadata changes. Spotlight
-help explains checkout-local messages, revision context, drift and explicit flush.
+Normal usage runs from the intended directory, like Git. Root-selection and structured
+output switches remain hidden integration controls and never appear in help text,
+examples or option listings, including private transport help. Internal format/API
+versions stay out of normal agent/human help and readable query headers; incompatible
+versions still produce actionable diagnostics. Pipes do not change output mode.
 
-Command lists use complete useful summaries rather than ellipses. Keep static help
-ASCII-safe through legacy Windows encodings. Help itself reads no project, stdin or
-body payload and performs no canonical or Git mutation. Primary help stays human-
-focused; less-prominent integration inputs retain explicit descriptions and their
-existing ownership. Ordinary result verbosity and structured API contracts remain
-independent of expanded help.
+Explain message/stdin input, complete-body versus passage edits, parent-list
+replacement, invocation-wide flags, exact deletion/consent, final validity, recovery,
+query selection/ancestors and deliberate source metadata. Link technical guides for
+integration detail rather than exposing transport mechanics in everyday examples.

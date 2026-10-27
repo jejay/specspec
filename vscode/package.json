@@ -1,6 +1,6 @@
 {
   "name": "specspec-vscode",
-  "displayName": "SpecSpec",
+  "displayName": "specspec-vscode",
   "description": "Connect intentions, revisable choices and implementation in versioned Markdown",
   "repository": { "type": "git", "url": "https://github.com/jejay/specspec.git", "directory": "vscode" },
   "homepage": "https://github.com/jejay/specspec",
@@ -31,21 +31,21 @@
     "commands": [
       {
         "command": "specspec.openGraph",
-        "title": "SpecSpec: Open Graph"
+        "title": "specspec: Open Graph"
       },
       {
         "command": "specspec.compareRevisions",
-        "title": "SpecSpec: Compare Revisions",
+        "title": "specspec: Compare Revisions",
         "icon": "$(git-compare)"
       },
       {
         "command": "specspec.selectProject",
-        "title": "SpecSpec: Select Project",
+        "title": "specspec: Select Project",
         "icon": "$(folder-opened)"
       }
     ],
     "configuration": {
-      "title": "SpecSpec",
+      "title": "specspec",
       "properties": {
         "specspec.command": {
           "type": "string",
@@ -57,7 +57,7 @@
           "type": "boolean",
           "default": false,
           "scope": "resource",
-          "description": "Log loading phase durations and counts in the SpecSpec output channel."
+          "description": "Log loading phase durations and counts in the specspec output channel."
         },
         "specspec.pollIntervalMs": {
           "type": "integer",
@@ -81,7 +81,7 @@
     "customEditors": [
       {
         "viewType": "specspec.graphEditor",
-        "displayName": "SpecSpec Graph",
+        "displayName": "specspec Graph",
         "selector": [
           { "filenamePattern": "**/.specspec/???????=.md" }
         ],

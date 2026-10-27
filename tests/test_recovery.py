@@ -16,7 +16,7 @@ def test_interrupted_edit_can_restore_original(workspace):
     updated = update_node(root, manifesto, body="New content\n")
     path = before.nodes[0].path
     write_journal(
-        root / ".specspec-local",
+        root / ".specspec/local",
         {
             "kind": "edit",
             "files": {
@@ -29,14 +29,14 @@ def test_interrupted_edit_can_restore_original(workspace):
         update_node(root, manifesto, body="Another\n")
     assert recover(root)["restored"] == [path]
     assert load_snapshot(root).files == before.files
-    assert all(p.suffix == ".md" for p in (root / ".specspec").iterdir())
+    assert all(p.suffix == ".md" for p in (root / ".specspec").iterdir() if p.name != "local")
 
 
 def test_recovery_refuses_external_changes(workspace):
     root, _ = workspace
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
-    state = root / ".specspec-local"
+    state = root / ".specspec/local"
     write_journal(
         state,
         {
@@ -56,7 +56,7 @@ def test_recovery_refuses_external_changes(workspace):
 
 def test_unsafe_journal_path_is_rejected(workspace):
     root, _ = workspace
-    state = root / ".specspec-local"
+    state = root / ".specspec/local"
     write_journal(
         state,
         {
@@ -72,7 +72,7 @@ def test_unsafe_journal_path_is_rejected(workspace):
 
 def test_stale_lock_requires_explicit_acknowledgment(workspace):
     root, _ = workspace
-    lock = root / ".specspec-local" / "lock"
+    lock = root / ".specspec/local" / "lock"
     lock.write_text("unknown writer")
     assert not load_snapshot(root).valid
     with pytest.raises(SpecError, match="--force-lock"):
@@ -86,7 +86,7 @@ def test_recover_init_removes_only_known_node(workspace):
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
     write_journal(
-        root / ".specspec-local",
+        root / ".specspec/local",
         {
             "kind": "init",
             "files": {
@@ -95,5 +95,6 @@ def test_recover_init_removes_only_known_node(workspace):
         },
     )
     recover(root)
-    assert not (root / ".specspec").exists()
-    assert not (root / ".specspec-local" / "journal.json").exists()
+    assert not list((root / ".specspec").glob("*.md"))
+    assert (root / ".specspec/local").is_dir()
+    assert not (root / ".specspec/local" / "journal.json").exists()

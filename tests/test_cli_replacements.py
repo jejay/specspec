@@ -16,8 +16,8 @@ from specspec.model import MAX_FILE_BYTES, SpecError
 from specspec.workspace import add_node, load_snapshot, recover, update_node
 
 
-def call(root, *args):
-    result = CliRunner().invoke(cli.main, ["--root", str(root), *args, "--json"])
+def call(root, *args, input=None):
+    result = CliRunner().invoke(cli.main, ["--root", str(root), *args, "--json"], input=input)
     assert result.stdout, (result.output, result.exception)
     return result, json.loads(result.stdout)
 
@@ -145,7 +145,7 @@ def test_both_option_values_remain_literal_in_chains(workspace, form, old, new):
     assert saved.graph.nodes[data["result"]["aliases"]["detail"]].parents == [id]
 
 
-@pytest.mark.parametrize("source", [["-m", ""], ["--body", "NEVER_OPEN.md"], ["--body", "-"]])
+@pytest.mark.parametrize("source", [["-m", ""], ["--message", "text"], ["-m", "one", "-m", "two"]])
 def test_conflicts_in_later_steps_are_rejected_before_body_reads(workspace, monkeypatch, source):
     root, parent = workspace
     before = load_snapshot(root).files
@@ -155,8 +155,6 @@ def test_conflicts_in_later_steps_are_rejected_before_body_reads(workspace, monk
         "add",
         "--parent",
         parent,
-        "--body",
-        "NEVER_OPEN.md",
         "update",
         parent,
         "--replace",
@@ -177,8 +175,6 @@ def test_empty_old_in_a_later_step_is_rejected_before_body_reads(workspace, monk
         "add",
         "--parent",
         parent,
-        "--body",
-        "-",
         "update",
         parent,
         "--replace",
@@ -196,7 +192,7 @@ def test_incomplete_pairs_and_mixed_commands_do_not_read_or_write(workspace, mon
     monkeypatch.setattr(cli, "read_body", lambda p: pytest.fail("Parse every step first."))
     result = CliRunner().invoke(
         cli.main,
-        ["--root", str(root), "add", "--parent", parent, "--body", "-", "update", parent, *suffix],
+        ["--root", str(root), "add", "--parent", parent, "update", parent, *suffix],
     )
     assert result.exit_code == 2 and load_snapshot(root).files == before
 
@@ -232,7 +228,7 @@ def test_a_failed_replacement_cancels_the_complete_chain_before_journaling(works
     ]
     assert message in data["diagnostics"][0]["message"]
     assert load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_replacement_repair_aliases_and_exact_deletion_share_one_transaction(
@@ -332,7 +328,7 @@ def test_fresh_matching_happens_under_the_writer_lock_and_keeps_unrelated_change
         return original_mutate(root, operation, **options)
 
     def under_lock(body, pairs, **options):
-        assert (root / ".specspec-local/lock").is_file()
+        assert (root / ".specspec/local/lock").is_file()
         assert "Concurrent unrelated text." in body
         return original_replace(body, pairs, **options)
 
@@ -376,8 +372,6 @@ def test_total_pair_count_and_combined_text_budget_precede_input_reads(workspace
         "add",
         "--parent",
         parent,
-        "--body",
-        "-",
     ]
     result, data = call(root, *args)
     assert result.exit_code == 2 and "1024 replacement pairs" in data["diagnostics"][0]["message"]
@@ -388,7 +382,7 @@ def test_total_pair_count_and_combined_text_budget_precede_input_reads(workspace
     assert load_snapshot(root).files == before
 
 
-def test_old_new_material_reduces_the_remaining_body_file_budget(workspace, monkeypatch, tmp_path):
+def test_old_new_material_reduces_the_remaining_stdin_budget(workspace, monkeypatch, tmp_path):
     root, parent = workspace
     before = load_snapshot(root).files
     monkeypatch.setattr(batch, "MAX_BATCH_BYTES", 15)
@@ -396,10 +390,10 @@ def test_old_new_material_reduces_the_remaining_body_file_budget(workspace, monk
     path.write_bytes(b"12345678")
     reads, original = [], cli.read_body
 
-    def read(path):
-        reads.append(path)
-        assert len(reads) == 1, "Do not open further bodies after the combined limit."
-        return original(path)
+    def read():
+        reads.append(True)
+        assert len(reads) == 1, "Consume stdin only once."
+        return original()
 
     monkeypatch.setattr(cli, "read_body", read)
     result, data = call(
@@ -412,13 +406,7 @@ def test_old_new_material_reduces_the_remaining_body_file_budget(workspace, monk
         "add",
         "--parent",
         parent,
-        "--body",
-        str(path),
-        "add",
-        "--parent",
-        parent,
-        "--body",
-        str(path),
+        input=path.read_bytes(),
     )
     assert result.exit_code == 2 and "16 MiB" in data["diagnostics"][0]["message"]
     assert len(reads) == 1 and load_snapshot(root).files == before
@@ -479,7 +467,7 @@ def test_interruption_recovery_restores_patched_and_new_files(workspace, monkeyp
         "-m",
         "# New",
     )
-    assert result.exit_code == 2 and (root / ".specspec-local/journal.json").exists()
+    assert result.exit_code == 2 and (root / ".specspec/local/journal.json").exists()
     monkeypatch.setattr(workspace_module.os, "replace", original)
     assert recover(root)["graph_valid"] and load_snapshot(root).files == before
 
@@ -502,7 +490,7 @@ def test_external_edits_after_matching_are_protected_by_original_byte_checks(
     monkeypatch.setattr(workspace_module, "write_journal", concurrent)
     result, data = call(root, "update", id, "--replace", "Old", "New")
     assert result.exit_code == 1 and data["diagnostics"][0]["code"] == "CONCURRENT"
-    assert path.read_bytes() == external and (root / ".specspec-local/journal.json").exists()
+    assert path.read_bytes() == external and (root / ".specspec/local/journal.json").exists()
     with pytest.raises(SpecError):
         recover(root)
     assert path.read_bytes() == external

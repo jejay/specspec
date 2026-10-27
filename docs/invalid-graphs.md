@@ -1,11 +1,11 @@
 # Inspecting and repairing broken justifications
 
 A valid completed specification is a rooted, shortcut-free DAG. Its working files
-can temporarily violate those graph rules. SpecSpec keeps three questions separate:
+can temporarily violate those graph rules. specspec keeps three questions separate:
 **did the operation succeed, is the graph valid, and what reasoning may be affected?**
 The last question identifies potential scope, not a verdict about owner intent or
-semantic correctness. Canonical node format remains 7; the CLI and both hosts use
-application API 7.
+semantic correctness. The CLI and both hosts share the same current data contract;
+internal version metadata is surfaced when diagnosing incompatible data.
 
 ## Delete precisely what you select
 
@@ -207,7 +207,7 @@ invocation/I/O failure. An incomplete comparison can carry useful `result` evide
 with `ok: false` and nonzero status. Callers must not discard it automatically.
 
 Locks, path/symlink protections, input bounds, original-byte checks and authorization
-are independent of graph validity. If interrupted, retain `.specspec-local` and run
+are independent of graph validity. If interrupted, retain `.specspec/local` and run
 `recover`. Recovery restores only recognized original bytes, including an invalid
 original graph; it refuses to overwrite new external text. A successful recovery can
 therefore still report `graph_valid: false`. It is transaction recovery, not semantic

@@ -107,7 +107,7 @@ proportionally fewer source reads.
 
 ```sh
 python tools/benchmark_query.py --root . --runs 3 \
-  --output .specspec-local/query-performance/after.json
+  --output .specspec/local/query-performance/after.json
 ```
 
 The helper writes a JSON report, `.prof` and `.profile.txt` next to the chosen output.

@@ -108,15 +108,15 @@ def test_only_dirty_nodes_get_checksums_no_node_copies_or_git_writes(workspace):
         removed: None,
     }
     assert shot["workspace"]["head"] == git_snapshot(root, "HEAD").commit
-    assert not (root / ".specspec-local/annotations/blobs").exists()
-    stored = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    assert not (root / ".specspec/local/annotations/blobs").exists()
+    stored = root / ".specspec/local/annotations" / (shot["id"] + ".json")
     assert set(stored.parent.iterdir()) == {stored}
     assert "Workspace only" not in stored.read_text()
     assert "blob" not in stored.read_text() and "color" not in stored.read_text()
     assert load_snapshot(root).files == snapshot.files
     assert git(root, "status", "--porcelain", "--untracked-files=all") == status
     assert git(root, "ls-files", "--stage") == index and git(root, "show-ref") == refs
-    git(root, "check-ignore", ".specspec-local/annotations/")
+    git(root, "check-ignore", ".specspec/local/annotations/")
     assert not (root / ".gitignore").exists()
 
 
@@ -125,7 +125,7 @@ def test_workspace_drift_warns_without_losing_members_and_original_is_immutable(
     setup_repository(root)
     _, child = add_node(root, "requirement", [parent], "# Child\n")
     shot = annotations.submit(root, payload(parent, child))
-    path = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    path = root / ".specspec/local/annotations" / (shot["id"] + ".json")
     raw = path.read_bytes()
     assert annotations.listing(root)["shots"][0]["warnings"] == []
     update_node(root, child, body="# Changed after capture\n")
@@ -257,7 +257,7 @@ def test_heading_changes_keep_spotlight_identity_and_canonical_path(workspace):
     assert f"M {parent}" in call(root, "show").stdout
 
 
-def test_non_git_unborn_and_sha256_workspaces(workspace):
+def test_non_git_unborn_and_sha256_workspaces(workspace, without_git):
     root, parent = workspace
     shot = annotations.submit(root, payload(parent))
     assert shot["workspace"]["head"] is None
@@ -295,7 +295,7 @@ def test_context_errors_remain_advisory_on_show_and_do_not_mutate_store(workspac
     root, parent = workspace
     setup_repository(root)
     shot = annotations.submit(root, payload(parent), target="HEAD")
-    file = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    file = root / ".specspec/local/annotations" / (shot["id"] + ".json")
     shot["comparison"]["target"] = "0" * 40
     file.write_text(json.dumps(shot), encoding="utf-8")
     shown = annotations.listing(root)["shots"][0]
@@ -308,9 +308,9 @@ def test_context_errors_remain_advisory_on_show_and_do_not_mutate_store(workspac
 def test_tracked_local_state_is_refused(workspace):
     root, parent = workspace
     setup_repository(root)
-    tracked = root / ".specspec-local/owner.txt"
+    tracked = root / ".specspec/local/owner.txt"
     tracked.write_text("Owner data", encoding="utf-8")
-    git(root, "add", "-f", ".specspec-local/owner.txt")
+    git(root, "add", "-f", ".specspec/local/owner.txt")
     with pytest.raises(SpecError, match="Git-tracked"):
         annotations.submit(root, payload(parent))
     assert annotations.load_shots(root) == []
@@ -320,11 +320,11 @@ def test_reviewed_flush_races_consent_and_obsolete_copy_cleanup(workspace):
     root, parent = workspace
     first = annotations.submit(root, payload(parent))
     second = annotations.submit(root, payload(parent))
-    path = root / ".specspec-local/annotations"
+    path = root / ".specspec/local/annotations"
     (path / "blobs").mkdir()
     (path / "blobs" / ("a" * 40)).write_bytes(b"obsolete node copy")
     (path / (".shot-" + "b" * 32 + ".tmp")).write_bytes(b"unpublished")
-    notes = root / ".specspec-local/notes.txt"
+    notes = root / ".specspec/local/notes.txt"
     notes.write_text("Keep")
     with pytest.raises(SpecError, match="list changed"):
         annotations.flush(root, expected=[first["id"]])
@@ -344,7 +344,7 @@ def test_reviewed_flush_races_consent_and_obsolete_copy_cleanup(workspace):
 def test_old_or_malformed_local_records_are_protected_and_explicitly_flushable(workspace):
     root, parent = workspace
     shot = annotations.submit(root, payload(parent))
-    file = root / ".specspec-local/annotations" / (shot["id"] + ".json")
+    file = root / ".specspec/local/annotations" / (shot["id"] + ".json")
     for raw in (b'{"annotation_version":1}', b"{broken"):
         file.write_bytes(raw)
         with pytest.raises(SpecError, match="Protected malformed"):
@@ -373,7 +373,7 @@ def test_metadata_limits_refuse_eviction_or_partial_publication(workspace, monke
 def test_unsafe_obsolete_entries_are_not_deleted(workspace):
     root, parent = workspace
     annotations.submit(root, payload(parent))
-    path = root / ".specspec-local/annotations/blobs"
+    path = root / ".specspec/local/annotations/blobs"
     path.mkdir()
     unsafe = path / "owner-notes.txt"
     unsafe.write_text("Keep")

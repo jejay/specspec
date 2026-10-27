@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1930" viewBox="0 0 1840 1930" role="img" aria-labelledby="architecture-title architecture-description">
-  <title id="architecture-title">SpecSpec architecture: one graph, human and agent workflows</title>
-  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the SpecSpec CLI. Their conversation takes place outside SpecSpec; built-in agent connectors are future work. The unprivileged renderer sends SpecSpecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and API 7 JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in .specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
-  <metadata>Current shortcut-free node format 7 / API 7 implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: .specspec/ and docs/own-spec.md.</metadata>
+  <title id="architecture-title">specspec architecture: one graph, human and agent workflows</title>
+  <desc id="architecture-description">Read top to bottom. First, the owner enters through the shared VS Code or Electron visual workspace, and a coding agent enters through its own shell and the specspec CLI. Their conversation takes place outside specspec; built-in agent connectors are future work. The unprivileged renderer sends specspecHost messages to authorized host adapters. GraphSession coordinates operations through a bounded, shell-free CLI bridge using argument arrays, UTF-8 stdin and application protocol JSON. The same Python library interprets canonical Markdown nodes, validates the rooted DAG, exports complete ancestor context, plans edits, resolves source regions and reads Git snapshots. Saved specifications live in .specspec; Git retains revisions and supplies exact staged blobs. The CLI reads saved files; VS Code working views also overlay open document text. File, document and Git notifications prompt coalesced rereads and render acknowledgements. Second, two persistence lanes distinguish journaled Python managed writes from non-writing Python plans applied to VS Code TextDocuments and persisted by native Save. Native Save can persist invalid text and has no Python lock or journal. Third, an agent working loop inspects owner changes and graph context, reasons about conclusions, implements and verifies, and returns to owner review. Deliberate staging and exact-index hook checks precede authorized commits. This is a descriptive overview, not an exhaustive call graph or an automated agent orchestration pipeline.</desc>
+  <metadata>Current shortcut-free current node format / application protocol implementation. Hand-authored offline SVG with literal text, system font fallbacks and local marker references only. Companion and source map: docs/architecture.md. Binding intentions and revisable conclusions: .specspec/ and docs/own-spec.md.</metadata>
   <defs>
     <style>
       text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
@@ -38,7 +38,7 @@
     <text x="64" y="132" class="title">One graph, two ways in.</text>
     <text x="64" y="176" class="subtitle">A visual workspace for the owner. A CLI for the coding agent. Shared rules beneath both.</text>
     <rect x="1496" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
-    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · FORMAT 7 / API 7</text>
+    <text x="1636" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">LOCAL-FIRST · CURRENT FORMAT</text>
     <path d="M1572 140H1618" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
     <path d="M1644 140H1690" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
     <path d="M1716 140H1762" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
@@ -68,7 +68,7 @@
       <text x="265" y="402" text-anchor="middle" class="label purple">view / edit</text>
     </g>
 
-    <g id="conversation" aria-label="Owner-agent conversation is external to SpecSpec">
+    <g id="conversation" aria-label="Owner-agent conversation is external to specspec">
       <path d="M94 501V720" class="hint"/>
       <path d="M90 502L94 493L98 502Z" fill="#788987"/>
       <text x="114" y="564" class="small" style="font-weight:600">Intent + feedback</text>
@@ -97,7 +97,7 @@
       <path d="M878 550V490" class="response"/>
       <text x="356" y="568" class="small" style="font-weight:600">VS Code extension ↔ webview</text>
       <text x="650" y="568" class="small" style="font-weight:600">Electron main ↔ preload / IPC</text>
-      <text x="356" y="600" class="code purple">window.SpecSpecHost</text>
+      <text x="356" y="600" class="code purple">window.specspecHost</text>
       <text x="578" y="600" class="small">message + presentation-state port</text>
       <text x="356" y="642" class="body" style="font-weight:650;fill:#203a40">GraphSession · guarded queue · bounded CLI bridge</text>
       <text x="356" y="669" class="caption">The canvas cannot access project files or spawn tools.</text>
@@ -117,11 +117,11 @@
       <text x="340" y="848" class="small">show · diff · sources · add · update · delete · check</text>
     </g>
 
-    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; API 7 JSON, records and diagnostics come back">
+    <g id="cli-interface" aria-label="Shell-free argument arrays and UTF-8 stdin go in; application protocol JSON, records and diagnostics come back">
       <path d="M940 610H1104" class="request"/>
       <text x="1022" y="589" text-anchor="middle" class="label purple">argv + stdin</text>
       <path d="M1104 646H940" class="response"/>
-      <text x="1022" y="674" text-anchor="middle" class="label teal">API 7 JSON</text>
+      <text x="1022" y="674" text-anchor="middle" class="label teal">application protocol JSON</text>
       <text x="1022" y="702" text-anchor="middle" class="caption">shell: false</text>
       <path d="M940 782H1104" class="request"/>
       <text x="1022" y="760" text-anchor="middle" class="label purple">read / change</text>
@@ -220,7 +220,7 @@
       <text x="684" y="1169" class="heading">Python owns the write</text>
       <text x="684" y="1205" class="small">Lock → diagnose explicit candidate</text>
       <text x="684" y="1234" class="small">Stage + journal → byte checks → replace / unlink</text>
-      <text x="684" y="1267" class="code" style="font-size:16px">workspace.py · .specspec-local/</text>
+      <text x="684" y="1267" class="code" style="font-size:16px">workspace.py · .specspec/local/</text>
       <path d="M1187 1178H1482" class="write"/>
       <text x="1334" y="1158" text-anchor="middle" class="label gold">persist → verify bytes</text>
       <text x="1217" y="1215" class="caption">Interrupted? retain journal</text>
@@ -257,7 +257,7 @@
       <path d="M1514 1369H1538L1550 1381V1416H1514ZM1538 1369V1381H1550" fill="#fff" stroke="#7056a8" stroke-width="1.7"/>
       <text x="1570" y="1388" class="heading" style="font-size:22px">Saved nodes</text>
       <text x="1570" y="1424" class="code" style="font-size:16px">.specspec/*.md</text>
-      <text x="352" y="1510" class="caption">Native Save may persist invalid text. Managed project mutations require clean SpecSpec documents.</text>
+      <text x="352" y="1510" class="caption">Native Save may persist invalid text. Managed project mutations require clean specspec documents.</text>
     </g>
     <text x="314" y="1559" class="caption">Manual Markdown edits are allowed. Cameras, colors and view state stay outside the canonical specification.</text>
   </g>
@@ -299,7 +299,7 @@
     </g>
     <text x="314" y="1810" class="eyebrow" style="font-size:12px;letter-spacing:1px">WHEN A COMMIT IS AUTHORIZED</text>
     <text x="662" y="1810" class="code" style="font-size:17px">git add → specspec check --staged [--sources] → git commit</text>
-    <text x="314" y="1839" class="caption">Check exact staged blobs. SpecSpec never stages, commits or installs hooks; hook setup belongs to you.</text>
+    <text x="314" y="1839" class="caption">Check exact staged blobs. specspec never stages, commits or installs hooks; hook setup belongs to you.</text>
     <path d="M1744 1782V1861H304V1782" class="hint"/>
     <rect x="958" y="1847" width="302" height="26" fill="#f8f9f4"/>
     <text x="1109" y="1867" text-anchor="middle" class="caption">Feedback → next revision</text>

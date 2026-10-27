@@ -10,6 +10,7 @@ function pollInterval(value) {
 class GraphSession {
   constructor(host) {
     this.host = host; this.base = 'HEAD'; this.queue = Promise.resolve();
+    this.startupState = host.startup ? 'checking' : 'ready';
     this.reads = host.readGraph ? undefined : new ProjectReads({ cli: (args, input) => this.cli(args, input) });
     this.renderSequence = 0; this.lastRendered = 0; this.listeners = new Set();
     this.ready = new Promise(resolve => { this.resolveReady = resolve; });
@@ -59,6 +60,7 @@ class GraphSession {
       const start = Date.now();
       await this.waitReady(); this.host.trace?.('ready', Date.now() - start);
       await this.run(async () => {
+        if (!await this.checkStartup()) return;
         if (this.restoredSpotlight) {
           await this.refreshAnnotations();
           const shot = this.annotationShots?.find(s => s.id === this.restoredSpotlight);
@@ -86,11 +88,49 @@ class GraphSession {
       return this.snapshot;
     } catch (error) { await this.post({ type: 'error', message: error.message }); throw error; }
   }
+  async checkStartup() {
+    if (!this.host.startup) return true;
+    this.startupState = 'checking';
+    await this.post({ type: 'startup', stage: 'checking' });
+    try {
+      if (!this.host.authorized()) throw new Error('Trust this project before running the specspec CLI.');
+      const status = await this.host.startup();
+      if (this.disposed) return false;
+      this.startupRoot = status.root;
+      if (status.kind === 'initialize') {
+        this.startupState = 'initialize';
+        await this.post({ type: 'startup', stage: 'initialize', root: status.root });
+        return false;
+      }
+      this.startupState = 'ready';
+      await this.post({ type: 'startup', stage: 'loading' });
+      return true;
+    } catch (error) {
+      if (this.disposed) return false;
+      this.log(error); this.startupState = 'error';
+      await this.post({ type: 'startup', stage: error.code === 'CLI_UNAVAILABLE' ? 'install' : 'error', message: error.message });
+      return false;
+    }
+  }
+  async initializeProject(message) {
+    if (!this.host.startup || this.host.document || this.startupState !== 'initialize') throw new Error('Select an uninitialized project before creating a specification.');
+    if (typeof message.body !== 'string' || !message.body.trim() || Buffer.byteLength(message.body, 'utf8') > 1024 * 1024) throw new Error('Provide a nonempty manifesto of at most 1 MiB.');
+    this.startupState = 'initializing';
+    await this.post({ type: 'startup', stage: 'initializing', root: this.startupRoot });
+    try {
+      await this.cli(['init', '--json'], message.body);
+      this.reads?.changed();
+      if (await this.checkStartup()) await this.refresh();
+    } catch (error) {
+      this.log(error); this.startupState = 'error';
+      await this.post({ type: 'startup', stage: 'error', message: error.message });
+    }
+  }
   async waitReady() {
     let timer;
     try {
       await Promise.race([this.ready, new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error('Graph startup timed out. Restart the host; see SpecSpec output.')), this.host.timeout || 10_000);
+        timer = setTimeout(() => reject(new Error('Graph startup timed out. Restart the host; see specspec output.')), this.host.timeout || 10_000);
       })]);
       if (this.disposed) throw new Error('Graph panel was closed before loading.');
     } finally { clearTimeout(timer); }
@@ -105,12 +145,13 @@ class GraphSession {
         else if (this.renderError) done(this.renderError);
         else if (this.lastRendered === token) done();
       };
-      const timer = setTimeout(() => done(new Error('Graph rendering timed out. See SpecSpec output or Developer Tools.')), this.host.timeout || 10_000);
+      const timer = setTimeout(() => done(new Error('Graph rendering timed out. See specspec output or Developer Tools.')), this.host.timeout || 10_000);
       this.listeners.add(check); check();
     });
   }
   async cli(args, input) {
-    if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to run SpecSpec.');
+    if (!this.host.authorized()) throw new Error('Workspace trust / project authorization is required to run specspec.');
+    if (this.startupState !== 'ready' && !(args[0] === 'init' && this.startupState === 'initializing')) throw new Error('Complete the CLI/project startup check before graph actions.');
     return this.host.cli(args, input);
   }
   flushDocument() { return this.documentEdits || Promise.resolve(); }
@@ -140,10 +181,15 @@ class GraphSession {
   }
   async invalid(error) {
     this.sourceInvalid = true;
+    if (!this.snapshot && this.host.startup) {
+      this.startupState = 'error';
+      await this.post({ type: 'startup', stage: 'error', message: error.message });
+    }
     const policy = this.host.document ? 'The bound document remains editable for repair.' : 'Repair Markdown and refresh to resume graph actions.';
     await this.post({ type: 'sync-error', message: `Graph files need repair. Showing the last valid graph. ${policy}\n${error.message}` });
   }
   async refresh(force = false, selectedId, automatic = false) {
+    if (this.startupState !== 'ready') return;
     if (!automatic) await this.post({ type: 'notice', message: this.target ? 'Loading revision comparison…' : 'Refreshing specification graph…' });
     let loaded;
     try {
@@ -205,7 +251,7 @@ class GraphSession {
     this.annotationTimer = setTimeout(() => this.requestAnnotationsRefresh(), this.host.debounceMs ?? 200);
   }
   requestAnnotationsRefresh() {
-    if (this.disposed) return;
+    if (this.disposed || this.startupState !== 'ready') return;
     void this.waitReady().then(() => this.refreshAnnotations()).catch(error => { if (!this.disposed) this.annotationWarning(error); });
   }
   sourceContext(id) {
@@ -306,6 +352,10 @@ class GraphSession {
   }
   requestRefresh() {
     if (this.disposed || this.target) return;
+    if (this.startupState !== 'ready') {
+      if (this.startupState === 'initialize') this.enqueue(async () => { if (await this.checkStartup()) await this.refresh(); });
+      return;
+    }
     if (this.autoQueued) { this.autoAgain = true; return; }
     this.autoQueued = true;
     this.enqueue(async () => {
@@ -317,6 +367,9 @@ class GraphSession {
     });
   }
   async handle(message) {
+    if (message.type === 'retry-startup') { if (await this.checkStartup()) await this.refresh(); return; }
+    if (message.type === 'initialize') return this.initializeProject(message);
+    if (this.startupState !== 'ready') throw new Error('Complete the CLI/project startup check before graph actions.');
     if (message.type === 'annotation-select') return this.selectSpotlight(message.shot);
     if (message.type === 'annotation-create') {
       try {
@@ -391,16 +444,16 @@ class GraphSession {
     if (message.type !== 'add' && (typeof id !== 'string' || !nodes.has(id))) throw new Error('Select a current node. Draft retained.');
     let args, input;
     if (message.type === 'save' || message.type === 'add') {
-      if (typeof message.body !== 'string' || Buffer.byteLength(message.body, 'utf8') > 1024 * 1024) throw new Error('Invalid or oversized body.');
+      if (typeof message.body !== 'string' || !message.body.trim() || Buffer.byteLength(message.body, 'utf8') > 1024 * 1024) throw new Error('Invalid, empty or oversized body.');
       if (!Array.isArray(message.parents) || message.parents.some(p => typeof p !== 'string' || (!nodes.has(p) && !/^[A-Za-z0-9_-]{6}[AEIMQUYcgkosw048]=$/.test(p)))) throw new Error('Invalid parent IDs.');
       const parents = ['--parents-json', JSON.stringify(message.parents)];
       if (message.type === 'add') {
         if (!['requirement', 'implementation'].includes(message.nodeType)) throw new Error('Invalid new-node form.');
-        args = ['add', '--type', message.nodeType, ...parents, '--body', '-'];
+        args = ['add', '--type', message.nodeType, ...parents];
       } else {
         // No graph-wide stale gate: only overwriting this node needs user attention.
         if (!this.host.sameNode(message.originalNode, nodes.get(id)) && !await this.host.confirm('This node changed outside your draft (or its original contents are unavailable). Save your draft over its current text, parents and sources? Cancel keeps your unsaved text.')) { await this.post({ type: 'cancelled' }); return; }
-        args = ['update', id, ...parents, '--body', '-'];
+        args = ['update', id, ...parents];
       }
       if (typeof message.sources !== 'string' || Buffer.byteLength(message.sources, 'utf8') > 1024 * 1024) throw new Error('Invalid source references.');
       if ((message.type === 'add' ? message.nodeType : nodes.get(id).type) === 'implementation') args.push('--sources', message.sources);

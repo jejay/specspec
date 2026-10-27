@@ -13,9 +13,10 @@ sources:
 # Parse and target-write the current Markdown schema
 
 `format.py` uses ruamel.yaml to bootstrap manifesto/version, validate typed
-frontmatter and serialize format 7 nodes. `SpecNode` supplies normalized records
-and semantic comparison. Metadata updates preserve unaffected body bytes; body
-updates preserve frontmatter comments/extensions and stable references. Diagnostics
+frontmatter and serialize current-schema nodes. `SpecNode` supplies normalized records
+and semantic comparison. Writes preserve unaffected logical body text, frontmatter comments/extensions
+and stable references while retaining local newline style and appending only a
+missing complete-document terminator. Raw reads and physical guards stay exact. Diagnostics
 identify unsupported/unknown/coerced YAML data, unsafe paths, aliases/duplicate keys,
 invalid UTF-8 and entry/file budgets.
 

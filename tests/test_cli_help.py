@@ -54,7 +54,9 @@ def test_every_help_is_substantial_specific_and_project_independent(monkeypatch,
     assert result.exit_code == 0, result.output
     text = result.stdout
     assert text.startswith("Usage:") and "Options:" in text
-    assert len(text.split()) >= 100, (path, text)
+    assert len(text.split()) >= 65, (path, text)
+    assert "--root" not in text and "--json" not in text and "--body" not in text
+    assert "API 7" not in text and "format 7" not in text
     assert "specspec " in text and any(
         word in text.lower() for word in ["example", "workflow", "one-shot"]
     )
@@ -126,7 +128,7 @@ def test_help_explains_the_actual_choices_not_only_option_names():
         "REPLACES",
         "does not append",
         "NEW keeps literal content",
-        "--body FILE|-",
+        "UTF-8 stdin",
     ]:
         assert phrase in update, phrase
     capture = " ".join(runner.invoke(cli.main, ["sources", "capture", "--help"]).stdout.split())

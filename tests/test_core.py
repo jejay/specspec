@@ -27,7 +27,12 @@ def test_flat_init(workspace):
     snapshot = load_snapshot(root)
     assert snapshot.valid
     assert snapshot.graph.order == [manifesto]
-    assert all(path.is_file() and path.suffix == ".md" for path in (root / ".specspec").iterdir())
+    assert all(
+        path.is_file() and path.suffix == ".md"
+        for path in (root / ".specspec").iterdir()
+        if path.name != "local"
+    )
+    assert (root / ".specspec/local").is_dir()
     assert not (root / ".specspec" / "specspec.yaml").exists()
     assert snapshot.nodes[0].format_version == 7
     assert "fingerprint" not in snapshot.to_dict()
@@ -219,7 +224,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     manifesto = json.loads(result.output)["result"]["changed_ids"][0]
     result = runner.invoke(
         main,
-        [*prefix, "add", "--parent", manifesto, "--body", "-", "--json"],
+        [*prefix, "add", "--parent", manifesto, "--json"],
         input="# Child\n",
     )
     assert result.exit_code == 0, result.output
@@ -229,7 +234,7 @@ def test_cli_end_to_end_and_budget(tmp_path):
     assert (
         runner.invoke(
             main,
-            [*prefix, "update", node_id, "--body", "-", "--expect", "anything"],
+            [*prefix, "update", node_id, "--expect", "anything"],
             input="Text\n",
         ).exit_code
         == 2

@@ -1,9 +1,9 @@
 /* Presentation-only graph calculations. Python remains authoritative for validation. */
 (function (root, factory) {
   const commonJS = typeof module === 'object' && module.exports;
-  const api = factory(commonJS ? require('./vendor/graph-vendor.js') : root.SpecSpecVendor);
+  const api = factory(commonJS ? require('./vendor/graph-vendor.js') : root.specspecVendor);
   if (commonJS) module.exports = api;
-  else root.SpecSpecGraph = api;
+  else root.specspecGraph = api;
 })(globalThis, vendor => {
   'use strict';
   const CARD_WIDTH = 264, CARD_HEIGHT = 112, DETAIL_WIDTH = 860;

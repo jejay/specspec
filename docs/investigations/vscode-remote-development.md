@@ -1,4 +1,4 @@
-# Investigation: SpecSpec over VS Code Remote SSH and Remote Tunnels
+# Investigation: specspec over VS Code Remote SSH and Remote Tunnels
 
 ## Scope and evidence
 
@@ -8,7 +8,7 @@ an implementation-completion claim. Repository baseline: `829a306`. No actual Re
 SSH or Remote Tunnels session has been tested in this investigation. Existing local
 Windows host tests and CI configuration do not establish remote compatibility.
 
-The owner asks about using SpecSpec through VS Code's remote execution extensions,
+The owner asks about using specspec through VS Code's remote execution extensions,
 including SSH and tunneling. Distinguish these environments:
 
 | Environment | Assessment |
@@ -29,15 +29,15 @@ Client desktop/browser
        over VS Code's authenticated SSH/tunnel connection
                     |
 Remote VS Code workspace extension host
-  SpecSpec adapter, document coordination, notifications
+  specspec adapter, document coordination, notifications
                     |
            shell-free subprocess / UTF-8 JSON
                     |
-Remote Python CLI + Git + repository + .specspec-local
+Remote Python CLI + Git + repository + .specspec/local
 ```
 
-Run SpecSpec's extension, Python and Git beside the remote repository. VS Code owns
-SSH/tunnel authentication, transport and server lifecycle. SpecSpec does not need
+Run specspec's extension, Python and Git beside the remote repository. VS Code owns
+SSH/tunnel authentication, transport and server lifecycle. specspec does not need
 its own HTTP server, exposed service port, SSH subprocess wrapper or file-sync layer.
 The webview does not directly execute Python or read remote files.
 

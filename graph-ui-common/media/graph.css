@@ -21,6 +21,17 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #message:not(:empty) { padding-bottom: 10px; }
 #sync-notice { margin: 0; padding: 6px 14px; font-size: 12px; color: var(--vscode-editorWarning-foreground, #e2c08d); border-block: 1px solid currentColor; }
 .canvas-shell { position: relative; flex: 1; min-height: 180px; }
+.startup-screen { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; overflow: auto; background: var(--vscode-editor-background); }
+.startup-screen[hidden] { display: none; }
+.startup-content { width: min(100%, 620px); }
+.startup-content h1 { margin: 0 0 18px; font-size: clamp(24px, 4vw, 36px); }
+.startup-content p { line-height: 1.6; overflow-wrap: anywhere; }
+#startup-command { padding: 12px; overflow: auto; background: var(--vscode-editorWidget-background); }
+#initialize-form { margin-top: 24px; }
+#initialize-body { width: 100%; min-height: 140px; font-family: var(--vscode-editor-font-family, monospace); }
+#initialize, #startup-retry, #startup-project { min-height: 40px; display: block; margin: 12px auto 0; }
+#initialize[hidden], #startup-retry[hidden], #startup-project[hidden] { display: none; }
+#startup-detail { white-space: pre-wrap; }
 #viewport { position: absolute; inset: 0; overflow: hidden; overflow: clip; touch-action: none; cursor: grab; outline-offset: -2px; background-color: var(--vscode-editor-background); background-image: radial-gradient(circle, color-mix(in srgb, var(--vscode-descriptionForeground) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
 #viewport.panning, #viewport.panning .card { cursor: grabbing; }
 #graph { position: absolute; left: 0; top: 0; transform-origin: 0 0; }

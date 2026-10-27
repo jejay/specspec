@@ -8,7 +8,7 @@ function open(t, scope, get, set) {
   const dom = new JSDOM('<meta name="specspec-project">', { runScripts: 'outside-only' });
   dom.window.document.querySelector('meta').content = scope;
   dom.window.acquireVsCodeApi = () => ({ getState: get, setState: set, postMessage() {} });
-  dom.window.eval(script); t.after(() => dom.window.close()); return dom.window.SpecSpecHost;
+  dom.window.eval(script); t.after(() => dom.window.close()); return dom.window.specspecHost;
 }
 test('the VS Code port preserves dirty drafts across project switches without sharing them', t => {
   let saved;

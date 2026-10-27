@@ -1,9 +1,9 @@
 /* Spatial navigation only. A camera never relayouts or mutates the graph. */
 (function (root, factory) {
   const commonJS = typeof module === 'object' && module.exports;
-  const api = factory(commonJS ? require('./vendor/graph-vendor.js') : root.SpecSpecVendor);
+  const api = factory(commonJS ? require('./vendor/graph-vendor.js') : root.specspecVendor);
   if (commonJS) module.exports = api;
-  else root.SpecSpecCamera = api;
+  else root.specspecCamera = api;
 })(globalThis, vendor => {
   'use strict';
   const MIN_SCALE = 0.12, MAX_SCALE = 2.5;

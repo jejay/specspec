@@ -4,6 +4,7 @@ const { dirname, join, resolve } = require('node:path');
 async function findProjectRoot(start) {
   let current = resolve(start);
   if ((await lstat(current)).isFile()) current = dirname(current);
+  const selected = current;
   while (true) {
     try { await lstat(join(current, '.specspec')); return current; }
     catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -11,6 +12,6 @@ async function findProjectRoot(start) {
     if (parent === current) break;
     current = parent;
   }
-  throw new Error(`Select a SpecSpec project folder or run specspec init at ${start}.`);
+  return selected;
 }
 module.exports = { findProjectRoot };

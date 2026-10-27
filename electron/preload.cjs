@@ -3,7 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 if (process.isMainFrame) {
   const initial = ipcRenderer.sendSync('specspec:initial');
   let state = initial.state;
-  contextBridge.exposeInMainWorld('SpecSpecNative', Object.freeze({
+  contextBridge.exposeInMainWorld('specspecNative', Object.freeze({
     getState: () => state,
     setState: value => { state = value; ipcRenderer.send('specspec:state', { generation: initial.generation, value }); },
     postMessage: value => ipcRenderer.send('specspec:message', { generation: initial.generation, value }),

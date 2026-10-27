@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "SpecSpec: compile extension",
+      "label": "specspec: compile extension",
       "type": "npm",
       "script": "compile",
       "path": "vscode",

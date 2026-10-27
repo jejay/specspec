@@ -28,9 +28,9 @@ async function buildGraph(media = resolve(__dirname, '../media'), runtime) {
   const root = resolve(__dirname, '..'); media = resolve(media);
   const result = await build({
     absWorkingDir: root, entryPoints: ['src/graph-vendor.js'], outfile: join(media, 'vendor/graph-vendor.js'),
-    bundle: true, platform: 'browser', format: 'iife', globalName: 'SpecSpecVendor', target: ['es2020'],
+    bundle: true, platform: 'browser', format: 'iife', globalName: 'specspecVendor', target: ['es2020'],
     minify: true, legalComments: 'linked', metafile: true, write: false,
-    footer: { js: 'if (typeof module === "object" && module.exports) module.exports = SpecSpecVendor; else globalThis.SpecSpecVendor = SpecSpecVendor;' },
+    footer: { js: 'if (typeof module === "object" && module.exports) module.exports = specspecVendor; else globalThis.specspecVendor = specspecVendor;' },
   });
   function publish(path, content) {
     mkdirSync(resolve(path, '..'), { recursive: true });

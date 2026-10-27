@@ -1,5 +1,5 @@
 .vscode/**
-.specspec-local/**
+.specspec/local/**
 .vscode-test/**
 src/**
 scripts/**

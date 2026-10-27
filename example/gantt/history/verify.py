@@ -1,6 +1,6 @@
 """Verify current CLI receipts and the independent, current-schema Gantt Git bundle.
 
-The surrounding SpecSpec repository's obsolete graph history is not a test corpus.
+The surrounding specspec repository's obsolete graph history is not a test corpus.
 No checkout/index changes are made in this repository; history uses a temporary clone.
 """
 

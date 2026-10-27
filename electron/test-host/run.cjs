@@ -23,6 +23,7 @@ async function run() {
   }
   const executable = process.env.SPECSPEC_DESKTOP_EXECUTABLE || require('electron');
   const launchDirectory = resolve(__dirname, '..');
+  await require('./startup.cjs').startupHosts({ executable, launchDirectory, env, python });
   const child = spawn(executable, [...(process.env.SPECSPEC_DESKTOP_EXECUTABLE ? [] : [launchDirectory]), '--project', project.root, ...(process.env.SPECSPEC_TEST_COMMAND ? [] : ['--python', relative(launchDirectory, python)]), '--profile', profile,
     `--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1',
     // Test profile only: sample real geometry without occluded-window timer throttling.
@@ -42,7 +43,7 @@ async function run() {
       };
       for(let i=0;i<300;i++){if(await evaluate(`document.getElementById('body')?.value==='# Retained stale desktop draft'`))break;await delay(100);}
       assert.equal(await evaluate(`document.getElementById('body').value`),'# Retained stale desktop draft');
-      assert.ok(await evaluate(`window.SpecSpecHost.getState().dirty`));
+      assert.ok(await evaluate(`window.specspecHost.getState().dirty`));
       const retained = project.cli(['spotlight','show','--json']).shots.length;
       assert.equal(retained,23);
       for(let i=0;i<300;i++){if(await evaluate(`document.querySelectorAll('#annotation-list .annotation-label').length===${retained}`))break;await delay(100);}

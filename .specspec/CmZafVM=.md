@@ -4,7 +4,7 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Use SpecSpec with VS Code Remote SSH and Remote Tunnels
+# Use specspec with VS Code Remote SSH and Remote Tunnels
 
 Provide the same graph, native documents, comparisons and source-region workflows
 when VS Code connects to a real project filesystem through Remote SSH or Remote

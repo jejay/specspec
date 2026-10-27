@@ -6,10 +6,10 @@ graph/history applies the current owner/tandem/agent/implementation process in
 The turns below are a fictional teaching story, not a phase-by-phase execution
 transcript. In particular, discussion of node recording/removal below supplies
 illustration; actual operations and commit chronology are in the receipt ledger
-and bundle. SpecSpec's real owner process input is preserved in its own Git history.
+and bundle. specspec's real owner process input is preserved in its own Git history.
 
 The independent history in `history/gantt.bundle` was explicitly reconstructed
-with the current SpecSpec scheme. The dialogue/app evolution below is retained;
+with the current specspec scheme. The dialogue/app evolution below is retained;
 node IDs, CLI receipts and Git stage references now come from new current-tool
 executions. This is not a claim that untouched original commits used today's
 encoding. Inspect the bundle's `stage/01-spec` through `stage/03-code` tags.
@@ -40,7 +40,7 @@ remain explicitly unimplemented.
 **User (simulated):** That experiment is worth trying. Show me a couple of projects;
 don't spend the first pass on operating a service.
 
-**AI (simulated):** I've initialized SpecSpec before writing application code. The
+**AI (simulated):** I've initialized specspec before writing application code. The
 manifesto is about understandable, revisable planning, not a fixed market or stack.
 I read each new node's ancestor context. Inputs must be validated and task names
 rendered as text. Implementation records will distinguish delivered behavior from
@@ -49,7 +49,7 @@ future candidates; passing tests will not turn choices into permanent decisions.
 **AI (simulated, prototype report):** The first runnable local view has two projects,
 weekday prerequisite forecasts, named-owner display, and simple completion/finish
 rollups. Six actual model tests passed. There are no shared accounts or resource
-constraints, and I haven't claimed a real-browser test yet. The SpecSpec implementation
+constraints, and I haven't claimed a real-browser test yet. The specspec implementation
 nodes link the source and state those limits.
 
 ## 02 — Redirect one: not a business tool after all
@@ -164,7 +164,7 @@ the verifier now treats that boundary explicitly rather than requiring a nonexis
 graph. Parent/nested graph tests also check exact staged blobs independently using a
 disposable repository, never corrupting or installing hooks in the real checkout.
 
-The SpecSpec parent graph links this example and its verification. CI is configured
+The specspec parent graph links this example and its verification. CI is configured
 for both graphs, full Git-history audit, model and real-browser checks; remote CI is
 not claimed run. The final audit is a separate real commit, not a fabricated part of
 the simulated dialogue. No files were pushed or unrelated logos staged.

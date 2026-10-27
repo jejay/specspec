@@ -4,7 +4,7 @@ type: requirement
 parents:
 - 1T-fMcs=
 ---
-# Explain SpecSpec through visible reasoning and honest scope
+# Explain specspec through visible reasoning and honest scope
 
 Introduce the problem of accumulated agent assumptions and separately revisable
 solutions before setup details. Explain how the specification spectrum connects

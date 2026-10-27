@@ -9,10 +9,10 @@ parents:
 ---
 # Use exact ID-only paths across creation, editors and maintained history
 
-Canonical node format 7 requires each direct Markdown filename to equal its full
+Canonical current node format requires each direct Markdown filename to equal its full
 frontmatter ID followed by .md: .specspec/<id>.md, ending in =.md. The validator
 checks exact case and spelling. Existing IDs, bodies, parent links and source
-reference grammar keep their contracts. API 7 envelopes retain their structure.
+reference grammar keep their contracts. application protocol envelopes retain their structure.
 Current-only readers diagnose other versions and noncanonical paths explicitly.
 
 Init, add and the library generate their paths solely from the random full ID.

@@ -17,7 +17,7 @@ function fixture(t, platform = 'Win32') {
   win.addEventListener('error',event=>errors.push(event.message));
   viewport.setPointerCapture=id=>captures.push(id);viewport.releasePointerCapture=id=>released.push(id);
   for(const name of ['vendor/graph-vendor.js','graph-camera.js']) win.eval(readFileSync(join(__dirname,'../media',name),'utf8'));
-  const camera=win.SpecSpecCamera.createCamera(viewport,world,{onRectangleChange:value=>active.push(value)});
+  const camera=win.specspecCamera.createCamera(viewport,world,{onRectangleChange:value=>active.push(value)});
   camera.set({x:20,y:-10,k:0.5});
   t.after(()=>{camera.dispose();win.close();assert.deepEqual(errors,[]);});
   const pointer=(type,x=100,y=100,flags={},target=viewport)=>{

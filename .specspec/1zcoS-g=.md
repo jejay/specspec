@@ -6,8 +6,9 @@ parents:
 ---
 # Give new projects actionable agent context
 
-Project creation supplies a root AGENTS.md that explains the specification spectrum,
-intention/conclusion relationships, owner/agent working phases and practical CLI
-inspection/editing. Ground the guide in the owner's supplied agent-instruction drafts
-and current behavior. Keep existing project instructions intact. The generated guide
-is ordinary owner-editable project text, separate from the canonical node graph.
+Project initialization supplies root AGENTS.md guidance explaining the spectrum,
+intention/conclusion relationships, owner/agent phases and practical CLI workflows.
+Create it when absent; when present, preserve its bytes as the prefix and concatenate
+the packaged guide. The guide remains ordinary owner-editable project text outside
+the canonical node inventory. Base it on the owner's supplied instruction drafts
+and current behavior.

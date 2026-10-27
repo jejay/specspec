@@ -20,6 +20,6 @@ backend without creating canonical membership. Staged graph validation remains c
 
 The public top-level vocabulary contains init, query, add, update, delete, check
 and diff. Advanced source and spotlight groups retain their domain-specific show
-subcommands. Hosts obtain fresh saved mutation context through the existing API-7
+subcommands. Hosts obtain fresh saved mutation context through the existing application protocol
 read request without base, overlays or retained hints; mutation stdin, consent and
-native document persistence retain their owners. Node format and API remain 7.
+native document persistence retain their owners. Node fields and transport contracts remain current.

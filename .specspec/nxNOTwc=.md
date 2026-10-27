@@ -14,26 +14,26 @@ sources:
 - path: docs/agents.md
 - path: docs/install.md
 - path: docs/investigations/release-0.1.md
+- path: tests/test_local_state.py
 ---
-# Bundle and safely initialize current project agent instructions
+# Package and safely concatenate initialization instructions
 
-The package template combines conceptual relationships, meaningful granularity,
-owner/agent phases and practical current CLI workflows. Its documented owner inputs
-are drafting sources, not runtime dependencies. Hatchling includes the template in
-wheel/source distributions; initialize reads package resources independently of
-checkout paths. CLI receipts report instruction creation or preservation.
+The distribution contains one static generic guide, loaded through package resources.
+Initialization validates a single manifesto and safe root instruction target, checks
+Git availability and ensures a Git working tree before publishing node/guide bytes,
+reusing a containing repository instead of creating nested Git metadata. Git metadata is not claimed by graph rollback. No staging, commit, identity
+configuration or hook management is performed.
 
-Initialization validates the candidate, stages node/guide bytes, records known
-absence/replacement states and publishes the graph under the existing workspace
-lock. An exclusive link publishes a new root AGENTS.md without replacing concurrent
-files; cleanup removes the staging link. Existing entries are detected without
-following symlinks and remain untouched. Recovery permits that one root path only
-for initialization, validates every state before writes, excludes the guide from
-canonical membership checks and refuses external changes. Ordinary mutations retain
-their direct-node-only path boundary.
+The workspace lock and bounded byte journal live inside .specspec/local. An absent
+guide is exclusively created; an existing regular file retains its exact byte prefix
+and receives the template after a separating paragraph. Changed targets reject
+publication and recovery. Initialization recovery permits AGENTS.md originals while
+ordinary edit journals remain direct-node-only. Direct nodes and the runtime subtree
+have separate inventories. Interrupted initialization can recover partial publication.
 
-Tests cover packaged text/current contracts, fresh and repeated init, invalid bodies,
-existing empty/binary/directory/symlink guides, publication races, interruptions,
-all-before-any recovery, illegal journal paths and readable/JSON receipts. Isolated
-wheel/source installs verify the actual resource and owner-byte preservation;
-filesystem and power-loss limits remain explicit rather than hidden fallbacks.
+Tests cover real Git setup and missing/failing Git, invalid bodies, empty/binary
+prefixes, unsafe targets, append/create receipts, concurrent changes, publication
+interruptions and all-before-any rollback. Package and installed-host checks exercise
+the actual template and initialization flow without owner installation.
+
+The existing exclusion helper protects runtime data during initialization.

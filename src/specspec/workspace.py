@@ -7,6 +7,7 @@ import json
 import os
 import secrets
 import shutil
+import subprocess
 from collections.abc import Callable, Collection
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
@@ -20,7 +21,7 @@ from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
 from .node_text import logical_bytes
 
 SPEC_DIR = ".specspec"
-STATE_DIR = ".specspec-local"
+STATE_DIR = ".specspec/local"
 
 
 @dataclass
@@ -149,6 +150,8 @@ def read_files(root: Path) -> tuple[dict[str, bytes], list[Diagnostic]]:
         return files, [Diagnostic("DIRECTORY", ".specspec must be a real directory.", SPEC_DIR)]
     for entry in sorted(directory.iterdir()):
         path = f"{SPEC_DIR}/{entry.name}"
+        if entry.name == "local" and entry.is_dir() and not entry.is_symlink():
+            continue
         if entry.is_symlink() or not entry.is_file() or entry.suffix != ".md":
             diagnostics.append(
                 Diagnostic("ENTRY", "Only direct, non-symlink Markdown nodes are allowed.", path)
@@ -292,6 +295,10 @@ def new_node(
 
 
 def safe_state(root: Path) -> Path:
+    directory = root / SPEC_DIR
+    if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
+        raise SpecError([Diagnostic("STATE", "Specification storage must be a real directory.")])
+    directory.mkdir(exist_ok=True)
     state = root / STATE_DIR
     if state.is_symlink() or (state.exists() and not state.is_dir()):
         raise SpecError([Diagnostic("STATE", "Runtime state must not be a symlink or file.")])
@@ -346,50 +353,164 @@ def cleanup(state: Path) -> None:
     (state / "journal.tmp").unlink(missing_ok=True)
 
 
+def initialization_available(root: Path) -> bool:
+    """Only absence or a safe empty/local-only directory is an initialization target."""
+    directory = root / SPEC_DIR
+    if directory.is_symlink():
+        return False
+    if not directory.exists():
+        return True
+    return directory.is_dir() and all(entry.name == "local" for entry in directory.iterdir())
+
+
 def initialize(root: Path, body: str) -> Snapshot:
     root = root.absolute()
     if not root.is_dir():
         raise SpecError([Diagnostic("WORKSPACE", "Project root must already exist.")], 2)
-    destination = root / SPEC_DIR
-    if destination.exists() or destination.is_symlink():
+    if not initialization_available(root):
         raise SpecError(
             [Diagnostic("EXISTS", "Refusing to overwrite an existing .specspec workspace.")]
         )
+    # Validate payloads without allocating an identity outside the writer lock.
+    example = SpecNode("AAAAAAA=", "manifesto", [], body, f"{SPEC_DIR}/AAAAAAA=.md", FORMAT_VERSION)
+    snapshot_from_files(root, {example.path: serialize(example)}).require_valid()
+    if diagnostics := runtime_diagnostics(root):
+        raise SpecError(diagnostics)
+    instructions = root / "AGENTS.md"
+    if instructions.is_symlink() or (instructions.exists() and not instructions.is_file()):
+        raise SpecError([Diagnostic("INSTRUCTIONS", "AGENTS.md must be a regular file or absent.")])
+    old_guide = None
+    if instructions.exists():
+        with instructions.open("rb") as stream:
+            old_guide = stream.read(16 * 1024 * 1024 + 1)
+        if len(old_guide) > 16 * 1024 * 1024:
+            raise SpecError(
+                [Diagnostic("INSTRUCTIONS", "AGENTS.md exceeds the 16 MiB append limit.")]
+            )
+    template = package_files("specspec").joinpath("templates/AGENTS.md").read_bytes()
+    separator = (
+        b""
+        if not old_guide or old_guide.endswith(b"\n\n")
+        else b"\n"
+        if old_guide.endswith((b"\n", b"\r"))
+        else b"\n\n"
+    )
+    guide = (old_guide or b"") + separator + template
+    # Explicit init authorizes Git initialization, not identity, hooks or index edits.
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if key
+        not in {
+            "GIT_DIR",
+            "GIT_WORK_TREE",
+            "GIT_COMMON_DIR",
+            "GIT_INDEX_FILE",
+            "GIT_OBJECT_DIRECTORY",
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        }
+    }
+    if len(environment) != len(os.environ):
+        raise SpecError(
+            [
+                Diagnostic(
+                    "GIT", "Unset Git directory/index overrides before initializing this project."
+                )
+            ],
+            2,
+        )
+    try:
+        git = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            env=environment,
+            timeout=30,
+        )
+        if git.returncode or git.stdout.strip() != b"true":
+            git = subprocess.run(
+                ["git", "-C", str(root), "init", "--quiet"],
+                capture_output=True,
+                env=environment,
+                timeout=30,
+            )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise SpecError(
+            [Diagnostic("GIT", f"Git is required for initialization: {error}")], 2
+        ) from error
+    if git.returncode:
+        raise SpecError(
+            [
+                Diagnostic(
+                    "GIT", git.stderr.decode("utf8", errors="replace").strip() or "git init failed."
+                )
+            ],
+            2,
+        )
+    # Reuse checkout-local exclusion protection without writing project ignore rules.
+    from .annotations import ensure_ignored
+
+    ensure_ignored(root)
     with workspace_lock(root) as state:
-        node = new_node("manifesto", [], body)
-        raw = serialize(node)
-        candidate = snapshot_from_files(root, {node.path: raw})
-        candidate.require_valid()
+        if not initialization_available(root):
+            raise SpecError([Diagnostic("CONCURRENT", "Workspace appeared during initialization.")])
         if state.stat().st_dev != root.stat().st_dev:
             raise SpecError(
                 [Diagnostic("FILESYSTEM", "Staging and workspace must share a filesystem.")]
             )
-        staging = state / "stage-init"
-        staging.mkdir()
-        (staging / Path(node.path).name).write_bytes(raw)
-        instructions = root / "AGENTS.md"
-        create_instructions = not os.path.lexists(instructions)
-        changes = {node.path: {"old": None, "new": encode(raw)}}
-        if create_instructions:
-            guide = package_files("specspec").joinpath("templates/AGENTS.md").read_bytes()
-            staged_guide = state / "stage-init-agents"
-            staged_guide.write_bytes(guide)
-            changes["AGENTS.md"] = {"old": None, "new": encode(guide)}
-        write_journal(state, {"kind": "init", "files": changes})
-        if destination.exists() or destination.is_symlink():
+        node = new_node("manifesto", [], body)
+        raw = serialize(node)
+        snapshot_from_files(root, {node.path: raw}).require_valid()
+        staged_node, staged_guide = state / "stage-init", state / "stage-init-agents"
+        staged_node.write_bytes(raw)
+        staged_guide.write_bytes(guide)
+        write_journal(
+            state,
+            {
+                "kind": "init",
+                "files": {
+                    node.path: {"old": None, "new": encode(raw)},
+                    "AGENTS.md": {"old": encode(old_guide), "new": encode(guide)},
+                },
+            },
+        )
+        if (root / SPEC_DIR).is_symlink():
             raise SpecError(
-                [Diagnostic("CONCURRENT", "Workspace appeared while initialization was staged.")]
+                [
+                    Diagnostic(
+                        "CONCURRENT",
+                        "Specification storage became a symlink; recover before retrying.",
+                    )
+                ]
             )
-        os.rename(staging, destination)
-        if create_instructions:
-            # Atomic, exclusive publication: unlike POSIX rename, link never replaces
-            # an instruction file that appeared after the absence check.
+        os.link(staged_node, root / node.path)
+        current = (
+            instructions.read_bytes()
+            if instructions.exists() and not instructions.is_symlink()
+            else None
+        )
+        if instructions.is_symlink() or current != old_guide:
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "CONCURRENT", "Instructions changed during init; recover before retrying."
+                    )
+                ]
+            )
+        if old_guide is None:
             os.link(staged_guide, instructions)
-            if instructions.is_symlink() or instructions.read_bytes() != guide:
-                raise SpecError([Diagnostic("CONCURRENT", "Instructions changed during init.")])
+        else:
+            os.replace(staged_guide, instructions)
         result = load_snapshot(root, ignore_state=True)
+        if (
+            result.files != {node.path: raw}
+            or instructions.is_symlink()
+            or instructions.read_bytes() != guide
+        ):
+            raise SpecError(
+                [Diagnostic("CONCURRENT", "Files changed during init; recover before retrying.")]
+            )
         result.require_valid()
-        result.created_instructions = create_instructions
+        result.created_instructions = old_guide is None
         result.mutation_actions = {"added": [node.id]}
         cleanup(state)
     return result
@@ -670,14 +791,21 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
                     raise ValueError(f"External edit to {path}; refusing to overwrite it.")
                 originals[path] = old
             if journal["kind"] == "init":
-                if any(original is not None for original in originals.values()):
-                    raise ValueError("Initialization journal cannot contain original files.")
+                if any(
+                    original is not None
+                    for path, original in originals.items()
+                    if path != "AGENTS.md"
+                ):
+                    raise ValueError("Initialization journal cannot contain original nodes.")
                 directory = root / SPEC_DIR
                 if directory.exists():
                     expected = {
                         Path(path).name for path in originals if path.startswith(SPEC_DIR + "/")
                     }
-                    if {entry.name for entry in directory.iterdir()} != expected:
+                    if (
+                        not {entry.name for entry in directory.iterdir() if entry.name != "local"}
+                        <= expected
+                    ):
                         raise ValueError(
                             "Unexpected initialization files; recovery changed nothing."
                         )
@@ -691,8 +819,6 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
                 staging = state / f"stage-recovery-{index}"
                 staging.write_bytes(original)
                 os.replace(staging, target)
-        if journal["kind"] == "init" and (root / SPEC_DIR).exists():
-            (root / SPEC_DIR).rmdir()
         diagnostics = (
             load_snapshot(root, ignore_state=True).diagnostics if journal["kind"] == "edit" else []
         )

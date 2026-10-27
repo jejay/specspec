@@ -1,7 +1,7 @@
 /* Electron services only. The canvas itself is unchanged shared code. */
 (() => {
-  const native = window.SpecSpecNative;
-  window.SpecSpecHost = Object.freeze({ getState: native.getState, setState: native.setState,
+  const native = window.specspecNative;
+  window.specspecHost = Object.freeze({ getState: native.getState, setState: native.setState,
     postMessage: native.postMessage, onMessage: native.onMessage });
   const dialog = document.createElement('dialog'); dialog.setAttribute('aria-label', 'Compare revisions');
   const form = document.createElement('form'); form.method = 'dialog';

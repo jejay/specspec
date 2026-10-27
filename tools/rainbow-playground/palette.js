@@ -1,4 +1,4 @@
-/* Standalone OKLCH generator. No SpecSpec runtime or browser API dependency. */
+/* Standalone OKLCH generator. No specspec runtime or browser API dependency. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;

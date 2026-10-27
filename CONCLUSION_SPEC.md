@@ -40,7 +40,7 @@ src/specspec/
   annotations.py           # Comparison spotlights and sparse workspace drift summaries
   annotation_commands.py   # Public spotlight add/show/flush
   application.py / wire.py # Shared reads/plans and compact comparison projection
-  output.py / cli.py       # Readable review presentation and API-7 envelopes
+  output.py / cli.py       # Readable review presentation and application protocol envelopes
   cli_help.py              # Task-oriented static help for every command/group
   replacement_matching.py  # Source-mapped newline/prose comparison
   body_replacements.py     # Disjoint original-body passages plus literal NEW
@@ -51,11 +51,12 @@ electron/                   # Authorized main/preload/renderer and local storage
 
 Adapters call the CLI with argument arrays, bounded UTF-8 stdin/output and a fixed
 trusted executable. The Python library owns graph/schema/serialization rules.
-API 7 structured stdout is one `{api_version, ok, result, diagnostics}` envelope; exit 0 means
+Internal structured stdout is one `{api_version, ok, result, diagnostics}` envelope; exit 0 means
 success, 1 validation/rejected operation, 2 invocation/I/O failure. Diagnostics have
 stable codes, severity, path/optional ID and actionable text. Ordinary bodies use
-literal repeatable -m paragraphs; explicit integration --body FILE|- supplies UTF-8
-files/stdin. Full-parent updates replace the supplied set. Repeated --replace OLD NEW
+literal repeatable -m paragraphs or automatic UTF-8 stdin when absent. File content
+is shell redirection; replacements leave stdin alone and empty metadata-only updates
+retain body text. Full-parent updates replace the supplied set. Repeated --replace OLD NEW
 selects unique disjoint original passages with default line-ending/prose tolerance;
 NEW and unselected text remain literal. Only add/update/delete compose into one
 candidate, consent decision and recoverable transaction, with local parent aliases.
@@ -65,8 +66,8 @@ text/Markdown defaults and explicit compact JSON. Full review diffs show all can
 file hunks, semantic node/relationship changes and separate linked-source impact.
 Comparison transport shares unchanged records; both hosts use the same read coordinator
 with optional native overlays and working-first loading. Native persistence stays
-separate from managed writes. Node format and protocol are **7**. Detailed static
---help explains every root/command/subgroup purpose, inputs, defaults, examples and
+separate from managed writes. Schema/protocol fields stay internal. Concise static
+--help explains each command's purpose, inputs, defaults, examples and
 safety; ordinary result verbosity stays independent. Query is the specification
 inspection vocabulary. Raw query reads saved, exact-index or committed documents
 for repair; parsed graph readings retain their revision comparison.
@@ -117,23 +118,30 @@ uses an explicitly unpacked runtime allowlist and Windows ZIP/Linux tar archives
 Python/Git remain external. Artifact checks enforce versions, resources, runtime
 membership and licenses and emit digests, never publication or owner installation.
 
-New project initialization bundles a conceptual/process/CLI AGENTS.md and creates
-it at the project root only when no entry occupies that name. Existing files,
-directories and symlinks remain untouched. New instructions share the lock and
-journal, exclusive publication and all-before-any recovery validation, while ordinary
-mutations remain node-only. The guide is owner-editable text, not graph membership.
+Initialization requires Git and initializes a repository when the selected directory
+is not already in a Git working tree. It creates root AGENTS.md or concatenates the
+packaged template after an existing regular file's exact bytes. Directories and
+symlinks are rejected. Node and guide bytes share the .specspec/local lock/journal,
+exclusive absent-file publication, exact original guards and all-before-any recovery.
+Rollback restores original instructions but leaves Git metadata intact. Initialization
+protects local state through a checkout-local exclusion, never stages, commits or
+configures identity/hooks. The guide is owner-editable text, not graph membership.
+Both UIs gate startup on CLI availability and offer explicit centered initialization
+for safe empty directories. Electron has no menu bar. Package names are specspec,
+specspec-vscode and specspec-desktop; ordinary chrome uses lowercase specspec.
 
 The introduction uses exact selected light/dark primary logos and explains intentions,
 revisable conclusions, source realizations and owner delegation without semantic
 proof or hosted-agent claims. Release guides distinguish actual Windows artifact
 qualification from other targets and retain dependency-audit and authentication
-compatibility limits. Parsed API-7 records retain logical bodies with CRLF normalized
+compatibility limits. Parsed application protocol records retain logical bodies with CRLF normalized
 to LF; raw documents, canonical files and diff are physical-layout evidence.
 
 ## Canonical files and grammar
 
-Use a flat project-root `.specspec` with direct regular node Markdown files.
-The unique manifesto contains integer `format_version: 7`. Requirements depend on
+Use project-root `.specspec` with direct regular node Markdown files and a reserved,
+ignored `local/` runtime subtree. The unique manifesto contains an internal integer
+schema version managed by the tool. Requirements depend on
 manifesto/requirement parents; implementation leaves depend on requirements. All
 nodes form one rooted connected DAG. Frontmatter fields are `id`, `type`, `parents`,
 manifesto `format_version`, optional implementation `sources` and optional namespaced
@@ -152,7 +160,7 @@ unaffected frontmatter comments during targeted writes. Lists/headings structure
 coherent element; independently reusable/reviewable reasoning warrants another node.
 
 The graph engine builds node/parent/child maps, deterministic heap-based Kahn order
-and iterative closures/cycle witnesses. Node format 7 requires a transitively reduced
+and iterative closures/cycle witnesses. The current node format requires a transitively reduced
 DAG: each direct parent adds ancestry. After basic graph checks pass, shared ancestor
 traversals diagnose redundant edges with deterministic alternative paths. Validation
 never normalizes edges. Managed candidates, native overlays, revisions and exact
@@ -188,7 +196,7 @@ Git predecessor trees retain reasoning; normal commit messages explain removal.
 VS Code forms use non-writing Python overlays/plans and native WorkspaceEdit;
 Save/autosave/undo/redo/dirty recovery belong to TextDocuments. Invalid text remains
 repairable and native Save can persist it. Managed project actions require clean
-SpecSpec documents. Missing-file buffers are validated then omitted from overlays;
+specspec documents. Missing-file buffers are validated then omitted from overlays;
 absent-file edits fail. Electron/project saves use the managed writer. Per-view
 unapplied-form recovery has separate explicit handling.
 
@@ -196,7 +204,7 @@ unapplied-form recovery has separate explicit handling.
 
 Read exact staged/commit blobs through NUL-delimited Git paths/object reads.
 `check --staged` validates the intended index; owner-managed hooks/CI call it without
-a SpecSpec installer. Optional `--sources` adds staged source resolution/retention. Compare full IDs, normalized records,
+a specspec installer. Optional `--sources` adds staged source resolution/retention. Compare full IDs, normalized records,
 raw files and added/removed edges. Potential impact uses both
 old/new closures and source references. Absent base graphs/genuinely unborn HEAD are
 empty baselines; invalid/unavailable revisions receive diagnostics.
@@ -227,7 +235,7 @@ require confirmation. Explicit Refresh and configurable
 polling (default 0/off) remain. Watcher delivery depends on the filesystem.
 
 Project-scoped bounded API channels reuse interpreter lifetime, with a separately
-warmed read-only source channel. Each API-7 frame performs current validation and
+warmed read-only source channel. Each application protocol frame performs current validation and
 file/ref/index reads. Ordinary CLI commands retain one-shot execution. Closing or
 reconfiguring a project disposes its channels; failed mutations receive no automatic
 replay. Preview replies match the published render and displayed commit. Native
@@ -293,7 +301,7 @@ Darken outside immediate displayed hover context with card brightness(.45) and
 Spotlight add takes full node IDs and one message, with optional --base/--target.
 Explicit refs pin commits; the implicit default follows fresh HEAD versus workspace.
 One immutable local-format-2 record stores the comparison, IDs and message in
-Git-excluded `.specspec-local/annotations/`. Workspace targets also store capture
+Git-excluded `.specspec/local/annotations/`. Workspace targets also store capture
 HEAD and a sparse map: SHA-256 checksums only for uncommitted added/modified nodes,
 null for deletions. Clean Git nodes and committed comparisons carry no saved node
 hashes. Git owns historical text; no raw-node archive or captured-text preview exists.
@@ -331,7 +339,7 @@ three agent-planned spec/code pairs include two major redirects. Every maintaine
 revision states that point's product positively; Git records changes. Existing manual
 clones retain experiments. Every node-schema change reconstructs all maintained
 example revisions/refs/receipts/source anchors and refreshes bundle/snapshot together.
-SpecSpec's own development history retains its original commits. Small synthetic
+specspec's own development history retains its original commits. Small synthetic
 graphs are focused test fixtures; the offline rainbow playground is a development tool.
 
 The playground defaults to seven samples, L=.69/C=.12, hues 320→20. Added selects

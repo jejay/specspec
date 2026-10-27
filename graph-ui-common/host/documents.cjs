@@ -37,7 +37,7 @@ class ProjectDocuments extends ProjectReads {
   }
   mutate(args, input) {
     return this.run(async () => {
-      if (this.documents().some(d => d.dirty)) throw new Error('Save or revert dirty SpecSpec documents before a project-wide CLI mutation.');
+      if (this.documents().some(d => d.dirty)) throw new Error('Save or revert dirty specspec documents before a project-wide CLI mutation.');
       const result = await this.host.cli(args, input); this.changed(); return result;
     });
   }

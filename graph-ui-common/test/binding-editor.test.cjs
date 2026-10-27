@@ -10,7 +10,7 @@ function fixture(t) {
   dom.window.Range.prototype.getBoundingClientRect = () => ({ left: 0, right: 0, top: 0, bottom: 0 });
   dom.window.eval(readFileSync(join(__dirname, '../media/vendor/graph-vendor.js'), 'utf8'));
   const body = dom.window.document.getElementById('body');
-  const editor = dom.window.SpecSpecVendor.createBindingEditor(body, 'local-nonce');
+  const editor = dom.window.specspecVendor.createBindingEditor(body, 'local-nonce');
   let inputs = 0;
   body.addEventListener('input', () => inputs++);
   t.after(() => { editor.destroy(); dom.window.close(); });

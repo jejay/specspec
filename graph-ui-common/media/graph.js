@@ -1,17 +1,18 @@
 /* Project content is data: use textContent/value, never project-supplied HTML. */
 (() => {
-  const host = window.SpecSpecHost, model = window.SpecSpecGraph;
+  const host = window.specspecHost, model = window.specspecGraph;
   const $ = id => document.getElementById(id);
-  const bindingEditor = window.SpecSpecVendor.createBindingEditor($('body'), document.currentScript?.nonce || '');
+  const bindingEditor = window.specspecVendor.createBindingEditor($('body'), document.currentScript?.nonce || '');
   const restored = host.getState() || {};
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
   let colorMode = model.COLOR_MODES.includes(restored.colorMode) ? restored.colorMode : 'distance';
   let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
   let editSequence = 0, documentVersion, sourceSequence = 0, sourceRequest;
+  let startupBlocked = true, startupStage = 'checking';
   let layoutFrame, layout, layoutKey, cameraScene, snapshotReceivedAt;
   let drawnEdges = [], hoveredNode, hoverPoint;
-  const cameraAPI = window.SpecSpecCamera;
+  const cameraAPI = window.specspecCamera;
   const cameras = Object.fromEntries(Object.entries(restored.cameras || {})
     .map(([key, value]) => [key, cameraAPI.validTransform(value)]).filter(([, value]) => value));
   const sceneKey = () => view === 'overview' ? 'overview' : creating ? 'draft' : `focus:${selected}`;
@@ -34,7 +35,7 @@
   const currentNode = () => currentNodeById(selected);
   const repairNode = id => state?.document?.nodeId === id ? state.repair_forms?.find(n => n.id === id) : undefined;
   const formRecord = () => currentNode() || repairNode(selected);
-  const editable = () => state?.snapshot && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 7 && !state.readonly &&
+  const editable = () => !startupBlocked && state?.snapshot && (!sourceInvalid || Boolean(state.document)) && state.snapshot.format_version === 7 && !state.readonly &&
     (state.document ? selected === state.document.nodeId && Boolean(formRecord()) : creating || Boolean(currentNode()));
   const orphaned = () => !creating && dirty && !formRecord() && !state?.readonly;
   const draftCard = () => creating || orphaned();
@@ -62,6 +63,7 @@
   function formChanged() { dirty = true; updateButtons(); saveDraft(); documentEdit(); }
 
   function updateButtons() {
+    for (const id of ['refresh', 'compare', 'workspace', 'annotations-toggle', 'color-mode']) $(id).disabled = startupBlocked;
     const previous = state?.diff?.base.nodes.find(node => node.id === selected);
     bindingEditor.configure({ key: creating ? '__new__' : selected, native: state?.document,
       original: !creating && state?.diff && currentNode() ? previous?.body || '' : undefined });
@@ -69,11 +71,11 @@
     $('sync-notice').textContent = state?.document ? 'Last valid graph · Repair Markdown; native Save retains document text.'
       : 'Last valid graph · Repair Markdown and refresh to resume editing.';
     $('back').hidden = view !== 'focus';
-    $('back').disabled = pending;
+    $('back').disabled = startupBlocked || pending;
     $('frame-node').hidden = view !== 'focus';
     $('resume').hidden = view !== 'overview' || !(dirty || creating);
-    $('resume').disabled = pending;
-    $('new').disabled = !state?.snapshot || sourceInvalid || state.snapshot.format_version !== 7 || state.readonly || state.provisional || pending || Boolean(state.document);
+    $('resume').disabled = startupBlocked || pending;
+    $('new').disabled = startupBlocked || !state?.snapshot || sourceInvalid || state.snapshot.format_version !== 7 || state.readonly || state.provisional || pending || Boolean(state.document);
     $('save').textContent = state?.document ? 'Save file' : 'Save node';
     $('discard').hidden = Boolean(state?.document) && !state.document.recoveredForm;
     $('discard').textContent = state?.document ? 'Discard recovered form' : 'Discard form edits';
@@ -137,7 +139,7 @@
     return card?.parentElement === $('cards') ? card.dataset.nodeId : undefined;
   }
 
-  const annotations = window.SpecSpecAnnotations.create({ restored, snapshot: () => state, cards: () => $('cards'),
+  const annotations = window.specspecAnnotations.create({ restored, snapshot: () => state, cards: () => $('cards'),
     save: saveDraft, send, frame: frameAnnotations });
 
   function updateHoverAppearance() {
@@ -571,12 +573,40 @@
   });
   for (const action of ['refresh', 'compare', 'workspace']) $(action).addEventListener('click', () => send({ type: action }));
   $('project')?.addEventListener('click', () => send({ type: 'select-project' }));
+  $('startup-project').addEventListener('click', () => send({ type: 'select-project' }));
+  $('startup-retry').addEventListener('click', () => { $('startup-retry').disabled = true; send({ type: 'retry-startup' }); });
+  const initializeEnabled = () => { $('initialize').disabled = startupStage !== 'initialize' || !$('initialize-body').value.trim(); };
+  $('initialize-body').addEventListener('input', initializeEnabled);
+  $('initialize-form').addEventListener('submit', event => {
+    event.preventDefault(); if ($('initialize').disabled || startupStage !== 'initialize') return;
+    $('initialize').disabled = true; send({ type: 'initialize', body: $('initialize-body').value });
+  });
+  function showStartup(message) {
+    startupStage = message.stage; startupBlocked = true; $('startup').hidden = false;
+    const copy = {
+      checking: ['Checking the specspec CLI…', 'The CLI must be available before opening the graph.'],
+      loading: ['Loading specspec…', 'Reading the project specification.'],
+      install: ['Install the specspec CLI', 'This graph needs the separately installed Python CLI. Install the specspec wheel with uv or pipx, then retry. In a remote VS Code window, install it on the workspace host.'],
+      initialize: ['Initialize specspec in this directory', 'Describe the core goal to create this project’s specification.'],
+      initializing: ['Initializing specspec…', 'Creating the graph and project instructions.'],
+      select: ['Open a project', 'Choose a directory to read or initialize its specification.'],
+      error: ['specspec needs attention', 'Review the diagnostic below, correct the prerequisite or project, then retry.'],
+    }[message.stage] || ['specspec needs attention', 'Retry the startup check.'];
+    $('startup-title').textContent = copy[0]; $('startup-description').textContent = copy[1];
+    $('startup-command').hidden = message.stage !== 'install';
+    $('startup-detail').textContent = message.message || message.root || '';
+    $('initialize-form').hidden = message.stage !== 'initialize';
+    $('startup-retry').hidden = !['install', 'error'].includes(message.stage); $('startup-retry').disabled = false;
+    $('startup-project').hidden = message.stage !== 'select';
+    initializeEnabled(); updateButtons();
+  }
 
   function showSnapshotNotes(extra) {
     setMessage([state.note, !state.snapshot.valid ? 'Graph INVALID · current files shown. Dependency scope is not a semantic-justification verdict.' : '', ...state.diagnostics.map(d => `${d.code}: ${d.message}`), extra].filter(Boolean).join('\n'));
   }
 
   host.onMessage(message => {
+    if (message.type === 'startup') { showStartup(message); return; }
     if (message.type === 'annotations') { annotations.receive(message.shots); return; }
     if (message.type === 'annotations-error') { annotations.error(message.message); return; }
     if (message.type === 'annotation-applied') { sourceInvalid = Boolean(message.invalid); updateButtons(); annotations.applied(message.shot, message.warning); return; }
@@ -621,6 +651,7 @@
     if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
     if (message.type !== 'snapshot') return;
     snapshotReceivedAt = performance.now();
+    startupBlocked = false; $('startup').hidden = true;
     state = message; sourceInvalid = false; pending = false; graph = model.displayGraph(state);
     if (state.document) documentVersion = state.document.version;
     if (!restored.used && state.document?.recoveredForm && !restored.draft) {

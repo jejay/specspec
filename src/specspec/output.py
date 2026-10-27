@@ -62,8 +62,6 @@ def render_node(node):
         f"File: {node['path']}",
         "Parents: " + (", ".join(node["parents"]) or "none"),
     ]
-    if "format_version" in node:
-        lines.append(f"Node format: {node['format_version']}")
     if node.get("sources"):
         lines.append("Sources: " + json_text(node["sources"]))
     if node.get("extensions"):
@@ -101,7 +99,7 @@ def action_lines(actions, *, dry_run=False):
 def render_receipt(result, actions, *, dry_run=False):
     lines = action_lines(actions, dry_run=dry_run)
     if instructions := result.get("agent_instructions"):
-        status = "created" if instructions["created"] else "existing entry preserved"
+        status = "created" if instructions["created"] else "template appended"
         lines.append(f"Agent instructions: {instructions['path']} ({status})")
     if result.get("aliases"):
         lines.append(

@@ -31,7 +31,7 @@ def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
     )
     original = original.replace("\n", "\r\n")
     path.write_bytes(original.encode("utf-8"))
-    before = {p.name: p.read_bytes() for p in (root / ".specspec").iterdir()}
+    before = {p.name: p.read_bytes() for p in (root / ".specspec").glob("*.md")}
     overlay = original.replace("# Original", "# Unsaved 🐕")
     result = request(root, {"documents": {node.path: overlay}})
     assert next(n for n in result["snapshot"]["nodes"] if n["id"] == node_id)["body"] == (
@@ -51,7 +51,7 @@ def test_overlay_and_plan_preserve_disk_comments_extensions_and_crlf(workspace):
     assert change["after"].startswith("---\r\n")
     assert change["after"].endswith("# Planned 🐕\r\n")
     assert planned["snapshot"]["valid"]
-    assert {p.name: p.read_bytes() for p in (root / ".specspec").iterdir()} == before
+    assert {p.name: p.read_bytes() for p in (root / ".specspec").glob("*.md")} == before
 
 
 def test_native_plan_diagnoses_noncanonical_filename_without_saving(workspace):
@@ -214,8 +214,8 @@ def test_invalid_raw_text_is_not_repaired_and_runtime_lock_is_not_overlaid(works
     result = request(root, {"documents": {node.path: "bad raw Markdown"}})
     assert not result["snapshot"]["valid"]
     assert (root / node.path).read_bytes() == before
-    (root / ".specspec-local").mkdir(exist_ok=True)
-    (root / ".specspec-local/lock").write_text("123")
+    (root / ".specspec/local").mkdir(exist_ok=True)
+    (root / ".specspec/local/lock").write_text("123")
     with pytest.raises(SpecError, match="progress"):
         editor_request(root, {"documents": {node.path: before.decode()}})
 

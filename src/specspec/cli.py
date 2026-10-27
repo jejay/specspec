@@ -97,7 +97,8 @@ json_option = click.option(
     "--json",
     "as_json",
     is_flag=True,
-    help="Return one structured API-7 JSON result with diagnostics instead of readable text.",
+    hidden=True,
+    help="Internal structured output.",
 )
 
 
@@ -129,35 +130,24 @@ def root_path(explicit):
     return explicit.absolute() if explicit is not None else discover_root()
 
 
-def read_body(path):
-    if path == "-":
-        raw = sys.stdin.buffer.read(MAX_FILE_BYTES + 1)
-    else:
-        with Path(path).open("rb") as stream:
-            raw = stream.read(MAX_FILE_BYTES + 1)
+def read_body():
+    raw = sys.stdin.buffer.read(MAX_FILE_BYTES + 1)
     if len(raw) > MAX_FILE_BYTES:
         raise SpecError([Diagnostic("FORMAT", "Body exceeds the 1 MiB node limit.")], 2)
     return raw.decode("utf8")
 
 
 def body_options(function):
-    function = click.option("--body", hidden=True, help="Integration body FILE, or - for stdin.")(
-        function
-    )
     return click.option(
         "-m",
         "--message",
         "messages",
         multiple=True,
-        help="Literal Markdown body; repeat for blank-line-separated paragraphs. Not a filename.",
+        help="Literal Markdown; repeat for paragraphs. Omit to read UTF-8 stdin.",
     )(function)
 
 
-def body_input(messages, path, *, required=False, read=True):
-    if messages and path is not None:
-        raise SpecError(
-            [Diagnostic("ARGUMENT", "Use --message or integration --body, not both.")], 2
-        )
+def body_input(messages, *, read=True):
     if messages:
         if (
             sum(len(part.encode("utf8")) for part in messages) + 2 * (len(messages) - 1)
@@ -165,11 +155,7 @@ def body_input(messages, path, *, required=False, read=True):
         ):
             raise SpecError([Diagnostic("FORMAT", "Body exceeds the 1 MiB node limit.")], 2)
         return "\n\n".join(messages)
-    if path is not None:
-        return read_body(path) if read else None
-    if required:
-        raise SpecError([Diagnostic("ARGUMENT", "Supply -m/--message binding text.")], 2)
-    return None
+    return read_body() if read else None
 
 
 def source_input(value):
@@ -216,18 +202,14 @@ def edit_input(name, params, *, read=True):
     if name == "delete":
         return {"op": name, "ids": list(params["ids"])}
     replacements = params.get("replacements", ())
-    if replacements and (params["messages"] or params["body"] is not None):
+    if replacements and params["messages"]:
         raise SpecError(
-            [
-                Diagnostic(
-                    "ARGUMENT", "Use --replace, --message or integration --body, not together."
-                )
-            ],
+            [Diagnostic("ARGUMENT", "Use --replace or --message, not together.")],
             2,
         )
     if replacements:
         input_bytes(replacements)
-    text = body_input(params["messages"], params["body"], required=name == "add", read=read)
+    text = body_input(params["messages"], read=False)
     parents = parent_input(params["parents"], params["parents_json"])
     sources = source_input(params["sources"])
     edit = {"op": name}
@@ -239,28 +221,61 @@ def edit_input(name, params, *, read=True):
         edit["id"] = params["node_id"]
         if parents is not None:
             edit["parents"] = parents
-        if (
-            text is None
-            and params["body"] is None
-            and not replacements
-            and parents is None
-            and sources is None
-        ):
-            raise SpecError(
-                [
-                    Diagnostic(
-                        "ARGUMENT", "Supply --message, --replace, --parent or advanced --sources."
-                    )
-                ],
-                2,
-            )
     if text is not None:
         edit["body"] = text
     if replacements:
         edit["replacements"] = [list(pair) for pair in replacements]
     if sources is not None:
         edit["sources"] = sources
+    if read:
+        fill_stdin([edit], [(name, params)])
     return edit
+
+
+def fill_stdin(edits, steps):
+    """One stream has one body owner; empty metadata-only invocations retain bodies."""
+    eligible = [
+        i
+        for i, (name, p) in enumerate(steps)
+        if name in {"add", "update"} and not p["messages"] and not p.get("replacements")
+    ]
+    if not eligible:
+        return
+
+    def metadata_only(edit):
+        return edit["op"] == "update" and any(k in edit for k in ("parents", "sources"))
+
+    if interactive_stdin() and all(metadata_only(edits[i]) for i in eligible):
+        return
+    text = read_body()
+    if text and len(eligible) != 1:
+        raise SpecError(
+            [
+                Diagnostic(
+                    "ARGUMENT",
+                    "Stdin body is ambiguous; supply messages for all but one editing step.",
+                )
+            ],
+            2,
+        )
+    total = input_budget(edits)
+    if text:
+        count_body_bytes(text, total)
+        edits[eligible[0]]["body"] = text
+    else:
+        for i in eligible:
+            if edits[i]["op"] == "add":
+                edits[i]["body"] = ""
+            elif not metadata_only(edits[i]):
+                raise SpecError(
+                    [
+                        Diagnostic(
+                            "ARGUMENT",
+                            "Supply --message, stdin text, --replace or relationship/source edits.",
+                        )
+                    ],
+                    2,
+                )
 
 
 @guarded
@@ -269,16 +284,10 @@ def run_edit_chain(root, steps, *, dry_run, require_valid, yes, as_json):
         raise SpecError(
             [Diagnostic("ARGUMENT", "Reviewed deletion plans require one standalone delete.")], 2
         )
-    if sum(p.get("body") == "-" for _, p in steps) > 1:
-        raise SpecError([Diagnostic("ARGUMENT", "Use at most one stdin body per invocation.")], 2)
-    # Validate every step and mutually exclusive input before opening any body source.
+    # Validate every step and mutually exclusive input before consuming the stream.
     edits = [edit_input(name, params, read=False) for name, params in steps]
-    total = input_budget(edits)
-    for edit, (_, params) in zip(edits, steps, strict=True):
-        if params.get("body") is not None:
-            text = read_body(params["body"])
-            total = count_body_bytes(text, total)
-            edit["body"] = text
+    input_budget(edits)
+    fill_stdin(edits, steps)
     return write_edits(
         root, edits, dry_run=dry_run, require_valid=require_valid, yes=yes, as_json=as_json
     )
@@ -314,7 +323,8 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
 @click.option(
     "--root",
     type=click.Path(path_type=Path, file_okay=False),
-    help="Project directory before the command. Default: discover from current/parent directories.",
+    hidden=True,
+    help="Internal explicit project selection.",
 )
 @click.version_option(__version__)
 @click.pass_context
@@ -334,9 +344,9 @@ def main(context, root):
 @json_option
 @click.pass_obj
 @guarded
-def init(root, messages, body, as_json):
-    """Create a graph from literal manifesto message paragraphs."""
-    text = body_input(messages, body, required=True)
+def init(root, messages, as_json):
+    """Initialize Git and a graph from messages or standard input."""
+    text = body_input(messages)
     snapshot = initialize(root.absolute() if root is not None else Path.cwd(), text)
     mutation_output(snapshot, [snapshot.nodes[0].id], as_json)
 
@@ -870,12 +880,18 @@ def recover_command(root, force_lock, as_json):
 
 @main.command(hidden=True, help=HELP["api"])
 @click.option("--stream", is_flag=True, help="Serve bounded newline-delimited API requests.")
+@click.option("--probe", is_flag=True, hidden=True)
 @click.pass_obj
 @guarded
-def api(root, stream):
+def api(root, stream, probe):
     """Internal API 7 transport with bounded JSON input and ordinary envelopes."""
     from .api_transport import decode_request, serve
 
+    if probe:
+        if stream:
+            raise SpecError([Diagnostic("ARGUMENT", "Choose probe or stream transport.")], 2)
+        emit({"features": ["stdin-body", "project-init", "nested-local-state"]}, as_json=True)
+        return
     project = root_path(root)
     if stream:
         raise click.exceptions.Exit(serve(project, sys.stdin.buffer, sys.stdout.buffer))

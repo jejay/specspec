@@ -40,4 +40,4 @@ boundary parents and each criterion's ordered IDs and values. Scoped base/target
 records and change summaries reconstruct the selected part of each revision, with
 full parent references; validity describes the independently validated original
 snapshots, rather than asserting that a partial view is canonical. The unfiltered
-comparison retains its complete API-7 contract. Human changes presentation only.
+comparison retains its complete application protocol contract. Human changes presentation only.

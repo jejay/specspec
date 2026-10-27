@@ -28,7 +28,7 @@ exports.documentChecks = async function documentChecks(port, project, paths) {
     const found = [], seen = new Set();
     for (const client of clients.values()) for (const context of client.contexts.values()) {
       try {
-        const probe = await client.evaluate(context, `typeof document!=='undefined'&&!!window.SpecSpecHost&&({url:location.href,identity:document.getElementById('identity')?.textContent,save:document.getElementById('save')?.textContent,message:document.getElementById('message')?.textContent,state:window.SpecSpecHost.getState()})`, 500);
+        const probe = await client.evaluate(context, `typeof document!=='undefined'&&!!window.specspecHost&&({url:location.href,identity:document.getElementById('identity')?.textContent,save:document.getElementById('save')?.textContent,message:document.getElementById('message')?.textContent,state:window.specspecHost.getState()})`, 500);
         if (probe && probe.save === 'Save file' && probe.identity?.includes(id)) {
           if (!seen.has(probe.url)) { found.push({ client, context }); seen.add(probe.url); }
         }
@@ -60,7 +60,7 @@ exports.documentChecks = async function documentChecks(port, project, paths) {
     await evaluate(`document.getElementById('body').value=${JSON.stringify(typedDraft)};document.getElementById('body').dispatchEvent(new Event('input'));document.getElementById('body').focus();document.getElementById('body').setSelectionRange(2,8)`);
     await waitFor(async () => { const d = await request(); return d.dirty && d.text.endsWith(draft); }, 'native dirty buffer');
     assert.equal(readFileSync(path, 'utf8'), before, 'Typing must not write the file through the CLI.');
-    await waitFor(() => evaluate(`!window.SpecSpecHost.getState().dirty`), 'form acknowledgement');
+    await waitFor(() => evaluate(`!window.specspecHost.getState().dirty`), 'form acknowledgement');
     assert.deepEqual(await evaluate(`[document.getElementById('body').selectionStart,document.getElementById('body').selectionEnd]`), [2,8]);
     let native = await request();
     assert.ok(native.tabs.some(t => t.type === 'specspec.graphEditor'));
@@ -90,7 +90,7 @@ exports.documentChecks = async function documentChecks(port, project, paths) {
     await waitFor(() => evaluate(`/Graph INVALID/.test(document.getElementById('message').textContent)&&document.getElementById('body').value===''&&!document.getElementById('body').readOnly`), 'fresh invalid native buffer diagnostics and retained editable empty body');
     assert.equal(await evaluate(`document.getElementById('sync-notice').hidden`), true, 'Repair uses the fresh graph, not a stale-view substitution.');
     await evaluate(`document.getElementById('body').value='# Repaired native document\\n';document.getElementById('body').dispatchEvent(new Event('input'))`);
-    await waitFor(() => evaluate(`!/Graph INVALID/.test(document.getElementById('message').textContent)&&!window.SpecSpecHost.getState().dirty`), 'native repair');
+    await waitFor(() => evaluate(`!/Graph INVALID/.test(document.getElementById('message').textContent)&&!window.specspecHost.getState().dirty`), 'native repair');
     await evaluate(`document.getElementById('save').click()`);
     await waitFor(async () => !(await request()).dirty && readFileSync(path, 'utf8').endsWith('# Repaired native document\n'), 'repaired file save');
     const other = await request('other');

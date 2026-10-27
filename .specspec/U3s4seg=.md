@@ -36,7 +36,7 @@ CLI query/diff/check and API reads consume that evidence without a global valid-
 starting-graph gate. The writer/batch planner retains byte-safe journaled transactions
 and optional complete candidate validation; recovery can restore invalid originals.
 
-Shared host reads/session/model/forms adopt API 7, preserve actual broken endpoints
+Shared host reads/session/model/forms adopt application protocol, preserve actual broken endpoints
 and diagnose invalid working graphs while retaining safe targeted editing. Tests
 exercise exclusive/shared/deep deletions, cyclic/disconnected/unreadable inputs,
 completeness and metrics, explicit repair choices, batching, consent, races/recovery,

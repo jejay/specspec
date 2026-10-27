@@ -30,6 +30,14 @@ test('sandbox defaults and narrow bounded commands never expose arbitrary CLI/sp
   for (const v of [null, [], 'save', { type: 'spawn' }, { type: 'accept' }, { type: 'save', body: 'a'.repeat(3 * 1024 * 1024) }]) assert.ok(!validMessage(v));
   const cycle = { type: 'save' }; cycle.self = cycle; assert.ok(!validMessage(cycle));
 });
+test('desktop removes application/window menus and retains an explicit project shortcut', () => {
+  const main = readFileSync(join(__dirname, '../main.cjs'), 'utf8');
+  assert.match(main, /Menu\.setApplicationMenu\(null\)/); assert.match(main, /window\.setMenu\(null\)/);
+  assert.doesNotMatch(main, /buildFromTemplate|toggleDevTools|editMenu/);
+  assert.match(main, /before-input-event/); assert.match(main, /input\.key\.toLowerCase\(\) === 'o'/);
+  assert.ok(validMessage({ type: 'initialize', body: 'Test' })); assert.ok(validMessage({ type: 'retry-startup' }));
+});
+
 test('project-scoped persisted native drafts retain original contents independently', t => {
   const dir = mkdtempSync(join(tmpdir(), 'specspec-state-')); t.after(() => rmSync(dir, { recursive: true, force: true }));
   const path = join(dir, 'state.json'), store = new PresentationStore(path);

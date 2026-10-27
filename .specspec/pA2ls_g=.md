@@ -6,9 +6,9 @@ parents:
 ---
 # Validate shortcut freedom centrally under the current node format
 
-Node format 7 requires a rooted, transitively reduced intention-conclusion DAG.
+The current node format requires a rooted, transitively reduced intention-conclusion DAG.
 Five-byte padded Base64url identities, node fields and source grammar retain their
-contracts. Application API 7 separates operation success from graph validity. Current-only readers diagnose
+contracts. Application application protocol separates operation success from graph validity. Current-only readers diagnose
 other node versions explicitly. Maintained Gantt revisions and actual receipts use
 this same current contract throughout; existing manual clones retain experiments.
 

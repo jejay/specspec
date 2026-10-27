@@ -1,4 +1,4 @@
-# Working with a SpecSpec Graph
+# Working with a specspec Graph
 
 ## Purpose
 
@@ -22,7 +22,7 @@ Edges point **parent -> child**, from intention toward conclusion. Multiple pare
 
 Keep the graph **shortcut-free**: if A reaches C through B, omit the additional direct edge from A to C. Ancestor bindings remain inherited; immediate links retain their explanatory meaning.
 
-Canonical `.specspec/` contains one Markdown file per node, named exactly `<id>.md`. Frontmatter records identity, type and parent references; the body carries binding text. Names are stable full IDs, including the final `=`, not title summaries. Find readable headings through query or the visual editor. Prefer graph-aware tools, permit manual Markdown edits and validate the complete graph. Runtime state lives separately in `.specspec-local/`; keep that directory ignored by Git.
+Canonical `.specspec/` contains one Markdown file per node, named exactly `<id>.md`. Frontmatter records identity, type and parent references; the body carries binding text. Names are stable full IDs, including the final `=`, not title summaries. Find readable headings through query or the visual editor. Prefer graph-aware tools, permit manual Markdown edits and validate the complete graph. The reserved `.specspec/local/` subtree holds runtime state, outside node membership; initialization protects it with a checkout-local Git exclusion.
 
 ## Intention and conclusion
 
@@ -84,7 +84,7 @@ Keep source links and realization explanations current. Passing checks are evide
 
 ## CLI: read the context you need
 
-Use the globally installed `specspec` command from this project or its subdirectories. `specspec --root PROJECT ...` selects an explicit project; put `--root` before the command. Every command and subgroup has detailed `--help`.
+Use the globally installed `specspec` command from the intended project or its subdirectories, like Git. Every command and subgroup has concise `--help`. In a new directory, `specspec init -m "Test"` initializes Git and a manifesto, and creates this guide or appends it after existing AGENTS.md content. Git must be installed. Initialization does not stage, commit or configure identity/hooks.
 
 Copy full case-sensitive IDs, including `=`. Uppercase IDs below are placeholders; examples use Bash quoting.
 
@@ -164,7 +164,7 @@ specspec update ID --parent FIRST_ID --parent SECOND_ID
 
 Repeated `-m` joins literal paragraphs with a blank line; `update ID -m TEXT` replaces the whole body. `update --parent` supplies the complete parent set. Implementation leaves have requirement parents.
 
-Each replacement OLD must identify one original-body span across all supported layouts; repeated pairs must be disjoint and do not cascade. Matching tolerates LF/CRLF/CR and ordinary Markdown prose soft wrapping, not changes to words, case, Unicode normalization, indentation or structural boundaries. NEW is literal in content; newline encoding follows the existing document (LF for new nodes). Unmatched logical text stays unchanged. Ambiguity or analysis limits reject the candidate. Whole-body input remains available, including integration `--body FILE|-` for UTF-8 files/stdin and arguments too large for the shell.
+Each replacement OLD must identify one original-body span across all supported layouts; repeated pairs must be disjoint and do not cascade. Matching tolerates LF/CRLF/CR and ordinary Markdown prose soft wrapping, not changes to words, case, Unicode normalization, indentation or structural boundaries. NEW is literal in content; newline encoding follows the existing document (LF for new nodes). Unmatched logical text stays unchanged. Ambiguity or analysis limits reject the candidate. Without messages or replacements, body input comes from UTF-8 stdin; use shell redirection such as `specspec update ID < binding.md` for large text. Empty stdin with explicit metadata edits preserves the body. A nonempty stdin stream can target only one step; give the other steps messages. Replacements do not consume stdin.
 
 Combine add/update/delete for one candidate and recoverable transaction. `--as goal` names a new node locally and quoted `--parent '$goal'` links it, including forward references. Preview IDs are not reservations.
 
@@ -179,9 +179,9 @@ Apply by removing `--dry-run`. `--require-valid` checks the complete final graph
 Deletion removes **exactly selected files**, retaining descendants and their parent declarations. Preview scope first; loss of justification does not authorize deleting a conclusion. The manifesto cannot be deleted or reparented. Resolve surviving missing-parent declarations deliberately. A successful intermediate edit can leave an invalid graph; `check` remains strict.
 
 ```sh
-specspec delete ID --dry-run --json
+specspec delete ID --dry-run
 specspec query --issues --with-ancestors
-specspec query ID --raw --json
+specspec query ID --raw
 specspec diff --with-context --node ID
 specspec check --sources --warnings-as-errors
 ```
@@ -198,4 +198,4 @@ specspec check --staged --sources --warnings-as-errors
 
 This checks the exact index, including partial staging; working-tree validation cannot substitute for it. Account for all remaining changes, including earlier agent work. Install or modify Git hooks only with explicit owner authorization.
 
-If a managed edit is interrupted, retain `.specspec-local/` and run `specspec recover`. Recovery restores known transaction originals, not arbitrary previous successful edits; external changes remain protected. Use `recover --force-lock` only after confirming no writer is running. Native VS Code document saves retain VS Code's own persistence/undo ownership and are not Python-journaled transactions.
+If a managed edit is interrupted, retain `.specspec/local/` and run `specspec recover`. Recovery restores known transaction originals, not arbitrary previous successful edits; external changes remain protected. Use `recover --force-lock` only after confirming no writer is running. Native VS Code document saves retain VS Code's own persistence/undo ownership and are not Python-journaled transactions.

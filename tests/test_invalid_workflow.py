@@ -47,7 +47,7 @@ def test_parent_only_deletion_preserves_all_survivor_bytes_and_declarations(work
     assert after.files == {p: raw for p, raw in before.files.items() if p != f".specspec/{a}.md"}
     assert next(n for n in after.nodes if n.id == c).parents == [a, b]
     assert set(after.graph.nodes) == {manifesto, b, c, d, e}
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
     assert call(root, "check")[0].exit_code == 1
 
 
@@ -102,7 +102,7 @@ def test_incremental_updates_and_optional_final_validity_are_separate(workspace)
     repaired, data = call(root, "update", e, "--parent", b, "--require-valid")
     assert repaired.exit_code == 0 and data["result"]["graph_valid"]
     assert call(root, "check")[0].exit_code == 0
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_batch_candidate_is_coherent_bounded_explicit_and_aliases_are_ephemeral(
@@ -119,8 +119,8 @@ def test_batch_candidate_is_coherent_bounded_explicit_and_aliases_are_ephemeral(
         c,
         "--parent",
         b,
-        "--body",
-        str(plan_dir / "c.md"),
+        "-m",
+        "# B-derived C\n",
         "update",
         e,
         "--parent",
@@ -147,7 +147,7 @@ def test_batch_candidate_is_coherent_bounded_explicit_and_aliases_are_ephemeral(
     assert saved.valid and saved.graph.nodes[d].parents == [alias]
     assert saved.graph.nodes[c].body == "# B-derived C\n"
     assert all(b"$piece" not in raw for raw in saved.files.values())
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
     before = saved.files
     for args in [
         ["update", c, "-m", "one", "delete", c],
@@ -166,7 +166,7 @@ def test_batch_deletion_consent_is_not_waived_by_invalid_editing(workspace):
     assert refused.exit_code == 1 and not data["ok"] and load_snapshot(root).files == before
     allowed, data = call(root, *args, "--yes")
     assert allowed.exit_code == 0 and data["result"]["deleted_ids"] == [child]
-    assert "DELETE_GIT_UNAVAILABLE" in allowed.stderr
+    assert "DELETE_UNCOMMITTED" in allowed.stderr
 
 
 def test_cycles_are_finite_and_explicit_metrics_do_not_invent_longest_paths(workspace):
@@ -193,7 +193,7 @@ def test_unreadable_file_is_not_mislabeled_as_deletion_and_unrelated_edits_work(
     result, data = call(root, "query", a, "--raw")
     assert result.exit_code == 0 and data["result"]["text"] == "not frontmatter\n"
     assert call(root, "query", b, "--raw")[0].exit_code == 0
-    assert call(root, "update", b, "--body", "-", input="# Still editable\n")[0].exit_code == 0
+    assert call(root, "update", b, input="# Still editable\n")[0].exit_code == 0
     result, data = call(root, "diff", "--with-context")
     assert result.exit_code == 1 and data["result"]
     assert next(n for n in data["result"]["changes"] if n["id"] == a)["kind"] == "unavailable"
@@ -285,11 +285,11 @@ def test_recovery_restores_invalid_original_and_preserves_external_intervention(
     result, _ = call(
         root, "update", c, "--parent", b, "update", e, "--parent", b, "--require-valid"
     )
-    assert result.exit_code == 2 and (root / ".specspec-local/journal.json").exists()
+    assert result.exit_code == 2 and (root / ".specspec/local/journal.json").exists()
     monkeypatch.setattr(module.os, "replace", original)
     recovered = recover(root)
     assert not recovered["graph_valid"] and load_snapshot(root).files == before
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_mutation_safety_does_not_depend_on_graph_validity(workspace, monkeypatch):
@@ -309,7 +309,7 @@ def test_mutation_safety_does_not_depend_on_graph_validity(workspace, monkeypatc
         with pytest.raises(SpecError):
             mutate(root, lambda snapshot, path=path, raw=raw: {path: raw})
         assert load_snapshot(root).files == before
-        assert not (root / ".specspec-local/journal.json").exists()
+        assert not (root / ".specspec/local/journal.json").exists()
     with pytest.raises(SpecError, match="manifesto"):
         mutate(root, lambda snapshot: {f".specspec/{manifesto}.md": None})
     from specspec.batch import prepare
@@ -350,7 +350,7 @@ def test_context_and_canonical_hunks_share_one_current_snapshot(workspace, monke
     assert calls == [root]
 
 
-def test_non_git_context_retains_evidence_without_inventing_owner_changes(workspace):
+def test_non_git_context_retains_evidence_without_inventing_owner_changes(workspace, without_git):
     root, manifesto = workspace
     _, child = add_node(root, "requirement", [manifesto], "# Current conclusion\n")
     result, data = call(root, "diff", "--with-context")

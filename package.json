@@ -2,7 +2,7 @@
   "name": "specspec-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "SpecSpec CLI, VS Code extension and Electron desktop — one source workspace",
+  "description": "specspec CLI, VS Code extension and Electron desktop — one source workspace",
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/jejay/specspec.git" },
   "engines": { "node": ">=22.12.0", "npm": ">=10" },

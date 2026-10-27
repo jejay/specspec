@@ -11,7 +11,7 @@ async function packageApp() {
   const { packager } = await import('@electron/packager');
   const paths = await packager({
     dir: resolve(__dirname, '..'),
-    name: 'SpecSpec',
+    name: 'specspec-desktop',
     appVersion: metadata.version,
     out: resolve(__dirname, '../../dist/desktop'),
     overwrite: true,
@@ -19,9 +19,9 @@ async function packageApp() {
     prune: false, // No runtime npm dependencies: the shared adapter/renderer is built locally.
     ignore: ignored,
     icon: resolve(__dirname, '../../branding', process.platform === 'win32' ? 'app-icon.ico' : 'app-icon.png'),
-    win32metadata: { CompanyName: 'SpecSpec contributors', FileDescription: 'SpecSpec', ProductName: 'SpecSpec' },
+    win32metadata: { CompanyName: 'specspec contributors', FileDescription: 'specspec-desktop', ProductName: 'specspec-desktop' },
   });
-  for (const path of paths) console.log(`Portable SpecSpec ${metadata.version}: ${path}`);
+  for (const path of paths) console.log(`Portable specspec ${metadata.version}: ${path}`);
 }
 module.exports = { ignored };
 if (require.main === module) packageApp().catch(error => { console.error(error); process.exitCode = 1; });

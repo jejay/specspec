@@ -1,5 +1,9 @@
 # Argument-first authoring and the retained UI seam
 
+> Historical implementation evidence. [Current authoring and startup](owner-experience.md)
+> uses automatic stdin without body flags. The earlier results below retain their
+> checkpoint scope rather than describing today's complete interface.
+
 The [direct-authoring intention](../../.specspec/rgGL5FY=.md) and
 [message choice](../../.specspec/BKekD_o=.md) separate ordinary invocation
 arguments from bulk integration transport. [Implementation](../../.specspec/Fy-_P9A=.md)
@@ -58,7 +62,7 @@ The 123 real CLI executions include 45 literal `-m` body payloads and no stdin
 payloads. The independent receipt oracle reconstructs bodies from arguments.
 Source anchors, receipts, ledger, bundle and tracked snapshot were refreshed
 together. Every retained revision validates; the three historical model stages
-pass. Existing manual clones, earlier diagnostics and unrelated SpecSpec history
+pass. Existing manual clones, earlier diagnostics and unrelated specspec history
 remain preserved.
 
 Focused tests cover literal filename/dash/option-like text, Markdown/control text,
@@ -78,7 +82,7 @@ These timings are observations rather than production responsiveness guarantees.
 
 That baseline's exact-index graph/source checks are recorded in its commit; the
 current chain checks are recorded in [editing-chains.md](editing-chains.md). Local logs
-remain under `.specspec-local/argv-inputs/`, including `python-final.log`, the three
+remain under `.specspec/local/argv-inputs/`, including `python-final.log`, the three
 `*-final.log` npm runs, `electron-host.log`, `vscode-host.log` and
 `history-rebuild.log`. No release publication or owner hook installation is part
 of this change.

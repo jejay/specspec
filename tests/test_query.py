@@ -127,8 +127,6 @@ def test_last_occurrence_not_deepest_parent_and_compact_golden_read():
         [
             "HEAD → workspace",
             f"manifesto {identity(0)}",
-            "format_version: 7",
-            "",
             "Root. ",
             f"├─requirement {identity(1)} @ {identity(0)}",
             "│ Left first. ¶ Left last. ",
@@ -153,8 +151,6 @@ def test_human_golden_read_preserves_lines_and_uses_the_same_parent_commas():
         [
             "HEAD → workspace",
             f"manifesto {identity(0)}",
-            "format_version: 7",
-            "",
             "Root.",
             "",
             f"├─requirement {identity(1)} @ {identity(0)}",
@@ -470,8 +466,6 @@ def test_body_presentation_flattens_only_the_default_and_preserves_human_lines(
     assert text.split("\n") == [
         "HEAD → workspace",
         f"manifesto {identity(0)}",
-        "format_version: 7",
-        "",
         *body_rows,
     ]
     assert query.target.graph.nodes[identity(0)].body == original_body
@@ -604,8 +598,8 @@ def test_cli_comparison_json_round_trip_and_read_only_git_state(workspace, human
     assert load_snapshot(root).files == before.files
     assert git(root, "ls-files", "--stage") == index and git(root, "show-ref") == refs
     assert git(root, "count-objects", "-v") == objects
-    assert not (root / ".specspec-local/lock").exists()
-    assert not (root / ".specspec-local/journal.json").exists()
+    assert not (root / ".specspec/local/lock").exists()
+    assert not (root / ".specspec/local/journal.json").exists()
 
 
 def test_diff_provides_exact_patches_while_query_keeps_change_summaries(workspace, tmp_path):
@@ -678,7 +672,7 @@ def test_cli_retains_available_context_when_a_document_is_unreadable(workspace):
     assert call(root, "--base", "").exit_code == 2
 
 
-def test_non_git_unborn_head_and_head_without_spec_are_explicit(workspace):
+def test_non_git_unborn_head_and_head_without_spec_are_explicit(workspace, without_git):
     root, _ = workspace
     result = json.loads(call(root, "--json").stdout)["result"]
     assert result["base_commit"] is None and "No Git" in result["notes"][0]

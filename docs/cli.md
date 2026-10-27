@@ -1,11 +1,12 @@
 # Compact command interface
 
-One CLI serves people and coding agents. Default output is readable text/Markdown;
-`--json` explicitly selects compact UTF-8 API **7**. Redirection does not change the
-format. Canonical node format is **7**; upgrade the CLI and both host builds
-together. The CLI does not supply old command aliases or old protocol readers.
+Run `specspec` from the intended project directory, like Git. Output is readable
+text/Markdown for people and coding agents; redirection does not switch its format.
+The external CLI serves both visual hosts. Internal schema/protocol versions stay
+out of everyday help and query headers; incompatible data still receives diagnostics.
+Upgrade the CLI and UIs together.
 
-Every root, command and subgroup `--help` supplies detailed task explanations,
+Every root, command and subgroup `--help` supplies concise task explanations,
 complete examples, defaults, input meanings and effects. Help is static: it opens
 no project and consumes no stdin. Source/spotlight groups keep their own inspection
 subcommands; the sole top-level specification-reading command is query.
@@ -16,7 +17,7 @@ subcommands; the sole top-level specification-reading command is query.
 specspec init -m "# Product intention" -m "Explain the goal." # New project only
 specspec query <full-id> --max-distance 0   # One complete binding
 specspec query <full-id>                    # Its complete descendant scope
-specspec query <full-id> --raw --json       # Literal document for repair
+specspec query <full-id> --raw              # Literal document for repair
 specspec query                            # Complete HEAD → workspace tree comparison
 specspec query --base main~2 --target main # Explicit versions, like spotlights
 specspec query --human                   # Original body lines, individual sources
@@ -40,8 +41,8 @@ specspec diff                              # Full HEAD → workspace review
 specspec diff <base> <target>               # Historical comparison, no checkout
 ```
 
-`--root <project>` precedes the command. IDs include their final `=` and are
-case-sensitive. Hyphen-leading IDs remain accepted as full node arguments.
+Discovery uses the current directory and nearest containing specification. IDs
+include their final `=` and are case-sensitive. Hyphen-leading IDs remain accepted as full node arguments.
 `add --type implementation` selects an implementation leaf. Repeated `--parent`
 values specify the complete replacement set on update. The manifesto keeps its
 empty parents; ordinary nodes require parents. `-m/--message` supplies literal body
@@ -50,9 +51,12 @@ or applying Git message cleanup. Logical line boundaries are preserved; their en
 follows the existing document's style, or LF for a new node.
 Markdown headings, Unicode and actual newlines remain text. `-` and filenames are
 literal text too; backslash-n is not automatically expanded. Quote for your shell;
-programmatic callers should pass an argument array with no shell. Omitting body-edit
-inputs on update leaves the body unchanged; explicit empty text is an explicit schema-checked
-edit. No editor opens implicitly. A completed valid graph is shortcut-free:
+programmatic callers should pass an argument array with no shell. Without messages,
+init/add read UTF-8 stdin; updates without messages or replacements read a complete
+body from stdin. Use shell redirection, for example `specspec update ID < binding.md`.
+Empty stdin with explicit metadata changes preserves the body; interactive
+metadata-only updates do not wait for text. Explicit empty -m is a schema-checked
+edit. Replacements do not consume stdin. No editor opens implicitly. A completed valid graph is shortcut-free:
 no direct parent may already be an indirect parent. Graph-invalid intermediate edits
 are saved with explicit validity/completeness diagnostics; --require-valid checks the
 whole final candidate before any writes. The starting graph need not be valid. REDUNDANT_PARENT reports the
@@ -62,6 +66,10 @@ managed writes never normalize them. See [graph structure](graph-structure.md) a
 [invalid-state inspection/repair](invalid-graphs.md).
 Init and add create `.specspec/<id>.md`, including the ID's trailing `=`.
 Paths depend only on identity; headings and binding text remain inside the document.
+`init` also initializes Git when needed and creates or appends the packaged root
+AGENTS.md. Git must be available. It protects the reserved `.specspec/local/` subtree
+with a checkout-local exclusion, without staging, committing or installing hooks.
+Existing Git working trees are reused, including a containing repository.
 
 ## Replace selected body text
 
@@ -95,15 +103,15 @@ Git settings. Equal OLD/NEW can change a tolerantly matched prose wrap. Unmatche
 logical characters, indentation, spaces and blank lines stay exact;
 there is no whole-body reflow, regex, fuzzy spelling or backslash-n expansion.
 The resulting node must satisfy the ordinary schema and size limits. Raw JSON
-(`query NODE_ID --raw --json`) remains available for exact document text and structure.
+(`query NODE_ID --raw`) remains available for exact document text and structure.
 Frontmatter is outside the matching surface; parent/source flags retain their
 separate meanings and can accompany replacements.
 
-Replacement input is mutually exclusive with `-m/--message` and integration `--body`
-within that update. Whole-body inputs remain available for substantial rewrites.
+Replacement input is mutually exclusive with `-m/--message` within that update and
+does not read stdin. Message or redirected stdin bodies remain available for rewrites.
 Replacements work in ordinary editing chains and support `--dry-run` and
 `--require-valid`. Syntax, source conflicts and input limits are checked before
-body-file/stdin reads. Actual matching happens under the writer lock on fresh saved
+stdin reads. Actual matching happens under the writer lock on fresh saved
 body text; stale matches fail before any canonical writes. This is context matching,
 not a claim that unrelated text or its meaning has stayed unchanged.
 
@@ -129,7 +137,7 @@ specspec delete OLD_ID \
   add --as goal --parent EXISTING_ID -m "# New conclusion" \
   add --as detail --parent '$goal' -m "# Its detail" \
   update SURVIVING_ID --parent '$goal' --parent OTHER_ID \
-  --require-valid --yes --json
+  --require-valid --yes
 ```
 
 - `add --as NAME` defines a local new-node alias. `--parent '$NAME'` references its
@@ -142,10 +150,10 @@ specspec delete OLD_ID \
   not instructions to update/delete a just-added node. One identity gets one edit;
   duplicate aliases and conflicting/duplicate target edits are rejected. Use repeated
   `--replace OLD NEW` pairs within one update for several passages of the same node.
-- `--dry-run`, `--require-valid`, `--yes` and `--json` apply to the **whole invocation**,
+- `--dry-run`, `--require-valid` and `--yes` apply to the **whole invocation**,
   wherever supplied. The validity boundary checks the final candidate, not temporary
   per-step states. Preview IDs are not reserved; re-running creates fresh IDs.
-- All steps are parsed before body-file/stdin reads or writes. Read/init/source/
+- All steps are parsed before stdin reads or writes. Read/init/source/
   spotlight/recovery/API commands cannot join an editing invocation. For example,
   `update ID -m "..." query ID delete OTHER_ID` fails without partial edits.
   Command names supplied as option values, such as `-m "delete"`, remain literal.
@@ -173,7 +181,7 @@ Parent headers always separate full IDs with `, `. Default source items share on
 `sources: ` line with comma-space separators, preserving duplicates and individual
 broken/uncertain/restored hints. `--human` keeps logical body lines and lists source
 occurrences individually, without changing parents, source facts or revision selection.
-`query --json` retains reconstructible API-7 records and complete source facts, with
+`query --json` retains reconstructible application protocol records and complete source facts, with
 file-change summaries rather than patches. Use `diff` for exact text modifications.
 Parsed JSON preserves logical body layout with CRLF/CR normalized to LF. Raw query
 retains physical documents; normal diffs compare logical newline boundaries. `--human --json` is identical
@@ -277,7 +285,7 @@ consent can show its `Would delete` proposal while refusing to remove anything.
 
 Requested `--as` aliases have one unpadded, comma-separated `Aliases` line mapping
 local names to full IDs. Those associations, structural references, instruction
-creation/preservation, potential affected scope, validity and completeness add
+creation/amendment, potential affected scope, validity and completeness add
 meaningful context separately. Diagnostics can still identify actual file paths.
 JSON retains its existing ID/path records and selected `changed_ids`, including
 no-op update targets; the text action groups do not add protocol fields.
@@ -335,30 +343,31 @@ mixed metadata `--graph-ref` and `delete --reviewed-plan FILE|-` remain availabl
 without bloating everyday help. Reviewed deletion plans are rechecked under lock;
 plan transport does not waive warnings, native dirty guards or original-byte checks.
 
-### Integration-only bulk inputs
+### Standard input and host-only controls
 
-Ordinary help focuses on literal messages and composed editing steps. Explicit
-hidden inputs remain for bulk body automation and the existing visual hosts:
+Messages and replacements leave stdin alone. Without them, init/add/update accept
+bounded UTF-8 stdin bodies. Files are shell redirections, not interpreted body
+arguments. A nonempty stream can target only one eligible editing step; give the
+others messages. Empty stdin allows metadata-only updates to retain their bodies.
+Every step's grammar and fields are preflighted before reading input or writing.
 
-- `init/add/update --body FILE|-` reads UTF-8 body bytes from a file or stdin.
-  File paths resolve from the launch directory. Editing steps can each name a body
-  file; at most one step may consume stdin. `init` remains standalone.
-- `--message`, `--body` and update's `--replace` are mutually exclusive on each step.
-  All such conflicts fail before body reads or canonical writes. Positional init payloads are
-  rejected rather than interpreted as body text.
-- Hidden `--parents-json` and `--sources` keep their existing integration meanings.
-- Reviewed deletion-plan stdin and the private API channels are unchanged. A reviewed
-  plan binds one standalone `delete`; combining it with editing steps is rejected
-  before reading the plan. Use the complete chain's `--dry-run` for a chained preview.
-  Managed UI saves still send body stdin; native VS Code saves retain their document
-  owner. The UI uses neither chained edits nor a JSON batch-plan transport.
+Managed UI create/save/init operations omit message/body options and send complete
+text on stdin. Empty managed form bodies are rejected rather than silently retaining
+an old body. Native VS Code forms use plans and native document persistence instead.
+
+Hosts retain hidden explicit project selection (`--root PROJECT`, before the
+command), structured results (`--json`), complete `--parents-json`/`--sources` fields
+and private application transport. These controls are absent from all help and
+ordinary agent recipes. A reviewed deletion plan uses separate stdin on one
+standalone delete, is rechecked under lock and cannot join a chain. The UI does not
+use a batch-plan transport.
 
 Node files remain bounded at 1 MiB and bulk requests at 16 MiB. Operating-system and
 shell argument limits are smaller and independent: Windows CreateProcess permits
 32,767 UTF-16 units for the whole command line including its terminator; cmd.exe
 permits 8,191 characters. Quotes/other arguments consume that budget too. Unix has
-platform-specific argument/environment limits. A long argv can fail before SpecSpec
-starts; repeated options do not bypass the total. Use the explicit bulk interfaces
+platform-specific argument/environment limits. A long argv can fail before specspec
+starts; repeated options do not bypass the total. Use stdin or shell redirection
 for large bodies. There is no automatic fallback, truncation or batch splitting.
 Command text may appear in shell history/process arguments. Shell quoting differs
 between Bash, PowerShell and cmd; the chain examples use Bash single quotes.
@@ -366,7 +375,7 @@ PowerShell native-argument quoting also depends on its version/passing mode.
 
 ### Private application transport
 
-The hidden `api` operation consumes bounded JSON stdin and returns one API-7 envelope.
+The hidden `api` operation consumes bounded JSON stdin and returns one application protocol envelope.
 Requests require integer `api_version: 7` and `op` from `read`, `plan`, `source-view`,
 `source-capture`, `annotations`, `annotation-create`, `annotation-flush`. Both hosts use `read` with optional `base`/historical `target`;
 VS Code additionally supplies `documents`. `plan` requires an `edit` and never writes
@@ -382,7 +391,7 @@ at 16 MiB, node files at 1 MiB; the UI bridge retains its existing process/outpu
 
 Git hook/CI setup is owner-controlled. Put `specspec check --staged` (optionally
 `--sources`) in your existing hook framework or manually managed hook; preserve its
-other commands and executable/environment selection. SpecSpec does not install or
+other commands and executable/environment selection. specspec does not install or
 replace hooks. The public read interface uses `query` for ancestor context; no
 `context`, `hook`, `list`, `impact`, `validate`, `export` or public `editor` command remains. Mermaid export is not part of this two-representation CLI.
 

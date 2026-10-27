@@ -46,7 +46,7 @@ def test_explicit_checkout_keeps_independent_git_history_and_lf_index(checkout, 
 
 
 @pytest.mark.parametrize(
-    "destination", [ROOT, GANTT / "checkout", ROOT / ".specspec-local/example-workspace"]
+    "destination", [ROOT, GANTT / "checkout", ROOT / ".specspec/local/example-workspace"]
 )
 def test_checkout_refuses_development_worktree(checkout, destination):
     existed = destination.exists()

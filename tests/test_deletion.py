@@ -52,7 +52,7 @@ def test_default_head_delta_keeps_deleted_file_until_commit_including_staging(
     assert child not in git_snapshot(root, "HEAD").require_valid().nodes
 
 
-def test_unborn_head_is_known_empty_non_git_is_incomplete_and_bad_refs_fail(workspace):
+def test_unborn_head_is_known_empty_non_git_is_incomplete_and_bad_refs_fail(workspace, without_git):
     root, manifesto = workspace
     runner = CliRunner()
     args = ["--root", str(root), "diff", "HEAD", "--json"]
@@ -121,7 +121,7 @@ def test_partial_delete_recovery_refuses_a_new_external_file(workspace, monkeypa
     with pytest.raises(SpecError, match="External edit"):
         recover(root)
     assert removed[0].read_bytes() == b"External content must not be replaced"
-    assert (root / ".specspec-local/journal.json").exists()
+    assert (root / ".specspec/local/journal.json").exists()
     removed[0].unlink()
     recover(root)
     assert load_snapshot(root).files == before.files

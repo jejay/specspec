@@ -1,5 +1,10 @@
 # Preparing the first local release
 
+> Historical release-preparation evidence. Current initialization, stdin, storage,
+> naming and startup behavior follows [the owner-experience revision](owner-experience.md).
+> Recorded counts/outcomes below belong to that earlier checkpoint; diagnostic paths
+> use their preserved current location after the runtime-directory move.
+
 The owner requested `.specspec/`, an installable monorepo-style 0.1 CLI/VS Code/
 Electron delivery, a clearer branded introduction and agent guidance created with
 new projects. The changes preserve the current intention/conclusion model, full
@@ -7,7 +12,7 @@ IDs, format/API 7, native versus managed save ownership and explicit Git control
 
 ## Choices and boundaries
 
-- `.specspec/` is the sole canonical directory; `.specspec-local/` remains runtime
+- `.specspec/` is the sole canonical directory; `.specspec/local/` remains runtime
   state. Discovery, literal paths/placeholders, Git/source roots, spotlights,
   watchers and both editors change together. Regex dots are literal. There is no
   permanent conversion command or fallback reader.
@@ -83,7 +88,7 @@ source anchor, ledger and bundle uses `.specspec/`. Node identities, chronology,
 redirects, parent topology and application behavior remain intact. The only intended
 application-byte adjustment is literal canonical-directory wording in the HTML
 footer; the models, scripts and runtime behavior are unchanged. Existing manual
-clones and unrelated SpecSpec history remain preserved, with no nested Git metadata
+clones and unrelated specspec history remain preserved, with no nested Git metadata
 installed in the tracked snapshot.
 
 ## Verification record
@@ -137,7 +142,7 @@ artifacts.
 
 Local diagnostic logs, input digests, clean-install evidence, preserved failed runs,
 reconstruction locations and review/artifact reports live under
-`.specspec-local/release-0.1/`. Notably: `python-final.log`, `npm-final.log`,
+`.specspec/local/release-0.1/`. Notably: `python-final.log`, `npm-final.log`,
 `cli-install-checks.json`, `vscode-artifact-host.log`, `electron-artifact-host.log`,
 `history-final.log`, `candidate.json`, `review.diff` and `original-byte-review.json`.
 Physical Linux/macOS and remote SSH/tunnel execution have not been rerun locally for

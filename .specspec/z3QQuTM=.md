@@ -21,14 +21,14 @@ sources:
 Hatchling packages src/specspec; Click exposes seven everyday commands: init,
 query, add, update, delete, check and diff. Advanced source/recovery tools retain
 explicit ownership and uncertainty. Hidden api accepts bounded versioned application
-requests. Ordinary binding text uses literal -m/--message arguments; integration
-UTF-8 files/stdin remain available and full IDs remain canonical.
+requests. Ordinary binding text uses literal -m/--message arguments; absent messages
+select bounded UTF-8 stdin with shell redirection for files and full IDs remain canonical.
 
 query.py/query_select.py supply complete selected bindings and optional ancestor
 completion through one pipeline. output.py renders readable node summaries and canonical
-file review patches with relationship and separate linked-source impact. Compact API 7
+file review patches with relationship and separate linked-source impact. Compact application protocol
 emits one UTF-8 envelope, small mutation receipts and reconstructible comparisons.
-Node format is 7. Byte budgets cover the actual chosen representation and required
+node schema is managed internally. Byte budgets cover the actual chosen representation and required
 ancestors are never silently truncated. Terminal controls are rendered visibly.
 CLI/host regressions exercise protocol/exit boundaries, full hunk/EOL/comment changes,
 source operations, guarded deletion, parent replacement and hyphen-leading identities.

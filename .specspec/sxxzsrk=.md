@@ -10,8 +10,8 @@ parents:
 Hosts reuse two shell-free Python application processes per active project and
 trusted executable configuration: an ordinary API channel and an independent
 read-only source-preview channel. Warm both at the first authorized request.
-The hidden api --stream transport reads bounded newline-delimited API 7 requests
-and emits one ordinary API 7 envelope per request. The one-shot CLI remains usable.
+The hidden api --stream transport reads bounded newline-delimited application protocol requests
+and emits one ordinary application protocol envelope per request. The one-shot CLI remains usable.
 
 Serialize frames per channel, bound queued requests and input/output/time budgets,
 and isolate configuration/project changes. Each request performs current backend

@@ -7,9 +7,9 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <meta name="specspec-project" content="${attr(options.scope || '')}">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; img-src ${cspSource}; script-src 'nonce-${nonce}';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="${resource('graph.css')}" rel="stylesheet"><link href="${resource('host.css')}" rel="stylesheet"><title>SpecSpec Graph</title></head>
-    <body><header class="toolbar"><span class="brand-context"><span class="brand-icon" role="img" aria-label="SpecSpec" style="mask-image:url('${attr(resource('specspec.svg'))}')"></span><span id="revision"></span></span>
-    ${options.showProject === false ? '' : '<button id="project" title="Choose a local SpecSpec project">Open project</button>'}
+    <link href="${resource('graph.css')}" rel="stylesheet"><link href="${resource('host.css')}" rel="stylesheet"><title>specspec Graph</title></head>
+    <body><header class="toolbar"><span class="brand-context"><span class="brand-icon" role="img" aria-label="specspec" style="mask-image:url('${attr(resource('specspec.svg'))}')"></span><span id="revision"></span></span>
+    ${options.showProject === false ? '' : '<button id="project" title="Choose a local specspec project">Open project</button>'}
     <button id="back" hidden>← Total graph</button><button id="refresh" title="Refresh graph" aria-label="Refresh graph">${icon('<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 6.1A8 8 0 0 1 19.5 10M4.5 14a8 8 0 0 0 13.4 3.9"/>')}</button>
     <button id="compare">Compare revisions</button><button id="workspace">HEAD / workspace</button>
     <button id="new">+ New node</button><button id="resume" hidden>Resume draft</button>
@@ -23,6 +23,18 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <p id="sync-notice" role="status" hidden>Last valid graph · Repair Markdown and refresh to resume editing.</p>
     <p id="annotation-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     <div class="canvas-shell">
+    <section id="startup" class="startup-screen" aria-labelledby="startup-title" aria-live="polite">
+      <div class="startup-content"><h1 id="startup-title">Checking the specspec CLI…</h1>
+      <p id="startup-description">The graph requires the separately installed specspec CLI.</p>
+      <pre id="startup-command" hidden>uv tool install /path/to/specspec.whl</pre>
+      <p id="startup-detail" class="form-help"></p>
+      <form id="initialize-form" hidden><label for="initialize-body">What should this product achieve?</label>
+        <textarea id="initialize-body" rows="6" placeholder="# Product purpose" required></textarea>
+        <p class="form-help">Initializes Git and the graph; creates or appends AGENTS.md. Nothing is staged or committed.</p>
+        <button id="initialize" type="submit">Initialize specspec</button></form>
+      <button id="startup-retry" type="button" hidden>Retry</button>
+      <button id="startup-project" type="button" hidden>Open project</button></div>
+    </section>
     <aside id="annotations-panel" hidden role="menu" aria-labelledby="annotations-heading">
       <h2 id="annotations-heading" class="sr-only">Spotlights</h2>
       <p id="annotation-error" role="status" hidden></p>

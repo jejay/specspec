@@ -44,4 +44,4 @@ newline, including terminal escaping or the JSON envelope. Format once and fail
 before emitting a partial result when the chosen representation exceeds the budget.
 The specification-reading interface is query; everyday verbs are init, query,
 add, update, delete, check and diff. Guides, checks and actual retained example
-receipts use that current interface. Node format is 7 and application API is 7.
+receipts use that current interface. Internal format/protocol metadata stays out of ordinary readings.

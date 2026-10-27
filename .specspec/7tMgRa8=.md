@@ -25,11 +25,10 @@ quotas. --max-distance 0 selects only the root before completion. An advanced
 Check covers
 working files, --staged exact-index files and optional --sources mapping/retention;
 --warnings-as-errors remains available. Diff accepts optional positional BASE/TARGET,
-defaulting to freshly resolved HEAD versus working files. Root selection stays --root.
+defaulting to freshly resolved HEAD versus working files. Ordinary operations use the current project directory.
 
 Init/add/update accept literal repeatable -m/--message paragraphs and explicit
-repeated --parent full IDs where applicable. Bulk file/stdin sources stay
-integration-only. Add defaults to requirement and supports --type implementation.
+repeated --parent full IDs where applicable. Absent messages use standard input, including shell-redirection from files. Add defaults to requirement and supports --type implementation.
 Init and add
 create <id>.md paths independently of body text.
 Updates replace the supplied parent list; valid manifesto parents stay empty.
@@ -58,8 +57,8 @@ ranges, explicit revision and staged selection remain meaningful. Raw source JSO
 mixed graph/code revision selection, reviewed deletion plans and cache hints
 belong to advanced/integration usage. A hidden api command accepts bounded
 structured application read/plan/source requests. Basic help separates the
-everyday vocabulary from advanced tooling. Every command and subgroup help explains
-its purpose, inputs, defaults, consequences and useful complete examples in detail.
+everyday vocabulary from advanced tooling. Every command and subgroup help concisely explains purpose, inputs, defaults,
+consequences and useful examples; host-only project/structured switches stay hidden.
 
 One spelling serves each operation. The current CLI exposes text and --json output;
 Git hook/CI setup calls check --staged through owner-controlled Git tooling. Mermaid

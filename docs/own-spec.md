@@ -1,4 +1,4 @@
-# SpecSpec's current specification
+# specspec's current specification
 
 [`.specspec/`](../.specspec/) is this repository's binding current graph. It describes
 owner intentions, separately reasoned conclusions and actual implementation mappings.
@@ -38,8 +38,9 @@ keep solution choices independently addressable.
 The [manifesto](../.specspec/XV5_rPQ=.md) leads a
 [rooted DAG](../.specspec/DiIJxaQ=.md) of requirements and
 terminal implementation leaves. [Spectrum position](../.specspec/W8_8BXA=.md)
-follows relationships. The flat `.specspec` directory contains direct node Markdown
-files; frontmatter holds identity/type/parents and the body holds binding text.
+follows relationships. `.specspec` contains direct node Markdown files and the
+reserved ignored `local/` runtime subtree. Frontmatter holds identity/type/parents;
+the body holds binding text. Runtime contents never join canonical membership.
 
 [Compact identity](../.specspec/F5JaC_4=.md) and the
 [typed schema conclusion](../.specspec/qowy5AI=.md)
@@ -50,7 +51,7 @@ The [ID-only path choice](../.specspec/ezHjLDs=.md) keeps filenames independent 
 binding text across CLI creation, native editors and every maintained example revision.
 Its [realization](../.specspec/OfBdhms=.md) maps exact path validation, creation forms,
 editor discovery and the reconstructed history to code and regression checks.
-Current **node format 7** defines the sole supported node scheme; **API 7** defines the compact application protocol. Schema errors and
+The installed tools manage the current node schema and compact application protocol. Schema errors and
 unsupported historical formats receive diagnostics. Source blob IDs address code
 contents; transaction protection compares original bytes.
 
@@ -64,7 +65,7 @@ Review ripple effects using both old and new graphs. See [graph structure](graph
 
 [Managed transactions](../.specspec/6SyZ-BU=.md)
 diagnose saved/candidate graphs and journal explicit bytes/null deletions under a lock in
-`.specspec-local`. Recovery recognizes known original/replacement/absence states
+`.specspec/local`. Recovery recognizes known original/replacement/absence states
 and preserves intervening external text. Retain interruption state and use
 `recover`; clear stale locks only after confirming the writer absent.
 
@@ -134,7 +135,7 @@ boundary, executed POSIX permission test and self-contained Git-fixture correcti
 Normal diffs and query hints ignore encoding-only differences and use logical LF
 patches without newline-counter dumps. Raw reads, guards, journals/recovery, Git
 objects and cache verification remain byte-exact. Linked source files retain their
-own formatting contracts. Node fields/accepted encodings and API-7 field grammar
+own formatting contracts. Node fields/accepted encodings and application protocol field grammar
 remain unchanged; existing maintained LF receipts retain their contents.
 
 ## Shared host experience
@@ -193,21 +194,23 @@ initial-discovery race and verifies shutdown/disposal with controlled clocks.
 leads the [everyday command vocabulary](../.specspec/7tMgRa8=.md),
 [readable defaults](../.specspec/sJ5dyh4=.md),
 [full review diffs](../.specspec/7kYVG_E=.md)
-and [compact API 7](../.specspec/cpFRqIM=.md).
-Canonical node format is **7**. The [shared read path](../.specspec/-UedVEw=.md)
+and [compact application protocol](../.specspec/cpFRqIM=.md).
+Internal versions stay out of ordinary help/readings. The [shared read path](../.specspec/-UedVEw=.md)
 serves both hosts with optional native overlays; [safeguards](../.specspec/nIj9fmE=.md)
 and [coordinated examples/cutover](../.specspec/4ZvnSGw=.md)
 retain their domain and verification boundaries. The [command guide](cli.md) gives
 current operational recipes; original owner source remains unchanged in AGENTS.md.
 [Direct authoring](../.specspec/rgGL5FY=.md) supplies bodies and batches through
 arguments. The [message choice](../.specspec/BKekD_o=.md) exposes repeatable
-`-m/--message`, with explicit hidden bulk body inputs separate from literal text.
+`-m/--message`, with automatic bounded UTF-8 stdin when messages are absent.
+Shell redirection supplies files; replacements leave stdin alone and empty
+metadata-only updates preserve bodies.
 [One editing vocabulary](../.specspec/pRK4Qwk=.md) and the
 [chain grammar](../.specspec/4626uI8=.md) combine add/update/delete steps into one
 candidate, consent decision and recovery scope, with `--as` / `$name` parent aliases
 and forward references. Other commands stay standalone. The
-[message realization](../.specspec/Fy-_P9A=.md) maps literal body input and unchanged
-UI transports. Node format and API remain 7; OS argument limits remain distinct from
+[message realization](../.specspec/Fy-_P9A=.md) maps literal messages and automatic
+stdin. Managed UIs omit body options and send complete text; native forms retain plans. Node fields and transport contracts remain current; OS argument limits remain distinct from
 bulk input limits. [Message transport evidence](investigations/argument-authoring.md)
 and [chain verification](investigations/editing-chains.md) record the boundaries and
 current-history reconstruction. [Chain implementation](../.specspec/kdTk6-0=.md)
@@ -231,7 +234,7 @@ host preflight and maintained-history coordination.
 [Grouped mutation feedback](../.specspec/6p7T7CY=.md) reports Added, Modified,
 Deleted and Unchanged as unpadded comma-separated full IDs, with hypothetical preview
 labels. The writer classifies locked original/candidate logical text independently
-of Git status; init adds its first node. Structured ID/path receipts retain API 7.
+of Git status; init adds its first node. Structured ID/path receipts retain application protocol.
 [CLI/review implementation](../.specspec/SF12qpA=.md)
 and [shared host implementation](../.specspec/GG_koyg=.md)
 map the code and verification seams.
@@ -284,7 +287,7 @@ bindings from quota matches and lists omitted nearby IDs without their bodies.
 The query emitter formats once and supports an exact encoded byte budget. The
 same query pipeline supplies complete agent context; the current everyday surface
 has seven verbs. Current-command receipts, source anchors and all retained Gantt
-refs are reconstructed together. Node format is 7; API is 7.
+refs are reconstructed together. Node fields and transport contracts remain current.
 
 ## Header identity and keyboard saving
 
@@ -294,7 +297,7 @@ refs are reconstructed together. Node format is 7; API is 7.
 and launcher tile locally. [Compact header context](../.specspec/EXGxivM=.md)
 groups the accessible symbol with the live revision label, uses an icon-only
 Refresh action and keeps project picking in VS Code's existing command while
-Electron retains its visible picker/menu. Below it, legends and diagnostics retain
+Electron retains its visible picker and Ctrl/Command+O without a menu bar. Below it, legends and diagnostics retain
 their space; linked source-file totals/list remain in CLI reports, with graph-node
 source cues preserved by the [Git-cue choice](../.specspec/fdB9ZLM=.md).
 [Keyboard saving](../.specspec/-DClehg=.md)
@@ -392,9 +395,9 @@ records capture HEAD and SHA-256 checksums only for uncommitted added/modified
 workspace nodes, plus null deletion markers. All dirty nodes contribute context,
 including unselected ones; clean CRLF/filtered checkouts remain clean under Git's
 assessment. Committed node text stays in Git. [Local storage](../.specspec/P2i_png=.md)
-holds bounded metadata-only format-2 JSON in `.specspec-local/annotations`, shared
+holds bounded metadata-only JSON in `.specspec/local/annotations`, shared
 by both hosts until explicit reviewed flush. Older local records are protected
-with a deliberate-flush diagnostic. Canonical node format is 7; API is 7.
+with a deliberate-flush diagnostic; normal readings keep internal versions quiet.
 [Identity resolution](../.specspec/63jO49Q=.md)
 derives current status/title/path and advisory drift/context warnings.
 
@@ -446,7 +449,7 @@ Actual current CLI outputs form the receipts, and staged code trees retain ancho
 
 [Example policy](../.specspec/TAvql3w=.md)
 and [bundle conclusion](../.specspec/YaXJpGE=.md)
-keep rigorous temporal tests independent of SpecSpec development schemas. Every node-
+keep rigorous temporal tests independent of specspec development schemas. Every node-
 schema change refreshes **all** maintained example revisions/refs, receipts, ledger,
 bundle and snapshot. Root development commits retain their original history.
 
@@ -470,8 +473,9 @@ CLI, a locally installed VSIX and portable desktop delivery from one monorepo.
 one locked npm workspace, with root build/test/package commands and inspected
 artifacts rather than implicit publication. [Project guide intention](../.specspec/1zcoS-g=.md)
 and [initialization ownership](../.specspec/J8H7P74=.md) supply a package-resource
-AGENTS.md only when absent, with explicit byte-checked recovery and preserved owner
-instructions. See [agent guidance](agents.md) and [installation](install.md).
+AGENTS.md on creation or appends it after existing instruction bytes. Init requires
+Git and initializes a repository when needed; byte-checked graph/guide recovery
+leaves Git metadata intact. See [agent guidance](agents.md) and [installation](install.md).
 
 The [introduction intention](../.specspec/U6paNqA=.md) and
 [selected presentation choice](../.specspec/1ev9uZo=.md) lead the README with the
@@ -487,6 +491,19 @@ keep logical LF records and target-style writes distinct from byte-exact raw rea
 initialization and artifact-host verification. [Release procedure](releasing.md)
 and [bounded evidence](investigations/release-0.1.md) distinguish builds,
 actual installed-artifact qualification and future publication.
+
+## Startup, naming and ordinary use
+
+[Clear prerequisites and project initialization](../.specspec/eZq6RCw=.md) and the
+[shared startup choice](../.specspec/xakKaOA=.md) require an immediate CLI check,
+a blocking install/retry screen when unavailable, and a centered explicit manifesto
+form for an authorized directory without a graph. Broken graphs remain repair cases.
+The [implementation](../.specspec/t9JA9fM=.md) shares those states across both hosts,
+retaining native dirty/trust guards and managed initialization ownership.
+[Product naming](../.specspec/LjyJ0Ow=.md) uses specspec, specspec-vscode and
+specspec-desktop. Human/agent help omits hidden project/structured controls and
+internal version numbers. See the [onboarding investigation](investigations/owner-experience.md)
+for implementation choices, verification and preserved inputs.
 
 ## Engineering artifacts and checks
 

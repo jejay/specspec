@@ -13,9 +13,11 @@ const lastSnapshot = panel => panel.messages.filter(m => m.type === 'snapshot').
 function fixture(t, options = {}) {
   const root = mkdtempSync(join(tmpdir(), 'specspec-extension-'));
   mkdirSync(join(root, '.specspec'));
+  if (!options.noGraph) writeFileSync(join(root, '.specspec', 'AAAAAAA=.md'), 'Existing graph fixture');
   mkdirSync(join(root, 'vscode'));
   const uri = path => ({ scheme: 'file', fsPath: resolve(path), toString() { return this.fsPath; } });
   const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], gitWatchers: [], sessions: [], gitLookups: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
+  calls.probes = [];
   const backups = new Map();
   const context = { extensionUri: uri(join(root, 'vscode')), extensionMode: 2, subscriptions: [],
     workspaceState: { get: key => backups.get(key), keys: () => [...backups.keys()], update: async (key, value) => { value === undefined ? backups.delete(key) : backups.set(key, value); } } };
@@ -97,7 +99,7 @@ function fixture(t, options = {}) {
               return true;
             },
             set html(value) {
-              if (value.includes('SpecSpec graph unavailable')) { calls.fallbackHtml = value; return; }
+              if (value.includes('specspec graph unavailable') || value.includes('<h1>Install the specspec CLI</h1>')) { calls.fallbackHtml = value; return; }
               assert.match(value, /Loading specification graph/);
               assert.doesNotMatch(value, /id="project"/, 'VS Code uses its existing Select Project command instead of header chrome.');
               assert.ok(listener, 'message listener must be registered before HTML');
@@ -113,6 +115,12 @@ function fixture(t, options = {}) {
   const invoke = async (command, prefix, selectedRoot, args, input) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args, input });
     if (options.cliError) throw new Error(options.cliErrorMessage || 'Cannot run Python backend');
+    if (args[0] === 'init') {
+      const node = { id: 'AAAAAAA=', type: 'manifesto', parents: [], sources: [], body: input + '\n', path: '.specspec/AAAAAAA=.md' };
+      writeFileSync(join(selectedRoot, node.path), node.body);
+      current = { ...snapshot, nodes: [node] };
+      return { api_version: 7, ok: true, diagnostics: [], result: { changed_ids: [node.id] } };
+    }
     if (args[0] === 'delete' && args.includes('--dry-run')) return { api_version:7,ok:true,diagnostics:options.deleteWarnings || [],result:options.deletePlan || {requested_ids:[args[1]],deleted_ids:[args[1]],nodes:[{id:args[1],path:current.nodes.find(n=>n.id===args[1]).path}],uncommitted:[],git_available:true,git_note:''} };
     if (args[0] === 'api') {
       const request = JSON.parse(input);
@@ -139,6 +147,14 @@ function fixture(t, options = {}) {
     Module._load = function(request, parent, ...rest) {
       if (request === 'vscode') return vscode;
       if (request === './bridge' && parent?.filename === extensionPath) return { createClient: () => ({ invoke, dispose() {} }) };
+      if (request === './common/host/startup.cjs' && parent?.filename === extensionPath) {
+        const portable = originalLoad.call(this, request, parent, ...rest);
+        return { ...portable, probeCli: async (...args) => {
+          calls.probes.push(args);
+          if (options.missingCli) throw new portable.CliUnavailableError('Missing fixture executable');
+          if (options.probeError) throw new Error(options.probeError);
+        } };
+      }
       if (request === './common/host/session.cjs' && parent?.filename === extensionPath) {
         const portable = originalLoad.call(this, request, parent, ...rest);
         return { ...portable, GraphSession: class extends portable.GraphSession {
@@ -183,6 +199,53 @@ async function waitFor(check) {
   assert.ok(check(), 'The serialized graph action did not complete.');
 }
 
+test('missing CLI opens a blocking install screen before any project read, with retry on the workspace host', async t => {
+  const options = { noGraph: true, missingCli: true, settings: { command: '/trusted/specspec', args: [] } };
+  const f = fixture(t, options);
+  assert.equal(await f.calls.commands.get('specspec.openGraph')(), undefined);
+  const panel = f.calls.panels[0];
+  assert.equal(panel.messages.at(-1).stage, 'install'); assert.equal(f.calls.cli.length, 0);
+  assert.equal(f.calls.probes[0][0], '/trusted/specspec'); assert.equal(f.calls.probes[0][2], f.root);
+  options.missingCli = false; panel.send({ type: 'retry-startup' });
+  await waitFor(() => panel.messages.at(-1).stage === 'initialize');
+  assert.equal(f.calls.cli.length, 0);
+  panel.send({ type: 'initialize', body: 'Test', root: 'forged-path' });
+  await waitFor(() => lastSnapshot(panel));
+  const init = f.calls.cli.find(call => call.args[0] === 'init');
+  assert.deepEqual(init.args, ['init', '--json']); assert.equal(init.input, 'Test'); assert.equal(init.root, f.root);
+  assert.equal(lastSnapshot(panel).snapshot.nodes[0].body, 'Test\n');
+});
+
+test('native node editors show a large CLI installation fallback before bootstrap reads', async t => {
+  const f = fixture(t, { missingCli: true });
+  await f.openDocument({ id: 'node', path: '.specspec/node.md', body: '# Owner text' });
+  assert.match(f.calls.fallbackHtml, /<h1>Install the specspec CLI<\/h1>/);
+  assert.equal(f.calls.cli.length, 0); assert.equal(f.calls.probes.length, 1);
+});
+
+test('initialization retains native dirty-document protection and never calls the writer when blocked', async t => {
+  const f = fixture(t, { noGraph: true }); await f.calls.commands.get('specspec.openGraph')();
+  f.workspace.textDocuments.push({ uri: f.uri(join(f.root, '.specspec/AAAAAAA=.md')), isDirty: true,
+    getText: () => 'Unsaved owner text', version: 1, isClosed: false, eol: 1 });
+  f.calls.panels[0].send({ type: 'initialize', body: 'Test' });
+  await waitFor(() => f.calls.panels[0].messages.at(-1).stage === 'error');
+  assert.match(f.calls.panels[0].messages.at(-1).message, /Save or revert dirty/);
+  assert.equal(f.calls.cli.length, 0);
+});
+
+test('runtime notifications are separate from canonical document refreshes', async t => {
+  let rejectDiscovery;
+  const f = fixture(t, { gitExecute: () => new Promise((_, reject) => { rejectDiscovery = reject; }) });
+  t.after(() => rejectDiscovery?.(nonGit()));
+  await f.calls.commands.get('specspec.openGraph')();
+  let scheduled = 0; f.calls.sessions[0].scheduleRefresh = () => scheduled++;
+  f.calls.watchers[0].change(f.uri(join(f.root, '.specspec/local/journal.json')));
+  f.calls.watchers[0].create(f.uri(join(f.root, '.specspec/local/annotations/message.json')));
+  assert.equal(scheduled, 0);
+  f.calls.watchers[0].change(f.uri(join(f.root, '.specspec/AAAAAAA=.md')));
+  assert.equal(scheduled, 1);
+});
+
 test('graph refresh watches real HEAD/refs without subscribing to Git-extension status churn',async t=>{
   const {calls}=fixture(t);await calls.commands.get('specspec.openGraph')();
   assert.deepEqual(calls.gitLookups,[]);
@@ -202,7 +265,7 @@ test('unsupported schema snapshots cannot invoke ordinary writes', async t => {
   await calls.commands.get('specspec.openGraph')();
   calls.panels[0].send({ type: 'add', body: '# New', parents: [], sources: '[]', nodeType: 'requirement', });
   await waitFor(() => calls.panels[0].messages.at(-1).type === 'error');
-  assert.match(calls.panels[0].messages.at(-1).message, /Current-format graph unavailable/);
+  assert.match(calls.panels[0].messages.at(-1).message, /Current-format graph unavailable|Complete the CLI\/project startup check/);
   assert.ok(!calls.cli.some(call => call.args[0] === 'add'));
 });
 
@@ -406,6 +469,7 @@ test('closing a panel while initial Git discovery is pending ignores its late co
 test('opening a nested project creates an independent graph tab', async t => {
   const {root,uri,calls}=fixture(t);await calls.commands.get('specspec.openGraph')();
   const nested=join(root,'example/gantt');mkdirSync(join(nested,'.specspec'),{recursive:true});
+  writeFileSync(join(nested,'.specspec/AAAAAAA=.md'),'Existing nested graph fixture');
   await calls.commands.get('specspec.openGraph')(uri(nested));
   assert.equal(calls.panels.length,2);assert.equal(calls.cli.at(-1).root,nested);
   await calls.commands.get('specspec.openGraph')();assert.equal(calls.cli.at(-1).root,nested);
@@ -447,7 +511,7 @@ test('external annotation shots notify all project views without reloading their
   const options = { shots: [] }, f = fixture(t, options);
   await f.calls.commands.get('specspec.openGraph')(); await f.calls.commands.get('specspec.openGraph')();
   const reads = f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length;
-  const path = join(f.root, '.specspec-local', 'annotations');
+  const path = join(f.root, '.specspec/local', 'annotations');
   mkdirSync(path, { recursive: true });
   options.shots = [{ id: '1'.repeat(32), message:'External answer',nodes:[],comparison:{base:'HEAD',target:'workspace'},workspace:{head:null,changes:{}} }];
   writeFileSync(join(path, '1'.repeat(32) + '.json'), '{}');
@@ -487,7 +551,7 @@ test('native Delete is bound, confirmed and managed, never a retired buffer edit
   const errors = panel.messages.filter(m => m.type === 'error').length;
   panel.send({ type: 'delete', id: 'node' });
   await waitFor(() => panel.messages.filter(m => m.type === 'error').length > errors);
-  assert.match(panel.messages.at(-1).message, /dirty SpecSpec/);
+  assert.match(panel.messages.at(-1).message, /dirty specspec/);
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'delete'));
   doc.isDirty = false;
   panel.send({ type: 'delete', id: 'node' });
@@ -510,7 +574,7 @@ test('native exact deletion warns about the selected file and dirty descendant t
   const count=f.calls.cli.filter(c=>c.args[0]==='delete').length;
   leaf.doc.isDirty=true;root.panel.send({type:'delete',id:'node'});
   await waitFor(()=>root.panel.messages.at(-1).type==='error');
-  assert.match(root.panel.messages.at(-1).message,/dirty SpecSpec/);
+  assert.match(root.panel.messages.at(-1).message,/dirty specspec/);
   assert.equal(f.calls.cli.filter(c=>c.args[0]==='delete').length,count);
   assert.equal(root.doc.isDirty,false);assert.equal(leaf.doc.isDirty,true);
 });
@@ -537,7 +601,7 @@ test('native undo/raw edits update graph views and project commands protect dirt
   const projectPanel = f.calls.panels.at(-1);
   projectPanel.send({ type: 'add', nodeType: 'requirement', body: '# New', parents: [], sources: '[]' });
   await waitFor(() => projectPanel.messages.at(-1).type === 'error');
-  assert.match(projectPanel.messages.at(-1).message, /dirty SpecSpec/);
+  assert.match(projectPanel.messages.at(-1).message, /dirty specspec/);
   assert.ok(!f.calls.cli.some(c => c.args[0] === 'add'));
   panel.send({ type: 'undo' }); await waitFor(() => f.calls.executed.some(c => c.name === 'undo'));
 });

@@ -1,5 +1,9 @@
 # One editing vocabulary and one invocation boundary
 
+> Historical implementation evidence. [Current input and storage](owner-experience.md)
+> replaces explicit body flags with automatic stdin and reserves `.specspec/local/`.
+> Earlier measurements and failure records below retain their checkpoint scope.
+
 [Owner intention](../../.specspec/pRK4Qwk=.md) combines individual and multi-node
 editing through add/update/delete. The [grammar choice](../../.specspec/4626uI8=.md)
 keeps literal message input and existing host communication while turning composed
@@ -52,7 +56,7 @@ No host product code or protocol/schema cutover is needed.
 
 Chains have at most 1024 steps, arguments and aggregate body material are separately
 bounded at 16 MiB, and canonical nodes stay bounded at 1 MiB. Operating-system/shell
-argv limits may be much smaller and can reject an invocation before SpecSpec starts.
+argv limits may be much smaller and can reject an invocation before specspec starts.
 Body files avoid placing large body text in argv; repeated flags do not bypass
 aggregate OS limits. There is no automatic truncation, splitting, fallback or replay.
 The [argument transport investigation](argument-authoring.md) records Windows bounds
@@ -96,8 +100,8 @@ canonical snapshot remain byte-identical where no content changes are needed.
 
 Exact-index graph/source checks are recorded with the final commit. Local logs,
 review reports and external reconstruction paths remain under
-`.specspec-local/edit-chains/`, including `python-final.log`, the three npm
+`.specspec/local/edit-chains/`, including `python-final.log`, the three npm
 `*-final.log` files, `electron-host.log`, `vscode-host.log`, `history-rebuild.log`
 and `bash-probe.json`. Existing manual clones, earlier evidence and unrelated
-SpecSpec history remain preserved. This change publishes no release and installs
+specspec history remain preserved. This change publishes no release and installs
 no owner hooks.

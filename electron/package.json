@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Connect intentions, revisable choices and implementation in a local desktop graph",
-  "productName": "SpecSpec",
+  "productName": "specspec-desktop",
   "repository": { "type": "git", "url": "https://github.com/jejay/specspec.git", "directory": "electron" },
   "license": "MIT",
   "main": "main.cjs",

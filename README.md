@@ -1,9 +1,9 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-dark.png">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-light.png" alt="SpecSpec" width="640">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-light.png" alt="specspec" width="640">
 </picture>
 
-# SpecSpec
+# specspec
 
 **Keep the intention. Reconsider the solution. Know what the code is meant to do.**
 
@@ -11,7 +11,7 @@ An agent can produce working code quickly. Keeping track of *why this solution*,
 which assumptions came from whom, and what should survive a change of approach is
 harder. A long conversation is a poor place to keep that understanding.
 
-SpecSpec connects **your intentions, revisable choices and implementation** in a
+specspec connects **your intentions, revisable choices and implementation** in a
 Git-versioned Markdown graph. Read and edit it through a small CLI, your own VS Code
 instance, or a standalone desktop window. People and coding agents use the same
 specification, with full explanations rather than a pile of unchecked task titles.
@@ -19,7 +19,7 @@ specification, with full explanations rather than a pile of unchecked task title
 > Engineering is on the spectrum now
 
 Hands-on engineering and delegated agent work are not a binary choice. You can
-direct one decision carefully and leave the next open. SpecSpec makes that reasoning
+direct one decision carefully and leave the next open. specspec makes that reasoning
 visible; it does not choose your level of delegation or run an agent for you.
 
 **0.1 is an early, local-first release.** The CLI and both graph editors are usable;
@@ -56,9 +56,9 @@ validation establishes structure, not whether a product actually meets its purpo
 
 | Entry point | What you install | What you need |
 | --- | --- | --- |
-| **CLI** | Global isolated Python tool | Python 3.11+, uv or pipx; Git for versioned workflows |
-| **VS Code** | Build a VSIX, install into your ordinary editor | Global CLI, VS Code 1.90+, Node 22.12+ and npm 10+ for building |
-| **Desktop** | Run from source or build a portable Electron app | Global CLI and Git; Node/npm for source builds |
+| **specspec CLI** | Global isolated Python tool | Python 3.11+, uv or pipx; Git including initialization |
+| **specspec-vscode** | Build a VSIX, install into your ordinary editor | Global CLI, VS Code 1.90+, Node 22.12+ and npm 10+ for building |
+| **specspec-desktop** | Run from source or build a portable Electron app | Global CLI and Git; Node/npm for source builds |
 
 The CLI needs **no Node, VS Code or Electron**. The UIs use `specspec` on PATH by
 default; neither bundles a second Python runtime. Desktop targets Windows/Linux;
@@ -92,7 +92,7 @@ npm run package:vscode
 code --install-extension dist/specspec-vscode-0.1.0.vsix
 ```
 
-Reload VS Code, open your project and run **SpecSpec: Open Graph** from the Command
+Reload VS Code, open your project and run **specspec: Open Graph** from the Command
 Palette. Or use **Extensions → … → Install from VSIX…** with that file. This is a
 normal installed extension, not an F5-only development window. No package is sent
 to the Marketplace. [Setup and troubleshooting](vscode/README.md)
@@ -122,16 +122,19 @@ In a different directory — this checkout already has a graph:
 ```sh
 mkdir my-project
 cd my-project
-git init
 specspec init -m "# Understand our plan" -m "Help a small team agree on timing."
 specspec query --max-distance 2
 ```
 
-Initialization creates `.specspec/` and a root **`AGENTS.md`** with conceptual,
-working-phase and CLI guidance. An existing `AGENTS.md` entry is preserved unchanged;
-review the [shipped guide](src/specspec/templates/AGENTS.md) and integrate it yourself.
-Add `.specspec-local/` to your project's `.gitignore`; it holds local recovery and
-spotlight state, not canonical nodes. Git initialization/staging/commits remain yours.
+Initialization requires Git and initializes a repository when needed. It creates
+`.specspec/` and creates root **`AGENTS.md`**, or appends the
+[shipped guide](src/specspec/templates/AGENTS.md) after existing instructions.
+The reserved `.specspec/local/` subtree holds ignored recovery and spotlight data,
+not nodes. Staging, commits, identity and hooks remain yours.
+
+Both UIs check for the CLI immediately and show a blocking installation message
+when it is missing. A directory without a graph offers a centered **Initialize
+specspec** action. Opening a folder alone does not create one.
 
 Copy the full manifesto ID printed by `init`, including its trailing `=`, and use
 it in place of `MANIFESTO_ID` below:
@@ -148,11 +151,12 @@ specspec diff --with-context
 `-m` for paragraphs. `--replace` selects unique passages while tolerating ordinary
 prose wrapping and line-ending differences; inserted text remains literal. Compose
 add/update/delete for one recoverable transaction. See [the CLI guide](docs/cli.md)
-and each command's detailed `--help`.
+and each command's concise `--help`. Without messages, text comes from stdin;
+use shell redirection for large bodies.
 
-The hidden `.specspec/` directory contains direct `<id>.md` nodes only. Headings,
-query and the graph editor provide human discovery. Node format **7** and API **7**
-are current. The 0.1 directory is `.specspec`, not the pre-release underscore name;
+The hidden `.specspec/` directory contains direct `<id>.md` nodes and the reserved
+`local/` runtime subtree. Headings, query and the graph editor provide discovery.
+Internal schema/protocol details stay out of ordinary usage. The 0.1 directory is `.specspec`, not the pre-release underscore name;
 [upgrade notes](docs/install.md#upgrading-pre-release-workspaces) explain the boundary.
 
 ## See a project change its mind
@@ -194,7 +198,7 @@ agent connectors are outside this initial release.
 - [CLI reference](docs/cli.md) · [Query selection](docs/query.md) · [Canvas controls](docs/node-canvas.md)
 - [Graph structure](docs/graph-structure.md) · [Sources](docs/source-regions.md) · [Deletion](docs/deletion.md)
 - [Invalid-state repair](docs/invalid-graphs.md) · [Native documents](docs/native-editors.md) · [Remote workspaces](docs/remote-workspaces.md)
-- [Architecture](docs/architecture.md) · [SpecSpec's own graph](docs/own-spec.md) · [Brand provenance](branding/README.md)
+- [Architecture](docs/architecture.md) · [specspec's own graph](docs/own-spec.md) · [Brand provenance](branding/README.md)
 - [Contributing and monorepo commands](CONTRIBUTING.md) · [Local release procedure](docs/releasing.md) · [MIT license](LICENSE)
 
 ## Monorepo map

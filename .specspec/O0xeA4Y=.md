@@ -41,7 +41,7 @@ batch.py retains combined input accounting and fresh under-lock transformation.
 The existing serializer, final graph validation, deletion consent, original-byte
 checks, journal and recovery retain their owners. Ordinary word/full-body matches
 and normal CLI/private API startup avoid the Markdown dependency until needed.
-UI transports and API/node format 7 remain unchanged.
+UI transports and API/current node format remain unchanged.
 
 Tests cover line-ending and prose-layout permutations, protected Markdown, Unicode
 source boundaries, all-layout ambiguity, duplicate-span handling, literal output,

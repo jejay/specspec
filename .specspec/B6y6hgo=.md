@@ -25,6 +25,6 @@ rails and last-occurrence ownership remain the same.
 Every full parent header uses ascending full case-sensitive IDs separated by comma
 and space after @, including the display parent, in both presentations. Consistent
 list punctuation improves scanning while complete items preserve review context.
-Human is a text presentation choice: --json remains the authoritative complete API-7
+Human is a text presentation choice: --json remains the authoritative complete application protocol
 comparison, including when combined with --human. Both presentations share the same
 fresh read and source facts, with existing contracts, budgets and read-only boundaries.

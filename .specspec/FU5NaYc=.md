@@ -10,7 +10,7 @@ parents:
 
 A request to draw/change the graph enters agent planning. Read the existing graph,
 owner input, saved working/index state and usable historical/tandem context. Preserve
-owner changes first. Use SpecSpec add/update/delete tools to build the best precise,
+owner changes first. Use specspec add/update/delete tools to build the best precise,
 implementation-mature graph justified by the available understanding. Keep meaningful
 conclusions separate and explain their intention relationships.
 

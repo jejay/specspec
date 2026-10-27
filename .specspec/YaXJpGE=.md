@@ -23,4 +23,4 @@ changes or an authorized process reconstruction. Preserve existing manual clones
 Verify all retained refs, exact indexes, complete context/impact, chronology,
 semantic/edge/source diffs, both deletion scopes and runnable historical models.
 Compare the final graph/runtime/tests with the tracked snapshot. Independent clones
-supply rigorous Git regressions; SpecSpec development commits remain intact.
+supply rigorous Git regressions; specspec development commits remain intact.

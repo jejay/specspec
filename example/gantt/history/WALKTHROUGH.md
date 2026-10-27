@@ -2,21 +2,21 @@
 
 ## Why comparisons in `example/gantt` can fail
 
-The **tracked** `example/gantt` folder is a fixture snapshot in the SpecSpec
+The **tracked** `example/gantt` folder is a fixture snapshot in the specspec
 checkout, not an independent Git working repository. Git there finds the enclosing
-SpecSpec repository, including old node formats. Selecting its old commits in the
+specspec repository, including old node formats. Selecting its old commits in the
 UI can therefore fail schema validation. This is expected: current tooling must
-not retain old readers just to understand SpecSpec development history.
+not retain old readers just to understand specspec development history.
 
 The complete, **independent** example history lives in `gantt.bundle`. It has eight
 commits: an empty predecessor, three spec-before-code pairs and a final audit.
 Every nonempty revision uses the current node schema and `.specspec/` directory. Clone it outside the
-SpecSpec worktree and open **that clone** in VS Code or Electron for Git experiments.
+specspec worktree and open **that clone** in VS Code or Electron for Git experiments.
 Do not add `.git` to the tracked snapshot or compare obsolete parent-repository refs.
 
 ## Create a manual example workspace
 
-From the SpecSpec repository root (install the global CLI with uv tools or pipx):
+From the specspec repository root (install the global CLI with uv tools or pipx):
 
 ```sh
 python example/gantt/history/checkout.py
@@ -37,7 +37,7 @@ The tracked bundle stays portable; tests and CI do not depend on your manual clo
 From the new example folder:
 
 ```sh
-git rev-parse --show-toplevel  # Must be this example folder, not SpecSpec.
+git rev-parse --show-toplevel  # Must be this example folder, not specspec.
 git log --oneline --all
 specspec check --warnings-as-errors
 specspec diff stage/01-code stage/02-spec
@@ -73,7 +73,7 @@ The three specification commits use `Agent specspec changes: <description>` and
 precede their code. The optional story supplies fictional product briefs, not a
 claim of actual owner-edited graphs or fabricated tandem approval. This replay has
 no manual owner graph edits to invent an `Owner specspec changes:` commit for.
-The actual SpecSpec owner's process input is recorded separately in SpecSpec's own
+The actual specspec owner's process input is recorded separately in specspec's own
 history. The eight-commit topology and meaningful redirects remain inspectable.
 
 The maintained process reconstruction reuses the example's existing canonical
@@ -103,11 +103,11 @@ git worktree remove ../gantt-personal
 
 The stages have six, seven and twenty model tests. Spec checkpoints retain the
 previous prototype; the first has no app code. App JSON v1 conversion is a workshop
-feature, **not** compatibility with obsolete SpecSpec node schemas.
+feature, **not** compatibility with obsolete specspec node schemas.
 
 ## Verify the maintained corpus
 
-From the SpecSpec checkout:
+From the specspec checkout:
 
 ```sh
 python example/gantt/history/verify.py --history
@@ -123,9 +123,9 @@ snapshot to catch drift. Git integration and real-host fixtures use the same clo
 helper; host fixtures add disposable A/M/D worktree changes without discarding
 history. CI runs the final model/browser app in an independent clone. Focused unit
 fixtures may be smaller independently generated current-schema projects. No test
-requires obsolete SpecSpec development revisions or a full root-history fetch.
+requires obsolete specspec development revisions or a full root-history fetch.
 
-The current receipts use application API 7 and shortcut-free node format 7 throughout
+The current receipts use application protocol and shortcut-free current node format throughout
 the maintained history. Command/protocol cutovers refresh actual receipts, teaching
 text, ledgers, refs, source retention, bundle and snapshot together; runnable
 application code and historical node identities remain stable. Old manual clones
@@ -146,10 +146,10 @@ review both old and new impact rather than treating direct links as extra promis
 
 This is a **recurring maintenance obligation**, not a one-time ID conversion:
 
-1. Build a fresh independent repository outside SpecSpec. Do not merely update
+1. Build a fresh independent repository outside specspec. Do not merely update
    `HEAD`, add a migration commit, or leave old-format branches/tags reachable.
 2. Reconstruct the example's entire chronological graph/code evolution using the
-   current CLI/schema, as if it had always been developed with today's SpecSpec.
+   current CLI/schema, as if it had always been developed with today's specspec.
    Use one consistent identity mapping through all revisions; convert every
    parent, filename, embedded reference and earlier/deleted node as needed. Revise
    schema/API-specific operations and verification, not the app's core intentions.
@@ -163,16 +163,16 @@ This is a **recurring maintenance obligation**, not a one-time ID conversion:
    tags and update all commit IDs, receipt ordinals and ledgers. Use a fresh repo
    without inherited old refs; do not archive obsolete schema refs in the corpus.
 5. Export a complete, prerequisite-free bundle, e.g. `git -C <fresh-example>
-   bundle create <SpecSpec>/example/gantt/history/gantt.bundle --all`. Refresh
+   bundle create <specspec>/example/gantt/history/gantt.bundle --all`. Refresh
    the tracked current graph/runtime/receipts/ledger and applicable docs together.
    Do not include the bundle inside its own history. Run the verifier and all
    integration suites against this new bundle before treating it as maintained.
 6. Existing manual clones are intentionally **not reset automatically**. Save any
    local experiments, then explicitly recreate the workspace at a new destination
    (or remove the old clone yourself). Old hashes no longer identify maintained
-   stages. Never rewrite or force-push unrelated SpecSpec development history.
+   stages. Never rewrite or force-push unrelated specspec development history.
 
 This policy applies to Gantt and any additional maintained example repositories.
 The backend remains current-only; fixture reconstruction is development work,
-not a production legacy-reader/migration feature. SpecSpec's own graph continues
+not a production legacy-reader/migration feature. specspec's own graph continues
 to receive present-working-graph and source-reference validation.

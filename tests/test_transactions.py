@@ -26,9 +26,12 @@ def test_real_partial_batch_failure_is_recoverable(workspace, monkeypatch):
     with pytest.raises(OSError, match="Simulated"):
         delete_nodes(root, [parent, child], allow_uncommitted=True)
     assert not load_snapshot(root).valid
-    assert (root / ".specspec-local" / "journal.json").exists()
-    assert all(entry.suffix == ".md" for entry in (root / ".specspec").iterdir())
-    assert len(list((root / ".specspec").iterdir())) == 2
+    assert (root / ".specspec/local" / "journal.json").exists()
+    assert all(
+        entry.suffix == ".md" for entry in (root / ".specspec").iterdir() if entry.name != "local"
+    )
+    assert len(list((root / ".specspec").glob("*.md"))) == 2
+    assert (root / ".specspec/local").is_dir()
     monkeypatch.setattr(Path, "unlink", original)
     recover(root)
     assert load_snapshot(root).files == before.files

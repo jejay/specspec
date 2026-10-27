@@ -7,7 +7,7 @@ conclusions and actual implementation mappings. Git records changed decisions. T
 [fictional story](STORY.md) is optional illustration, not required evidence or
 actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
 physically deleted during redirects and remain in the earlier Git commits.
-Every retained revision uses shortcut-free node format 7 and application API 7.
+Every retained revision uses the current shortcut-free graph and tool interface.
 Authoring receipts supply literal `-m` body arguments; the UI's private transports
 and explicit bulk integration inputs retain their separate roles. Coherent changes
 can combine add/update/delete steps in one invocation, with `--as` / `$name` parent
@@ -17,14 +17,14 @@ bindings and changes require downstream reconsideration.
 
 ## Use the independent repository, not this tracked snapshot, for Git
 
-`example/gantt` in the SpecSpec checkout is a tracked fixture snapshot. **Git in
+`example/gantt` in the specspec checkout is a tracked fixture snapshot. **Git in
 this folder uses the surrounding development repository**, whose old schemas are
 intentionally unsupported. This explains failed UI comparisons of its old commits.
 Do not install nested `.git` metadata here or resurrect legacy schema readers.
 
 The [complete Git bundle](history/gantt.bundle) holds a separate rewritten,
 current-schema history. Install the global CLI with `uv tool install .` or
-`pipx install .` from the SpecSpec checkout first. From that checkout's root:
+`pipx install .` from the specspec checkout first. From that checkout's root:
 
 ```sh
 python example/gantt/history/checkout.py
@@ -44,7 +44,7 @@ specspec diff stage/02-code stage/03-spec
 ```
 
 Use the same tags in **Compare Revisions**. The clone has its own Git root, index,
-ancestry and worktree; it never depends on SpecSpec's obsolete historical schemas.
+ancestry and worktree; it never depends on specspec's obsolete historical schemas.
 See the [history/maintenance walkthrough](history/WALKTHROUGH.md).
 
 | Stage | Spec / code tags | Change |
@@ -66,11 +66,11 @@ These are real executions in an intentionally synthetic history, not a claim tha
 untouched original commits used today's encoding. No approval workflow is involved.
 
 **Whenever the node schema changes, rewrite the entire maintained example history
-as if every revision had always used the current SpecSpec version.** Updating only
+as if every revision had always used the current specspec version.** Updating only
 HEAD is insufficient. Refresh all refs, ledgers, receipts, snapshot and bundle;
 validate every revision with current tools. The walkthrough gives the maintenance
 procedure. Existing manual clones must be explicitly recreated after preserving
-local work. Unrelated SpecSpec development history is never rewritten.
+local work. Unrelated specspec development history is never rewritten.
 
 ## Run the final app
 
@@ -97,7 +97,7 @@ Valid edits autosave locally. Corrupt/old application JSON stays protected until
 explicit Apply/reset and can be downloaded. Storage denial is visible. Browser
 storage is not durable backup or sync; file-origin support varies. There is no
 runtime API, CDN, remote script or app build dependency. App JSON v1 conversion
-is unrelated to obsolete SpecSpec node schemas.
+is unrelated to obsolete specspec node schemas.
 
 ## Explore and check
 
@@ -113,14 +113,15 @@ npm run test:browser
 
 `FULL_ID` means an actual complete node ID, not a literal argument. IDs are canonical
 padded Base64url over five random bytes, including `=`; `.specspec/` contains direct
-`<id>.md` files. Init supplies a packaged root `AGENTS.md` only when absent;
+`<id>.md` files and the reserved `.specspec/local/` runtime subtree. Init requires
+Git and creates or appends the packaged root `AGENTS.md` guide;
 this example retains its own project-specific instructions. Manual Markdown is permitted and validated; CLI/UI editing is
 recommended. Do not reinitialize the graph. Node 22+ is needed for the installed
 Chromium browser harness; no app dependencies or browser downloads are required.
 `GANTT_BROWSER` selects the installed browser; `GANTT_SCREENSHOT_DIR` saves screenshots.
 Tests use loopback and disposable profiles, not personal data.
 
-From the SpecSpec checkout, verify the portable fixture independently:
+From the specspec checkout, verify the portable fixture independently:
 
 ```sh
 python example/gantt/history/verify.py --history
@@ -132,7 +133,7 @@ consistency is checked. Historical checks do not modify this checkout's index or
 history. Existing Windows browser evidence is bounded prototype verification,
 not exhaustive accessibility/platform/performance/security proof or a remote CI claim.
 
-Before an authorized SpecSpec-checkout commit, validate both **exact staged** graphs
+Before an authorized specspec-checkout commit, validate both **exact staged** graphs
 from its root: `specspec check --staged` and
 `specspec --root example/gantt check --staged`. In an independent example
 repository, only its own `check --staged` applies. No hooks are installed automatically.

@@ -7,7 +7,7 @@ parents:
 ---
 # Materialize portable example artifacts in independent workspaces
 
-Version the Gantt snapshot, complete bundle and stage/receipt ledger in SpecSpec.
+Version the Gantt snapshot, complete bundle and stage/receipt ledger in specspec.
 Git in the tracked folder resolves to this enclosing development repository.
 A development checkout helper clones the bundle to an external standalone workspace,
 default `~/Projects/specspec-examples/gantt`, or an explicit disposable destination.

@@ -39,17 +39,18 @@ sources:
 - path: tests/test_node_newlines.py
 - path: tests/test_final_newline.py
 - path: vscode/test-host/documents.cjs
+- path: tests/test_cli_stdin.py
+- path: tests/test_local_state.py
 ---
 # Implement the compact command surface and complete review projection
 
 Click presents seven everyday verbs with focused advanced tools and a bounded hidden
 application adapter. Query owns parsed and raw specification inspection, while
-cli_help.py supplies detailed task guides and a scoped ASCII-safe help formatter.
+cli_help.py supplies concise task guides and a scoped ASCII-safe help formatter.
 Host managed preflights use the existing saved API read. Ordinary authoring uses
 literal message paragraphs and
-combinable add/update/delete steps; explicit body integration inputs and existing UI
-stdin remain separate.
-Output rendering separates readable text/Markdown from explicit compact API-7
+combinable add/update/delete steps; absent messages select stdin, and managed UIs send complete text without body flags.
+Output rendering separates readable text/Markdown from explicit compact application protocol
 envelopes. Structured mutation receipts retain IDs/paths/scope and warnings rather
 than full graphs. Readable receipts group full node IDs by Added, Modified, Deleted
 and Unchanged, with hypothetical preview labels and explicit alias associations.
@@ -58,7 +59,7 @@ logical text; output uses the verified transaction result independently of Git s
 Tests cover init, singleton and composed mutations, no-op body/parent/source and
 replacement edits, byte-only changes, fresh locked originals, post-write external
 edits, preview/refusal, invalid/incomplete context and unchanged protocol fields.
-Node format 7 and canonical identities/source grammar remain stable.
+The current node format and canonical identities/source grammar remain stable.
 
 Full review output combines stable-ID classification, every logical canonical
 text hunk, relationship labels and separate linked-source context. Comments,
@@ -88,3 +89,7 @@ retain their explicit UTF-8 byte paths. Subprocess regressions force ASCII/cp125
 stdout encodings for every root/subcommand help without changing canonical project
 text. Dedicated tests cover all help paths, removed-command rejection, safe raw
 repair/index/history reads and unchanged managed/native mutation ownership.
+
+Hidden integration controls stay out of all help and ordinary query headers omit
+internal versions. Tests assert 50–70 percent help-body lengths, automatic stdin
+preflight and a project/input-independent capability handshake.

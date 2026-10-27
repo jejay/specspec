@@ -36,7 +36,7 @@ The internal batch planner allocates safe IDs under lock, resolves forward/backw
 parent aliases, rejects conflicting targets and constructs one candidate for the
 existing journaled writer. Local aliases remain outside canonical data. Output
 reports actual alias mappings in readable and JSON receipts. Host products retain
-their single-edit stdin and API-7 channels and native/managed persistence owners.
+their single-edit stdin and application protocol channels and native/managed persistence owners.
 
 Tests cover composed deletion/replacement/coparents, exact body/source association,
 syntax/input preflight, literal command/option words, aliases, invocation-wide flags,

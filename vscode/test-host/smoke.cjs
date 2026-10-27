@@ -22,7 +22,32 @@ exports.run = async function run() {
   // Only the disposable test profile: give the node editor a useful screenshot area.
   await vscode.commands.executeCommand('workbench.action.closeSidebar');
   await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
-  const snapshot = await vscode.commands.executeCommand('specspec.openGraph');
+  if (process.env.SPECSPEC_STARTUP_ROOT) {
+    const configuration = vscode.workspace.getConfiguration('specspec');
+    const command = configuration.inspect('command').globalValue, args = configuration.inspect('args').globalValue;
+    const requestPath = process.env.SPECSPEC_STARTUP_REQUEST, responsePath = process.env.SPECSPEC_STARTUP_RESPONSE;
+    const wait = async action => {
+      const until = Date.now() + 60000;
+      while (Date.now() < until) {
+        try { if (JSON.parse(readFileSync(requestPath, 'utf8')).action === action) return; } catch {}
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      assert.fail(`Startup controller did not receive ${action}.`);
+    };
+    // Only the disposable profile: prove the real installed UI checks before reads.
+    await configuration.update('command', process.env.SPECSPEC_STARTUP_MISSING, vscode.ConfigurationTarget.Global);
+    await configuration.update('args', [], vscode.ConfigurationTarget.Global);
+    await vscode.commands.executeCommand('specspec.openGraph', vscode.Uri.file(process.env.SPECSPEC_STARTUP_ROOT));
+    writeFileSync(responsePath, JSON.stringify({ stage: 'missing' }));
+    await wait('restore');
+    await configuration.update('command', command, vscode.ConfigurationTarget.Global);
+    await configuration.update('args', args, vscode.ConfigurationTarget.Global);
+    writeFileSync(responsePath, JSON.stringify({ stage: 'restored' }));
+    await wait('done');
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    console.log('SPECSPEC_VSCODE_STARTUP_OK: missing CLI, retry and explicit initialization.');
+  }
+  const snapshot = await vscode.commands.executeCommand('specspec.openGraph', vscode.Uri.file(expected));
   // The graph is now in the main editor, not an Activity Bar sidebar.
   assert.ok(snapshot?.valid, 'Open Graph must load and render a valid graph.');
   assert.ok(snapshot.nodes.length > 0);

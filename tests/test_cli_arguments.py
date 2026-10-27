@@ -1,4 +1,4 @@
-"""Argument-first authoring and explicitly separate integration bulk inputs."""
+"""Literal message authoring and automatic, bounded UTF-8 standard input."""
 
 import json
 import os
@@ -73,7 +73,7 @@ def test_repeated_messages_join_without_cleanup_and_omission_keeps_body(workspac
 
 
 @pytest.mark.parametrize("command", ["init", "add", "update"])
-def test_message_and_integration_source_are_exclusive_before_reads(workspace, monkeypatch, command):
+def test_removed_body_options_fail_before_reads(workspace, monkeypatch, command):
     root, id = workspace
     before = load_snapshot(root).files
 
@@ -82,8 +82,8 @@ def test_message_and_integration_source_are_exclusive_before_reads(workspace, mo
 
     monkeypatch.setattr(cli, "read_body", forbidden)
     args = [command, *([id] if command == "update" else []), "-m", "", "--body", "-"]
-    result, data = call(root, *args)
-    assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "ARGUMENT"
+    result = CliRunner().invoke(cli.main, ["--root", str(root), *args])
+    assert result.exit_code == 2 and "--body" in result.stderr
     assert load_snapshot(root).files == before
 
 
@@ -100,17 +100,17 @@ def test_message_budget_counts_utf8_and_inserted_separators(workspace, monkeypat
     assert load_snapshot(root).files == before
 
 
-def test_help_focuses_on_arguments_and_missing_inputs_do_not_read_stdin(workspace):
+def test_help_describes_messages_and_stdin_and_empty_bodies_are_rejected(workspace):
     root, id = workspace
     for command in ["init", "add", "update"]:
         text = CliRunner().invoke(cli.main, [command, "--help"]).stdout
         options = text.split("Options:", 1)[1]
         assert "--body" not in options and "--plan " not in text
-        assert "Integration" in text and "stdin" in text
+        assert "stdin" in text and "--root" not in text and "--json" not in text
         assert "--message" in text
     for args in [("init",), ("add", "--parent", id)]:
         result, data = call(root, *args)
-        assert result.exit_code == 2 and data["diagnostics"][0]["code"] == "ARGUMENT"
+        assert result.exit_code != 0 and not data["ok"]
     # Old positional payloads cannot be mistaken for literal text or JSON.
     for args in [("init", "manifesto.md"), ("init", "-"), ("apply", "plan.json"), ("apply", "-")]:
         result = CliRunner().invoke(cli.main, ["--root", str(root), *args])
@@ -168,21 +168,34 @@ def test_removed_batch_inputs_have_no_hidden_alias(workspace, monkeypatch):
         assert load_snapshot(root).files == before
 
 
-def test_integration_body_files_remain_available(workspace, tmp_path, monkeypatch):
+def test_shell_redirected_files_supply_the_automatic_stdin_body(workspace, tmp_path):
     root, id = workspace
-    directory = tmp_path / "inputs"
-    directory.mkdir()
-    body = "# Integration body\r\n\r\nPreserved whitespace.  \r\n"
-    (directory / "body.md").write_bytes(body.encode("utf8"))
-    result, data = call(root, "add", "--parent", id, "--body", str(directory / "body.md"))
-    assert result.exit_code == 0
-    added = data["result"]["changed_ids"][0]
+    path = tmp_path / "body.md"
+    body = "# Redirected body\r\n\r\nUnicode 🐕 and trailing spaces.  \r\n"
+    path.write_bytes(body.encode("utf8"))
+    with path.open("rb") as stream:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "specspec",
+                "--root",
+                str(root),
+                "add",
+                "--parent",
+                id,
+                "--json",
+            ],
+            stdin=stream,
+            capture_output=True,
+        )
+    assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
+    added = json.loads(result.stdout)["result"]["changed_ids"][0]
     assert load_snapshot(root).graph.nodes[added].body == logical_text(body)
-    monkeypatch.chdir(directory)
-    result, _ = call(root, "update", added, "--body", "body.md")
-    assert result.exit_code == 0 and load_snapshot(root).graph.nodes[added].body == logical_text(
-        body
-    )
+    changed = body.replace("Redirected", "Updated")
+    result, _ = call(root, "update", added, input=changed.encode("utf8"))
+    assert result.exit_code == 0
+    assert load_snapshot(root).graph.nodes[added].body == logical_text(changed)
 
 
 @pytest.mark.parametrize("encoding", ["ascii", "cp1252"])
@@ -211,8 +224,6 @@ def test_large_integration_stdin_does_not_move_into_argv(tmp_path):
             "--root",
             str(tmp_path),
             "init",
-            "--body",
-            "-",
             "--json",
         ],
         input=body.encode("utf8"),

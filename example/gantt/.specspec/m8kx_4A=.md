@@ -6,7 +6,7 @@ parents:
 - BumOqek=
 sources:
 - path: index.html
-  blob: 5fd1d5120c0e7b599482c75f8475d1ae5e64f54b
+  blob: 0453dab8152586cebaf97be54b24293d3f570a87
   mode: expanding
   ranges:
   - - 1

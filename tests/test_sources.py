@@ -334,7 +334,7 @@ def test_view_is_literal_and_nonwriting(project):
     assert load_snapshot(root).files == before
 
 
-def test_sha256_repository_and_binary_target(workspace):
+def test_sha256_repository_and_binary_target(workspace, without_git):
     root, manifesto = workspace
     init = subprocess.run(
         ["git", "-C", str(root), "init", "--object-format=sha256"], capture_output=True

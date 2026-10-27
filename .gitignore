@@ -5,7 +5,7 @@ __pycache__/
 .ruff_cache/
 dist/
 *.egg-info/
-.specspec-local/
+.specspec/local/
 .vscode-test/
 node_modules/
 vscode/out/

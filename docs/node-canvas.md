@@ -24,10 +24,10 @@ shader engine, socket type system, freely draggable dependency editor, or brand 
 
 ## Canvas controls
 
-The header shows the SpecSpec symbol followed by the current revision comparison.
-The circular-arrow icon refreshes the graph. VS Code's **SpecSpec: Select Project**
-command chooses another project; Electron also offers **Open project** and its
-Project menu (**Ctrl/Command+O**). The area below the toolbar holds color legends
+The header shows the specspec symbol followed by the current revision comparison.
+The circular-arrow icon refreshes the graph. VS Code's **specspec: Select Project**
+command chooses another project; Electron offers **Open project** and
+**Ctrl/Command+O**, without a menu bar. The area below the toolbar holds color legends
 and diagnostics. Source-change totals and file lists remain available through
 `specspec diff`; node-level source cues and source previews remain in the graph.
 

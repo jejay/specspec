@@ -14,23 +14,23 @@ class Channel {
     this.child.stdout.on('data', chunk => this.data(chunk));
     this.child.stderr.on('data', chunk => {
       this.output += chunk.length;
-      if (this.output > (this.active?.limit || LIMIT)) this.fail(new Error('SpecSpec response exceeds the output limit.'));
+      if (this.output > (this.active?.limit || LIMIT)) this.fail(new Error('specspec response exceeds the output limit.'));
       else this.errors.push(chunk);
     });
     this.child.on('error', error => this.fail(new Error(`CLI launch failed for ${command}: ${error.message}. Install/configure the matching Python CLI.`)));
     this.child.stdin.on('error', error => this.fail(error));
-    this.child.on('close', code => this.fail(new Error(Buffer.concat(this.errors).toString('utf8') || `SpecSpec API channel closed (${code}).`)));
+    this.child.on('close', code => this.fail(new Error(Buffer.concat(this.errors).toString('utf8') || `specspec API channel closed (${code}).`)));
   }
   request(value, timeout, limit) {
-    if (this.closed) return Promise.reject(new Error('SpecSpec API channel is closed.'));
-    if (this.queue.length >= 32) return Promise.reject(new Error('SpecSpec API request queue is full.'));
+    if (this.closed) return Promise.reject(new Error('specspec API channel is closed.'));
+    if (this.queue.length >= 32) return Promise.reject(new Error('specspec API request queue is full.'));
     const raw = Buffer.from(JSON.stringify(value) + '\n');
     if (raw.length > LIMIT + 1) return Promise.reject(new Error('Application request exceeds the 16 MiB input limit.'));
     return new Promise((resolve, reject) => {
       const job = { raw, op: value?.op, limit, resolve, reject };
       job.timer = setTimeout(() => {
-        if (this.active === job) this.fail(new Error('SpecSpec CLI timed out.'));
-        else { this.queue = this.queue.filter(j => j !== job); reject(new Error('SpecSpec CLI timed out before dispatch.')); }
+        if (this.active === job) this.fail(new Error('specspec CLI timed out.'));
+        else { this.queue = this.queue.filter(j => j !== job); reject(new Error('specspec CLI timed out before dispatch.')); }
       }, timeout);
       this.queue.push(job); this.pump();
     });
@@ -44,22 +44,22 @@ class Channel {
   data(chunk) {
     if (this.closed) return;
     this.output += chunk.length;
-    if (!this.active) { this.fail(new Error('Unsolicited SpecSpec API output.')); return; }
-    if (this.output > this.active.limit) { this.fail(new Error('SpecSpec response exceeds the output limit.')); return; }
+    if (!this.active) { this.fail(new Error('Unsolicited specspec API output.')); return; }
+    if (this.output > this.active.limit) { this.fail(new Error('specspec response exceeds the output limit.')); return; }
     let offset = 0;
     while (offset < chunk.length && !this.closed) {
       const end = chunk.indexOf(10, offset), stop = end < 0 ? chunk.length : end;
       this.parts.push(chunk.subarray(offset, stop)); this.bytes += stop - offset;
       offset = stop + (end < 0 ? 0 : 1);
       if (end < 0) break;
-      if (!this.active) { this.fail(new Error('Unsolicited SpecSpec API response frame.')); return; }
+      if (!this.active) { this.fail(new Error('Unsolicited specspec API response frame.')); return; }
       let value;
       try {
         value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(this.parts, this.bytes)));
         if (value?.api_version !== 7 || typeof value.ok !== 'boolean' || !Array.isArray(value.diagnostics))
-          throw new Error('Unsupported SpecSpec JSON API. This graph UI requires the matching API 7 CLI.');
+          throw new Error('Unsupported specspec JSON API. This graph UI requires the matching API 7 CLI.');
         if (value.ok) value = { ...value, result: expandResult(value.result) };
-      } catch (error) { this.fail(new Error(`Invalid SpecSpec API response: ${error.message}`)); return; }
+      } catch (error) { this.fail(new Error(`Invalid specspec API response: ${error.message}`)); return; }
       this.parts = []; this.bytes = 0;
       const job = this.active; this.active = undefined; clearTimeout(job.timer);
       if (value.ok) job.resolve(value);
@@ -77,7 +77,7 @@ class Channel {
     // EOF also reaches Windows venv redirector children; no idle interpreter is retained.
     this.child.stdin.end(); this.child.kill();
   }
-  dispose() { this.fail(new Error('SpecSpec API channel disposed.')); }
+  dispose() { this.fail(new Error('specspec API channel disposed.')); }
 }
 
 class CliClient {

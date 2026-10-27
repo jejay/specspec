@@ -15,7 +15,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
         let failure;
         let started = false;
         child.on('spawn', () => { started = true; });
-        const uncertain = error => started && ['add', 'update', 'delete'].includes(args[0])
+        const uncertain = error => started && ['init', 'add', 'update', 'delete'].includes(args[0])
             ? new Error(`${error.message} The action result needs verification; inspect project/recovery state before retrying.`) : error;
         const fail = (error) => {
             if (settled || failure)
@@ -25,13 +25,13 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
             // Wait for close before settling: Windows keeps the cwd locked until exit.
             child.kill();
         };
-        const timer = setTimeout(() => fail(new Error('SpecSpec CLI timed out.')), timeoutMs);
+        const timer = setTimeout(() => fail(new Error('specspec CLI timed out.')), timeoutMs);
         child.on('error', (error) => fail(new Error(`CLI launch failed for ${command}: ${error.message}. Install Python CLI or configure specspec.command/specspec.args.`)));
         for (const [stream, collection] of [[child.stdout, stdout], [child.stderr, stderr]]) {
             stream.on('data', (chunk) => {
                 size += chunk.length;
                 if (size > maxOutputBytes)
-                    fail(new Error('SpecSpec response exceeds the output limit.'));
+                    fail(new Error('specspec response exceeds the output limit.'));
                 else
                     collection.push(chunk);
             });
@@ -58,7 +58,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
                 return;
             }
             if (envelope.api_version !== 7 || typeof envelope.ok !== 'boolean' || !Array.isArray(envelope.diagnostics)) {
-                reject(uncertain(new Error('Unsupported SpecSpec JSON API. This graph UI requires API 7; upgrade the Python CLI.')));
+                reject(uncertain(new Error('Unsupported specspec JSON API. This graph UI requires API 7; upgrade the Python CLI.')));
                 return;
             }
             if (code !== 0 || !envelope.ok) {

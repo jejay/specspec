@@ -7,7 +7,7 @@ parents:
 ---
 # Distinguish logical node records from physical document evidence
 
-API-7 parsed records carry complete logical bodies with newline encodings normalized
+application protocol parsed records carry complete logical bodies with newline encodings normalized
 to LF, sorted parent/source fields and unchanged identities. Readable projections
 and logical diffs use the same content. Spaces, indentation, blank lines and final
 newline presence stay meaningful. Physical newline encoding alone is equivalent.
@@ -19,5 +19,5 @@ newline style and append a missing file terminator. Existing trailing blank line
 remain unchanged. Git configuration, attributes and linked source files remain under
 their existing owners. Verify logical behavior and physical safety separately.
 
-Application API and canonical node fields remain version 7. Representation policy
+Application envelopes and canonical node fields retain their contracts. Representation policy
 changes do not add a node-format constraint rejecting existing newline encodings.

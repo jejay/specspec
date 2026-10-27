@@ -1,5 +1,9 @@
 # Selected-passage updates with newline-tolerant matching
 
+> Historical matching/implementation evidence. [Current authoring](owner-experience.md)
+> uses messages or automatic stdin, with replacements remaining an independent mode.
+> Earlier body-flag references below describe the verified earlier checkpoint.
+
 The [selected-passage intention](../../.specspec/kiRE62k=.md) supports concise edits
 while retaining unrelated binding text. The [replacement contract](../../.specspec/1GJRSPU=.md)
 uses the existing `update --replace OLD NEW` input. Its
@@ -116,7 +120,7 @@ differences. Current Gantt verification passes all eight refs and stages 01–03
 123 recorded CLI operations, 22 current nodes and 22 historical deletions. Its
 bundle, receipts, ledger, snapshot and manual clones remain unchanged.
 
-Evidence and byte snapshots remain in `.specspec-local/replacement-tolerance/`,
+Evidence and byte snapshots remain in `.specspec/local/replacement-tolerance/`,
 including `python-final.log`, `python-before-id-fix.log`, `id-fix.log`, the three npm
 `*-final.log` files, `history-final.log`, `bash-probe.json`, `click81-probe.log` and
 the final review artifacts. The complete installed-host suites and physical

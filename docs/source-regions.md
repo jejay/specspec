@@ -1,7 +1,7 @@
 # Implementation source regions
 
 Implementation `sources` supports whole-file hints and Git-addressed text regions.
-Canonical **node format 7** and **application API 7** retain the source-region
+Canonical **current node format** and **application protocol** retain the source-region
 contract, with a compact current command surface.
 Node IDs still use five random bytes and padded Base64url, including `=`.
 
@@ -115,7 +115,7 @@ This optional check inspects exact staged nodes, staged source bytes and retenti
 It reports strict conflicts/missing/ambiguous/unavailable links with nonzero exit.
 Expanding modifications remain reported but don't fail this contract check. Default
 `check --staged` checks graph/schema only. Owner-controlled Git hooks or CI can
-invoke it; SpecSpec does not install or replace hooks.
+invoke it; specspec does not install or replace hooks.
 
 Whole-file source impact reporting remains conservative. A change outside a linked
 region may alter imports, callers or other semantics; region mapping is **not** a

@@ -6,24 +6,23 @@ parents:
 - 7tMgRa8=
 - 0piRXe0=
 ---
-# Use literal message paragraphs and explicit integration body inputs
+# Use literal message paragraphs or automatic standard input
 
-init/add/update expose repeatable -m/--message arguments. One message is preserved
-literally; repeated values are joined with exactly two LF characters, preserving
-all supplied content whitespace and Markdown headings. Newline encoding follows
-the target document: existing style for updates and LF for new nodes. Values such as dash
-or a filename are text. Omitting all body-edit inputs on update retains its logical body content, subject
-to the tool-written document terminator;
-explicit empty text remains an explicit schema-checked edit. Combined message and
-integration body sources fail before reads or writes. Document size checks apply.
+Init/add/update accept repeatable -m/--message paragraphs. Join repeated values with
+exactly two LF characters, preserving literal words, Unicode and whitespace. Newline
+encoding follows the target document, and serialization appends only a missing
+complete-document terminator. A filename or dash passed to -m is literal text.
 
-Less-prominent integration --body FILE|- on init/add/update supplies explicit UTF-8
-body inputs. Help focuses on literal messages. Positional init payloads are rejected,
-keeping text and file interpretation explicit. Reviewed single-deletion-plan stdin
-and API-7 one-shot/stream channels retain their current contracts and both host
-adapters retain their communication and persistence owners.
+When messages are absent, init and add read bounded UTF-8 standard input. Updates
+without messages or replacements accept a whole-body stdin replacement. Empty stdin
+with explicit metadata edits retains the body; a metadata-only interactive update
+need not wait for text. Explicit empty -m remains a schema-checked edit. --replace
+uses selected original passages and does not consume stdin. There is no body-file
+option: shell redirection supplies files. Multiple eligible steps cannot share a
+nonempty stdin payload ambiguously; parse and preflight every step before reads or
+writes. Metadata-only chains with no input remain possible.
 
-Argument transport has operating-system/shell limits independent of the 1 MiB node
-and 16 MiB aggregate body/request limits. Long argv may fail before the tool starts.
-Explicit body files/stdin accommodate large bodies without splitting, truncating or
-silently redirecting edits. The current protocol is API 7 and node format is 7.
+Both managed UIs pass complete body text on stdin without a body option. Native VS
+Code forms retain non-writing plans and native persistence. Reviewed deletion plans
+and private application channels retain their independent inputs. Argument, body,
+aggregate and operating-system limits remain separate and explicit.

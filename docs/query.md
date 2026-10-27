@@ -241,8 +241,8 @@ A missing base specification or genuinely unborn HEAD has an explicit empty base
 A non-Git workspace identifies its synthetic empty graph and unavailable base code.
 Unavailable refs fail explicitly. Diagnosable graph-invalid inputs remain readable;
 partial parsed content retains available evidence with a nonzero result rather than
-fabricated complete scope. Unsupported schemas remain unsupported. Node format and
-application API are **7**. See [invalid-state inspection](invalid-graphs.md) for
+fabricated complete scope. Unsupported schemas produce explicit diagnostics, rather
+than adding version controls to ordinary readings. See [invalid-state inspection](invalid-graphs.md) for
 `query --issues --with-ancestors`, contextual diffs and metric availability.
 
 `query --json` retains target/before records, original edge deltas, file-change

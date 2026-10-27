@@ -31,29 +31,29 @@ resolution. Working tests give bounded evidence for review.
 
 ## Independent workspace and portable fixture
 
-In the SpecSpec checkout, `example/gantt` is a tracked fixture snapshot. Git here
-uses SpecSpec's development repository. Its parent instructions apply. For temporal
+In the specspec checkout, `example/gantt` is a tracked fixture snapshot. Git here
+uses specspec's development repository. Its parent instructions apply. For temporal
 experiments, run `python example/gantt/history/checkout.py <new-external-destination>`
 and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
 manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
 Use the global `specspec` command installed with uv tools or pipx. The canonical
-`.specspec/` directory contains direct node files; `.specspec-local/` is runtime state.
-Init supplies a packaged root `AGENTS.md` when absent and preserves existing instructions.
+`.specspec/` directory contains direct node files; `.specspec/local/` is runtime state.
+Init requires Git, reuses a containing working tree or initializes one, and creates
+or appends the packaged guide after existing root `AGENTS.md` bytes.
 Ordinary authoring supplies literal `-m/--message` paragraphs to init/add/update.
 Combine add/update/delete steps in one invocation and transaction; `add --as NAME`
 and `--parent '$NAME'` connect new nodes, including forward references. Other commands
-stay standalone. Explicit integration body inputs and the UI's existing transports
-retain their roles.
+stay standalone. Without messages, authoring reads bounded UTF-8 stdin; a nonempty
+stream targets one step. Managed UIs omit body flags and send complete text on stdin.
 
 Use `query ID --max-distance 0 --with-ancestors` and `query ID`
 before code changes. Query's optional ancestor completion follows every parent path
 after selection; added bindings consume no metric quota. `specspec diff` supplies
 canonical-file hunks; ordinary `git diff` supplies code patches. Read untracked
 files explicitly and coordinate with unsaved native documents.
-Canonical node format 7 and application API 7 use
-canonical padded Base64url IDs over five bytes, including `=`, and `<id>.md`
+Node identity uses canonical padded Base64url IDs over five bytes, including `=`, and `<id>.md`
 files. Each direct parent adds ancestry: a direct parent cannot already be an
 indirect parent. Review ripple effects using both old and new graphs, including
 ancestry lost by reparenting. Implementation leaves contribute bounded realization.
@@ -72,10 +72,10 @@ in Git and scope future candidates distinctly from delivered prototype behavior.
 Every node-schema change reconstructs the entire maintained example history under
 today's grammar: all refs, predecessor/deleted nodes, source anchors, actual receipts,
 ledger, bundle and tracked snapshot. Validate every revision with current tools.
-See `history/WALKTHROUGH.md`. SpecSpec development history retains its original
+See `history/WALKTHROUGH.md`. specspec development history retains its original
 commits, and existing clones retain their experiments.
 
-Before an authorized SpecSpec-checkout commit, run from its root:
+Before an authorized specspec-checkout commit, run from its root:
 
 ```sh
 specspec check --staged --sources

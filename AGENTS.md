@@ -1,4 +1,4 @@
-# Working on SpecSpec
+# Working on specspec
 
 ## Project specification and review
 
@@ -48,15 +48,17 @@ into an owner's editor. Only separate explicit requests authorize release tags o
 The generic guide created by `init` is `src/specspec/templates/AGENTS.md`, adapted
 from the owner drafting workspace and current tool contracts. Keep it generic and
 validate wheel/sdist resources, exact selected deletion, ID-only `.specspec/` paths,
-replacement defaults and explicit Git ownership. Preserve existing root instructions
-and protect newly created guides through initialization/recovery. Repository-specific
+replacement defaults and explicit Git ownership. Init requires Git, initializes a
+repository when needed, and creates or appends the template after exact existing
+root instruction bytes. Preserve external edits through byte-checked recovery;
+Git metadata stays outside graph rollback. Runtime state lives in `.specspec/local/`. Repository-specific
 maintenance guidance remains here rather than being copied into every product.
 
 ## Changes
 
 - Use `add`, `update`, and `delete` for ordinary canonical graph changes
   in this checkout. The product permits manual Markdown edits, but CLI/UI editing
-  remains recommended. Node format 7 / API 7 has no node hashes, fingerprints, or `--expect`; source blob IDs
+  remains recommended. Current storage/protocol has no node hashes, fingerprints, or `--expect`; source blob IDs
   are Git content addresses, not node edit gates.
   The authorized compact-ID conversion is a one-time tool-managed migration,
   not a permanent compatibility command.
@@ -101,7 +103,7 @@ stage the complete intended graph change and run
 `python -m specspec check --staged --sources --warnings-as-errors` against that exact
 index; working-tree validation cannot substitute for staged validation.
 
-Maintain only the current schema: node format 7 requires a shortcut-free rooted DAG.
+Maintain only the current schema: current node format requires a shortcut-free rooted DAG.
 No direct parent may already be an indirect parent. Review ripple effects against
 both old and new graphs; related Markdown changes remain deliberate. See
 `docs/graph-structure.md`. Use padded Base64url IDs over five random bytes,
@@ -119,16 +121,16 @@ create `~/Projects/specspec-examples/gantt` for manual UI comparisons, or give a
 external destination for disposable tests. Do not install nested Git metadata.
 
 EVERY node-schema change requires rewriting the ENTIRE maintained history of Gantt
-and additional examples as if all revisions had always used today's SpecSpec.
+and additional examples as if all revisions had always used today's specspec.
 Refresh all retained refs, earlier/deleted nodes, actual receipts, commit ledgers, bundle
 and tracked snapshot together; validate every revision with current tools. Updating
 only HEAD or retaining old readers is not a solution. See
 `example/gantt/history/WALKTHROUGH.md`. Preserve local experiments before explicitly
-recreating stale clones; never reset them silently or rewrite unrelated SpecSpec
+recreating stale clones; never reset them silently or rewrite unrelated specspec
 history. Plausible graph emergence/revision is sufficient; fabricated AI dialogue
 is not required. Focused unit tests may use smaller independent current-schema graphs.
 
-If an edit is interrupted, retain `.specspec-local/` and run `recover`. Remove a
+If an edit is interrupted, retain `.specspec/local/` and run `recover`. Remove a
 stale lock with `recover --force-lock` only after confirming no writer is running.
 
 Part of this project is to work out a "specspec AGENTS.md" for specspec-driven development. The goal is to replace this whole AGENTS.md with the following text (or to work out a version of this text that will take this place). To keep the flexibility we need to accept that we cannot just do that, for example reliance on git history will break if we develop on breaking changes. Hence we need to approach/converge to the principles described in the following text: 

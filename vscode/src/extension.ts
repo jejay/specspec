@@ -8,6 +8,7 @@ const { GraphSession } = require('./common/host/session.cjs');
 const { ProjectDocuments } = require('./common/host/documents.cjs');
 const { GitWatcher } = require('./common/host/git-watch.cjs');
 const { AnnotationWatcher } = require('./common/host/annotations.cjs');
+const { probeCli, inspectProject } = require('./common/host/startup.cjs');
 const presentation = require('../media/graph-model.js');
 
 const VIEW_TYPE = 'specspec.graphEditor';
@@ -16,7 +17,7 @@ interface FormEdit { id: string; body: string; parents: string[]; sources: strin
 interface FormRecovery { key: string; form: FormEdit; }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const output = vscode.window.createOutputChannel('SpecSpec');
+  const output = vscode.window.createOutputChannel('specspec');
   const editors = new GraphEditors(context, output);
   context.subscriptions.push(output, editors,
     vscode.window.registerCustomEditorProvider(VIEW_TYPE, editors, { webviewOptions: { retainContextWhenHidden: true } }),
@@ -46,11 +47,11 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
     for (const project of this.projects.values()) if (project.documentPath(document)) project.documents.changed();
   }
   private async project(resource: vscode.Uri): Promise<GraphProject> {
-    if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before executing the SpecSpec CLI.');
-    if (resource.scheme !== 'file') throw new Error('SpecSpec requires a real filesystem on its workspace extension host. Install it in the connected remote window; virtual/client-local resources are unavailable here.');
+    if (!vscode.workspace.isTrusted) throw new Error('Trust this workspace before executing the specspec CLI.');
+    if (resource.scheme !== 'file') throw new Error('specspec requires a real filesystem on its workspace extension host. Install it in the connected remote window; virtual/client-local resources are unavailable here.');
     const started = Date.now();
     const root = vscode.Uri.file(await findProjectRoot(resource.fsPath));
-    if (this.disposed) throw new Error('SpecSpec editors are closed.');
+    if (this.disposed) throw new Error('specspec editors are closed.');
     const key = process.platform === 'win32' ? root.fsPath.toLowerCase() : root.fsPath;
     let project = this.projects.get(key);
     if (!project) {
@@ -79,6 +80,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
       const project = await this.project(document.uri);
       const path = project.documentPath(document);
       if (!path) throw new Error('Only direct canonical .specspec node files can use the graph editor.');
+      await project.probe();
       const bootstrap = await project.documents.bootstrap();
       const node: SpecNode | undefined = bootstrap.result.snapshot.nodes.find((item: SpecNode) => item.path === path);
       if (!node) throw new Error('Node Markdown needs repair. Reopen with Text Editor.');
@@ -94,27 +96,28 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
       void view.open().catch(error => this.report(error, document.uri));
     } catch (error) {
       const text = (error instanceof Error ? error.message : String(error)).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
-      panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'"></head><body><h1>SpecSpec graph unavailable</h1><pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
+      const missing = error instanceof Error && 'code' in error && error.code === 'CLI_UNAVAILABLE';
+      panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>body{font-family:system-ui;padding:10vh 8vw}h1{font-size:36px}pre{white-space:pre-wrap}</style></head><body><h1>${missing ? 'Install the specspec CLI' : 'specspec graph unavailable'}</h1>${missing ? '<p>Install the specspec wheel with uv or pipx on this workspace host, then reopen the graph.</p><pre>uv tool install /path/to/specspec.whl</pre>' : ''}<pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
       void this.report(error, document.uri).catch(failure => this.output.appendLine(String(failure)));
     }
   }
   async open(resource?: vscode.Uri, compare = false, selectFolder = false): Promise<Snapshot | undefined> {
     try {
-      if (!vscode.workspace.isTrusted) { await vscode.window.showWarningMessage('Trust this workspace before executing the SpecSpec CLI.'); return; }
+      if (!vscode.workspace.isTrusted) { await vscode.window.showWarningMessage('Trust this workspace before executing the specspec CLI.'); return; }
       let selected = resource;
       if (!selected && !selectFolder) selected = this.lastRoot;
       if (!selected && !selectFolder) {
         const folders = vscode.workspace.workspaceFolders ?? [];
         if (folders.length === 1) selected = folders[0].uri;
-        else if (folders.length > 1) selected = (await vscode.window.showWorkspaceFolderPick({ placeHolder: 'Select the SpecSpec project' }))?.uri;
+        else if (folders.length > 1) selected = (await vscode.window.showWorkspaceFolderPick({ placeHolder: 'Select the specspec project' }))?.uri;
       }
       if (!selected && (selectFolder || !(vscode.workspace.workspaceFolders?.length))) selected = (await vscode.window.showOpenDialog({
-        title: 'Select a SpecSpec project folder', openLabel: 'Open SpecSpec graph', canSelectFolders: true,
+        title: 'Select a specspec project folder', openLabel: 'Open specspec graph', canSelectFolders: true,
         canSelectFiles: false, canSelectMany: false, defaultUri: this.lastRoot || vscode.Uri.joinPath(this.context.extensionUri, '..'),
       }))?.[0];
       if (!selected) { this.output.appendLine('Project selection cancelled.'); return; }
       const project = await this.project(selected);
-      const panel = vscode.window.createWebviewPanel('specspec.projectGraph', 'SpecSpec Graph', vscode.ViewColumn.Active,
+      const panel = vscode.window.createWebviewPanel('specspec.projectGraph', 'specspec Graph', vscode.ViewColumn.Active,
         { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')] });
       const view = this.attach(project, panel);
       // A commit comparison must also open when dirty workspace buffers are invalid.
@@ -125,7 +128,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
   private async report(error: unknown, resource?: vscode.Uri): Promise<void> {
     const message = error instanceof Error ? error.message : String(error);
     this.output.appendLine(error instanceof Error ? error.stack || message : message);
-    const action = await vscode.window.showErrorMessage(`SpecSpec: ${message}`, ...(resource ? ['Open Markdown'] : []), 'Show Log');
+    const action = await vscode.window.showErrorMessage(`specspec: ${message}`, ...(resource ? ['Open Markdown'] : []), 'Show Log');
     if (action === 'Show Log') this.output.show();
     if (action === 'Open Markdown' && resource) await vscode.commands.executeCommand('vscode.openWith', resource, 'default');
   }
@@ -141,6 +144,7 @@ class GraphProject implements vscode.Disposable {
   private readonly annotationListeners = new Set<(error?: Error) => void>();
   private readonly disposables: vscode.Disposable[] = [];
   private readonly cliClient = createClient();
+  private verifiedInvocation?: string;
   constructor(readonly root: vscode.Uri, private context: vscode.ExtensionContext, private output: vscode.OutputChannel) {
     this.documents = new ProjectDocuments({
       documents: () => vscode.workspace.textDocuments.filter(d => this.documentPath(d)).map(d => this.documentState(d)),
@@ -148,8 +152,12 @@ class GraphProject implements vscode.Disposable {
       confirm: async (message: string) => (await vscode.window.showWarningMessage(message, { modal: true }, 'Confirm')) === 'Confirm',
     });
     const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '.specspec{,/**}'));
-    this.disposables.push(watcher, watcher.onDidChange(() => this.documents.changed()),
-      watcher.onDidCreate(() => this.documents.changed()), watcher.onDidDelete(() => this.documents.changed()));
+    const canonicalChanged = (resource?: vscode.Uri) => {
+      const path = resource ? relative(root.fsPath, resource.fsPath).split(sep).join('/') : '';
+      if (path !== '.specspec/local' && !path.startsWith('.specspec/local/')) this.documents.changed();
+    };
+    this.disposables.push(watcher, watcher.onDidChange(canonicalChanged),
+      watcher.onDidCreate(canonicalChanged), watcher.onDidDelete(canonicalChanged));
     this.disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration('specspec', root)) this.documents.changed();
     }));
@@ -159,7 +167,7 @@ class GraphProject implements vscode.Disposable {
       () => this.annotationListeners.forEach(listener => listener()),
       (error: Error) => { this.output.appendLine(error.message); this.annotationListeners.forEach(listener => listener(error)); });
     this.disposables.push({ dispose: () => annotationWatcher.close() });
-    this.output.appendLine(`Execution: workspace host (${vscode.env?.remoteName || 'local'}); install Python/Git and configure SpecSpec on this host.`);
+    this.output.appendLine(`Execution: workspace host (${vscode.env?.remoteName || 'local'}); install Python/Git and configure specspec on this host.`);
   }
   subscribeAnnotations(listener: (error?: Error) => void): vscode.Disposable {
     this.annotationListeners.add(listener);
@@ -178,19 +186,34 @@ class GraphProject implements vscode.Disposable {
     return { path: this.documentPath(document)!, text: document.getText(), version: document.version, dirty: document.isDirty,
       closed: document.isClosed, eol: document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n' };
   }
-  async cli<T>(args: string[], input?: string): Promise<Envelope<T>> {
-    if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to run SpecSpec.');
+  private invocation() {
+    if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to run specspec.');
     const configuration = vscode.workspace.getConfiguration('specspec', this.root);
     const command = configuration.get<string>('command', 'specspec');
     const prefix = configuration.get<string[]>('args', []);
-    if (!command || !Array.isArray(prefix) || prefix.some(arg => typeof arg !== 'string')) throw new Error('Invalid SpecSpec executable configuration.');
+    if (!command || !Array.isArray(prefix) || prefix.some(arg => typeof arg !== 'string')) throw new Error('Invalid specspec executable configuration.');
     const explicit = (key: string) => {
       const values = configuration.inspect(key);
       return values?.globalValue !== undefined || values?.workspaceValue !== undefined || values?.workspaceFolderValue !== undefined;
     };
-    const invocation = resolveInvocation({ command, args: prefix },
+    return resolveInvocation({ command, args: prefix },
       this.context.extensionMode !== vscode.ExtensionMode.Production ? process.env.SPECSPEC_PYTHON : undefined,
       explicit('command') || explicit('args'));
+  }
+  async probe(): Promise<void> {
+    const invocation = this.invocation();
+    await probeCli(invocation.command, invocation.args, this.root.fsPath);
+    this.verifiedInvocation = JSON.stringify(invocation);
+  }
+  async startup() { await this.probe(); return inspectProject(this.root.fsPath); }
+  async cli<T>(args: string[], input?: string): Promise<Envelope<T>> {
+    const invocation = this.invocation();
+    const signature = JSON.stringify(invocation);
+    if (signature !== this.verifiedInvocation) {
+      await probeCli(invocation.command, invocation.args, this.root.fsPath);
+      this.verifiedInvocation = signature;
+    }
+    if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to run specspec.');
     this.output.appendLine(`CLI: ${invocation.command} ${[...invocation.args, ...args].join(' ')}`);
     const start = Date.now();
     try { return await this.cliClient.invoke<T>(invocation.command, invocation.args, this.root.fsPath, args, input); }
@@ -217,15 +240,16 @@ class GraphView implements vscode.Disposable {
       id: node!.id,
       get: () => project.documentState(document),
       apply: async (before: string, _after: string, edit: { start: number; end: number; text: string }) => {
-        if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to edit SpecSpec documents.');
+        if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to edit specspec documents.');
         if (document.isClosed || document.getText() !== before) throw new Error('Document changed or closed; the form is retained.');
         const workspaceEdit = new vscode.WorkspaceEdit();
         workspaceEdit.replace(document.uri, new vscode.Range(document.positionAt(edit.start), document.positionAt(edit.end)), edit.text);
-        if (!await vscode.workspace.applyEdit(workspaceEdit)) throw new Error('Document edit failed. See SpecSpec output.');
+        if (!await vscode.workspace.applyEdit(workspaceEdit)) throw new Error('Document edit failed. See specspec output.');
       },
     } : undefined;
     this.session = new GraphSession({
-      cli: (args: string[], input?: string) => ['add', 'update', 'delete'].includes(args[0])
+      startup: () => project.startup(),
+      cli: (args: string[], input?: string) => ['init', 'add', 'update', 'delete'].includes(args[0])
         ? project.documents.mutate(args, input) : project.cli(args, input),
       initialGraph: () => project.documents.initial(bootstrap),
       readGraph: (base: string, target?: string) => project.documents.readGraph(base, false, target),
@@ -246,13 +270,13 @@ class GraphView implements vscode.Disposable {
       revisions: async (base: string, target: string) => {
         const a = await vscode.window.showInputBox({ prompt: 'Base commit/ref', value: base }); if (!a) return;
         const b = await vscode.window.showInputBox({ prompt: 'Target commit/ref (empty = workspace)', value: target });
-        if (b !== undefined) { panel.title = `SpecSpec: ${a} → ${b || 'workspace'}`; return [a, b]; }
+        if (b !== undefined) { panel.title = `specspec: ${a} → ${b || 'workspace'}`; return [a, b]; }
       },
       ...(adapter && document ? { document: {
         state: () => ({ nodeId: adapter.id, path: adapter.get().path, version: document.version, dirty: document.isDirty,
           ...(recovery ? { recoveredForm: recovery.form } : {}) }),
         edit: (message: unknown) => project.documents.edit(adapter, message),
-        save: async () => { await project.documents.idle(); if (!await document.save()) throw new Error('Node file save needs attention. See SpecSpec output.'); },
+        save: async () => { await project.documents.idle(); if (!await document.save()) throw new Error('Node file save needs attention. See specspec output.'); },
       } } : {}),
     });
     this.disposables.push(panel.webview.onDidReceiveMessage(message => {
@@ -290,7 +314,7 @@ class GraphView implements vscode.Disposable {
   }
   open(): Promise<Snapshot> { return this.session.open(); }
   get snapshot(): Snapshot | undefined { return this.session.snapshot; }
-  async chooseRevisions(): Promise<void> { await this.session.waitReady(); await this.session.run(() => this.session.chooseRevisions()); }
+  async chooseRevisions(): Promise<void> { await this.session.waitReady(); await this.session.run(async () => { if (await this.session.checkStartup()) await this.session.chooseRevisions(); }); }
   flushDocument(): Promise<void> { return this.session.flushDocument(); }
   dispose(): void { this.session.dispose(); this.disposables.forEach(d => d.dispose()); }
 }

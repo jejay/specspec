@@ -1,19 +1,19 @@
 # VS Code remote workspaces
 
-SpecSpec is a **workspace extension**: its Node adapter, Python CLI and Git execute
+specspec is a **workspace extension**: its Node adapter, Python CLI and Git execute
 where the real repository filesystem lives. The graph/webview renders in your
 VS Code desktop or connected browser. VS Code owns authentication, SSH/tunnel
-transport, resource routing and reconnection. SpecSpec requires no extra web server,
+transport, resource routing and reconnection. specspec requires no extra web server,
 exposed port, credential store or remote shell wrapper.
 
 ## Setup
 
 1. Connect with Remote SSH or Remote Tunnels and open the remote project folder.
-2. Install the SpecSpec VSIX **in that connected window**, on the workspace host.
+2. Install the specspec VSIX **in that connected window**, on the workspace host.
    Use Developer: Show Running Extensions to check placement. A local-only install
    is not a substitute for the remote installation. This application is not yet a
    published Marketplace/PyPI release.
-3. Install Python 3.11+, the matching API-7 SpecSpec application and Git on that host.
+3. Install Python 3.11+, the matching application protocol specspec application and Git on that host.
    Use an isolated installation from your authorized checkout/Git URL. Confirm the
    CLI works from the remote terminal before opening a graph.
 4. Trust that workspace if appropriate. Use Remote Settings for the executable:
@@ -37,7 +37,7 @@ from committing. Native dirty descendant tabs still block managed deletion.
 ## Resource and connection boundaries
 
 VS Code normally translates client `vscode-remote:` resources to `file:` resources
-inside the remote Node host. SpecSpec accepts that executing host's real files;
+inside the remote Node host. specspec accepts that executing host's real files;
 client-local resources presented there and virtual repository providers receive
 an actionable filesystem error. Plain `github.dev`/disconnected `vscode.dev` lacks
 the required Python execution environment. Browser clients connected to a real
@@ -49,7 +49,7 @@ See [loading and diagnostics](loading.md).
 
 If the connection or a command reply is lost, retain drafts and inspect the current
 remote files and recovery state before retrying an action. A missing reply is not
-proof that a mutation failed. SpecSpec does not automatically replay destructive
+proof that a mutation failed. specspec does not automatically replay destructive
 commands. Reconnect/Refresh performs current reads. Native recovery and managed
 journal recovery remain separate; see [native persistence](native-editors.md).
 
@@ -64,7 +64,7 @@ an actual remote extension host. Use a **disposable external clone** of the main
 Gantt bundle, never a development worktree or an existing experiment. Give that
 clone a `.specspec-remote-smoke.json` containing the host's absolute `python` path
 and expected `remoteName` (`ssh-remote`, `tunnel`, or `wsl`, as applicable). Configure
-SpecSpec in that clone's settings and launch the installed/development extension
+specspec in that clone's settings and launch the installed/development extension
 with the remote folder and test module through VS Code. It verifies actual execution
 placement, working graph rendering, native dirty/save/Unicode overlays and an anchored
 source preview, and writes `.specspec-remote-result.json` in the disposable clone.
@@ -90,8 +90,8 @@ background launches, and remote asset HTTP 401/ready timeouts. A fresh foregroun
 launch with normalized `wsl+ubuntu` authority passed; profile/launch differences mean
 this is not proof of a single cause. Keep connection authority/resource routing
 consistent and inspect webview resource errors rather than loosening CSP or resource
-roots. API-7 remote sessions and SSH/desktop/browser tunnel runs still require fresh
-qualification with operator-supplied endpoints and authentication. The current API-7
+roots. application protocol remote sessions and SSH/desktop/browser tunnel runs still require fresh
+qualification with operator-supplied endpoints and authentication. The current application protocol
 Windows installed-host regression uses an isolated portable VS Code Insiders build;
 it does not prove any remote transport. No server service, SSH keys or global Python packages were installed.
 

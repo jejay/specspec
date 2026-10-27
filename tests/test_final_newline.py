@@ -39,7 +39,7 @@ def test_init_always_terminates_without_trimming_body_whitespace(tmp_path, body,
     result = invoke(
         tmp_path,
         "init",
-        *(["--body", "-"] if bulk else ["-m", body]),
+        *([] if bulk else ["-m", body]),
         input=body.encode() if bulk else None,
     )
     assert result.exit_code == 0, result.output

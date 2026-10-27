@@ -1,8 +1,8 @@
 # Exact node deletion and HEAD-relative context
 
-Withdrawing a node physically removes its canonical Markdown file. Canonical node
-format **7** has no retired flag, approval state or tombstone. Application API is
-**7**. Earlier text/relationships and removal reasons belong in ordinary Git history.
+Withdrawing a node physically removes its canonical Markdown file. There is no
+retired flag, approval state or tombstone. Earlier text/relationships and removal
+reasons belong in ordinary Git history.
 
 ## Delete exactly the selected files
 
@@ -52,7 +52,7 @@ The writer journals each selected `new: null`, byte-checks originals and preserv
 intervening external text. Interrupted edits require `recover`; recovery can restore
 an invalid original graph without treating structural faults as unfinished recovery.
 Path/symlink safety, native dirty-document guards and physical race limitations remain.
-SpecSpec never stages/commits, installs hooks or deletes linked source code implicitly.
+specspec never stages/commits, installs hooks or deletes linked source code implicitly.
 
 ## Default workspace compares to HEAD, not the index
 
@@ -75,7 +75,7 @@ remain independent and historical targets remain read-only.
 Canonical/Git watchers reread fresh files and HEAD, including linked worktrees and
 shared refs. Notifications are hints; Refresh and optional default-off polling remain
 fallbacks. Unsupported historical node schemas stay unsupported. Use the independent
-maintained Gantt history for serious temporal and host tests, not obsolete SpecSpec
+maintained Gantt history for serious temporal and host tests, not obsolete specspec
 development snapshots or the tracked non-Git example fixture directory.
 
 The [owner intention](../.specspec/fuyy0Lk=.md),

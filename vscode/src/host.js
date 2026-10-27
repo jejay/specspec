@@ -4,7 +4,7 @@
   const scope = document.querySelector('meta[name="specspec-project"]')?.content || '';
   const stored = api.getState() || {};
   const projects = stored.projects || {};
-  window.SpecSpecHost = Object.freeze({
+  window.specspecHost = Object.freeze({
     getState: () => projects[scope],
     setState: value => { projects[scope] = value; api.setState({ projects }); },
     postMessage: value => api.postMessage(value),

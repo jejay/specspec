@@ -148,12 +148,12 @@ history, an edit lock or a correctness guarantee. New commits can warn even when
 node text remains the same. Staging alone does not change the workspace snapshot.
 No node bytes, committed-node hashes, per-color groups, blob archive or captured-
 text preview are stored. Local drift checks leave canonical schema/edit protection
-unchanged. Node format and API are 7; the separate local spotlight format is 2.
+unchanged. Node fields and transport contracts remain current; the separate local spotlight format is 2.
 
 ## Storage and lifetime
 
 ```text
-<project>/.specspec-local/annotations/<spotlight-id>.json
+<project>/.specspec/local/annotations/<spotlight-id>.json
 ```
 
 The CLI and both hosts share this ignored store for the **same checkout**. Separate

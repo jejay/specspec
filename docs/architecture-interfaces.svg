@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2320" viewBox="0 0 2000 2320" role="img" aria-labelledby="interface-title interface-description">
-  <title id="interface-title">SpecSpec interface detail: renderer messages, CLI processes, Python calls and agent use</title>
-  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the SpecSpecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, shared project reads and optional native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A project-scoped API channel or ordinary CLI process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an API 7 JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through API-7 native plan overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar shows shared Electron/VS Code reads with optional overlays, commit targets, managed mutations and source previews. Host API channels are bounded child processes, with an independent warmed source-preview lane and fresh validation per frame.</desc>
-  <metadata>Descriptive documentation of current shortcut-free node format 7 and API 7. Self-contained offline SVG with system font fallbacks and local markers only. Companion overview: docs/architecture.svg. Guide and source links: docs/architecture.md. Payload snippets are illustrative; an empty result in the response example stands in for command-specific data.</metadata>
+  <title id="interface-title">specspec interface detail: renderer messages, CLI processes, Python calls and agent use</title>
+  <desc id="interface-description">A companion zoom to architecture.svg. The shared browser renderer calls the specspecHost message and presentation-state port. Authorized VS Code or Electron adapters connect it to GraphSession, shared project reads and optional native document coordination and the bounded invoke subprocess bridge. The bridge starts a configured CLI executable with argument arrays, an explicit project root, shell false and UTF-8 stdin. A project-scoped API channel or ordinary CLI process contains both the Click CLI facade and the reusable domain library; the facade makes ordinary Python function calls and serializes results or SpecError diagnostics into an application protocol JSON envelope. The agent calls this same CLI contract directly from its own shell, bypassing UI messages and host queues. Alternative Python integrations import the same module code in their own process, using Python objects and exceptions rather than JSON. Payload examples distinguish renderer Save messages, translated CLI arguments and body stdin, and returned JSON plus exit status. A native form edit trace follows sequence-numbered input through application protocol native plan overlays, a non-writing before/after plan, guarded WorkspaceEdit application to a TextDocument and acknowledgement back to the renderer. Native Save writes files separately and can persist invalid text. A routing sidebar shows shared Electron/VS Code reads with optional overlays, commit targets, managed mutations and source previews. Host API channels are bounded child processes, with an independent warmed source-preview lane and fresh validation per frame.</desc>
+  <metadata>Descriptive documentation of current shortcut-free current node format and application protocol. Self-contained offline SVG with system font fallbacks and local markers only. Companion overview: docs/architecture.svg. Guide and source links: docs/architecture.md. Payload snippets are illustrative; an empty result in the response example stands in for command-specific data.</metadata>
   <defs>
     <style>
       text { font-family: "Segoe UI", Arial, sans-serif; fill: #203a40; }
@@ -37,7 +37,7 @@
     <text x="64" y="132" class="title">Inside the interface.</text>
     <text x="64" y="176" class="subtitle">UI messages become host commands. The CLI calls a Python library—not another service.</text>
     <rect x="1656" y="48" width="280" height="44" rx="22" fill="#e5ede5"/>
-    <text x="1796" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">COMPANION / CURRENT API 7</text>
+    <text x="1796" y="76" text-anchor="middle" class="eyebrow" style="font-size:13px;letter-spacing:1px;fill:#42665d">COMPANION / CURRENT application protocol</text>
     <path d="M1732 140H1778" stroke="#7056a8" stroke-width="6" stroke-linecap="round"/>
     <path d="M1804 140H1850" stroke="#16796d" stroke-width="6" stroke-linecap="round"/>
     <path d="M1876 140H1922" stroke="#b86e35" stroke-width="6" stroke-linecap="round"/>
@@ -55,13 +55,13 @@
     <text x="64" y="288" class="eyebrow">01 / CALL CHAIN</text>
     <text x="344" y="288" class="section">Three contracts. One Python engine.</text>
 
-    <g id="renderer-port" aria-label="Unprivileged shared renderer and SpecSpecHost message/state methods">
+    <g id="renderer-port" aria-label="Unprivileged shared renderer and specspecHost message/state methods">
       <rect x="64" y="352" width="360" height="372" rx="16" fill="#fff" stroke="#d8d4e5" stroke-width="1.5"/>
       <text x="88" y="393" class="heading" style="font-size:27px">Shared renderer</text>
       <text x="88" y="425" class="small">DOM forms + graph canvas</text>
       <text x="88" y="458" class="code" style="font-size:16px">graph-ui-common/media/graph.js</text>
       <path d="M88 483H400" class="hairline"/>
-      <text x="88" y="519" class="code purple" style="font-size:20px">window.SpecSpecHost</text>
+      <text x="88" y="519" class="code purple" style="font-size:20px">window.specspecHost</text>
       <text x="88" y="553" class="code">postMessage / onMessage</text>
       <text x="88" y="585" class="small">Typed actions, node IDs and text</text>
       <text x="88" y="611" class="caption" style="font-size:15px">ready / rendered: token + visible IDs</text>
@@ -109,7 +109,7 @@
         <text x="1152" y="560" class="body" style="font-weight:650;fill:#203a40">Dispatch</text>
         <text x="1152" y="589" class="small">SpecError / I/O</text>
         <text x="1152" y="632" class="code" style="font-size:20px">emit()</text>
-        <text x="1152" y="661" class="small">API 7 envelope</text>
+        <text x="1152" y="661" class="small">application protocol envelope</text>
         <text x="1152" y="690" class="small">JSON stdout</text>
         <text x="1152" y="721" class="caption">+ exit status</text>
       </g>
@@ -144,7 +144,7 @@
       <path d="M954 672H1128" class="request"/>
       <text x="1041" y="650" text-anchor="middle" class="label purple">argv + stdin</text>
       <path d="M1128 708H954" class="response"/>
-      <text x="1041" y="736" text-anchor="middle" class="label teal">API 7 JSON</text>
+      <text x="1041" y="736" text-anchor="middle" class="label teal">application protocol JSON</text>
     </g>
 
     <g id="agent-cli" aria-label="The agent calls the same CLI directly, bypassing renderer messages and JavaScript host coordination">
@@ -189,7 +189,7 @@
       <text x="560" y="1132" class="small">invoke(command, prefix, root, args, input)</text>
       <rect x="560" y="1152" width="680" height="175" rx="8" fill="#e9eee8"/>
       <text x="584" y="1188" class="code">args = ['update', id, '--parent', parentId,</text>
-      <text x="584" y="1221" class="code">        '--body', '-', '--json']</text>
+      <text x="584" y="1221" class="code">        '--json']</text>
       <text x="584" y="1254" class="code">spawn(command,</text>
       <text x="584" y="1287" class="code">  [...prefix, '--root', root, ...args], …)</text>
       <text x="560" y="1361" class="small">cwd=root · shell:false · UTF-8 stdin = body text</text>
@@ -251,7 +251,7 @@
     <g id="trace-editor-result" aria-label="The CLI returns exact before/after text, snapshot and diagnostics to project-level coordination">
       <path d="M870 1871H475" class="response"/>
       <text x="504" y="1859" class="code" style="font-size:16px">changes: [{path, before, after}]</text>
-      <text x="504" y="1901" class="caption">+ snapshot + diagnostics, inside API 7 JSON</text>
+      <text x="504" y="1901" class="caption">+ snapshot + diagnostics, inside application protocol JSON</text>
     </g>
     <g id="trace-apply" aria-label="The host checks version and before text, then applies a minimal WorkspaceEdit to the native document">
       <path d="M475 1952H1240" class="request"/>
@@ -295,7 +295,7 @@
     <text x="1412" y="2055" class="body" style="font-weight:650;fill:#203a40">Managed project actions</text>
     <text x="1412" y="2085" class="code">add / update / delete</text>
     <text x="1412" y="2113" class="caption">workspace.py writer → lock / journal / saved files</text>
-    <text x="1412" y="2141" class="caption">VS Code first refuses dirty SpecSpec documents.</text>
+    <text x="1412" y="2141" class="caption">VS Code first refuses dirty specspec documents.</text>
     <path d="M1412 2161H1936" class="hairline"/>
 
     <text x="1412" y="2197" class="body" style="font-weight:650;fill:#203a40">Source preview / capture</text>

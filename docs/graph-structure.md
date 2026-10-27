@@ -1,6 +1,6 @@
 # Immediate justification and shortcut freedom
 
-Canonical **node format 7** records a rooted, shortcut-free DAG. A direct parent
+Canonical **current node format** records a rooted, shortcut-free DAG. A direct parent
 adds ancestry beyond the other direct parents: none of a node's direct parents
 may already be an indirect parent. Parent depth can differ; the graph is not a tree.
 
@@ -44,7 +44,7 @@ There is no automatic repair, separate approval status or extra hook policy.
 
 ## Current-only contract and history
 
-The current node format is **7**, with application API **7**. Fields, five-byte padded
+Internal schema/protocol metadata is managed by the installed tools. Fields, five-byte padded
 Base64url IDs and source-region grammar retain their contracts. Older node formats
 receive version diagnostics; there is no legacy reader or permanent migration command.
 The upgrade requires deliberate, complete graph cleanup rather than silent read-time
@@ -53,12 +53,12 @@ those captured versions resolve as changed against the current graph.
 
 The maintained Gantt bundle, all retained revisions, original/deleted nodes, actual
 CLI receipts and commit ledger use this same current rule. Use a fresh external
-checkout for comparisons; existing manual clones and unrelated SpecSpec development
+checkout for comparisons; existing manual clones and unrelated specspec development
 history remain untouched. See [the history procedure](../example/gantt/history/WALKTHROUGH.md).
 
 ## Verification
 
-The maintained graphs contain 201 nodes/354 edges (SpecSpec) and 22 nodes/35 edges
+The maintained graphs contain 201 nodes/354 edges (specspec) and 22 nodes/35 edges
 (Gantt), with zero shortcuts. Verification includes the full Python/shared/adapter
 suites, exact indexes and all retained Gantt refs; see the
 [invalid-state verification note](investigations/invalid-graph-authoring.md). Backend, renderer and host-adapter suites

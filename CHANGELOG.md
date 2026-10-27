@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Initialize Git when needed and create or concatenate the packaged AGENTS.md guide.
+- Read body stdin automatically without messages; remove body-file/stdin flags.
+- Reserve `.specspec/local/` for runtime state and separate its watcher/inventory scope.
+- Gate both UIs on a compatible CLI and offer explicit centered project initialization.
+- Remove Electron menus; retain its project picker and keyboard shortcut.
+- Use specspec, specspec-vscode and specspec-desktop naming; shorten all help bodies
+  and hide host-only controls and ordinary schema/protocol version headers.
+
+
+## Unreleased
+
 - Terminate complete tool-written/native-planned node Markdown with a newline,
   appending only when missing and preserving local style and trailing blank lines.
   Reads, raw-editor saves and Git configuration remain untouched.
@@ -18,7 +29,7 @@
 
 ## 0.1.0 — initial release preparation
 
-SpecSpec connects intentions, separately revisable choices and implementation in a
+specspec connects intentions, separately revisable choices and implementation in a
 local Git-versioned Markdown graph. This is an early release, with evolving
 interfaces and bounded verification rather than production/correctness claims.
 

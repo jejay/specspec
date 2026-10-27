@@ -1,4 +1,4 @@
-# SpecSpec for VS Code
+# specspec for VS Code
 
 Connect your intentions, revisable choices and implementation in a Git-versioned
 Markdown graph, inside your ordinary VS Code editor. Open a node's justification,
@@ -24,6 +24,11 @@ them to every product's runtime. Restart VS Code if its inherited PATH does not 
 include your tool-bin directory. A VSIX includes the extension/shared UI, not Python,
 Git or a bundled CLI.
 
+Opening a graph immediately checks CLI availability on the workspace host. A
+blocking installation message and Retry action replace an unusable empty canvas;
+the extension never installs Python packages automatically. Its package/display name
+is **specspec-vscode**.
+
 ## Build and install the VSIX
 
 Use Node 22.12+ and npm 10+. From the **monorepo root**, not `vscode/`:
@@ -43,17 +48,19 @@ The local identifier is `specspec-dev.specspec-vscode`.
 ## Open your graph
 
 1. In a product directory, create a graph with `specspec init -m "# Product purpose"`
-   if it does not already have one. This also supplies `AGENTS.md` when absent.
+   if it does not already have one. This initializes Git when needed and creates
+   or appends the packaged guide to `AGENTS.md`. Alternatively, use the graph's
+   centered **Initialize specspec** form after opening an empty directory.
 2. Open the folder in VS Code and trust it only if appropriate.
-3. Run **SpecSpec: Open Graph** from the Command Palette. Explorer's folder context
-   menu also offers it. **SpecSpec: Select Project** chooses another containing graph.
+3. Run **specspec: Open Graph** from the Command Palette. Explorer's folder context
+   menu also offers it. **specspec: Select Project** chooses another containing graph.
 4. Open a `.specspec/<id>.md` file for its native node editor. Use **Reopen Editor
    With → Text Editor** for raw Markdown.
 
 The graph opens in the main editor area. Split/file tabs share native document text
 and retain independent cameras. File editing uses normal Save/autosave/undo/redo;
 managed project actions require clean project documents. Historical views are
-read-only. **SpecSpec: Compare Revisions** opens a separate comparison panel; default
+read-only. **specspec: Compare Revisions** opens a separate comparison panel; default
 working views compare saved/native-overlaid content against fresh HEAD.
 
 **Ctrl+S** (Command+S on macOS) saves through the current native or managed owner.
@@ -79,7 +86,7 @@ command string. Explicit machine-overridable settings take precedence over the
 optional development `SPECSPEC_PYTHON` environment variable.
 
 Errors and optional `specspec.traceLoading` diagnostics appear in **View → Output →
-SpecSpec**. File watchers are enabled; polling defaults to off
+specspec**. File watchers are enabled; polling defaults to off
 (`specspec.pollIntervalMs: 0`). Use Refresh when filesystem notifications are missed.
 Invalid graphs remain inspectable/repairable; raw text is available for unreadable
 nodes. No automatic repair, staging, commits or hook installation occurs.

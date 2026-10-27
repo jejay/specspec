@@ -69,7 +69,7 @@ def test_query_errors_retain_structured_incomplete_evidence(workspace):
 
 def test_orphan_staging_requires_recovery(workspace):
     root, manifesto = workspace
-    (root / ".specspec-local" / "stage-0").write_bytes(b"unfinished")
+    (root / ".specspec/local" / "stage-0").write_bytes(b"unfinished")
     assert not load_snapshot(root).valid
     with pytest.raises(SpecError, match="recover"):
         update_node(root, manifesto, body="Another edit\n")
@@ -82,7 +82,7 @@ def test_init_recovery_refuses_extra_files_before_modifying_anything(workspace):
     snapshot = load_snapshot(root)
     node = snapshot.nodes[0]
     write_journal(
-        root / ".specspec-local",
+        root / ".specspec/local",
         {
             "kind": "init",
             "files": {
