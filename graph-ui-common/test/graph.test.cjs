@@ -44,6 +44,8 @@ test('startup blocks graph controls, exposes installation/retry, and initializes
   assert.equal(f.$('startup').hidden, false); assert.equal(f.$('new').disabled, true);
   f.send({ type: 'startup', stage: 'install', message: '<b>missing executable</b>' });
   assert.match(f.$('startup-title').textContent, /Install the specspec CLI/);
+  assert.match(f.$('startup-description').textContent, /from PyPI/);
+  assert.equal(f.$('startup-command').textContent, 'uv tool install specspec');
   assert.equal(f.$('startup-detail').textContent, '<b>missing executable</b>');
   assert.equal(f.$('startup-detail').querySelector('b'), null);
   assert.equal(f.$('initialize-form').hidden, true); assert.equal(f.$('compare').disabled, true);

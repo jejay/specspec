@@ -38,7 +38,8 @@ and open that independent clone. Tests/CI clone `history/gantt.bundle`. Existing
 manual experiments remain preserved; the helper reserves new destinations and
 retains partial clones. Independent clones own their Git metadata/index.
 
-Use the global `specspec` command installed with uv tools or pipx. The canonical
+Install the global CLI from PyPI with `uv tool install specspec` or
+`pipx install specspec` when authorized. Use `specspec` across projects. The canonical
 `.specspec/` directory contains direct node files; `.specspec/local/` is runtime state.
 Init requires Git, reuses a containing working tree or initializes one, and creates
 or appends the packaged guide after existing root `AGENTS.md` bytes.

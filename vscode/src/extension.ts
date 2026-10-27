@@ -97,7 +97,7 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
     } catch (error) {
       const text = (error instanceof Error ? error.message : String(error)).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
       const missing = error instanceof Error && 'code' in error && error.code === 'CLI_UNAVAILABLE';
-      panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>body{font-family:system-ui;padding:10vh 8vw}h1{font-size:36px}pre{white-space:pre-wrap}</style></head><body><h1>${missing ? 'Install the specspec CLI' : 'specspec graph unavailable'}</h1>${missing ? '<p>Install the specspec wheel with uv or pipx on this workspace host, then reopen the graph.</p><pre>uv tool install /path/to/specspec.whl</pre>' : ''}<pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
+      panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>body{font-family:system-ui;padding:10vh 8vw}h1{font-size:36px}pre{white-space:pre-wrap}</style></head><body><h1>${missing ? 'Install the specspec CLI' : 'specspec graph unavailable'}</h1>${missing ? '<p>Install specspec from PyPI with uv or pipx on this workspace host, then reopen the graph.</p><pre>uv tool install specspec</pre>' : ''}<pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
       void this.report(error, document.uri).catch(failure => this.output.appendLine(String(failure)));
     }
   }

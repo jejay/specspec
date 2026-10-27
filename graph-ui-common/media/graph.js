@@ -586,7 +586,7 @@
     const copy = {
       checking: ['Checking the specspec CLI…', 'The CLI must be available before opening the graph.'],
       loading: ['Loading specspec…', 'Reading the project specification.'],
-      install: ['Install the specspec CLI', 'This graph needs the separately installed Python CLI. Install the specspec wheel with uv or pipx, then retry. In a remote VS Code window, install it on the workspace host.'],
+      install: ['Install the specspec CLI', 'This graph needs the separately installed Python CLI. Install specspec from PyPI with uv or pipx, then retry. In a remote VS Code window, install it on the workspace host.'],
       initialize: ['Initialize specspec in this directory', 'Describe the core goal to create this project’s specification.'],
       initializing: ['Initializing specspec…', 'Creating the graph and project instructions.'],
       select: ['Open a project', 'Choose a directory to read or initialize its specification.'],

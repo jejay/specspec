@@ -23,8 +23,8 @@ intentionally unsupported. This explains failed UI comparisons of its old commit
 Do not install nested `.git` metadata here or resurrect legacy schema readers.
 
 The [complete Git bundle](history/gantt.bundle) holds a separate rewritten,
-current-schema history. Install the global CLI with `uv tool install .` or
-`pipx install .` from the specspec checkout first. From that checkout's root:
+current-schema history. Install the global CLI from PyPI with
+`uv tool install specspec` or `pipx install specspec` first. From that checkout's root:
 
 ```sh
 python example/gantt/history/checkout.py

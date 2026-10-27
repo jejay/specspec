@@ -84,6 +84,10 @@ Keep source links and realization explanations current. Passing checks are evide
 
 ## CLI: read the context you need
 
+The default installation source is PyPI: `uv tool install specspec`, or
+`pipx install specspec`. Install only when authorized, on the host running the
+project's CLI; use `uv tool upgrade specspec` or `pipx upgrade specspec` to update.
+
 Use the globally installed `specspec` command from the intended project or its subdirectories, like Git. Every command and subgroup has concise `--help`. In a new directory, `specspec init -m "Test"` initializes Git and a manifesto, and creates this guide or appends it after existing AGENTS.md content. Git must be installed. Initialization does not stage, commit or configure identity/hooks.
 
 Copy full case-sensitive IDs, including `=`. Uppercase IDs below are placeholders; examples use Bash quoting.

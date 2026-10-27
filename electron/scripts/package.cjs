@@ -15,7 +15,7 @@ async function packageApp() {
     appVersion: metadata.version,
     out: resolve(__dirname, '../../dist/desktop'),
     overwrite: true,
-    asar: false, // Keep the allowlisted local runtime directly inspectable in 0.1.
+    asar: false, // Keep the allowlisted local runtime directly inspectable.
     prune: false, // No runtime npm dependencies: the shared adapter/renderer is built locally.
     ignore: ignored,
     icon: resolve(__dirname, '../../branding', process.platform === 'win32' ? 'app-icon.ico' : 'app-icon.png'),

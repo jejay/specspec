@@ -69,7 +69,8 @@ complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
 spotlight and reload suites retain their assertions and production safeguards.
 Current startup/naming qualification is recorded in the owner-experience
 investigation, with earlier release/audit evidence scoped to its checkpoint. Build
-workflows upload artifacts without publication, tags, owner installs or Git writes.
+artifact workflows upload builds without publication, tags, owner installs or Git
+writes. Public CLI publication has its own explicitly authorized release workflow.
 
 Permission-sensitive Linux archive verification executes on a POSIX filesystem.
 Qualification records distinguish the executed Python/archive environment from

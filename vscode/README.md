@@ -5,17 +5,17 @@ Markdown graph, inside your ordinary VS Code editor. Open a node's justification
 edit its binding text, compare revisions and follow source references without
 turning the specification into a task board or an approval score.
 
-**0.1 is an early local release. This extension is not on the Marketplace.**
+**0.0.1 is an early release. This extension is not on the Marketplace.**
 [Product overview](https://github.com/jejay/specspec) ·
 [Full installation guide](https://github.com/jejay/specspec/blob/main/docs/install.md)
 
 ## Install the CLI first
 
-In a checkout of the monorepo, install the Python CLI globally:
+Install the Python CLI globally from [PyPI](https://pypi.org/project/specspec/):
 
 ```sh
-uv tool install .
-# Or: pipx install .
+uv tool install specspec
+# Or: pipx install specspec
 specspec --version
 ```
 
@@ -36,7 +36,7 @@ Use Node 22.12+ and npm 10+. From the **monorepo root**, not `vscode/`:
 ```sh
 npm ci
 npm run package:vscode
-code --install-extension dist/specspec-vscode-0.1.0.vsix
+code --install-extension dist/specspec-vscode-0.0.1.vsix
 ```
 
 Without the `code` shell command, open VS Code's Extensions view, choose **… → Install

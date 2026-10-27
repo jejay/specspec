@@ -1,12 +1,16 @@
 # Shared graph UI and desktop adapter — architecture and verification history
 
-## Current 0.1 entry points
+## Current 0.0.1 entry points
 
 The global Python CLI and locally installed VSIX target Windows/Linux/macOS; the
 portable Electron app currently targets Windows/Linux. Source builds use one root
 npm workspace, not per-adapter installation trees. See [installation](install.md).
 
-The 0.1 release qualification exercises fresh isolated wheel/sdist CLI installs,
+The CLI's normal installation source is PyPI: `uv tool install specspec` or
+`pipx install specspec`. See [current release evidence](investigations/pypi-0.0.1.md)
+for this release's actual publishing and execution scope.
+
+The earlier local release qualification exercised fresh isolated wheel/sdist CLI installs,
 a normally installed VSIX in a disposable extensions directory, and the actual
 Windows portable executable against that global-style CLI. All use `.specspec/`.
 The [release evidence](investigations/release-0.1.md) records exact successful suites,

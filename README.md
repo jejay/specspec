@@ -22,10 +22,10 @@ Hands-on engineering and delegated agent work are not a binary choice. You can
 direct one decision carefully and leave the next open. specspec makes that reasoning
 visible; it does not choose your level of delegation or run an agent for you.
 
-**0.1 is an early, local-first release.** The CLI and both graph editors are usable;
+**0.0.1 is an early, local-first release.** The CLI and both graph editors are usable;
 expect rough edges and changing interfaces. There is no hosted service, Marketplace
 listing, automatic coding agent, or correctness guarantee. Your specification stays
-in your repository. [Scope and release notes](CHANGELOG.md) · [Install](docs/install.md)
+in your repository. [Scope and release notes](https://github.com/jejay/specspec/blob/main/CHANGELOG.md) · [Install](https://github.com/jejay/specspec/blob/main/docs/install.md)
 
 ## A spectrum, not a checklist
 
@@ -62,40 +62,42 @@ validation establishes structure, not whether a product actually meets its purpo
 
 The CLI needs **no Node, VS Code or Electron**. The UIs use `specspec` on PATH by
 default; neither bundles a second Python runtime. Desktop targets Windows/Linux;
-macOS users can use the CLI and VS Code. See [platform qualification](docs/platforms.md).
+macOS users can use the CLI and VS Code. See [platform qualification](https://github.com/jejay/specspec/blob/main/docs/platforms.md).
 
 ### Install the CLI globally
 
-From a checkout of this monorepo:
+Install **[specspec from PyPI](https://pypi.org/project/specspec/)**:
 
 ```sh
-git clone https://github.com/jejay/specspec.git
-cd specspec
-uv tool install .
+uv tool install specspec
 specspec --version
 specspec --help
 ```
 
-Or use `pipx install .`. Both install a user-wide command in an isolated environment,
-not a dependency in every project. Restart your terminal/editor after fixing PATH
-with `uv tool update-shell` or `pipx ensurepath` if necessary. No administrator or
-`sudo pip` installation is needed. PyPI publication is not assumed: installation
-from Git or the built wheel is documented in the [installation guide](docs/install.md).
+Or use `pipx install specspec`. Both install a user-wide command in an isolated
+environment, not a dependency in every project. No source checkout or Node is needed
+for the CLI. Upgrade with `uv tool upgrade specspec` or `pipx upgrade specspec`.
+Restart your terminal/editor after fixing PATH with `uv tool update-shell` or
+`pipx ensurepath` if necessary. No administrator or `sudo pip` installation is needed.
+The [installation guide](https://github.com/jejay/specspec/blob/main/docs/install.md) covers source/wheel alternatives and
+replacing an older local build.
 
 ### Use it in your own VS Code — no Marketplace
 
-From the repository root, after installing the CLI:
+Only UI source builds need a checkout. After installing the CLI:
 
 ```sh
+git clone https://github.com/jejay/specspec.git
+cd specspec
 npm ci
 npm run package:vscode
-code --install-extension dist/specspec-vscode-0.1.0.vsix
+code --install-extension dist/specspec-vscode-0.0.1.vsix
 ```
 
 Reload VS Code, open your project and run **specspec: Open Graph** from the Command
 Palette. Or use **Extensions → … → Install from VSIX…** with that file. This is a
 normal installed extension, not an F5-only development window. No package is sent
-to the Marketplace. [Setup and troubleshooting](vscode/README.md)
+to the Marketplace. [Setup and troubleshooting](https://github.com/jejay/specspec/blob/main/vscode/README.md)
 
 ### Run the desktop
 
@@ -111,9 +113,9 @@ npm run desktop -- --project .
 Choose **Open project**, select your project and **Trust and Open**. The explicit
 `--project` launch argument authorizes that folder instead. To create a portable
 Windows/Linux package, activate the development Python environment described in
-[contributing](CONTRIBUTING.md) and run `npm run package:electron`. Output is under
+[contributing](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) and run `npm run package:electron`. Output is under
 `dist/`. End users of the portable archive need the global CLI and Git, **not Node**.
-[Desktop guide](electron/README.md)
+[Desktop guide](https://github.com/jejay/specspec/blob/main/electron/README.md)
 
 ## Start a project
 
@@ -128,7 +130,7 @@ specspec query --max-distance 2
 
 Initialization requires Git and initializes a repository when needed. It creates
 `.specspec/` and creates root **`AGENTS.md`**, or appends the
-[shipped guide](src/specspec/templates/AGENTS.md) after existing instructions.
+[shipped guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md) after existing instructions.
 The reserved `.specspec/local/` subtree holds ignored recovery and spotlight data,
 not nodes. Staging, commits, identity and hooks remain yours.
 
@@ -150,19 +152,19 @@ specspec diff --with-context
 `NODE_ID` is another full ID from the result. Messages are literal Markdown; repeat
 `-m` for paragraphs. `--replace` selects unique passages while tolerating ordinary
 prose wrapping and line-ending differences; inserted text remains literal. Compose
-add/update/delete for one recoverable transaction. See [the CLI guide](docs/cli.md)
+add/update/delete for one recoverable transaction. See [the CLI guide](https://github.com/jejay/specspec/blob/main/docs/cli.md)
 and each command's concise `--help`. Without messages, text comes from stdin;
 use shell redirection for large bodies.
 
 The hidden `.specspec/` directory contains direct `<id>.md` nodes and the reserved
 `local/` runtime subtree. Headings, query and the graph editor provide discovery.
-Internal schema/protocol details stay out of ordinary usage. The 0.1 directory is `.specspec`, not the pre-release underscore name;
-[upgrade notes](docs/install.md#upgrading-pre-release-workspaces) explain the boundary.
+Internal schema/protocol details stay out of ordinary usage. The directory is `.specspec`, not the development-only underscore name;
+[upgrade notes](https://github.com/jejay/specspec/blob/main/docs/install.md#upgrading-pre-release-workspaces) explain the boundary.
 
 ## See a project change its mind
 
-[The Gantt example](example/gantt/README.md) has a runnable local planner and an
-independent eight-revision Git history with two substantial changes of direction.
+[The Gantt example](https://github.com/jejay/specspec/blob/main/example/gantt/README.md) has a runnable local planner and an
+independent Git history with two substantial changes of direction.
 Create a real example workspace outside this checkout:
 
 ```sh
@@ -194,12 +196,12 @@ agent connectors are outside this initial release.
 
 ## Go deeper
 
-- [Installation, upgrades and PATH](docs/install.md) · [Agent process and template](docs/agents.md)
-- [CLI reference](docs/cli.md) · [Query selection](docs/query.md) · [Canvas controls](docs/node-canvas.md)
-- [Graph structure](docs/graph-structure.md) · [Sources](docs/source-regions.md) · [Deletion](docs/deletion.md)
-- [Invalid-state repair](docs/invalid-graphs.md) · [Native documents](docs/native-editors.md) · [Remote workspaces](docs/remote-workspaces.md)
-- [Architecture](docs/architecture.md) · [specspec's own graph](docs/own-spec.md) · [Brand provenance](branding/README.md)
-- [Contributing and monorepo commands](CONTRIBUTING.md) · [Local release procedure](docs/releasing.md) · [MIT license](LICENSE)
+- [Installation, upgrades and PATH](https://github.com/jejay/specspec/blob/main/docs/install.md) · [Agent process and template](https://github.com/jejay/specspec/blob/main/docs/agents.md)
+- [CLI reference](https://github.com/jejay/specspec/blob/main/docs/cli.md) · [Query selection](https://github.com/jejay/specspec/blob/main/docs/query.md) · [Canvas controls](https://github.com/jejay/specspec/blob/main/docs/node-canvas.md)
+- [Graph structure](https://github.com/jejay/specspec/blob/main/docs/graph-structure.md) · [Sources](https://github.com/jejay/specspec/blob/main/docs/source-regions.md) · [Deletion](https://github.com/jejay/specspec/blob/main/docs/deletion.md)
+- [Invalid-state repair](https://github.com/jejay/specspec/blob/main/docs/invalid-graphs.md) · [Native documents](https://github.com/jejay/specspec/blob/main/docs/native-editors.md) · [Remote workspaces](https://github.com/jejay/specspec/blob/main/docs/remote-workspaces.md)
+- [Architecture](https://github.com/jejay/specspec/blob/main/docs/architecture.md) · [specspec's own graph](https://github.com/jejay/specspec/blob/main/docs/own-spec.md) · [Brand provenance](https://github.com/jejay/specspec/blob/main/branding/README.md)
+- [Contributing and monorepo commands](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) · [Release and PyPI publishing](https://github.com/jejay/specspec/blob/main/docs/releasing.md) · [MIT license](https://github.com/jejay/specspec/blob/main/LICENSE)
 
 ## Monorepo map
 

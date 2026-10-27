@@ -220,6 +220,8 @@ test('native node editors show a large CLI installation fallback before bootstra
   const f = fixture(t, { missingCli: true });
   await f.openDocument({ id: 'node', path: '.specspec/node.md', body: '# Owner text' });
   assert.match(f.calls.fallbackHtml, /<h1>Install the specspec CLI<\/h1>/);
+  assert.match(f.calls.fallbackHtml, /from PyPI/);
+  assert.match(f.calls.fallbackHtml, /<pre>uv tool install specspec<\/pre>/);
   assert.equal(f.calls.cli.length, 0); assert.equal(f.calls.probes.length, 1);
 });
 

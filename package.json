@@ -1,6 +1,6 @@
 {
   "name": "specspec-monorepo",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "specspec CLI, VS Code extension and Electron desktop — one source workspace",
   "license": "MIT",

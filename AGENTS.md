@@ -40,8 +40,8 @@ material uncertainty and conflicts rather than manufacturing agreement.
 ## Release workspace and generated guides
 
 This checkout is a private npm workspace with one root `package-lock.json`.
-Run `npm ci` at the root; CLI users normally install globally with `uv tool install .`
-or `pipx install .`. See `CONTRIBUTING.md` and `docs/releasing.md` for root build,
+Run `npm ci` at the root; CLI users normally install from PyPI with
+`uv tool install specspec` or `pipx install specspec`. See `CONTRIBUTING.md` and `docs/releasing.md` for root build,
 VSIX, portable desktop and artifact-check commands. Builds do not publish or install
 into an owner's editor. Only separate explicit requests authorize release tags or publication.
 

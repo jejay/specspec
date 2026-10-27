@@ -1,4 +1,4 @@
-"""Archive and inspect local 0.1 artifacts. Never publish, tag, stage or commit.
+"""Archive and inspect local artifacts. Never publish, tag, stage or commit.
 
 Uses only the Python standard library; run after the root package scripts.
 """
@@ -33,6 +33,12 @@ def version(root: Path) -> str:
         encoding="utf8"
     ):
         raise ValueError("Python runtime version differs from package metadata.")
+    lock = json.loads((root / "package-lock.json").read_text(encoding="utf8"))
+    if lock["version"] != expected:
+        raise ValueError("Version mismatch: package-lock.json")
+    for workspace in ["", "graph-ui-common", "vscode", "electron"]:
+        if lock["packages"][workspace]["version"] != expected:
+            raise ValueError(f"Version mismatch: package-lock.json workspace {workspace!r}")
     return expected
 
 

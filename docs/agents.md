@@ -65,7 +65,7 @@ These are design inputs, not runtime dependencies. The shipped text is deliberat
 adapted to current behavior: `.specspec/`, ID-only filenames, exact selected deletion
 without cascading, safe invalid intermediates, default newline/prose-wrap matching,
 and explicit Git authorization. Older draft claims about filename summaries or
-all-descendant deletion do not describe 0.1. Source-input digests and verification
+all-descendant deletion do not describe the current release. Source-input digests and verification
 scope are recorded in the [release investigation](investigations/release-0.1.md).
 
 ## Maintaining it

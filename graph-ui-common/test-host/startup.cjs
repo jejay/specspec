@@ -41,7 +41,8 @@ async function startupChecks(port, { root = '', missing = true, restore, initial
       await wait(`document.getElementById('startup-title').textContent === 'Install the specspec CLI'`, 'Missing CLI must have a prominent blocking message');
       assert.ok(await evaluate(`!document.getElementById('startup').hidden && document.getElementById('new').disabled && document.getElementById('compare').disabled`));
       assert.equal(await evaluate(`document.querySelectorAll('#cards .card').length`), 0);
-      assert.match(await evaluate(`document.getElementById('startup-command').textContent`), /uv tool install/);
+      assert.equal(await evaluate(`document.getElementById('startup-command').textContent`), 'uv tool install specspec');
+      assert.match(await evaluate(`document.getElementById('startup-description').textContent`), /from PyPI/);
       if (!initialize) return;
       await restore();
       await evaluate(`document.getElementById('startup-retry').click()`);

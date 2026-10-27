@@ -11,17 +11,17 @@ exposed port, credential store or remote shell wrapper.
 1. Connect with Remote SSH or Remote Tunnels and open the remote project folder.
 2. Install the specspec VSIX **in that connected window**, on the workspace host.
    Use Developer: Show Running Extensions to check placement. A local-only install
-   is not a substitute for the remote installation. This application is not yet a
-   published Marketplace/PyPI release.
-3. Install Python 3.11+, the matching application protocol specspec application and Git on that host.
-   Use an isolated installation from your authorized checkout/Git URL. Confirm the
-   CLI works from the remote terminal before opening a graph.
+   is not a substitute for the remote installation. The extension is distributed
+   locally as a VSIX, not through the Marketplace.
+3. Install Python 3.11+, Git and the CLI on that host. Use PyPI's isolated default:
+   `uv tool install specspec` (or `pipx install specspec`). Confirm `specspec --version`
+   works from the remote terminal before opening a graph.
 4. Trust that workspace if appropriate. Use Remote Settings for the executable:
 
 ```json
 {
-  "specspec.command": "/home/me/.venvs/specspec/bin/python",
-  "specspec.args": ["-m", "specspec"]
+  "specspec.command": "/home/me/.local/bin/specspec",
+  "specspec.args": []
 }
 ```
 

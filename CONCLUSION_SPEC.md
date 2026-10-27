@@ -20,9 +20,9 @@ addressable choices, with human review assessing remaining uncertainty.
 ## Domain library, CLI and hosts
 
 Use Python 3.11+, Hatchling, Click, ruamel.yaml, markdown-it-py and pytest. The importable domain
-library and console/module CLI serve all hosts. Prefer global `uv tool install` or
-`pipx install` isolation across projects, retain optional one-shot uvx, and support local/
-Git installation; publication is separately authorized.
+library and console/module CLI serve all hosts. Default to PyPI with global
+`uv tool install specspec` or `pipx install specspec` isolation across projects;
+retain optional one-shot uvx and explicit local/Git/wheel alternatives.
 
 ```text
 src/specspec/
@@ -107,7 +107,7 @@ The emitter formats once; advanced --max-bytes bounds its exact UTF-8 response,
 envelope/control escaping and final newline, failing without partial success.
 Canonical node schema and existing host operations retain their contracts.
 
-## Local 0.1 distribution and onboarding
+## 0.0.1 distribution, publication and onboarding
 
 Python wheels/source distributions and a private three-workspace npm monorepo provide
 separate CLI, VS Code and Electron products. One root lock and root commands install,
@@ -117,6 +117,15 @@ Marketplace submission; F5 remains a developer alternative. The portable desktop
 uses an explicitly unpacked runtime allowlist and Windows ZIP/Linux tar archives;
 Python/Git remain external. Artifact checks enforce versions, resources, runtime
 membership and licenses and emit digests, never publication or owner installation.
+
+All maintained product/runtime/workspace versions and local lock entries are 0.0.1.
+CLI publication is the explicitly dispatched `.github/workflows/pipy_publish.yaml`
+on main, matching the owner's PyPI publisher and GitHub `pypi` environment. A build/
+verification job has no OIDC permission; only a separate download-and-publish job
+uses GitHub's short-lived identity through pinned PyPA tooling. It publishes exactly
+the verified Python wheel/sdist with attestations and duplicate rejection, not the
+VSIX/desktop. Public success requires observing the index and an isolated index
+installation. Local builds, ordinary pushes and application actions never publish.
 
 Initialization requires Git and initializes a repository when the selected directory
 is not already in a Git working tree. It creates root AGENTS.md or concatenates the

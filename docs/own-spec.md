@@ -465,7 +465,7 @@ existing/development-worktree destinations and preserves partial/experimental cl
 Serious Git/host/app tests use the complete bundle; small generated graphs are focused
 unit fixtures. Optional [STORY.md](../example/gantt/STORY.md) supplies labeled illustration.
 
-## Local 0.1 delivery and project guidance
+## 0.0.1 delivery, PyPI and project guidance
 
 The [initial release intention](../.specspec/1T-fMcs=.md) covers a global isolated
 CLI, a locally installed VSIX and portable desktop delivery from one monorepo.
@@ -489,8 +489,20 @@ keep logical LF records and target-style writes distinct from byte-exact raw rea
 [Release realization](../.specspec/przmxmo=.md) and
 [guide realization](../.specspec/nxNOTwc=.md) map the packaging, documentation,
 initialization and artifact-host verification. [Release procedure](releasing.md)
-and [bounded evidence](investigations/release-0.1.md) distinguish builds,
-actual installed-artifact qualification and future publication.
+and [earlier bounded evidence](investigations/release-0.1.md) distinguish local
+builds from actual installed-artifact qualification.
+
+[Public CLI installation](../.specspec/Es6S-yg=.md) makes PyPI the default across
+human/agent guides and startup screens: `uv tool install specspec` or
+`pipx install specspec`. [Aligned product versions](../.specspec/qY3YIpQ=.md)
+set all maintained products/workspaces and their lock entries to 0.0.1, independently
+of internal schemas and third-party versions. [Explicit trusted publication](../.specspec/JYMQE1c=.md)
+uses `.github/workflows/pipy_publish.yaml`, repository jejay/specspec and environment
+pypi. The build job tests/validates/smokes the CLI wheel and sdist; the isolated
+publisher job alone receives OIDC permission. [Implementation](../.specspec/po3D-Xk=.md)
+maps the workflow, artifact verifier, metadata and installation surfaces.
+See the [known workflow](releasing.md)
+and [executed release evidence](investigations/pypi-0.0.1.md).
 
 ## Startup, naming and ordinary use
 

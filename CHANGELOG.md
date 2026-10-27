@@ -1,71 +1,66 @@
 # Changelog
 
-## Unreleased
-
-- Initialize Git when needed and create or concatenate the packaged AGENTS.md guide.
-- Read body stdin automatically without messages; remove body-file/stdin flags.
-- Reserve `.specspec/local/` for runtime state and separate its watcher/inventory scope.
-- Gate both UIs on a compatible CLI and offer explicit centered project initialization.
-- Remove Electron menus; retain its project picker and keyboard shortcut.
-- Use specspec, specspec-vscode and specspec-desktop naming; shorten all help bodies
-  and hide host-only controls and ordinary schema/protocol version headers.
-
-
-## Unreleased
-
-- Terminate complete tool-written/native-planned node Markdown with a newline,
-  appending only when missing and preserving local style and trailing blank lines.
-  Reads, raw-editor saves and Git configuration remain untouched.
-
-- Compare node text independently of LF/CRLF/CR encoding, without changing any Git
-  configuration or attributes. Existing-document writes/native plans retain local
-  newline style; new nodes use LF. Normal diffs omit encoding-only changes and
-  newline counters; raw reads and physical transaction/recovery guards remain exact.
-
-- Group mutation feedback by Added/Modified/Deleted/Unchanged with unpadded,
-  comma-separated full node IDs. Init reports Added; previews use Would add/modify/
-  delete. Classification compares logical text within the transaction, independently
-  of Git status. Preserve diagnostics, explicit aliases and API-7 JSON records.
-
-## 0.1.0 — initial release preparation
+## 0.0.1 — initial PyPI CLI release
 
 specspec connects intentions, separately revisable choices and implementation in a
-local Git-versioned Markdown graph. This is an early release, with evolving
-interfaces and bounded verification rather than production/correctness claims.
+local Git-versioned Markdown graph. This is an early release with evolving
+interfaces and bounded verification, not a production/correctness guarantee.
 
-### Included
+### Install and distribute
 
-- A globally installed, isolated Python CLI with seven everyday commands, detailed
-  task-oriented help, complete ancestor readings, Git-aware diffs and source links.
-- Repeatable literal messages and selected-passage replacements with default
-  line-ending/Markdown prose-wrap tolerance; composed add/update/delete transactions.
-- A locally built/installed VSIX for ordinary VS Code, retaining native document
-  Save/undo/dirty ownership, raw Markdown and independent graph views.
-- A standalone sandboxed Windows/Linux Electron editor and portable packaging,
-  sharing the renderer/session/backend instead of a separate mutation engine.
-- Root npm workspace commands/lock, Python wheels/sdist, artifact inspection and
-  SHA-256 manifests, setup/contribution/release guides and the selected brand assets.
-- A packaged `AGENTS.md` generated for newly initialized projects when absent,
-  grounded in the supplied conceptual/CLI drafts and current working behavior.
-- Exact selected deletion, visible invalid intermediates, explicit repair/recovery,
-  bounded source uncertainty and owner-controlled Git operations.
-- An independent maintained Gantt history with three runnable stages and two
-  substantial redirects, reconstructed throughout for the current directory scheme.
+- Install the CLI from [PyPI](https://pypi.org/project/specspec/) with
+  `uv tool install specspec` or `pipx install specspec`. No checkout or Node is
+  needed for the CLI. Current user/agent guides and both UIs recommend this path.
+- All maintained Python/runtime/npm workspace/product versions are `0.0.1`.
+  Internal schema/protocol and third-party dependency versions remain separate.
+- An explicitly dispatched GitHub Trusted Publishing workflow verifies/builds/smokes
+  the Python wheel and source distribution, then publishes them through environment
+  `pypi` with short-lived OIDC identity and attestations. Local builds and ordinary
+  pushes do not upload. [Release workflow](docs/releasing.md)
+- VS Code remains a locally built/installed VSIX; desktop remains a portable,
+  unsigned Windows/Linux app. They use the separately installed CLI and Git.
+  Marketplace/npm publication, installers and auto-updates are not included.
 
-### Pre-release directory change
+Earlier development-only packages used `0.1.0`; this is the first public `0.0.1`,
+not a promise that ordinary numerical upgrades will downgrade those local builds.
+See [replacement/upgrade instructions](docs/install.md#upgrade-and-uninstall).
 
-Canonical nodes now live in **`.specspec/`** rather than `_specspec/`. Node IDs,
-ID-only filenames, node fields, format 7 and API 7 retain their contracts. There is
-one current location, not a compatibility reader. See [upgrade instructions](docs/install.md#upgrading-pre-release-workspaces)
-before changing an existing workspace. Old manual clones/experiments are preserved;
-arbitrary product history is not rewritten automatically.
+### Included behavior
 
-### Deliberate limits
+- Seven everyday CLI verbs, concise task-oriented help, complete ancestor readings,
+  Git-aware diffs and tracked source explanations. Integration controls and internal
+  version headers stay out of ordinary help/readings.
+- Literal repeatable messages, automatic bounded UTF-8 stdin without messages,
+  newline/Markdown-prose-tolerant selected-passage replacements, and composed
+  add/update/delete transactions with complete preflight and local aliases.
+- Grouped Added/Modified/Deleted/Unchanged receipts with full unpadded IDs. Logical
+  LF/CRLF/CR equivalence preserves meaningful text, blank lines and final-newline
+  evidence. Complete managed/native-planned documents append a terminator only when
+  missing; Git settings, attributes and raw-editor saves remain untouched.
+- Explicit initialization requires Git, reuses a containing working tree or creates
+  one, and creates/appends packaged `AGENTS.md` after exact original bytes. Node/guide
+  journaling and recovery protect external edits; Git metadata remains Git-owned.
+- Direct `.specspec/<id>.md` nodes and a reserved ignored `.specspec/local/` runtime
+  subtree. Canonical inventories and watchers exclude that subtree.
+- Shared graph UI with blocking compatible-CLI checks and centered explicit project
+  initialization. Electron has no menu bar; its project picker/shortcut remain.
+- Native VS Code Save/undo/dirty ownership; managed project/desktop byte-checked
+  writes, exact selected deletion, invalid-graph repair, source uncertainty,
+  spotlights, watchers and current/historical comparisons.
+- One private npm workspace/lock, offline UI assets/license notices, inspected local
+  artifacts, selected Spectrum flow branding and independent maintained Gantt history.
 
-No Marketplace submission or assumed PyPI publication, signed installers,
-auto-updater, bundled Python/Git, hosted service or built-in agent connector.
-Desktop currently targets Windows/Linux; CLI and VS Code also target macOS with
-separate execution qualification. Large graphs are not virtualized. Watchers are
-filesystem-dependent hints; transaction recovery is not universal Undo or guaranteed
-power-loss durability. Source mappings and passing tests are evidence, not semantic
-proof. [Executed qualification and evidence](docs/investigations/release-0.1.md)
+### Workspace and qualification boundaries
+
+Canonical storage is `.specspec/`, not development-only `_specspec/`; keep IDs and
+finish/recover old writes before changing paths/tools. Preserve recovery records,
+experiments and native drafts. No compatibility reader or automatic history rewrite
+is supplied. [Workspace upgrade](docs/install.md#upgrading-pre-release-workspaces)
+
+Large graphs are not virtualized. Watchers are hints; recovery is not universal
+Undo or guaranteed power-loss durability. No bundled Python/Git, hosted service or
+built-in coding agent is included. Target platforms and actual executed qualification
+remain separate. [Current release evidence](docs/investigations/pypi-0.0.1.md),
+[earlier preparation](docs/investigations/release-0.1.md) and
+[onboarding evidence](docs/investigations/owner-experience.md) retain their run scope.
+Passing tests and source mappings are evidence, not semantic proof.

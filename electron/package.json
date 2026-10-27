@@ -1,6 +1,6 @@
 {
   "name": "specspec-desktop",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Connect intentions, revisable choices and implementation in a local desktop graph",
   "productName": "specspec-desktop",

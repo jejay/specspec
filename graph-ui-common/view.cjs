@@ -26,7 +26,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <section id="startup" class="startup-screen" aria-labelledby="startup-title" aria-live="polite">
       <div class="startup-content"><h1 id="startup-title">Checking the specspec CLI…</h1>
       <p id="startup-description">The graph requires the separately installed specspec CLI.</p>
-      <pre id="startup-command" hidden>uv tool install /path/to/specspec.whl</pre>
+      <pre id="startup-command" hidden>uv tool install specspec</pre>
       <p id="startup-detail" class="form-help"></p>
       <form id="initialize-form" hidden><label for="initialize-body">What should this product achieve?</label>
         <textarea id="initialize-body" rows="6" placeholder="# Product purpose" required></textarea>

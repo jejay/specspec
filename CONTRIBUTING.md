@@ -33,8 +33,8 @@ If activation is unavailable, invoke `.venv/Scripts/python.exe` on Windows or
 `.venv/bin/python` explicitly and put its directory on PATH for npm's Python scripts.
 No global npm installation or Marketplace credentials are required.
 
-For normal product use, install the CLI with `uv tool install .` or `pipx install .`
-instead. An editable development environment and a global installation can coexist;
+For normal product use, install from PyPI with `uv tool install specspec` or
+`pipx install specspec` instead. An editable development environment and a global installation can coexist;
 select the intended executable explicitly when testing changes.
 
 ## Root commands
@@ -121,6 +121,7 @@ Builds use selected assets in `branding/`, not a sibling checkout. Imports retai
 source digests and exact bytes; keep UI status colors independent. Regenerate the
 Windows launcher with `python tools/build_icon.py` only when its source changes.
 
-[The local release procedure](docs/releasing.md) covers artifact inspection,
-fresh-environment installs and platform qualification. Publication, tags, signing,
-owner hook changes and Marketplace submission require separate explicit authorization.
+[The release procedure](docs/releasing.md) covers artifact inspection, isolated
+qualification and the explicitly dispatched PyPI Trusted Publishing workflow.
+Local builds never publish. Tags, signing, owner hook changes and Marketplace
+submission require their own authorization.

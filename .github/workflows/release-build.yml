@@ -34,7 +34,7 @@ jobs:
       - run: npm run package:all
       - uses: actions/upload-artifact@v4
         with:
-          name: specspec-0.1-${{ runner.os }}
+          name: specspec-0.0.1-${{ runner.os }}
           if-no-files-found: error
           path: |
             dist/*.whl

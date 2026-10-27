@@ -4,14 +4,14 @@ A standalone Windows/Linux graph editor using the **same renderer and guarded
 session as the VS Code extension**. Connect intentions, separately revisable choices
 and actual implementation in local, Git-versioned Markdown.
 
-This is the early **0.1** desktop: portable, unsigned, without installers,
+This is the early **0.0.1** desktop: portable, unsigned, without installers,
 auto-updates or a bundled Python runtime. CLI and Git remain external prerequisites.
 There is no hosted service or built-in coding-agent connector.
 
 ## Run from the monorepo
 
-Install the CLI globally first: from the repository root, `uv tool install .` or
-`pipx install .`. Check `specspec --version` in the shell used to launch the app.
+Install the CLI globally from PyPI first: `uv tool install specspec` or
+`pipx install specspec`. Check `specspec --version` in the shell used to launch the app.
 Then use Node 22.12+ and npm 10+:
 
 ```sh
@@ -54,8 +54,8 @@ npm run package:electron
 
 Output follows the current Node platform/architecture:
 
-- `dist/desktop/specspec-desktop-win32-x64/` and `dist/specspec-desktop-0.1.0-win32-x64.zip`, or
-- `dist/desktop/specspec-desktop-linux-x64/` and `dist/specspec-desktop-0.1.0-linux-x64.tar.gz`
+- `dist/desktop/specspec-desktop-win32-x64/` and `dist/specspec-desktop-0.0.1-win32-x64.zip`, or
+- `dist/desktop/specspec-desktop-linux-x64/` and `dist/specspec-desktop-0.0.1-linux-x64.tar.gz`
   (other supported Node architectures use their own suffix).
 
 Extract the whole archive and run `specspec-desktop.exe` or `./specspec-desktop`. Keep resources,

@@ -6,7 +6,7 @@ parents:
 ---
 # Make the initial release straightforward to install and try
 
-Prepare a candid 0.1 release from one source monorepo. People can independently
+Prepare a candid initial release from one source monorepo. People can independently
 install the global CLI, build and install the extension into their ordinary VS Code
 instance, or build and run the standalone Electron UI. Explain prerequisites,
 commands, output locations, upgrades and troubleshooting without requiring knowledge
