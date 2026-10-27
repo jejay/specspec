@@ -152,6 +152,18 @@ checks cover **240 project / 22 example nodes**, with no source warnings. These
 verification-only changes leave the published 0.0.1 Python/guide/README bytes intact;
 registry artifacts are not replaced.
 
+The [next general run](https://github.com/jejay/specspec/actions/runs/40471258799)
+passed the corrected Spotlight test and both Linux Python jobs, while exposing an
+exact one-read native-bootstrap assumption. Initial Git discovery can invalidate
+that pending context, legitimately requiring a second read before any redraw timer.
+A causal regression now blocks the first read, completes real watcher discovery,
+and asserts exactly two reads, fresh content and no error. Stable-input bootstrap,
+canonical-watcher and Spotlight count tests explicitly hold only this unrelated
+provider pending; other fixture cases retain real Git. The VS Code suite passes
+**54** cases with the added regression, without weakening either exact count or
+changing production scheduling. This is another test-oracle correction, not a
+published runtime update.
+
 Local scripts, original bytes, failed runs, artifacts, GitHub/API reports and final
 checks are retained in `.specspec/local/pypi-0.0.1/`. Credentials remain in existing
 credential management or transient CI identity, never these reports. Original

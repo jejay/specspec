@@ -114,6 +114,7 @@ function fixture(t, options = {}) {
   };
   const invoke = async (command, prefix, selectedRoot, args, input) => {
     calls.cli.push({ command, prefix, root: selectedRoot, args, input });
+    if (options.beforeCli) await options.beforeCli({ args, input });
     if (options.cliError) throw new Error(options.cliErrorMessage || 'Cannot run Python backend');
     if (args[0] === 'init') {
       const node = { id: 'AAAAAAA=', type: 'manifesto', parents: [], sources: [], body: input + '\n', path: '.specspec/AAAAAAA=.md' };
@@ -389,7 +390,7 @@ test('Open Graph creates independent main-editor panels and a shared project wat
 });
 
 test('watchers include directory replacement, refresh external changes, and polling defaults off', async t => {
-  const f = fixture(t); await f.calls.commands.get('specspec.openGraph')();
+  const f = fixedGitFixture(t); await f.calls.commands.get('specspec.openGraph')();
   assert.equal(f.calls.watchers[0].pattern.pattern, '.specspec{,/**}');
   const count = f.calls.cli.length; await new Promise(r => setTimeout(r, 30)); assert.equal(f.calls.cli.length, count);
   f.change({ ...snapshot, nodes: [{ id: 'manual', type: 'requirement', body: '# Manually edited', parents: [], sources: [] }] });
@@ -400,6 +401,14 @@ test('watchers include directory replacement, refresh external changes, and poll
 
 const nextTurn = () => new Promise(resolve => setImmediate(resolve));
 const nonGit = () => Object.assign(new Error('Not a Git repository'), { code: 128 });
+function fixedGitFixture(t, options = {}) {
+  // Count only the provider under test; real late Git hints have their own tests.
+  let rejectDiscovery;
+  options.gitExecute = () => new Promise((_, reject) => { rejectDiscovery = reject; });
+  const f = fixture(t, options);
+  t.after(() => rejectDiscovery?.(nonGit()));
+  return f;
+}
 async function advanceClock(t, milliseconds, session) {
   t.mock.timers.tick(milliseconds); await nextTurn();
   await session.queue; await session.annotationsWork; await nextTurn();
@@ -510,11 +519,7 @@ test('native spotlight creation includes actual dirty buffers without invoking S
 });
 
 test('external annotation shots notify all project views without reloading their graphs', async t => {
-  // Isolate Spotlight events from the independent startup Git-discovery hint.
-  // Its legitimate late graph refresh has separate controlled-clock regressions.
-  let rejectDiscovery;
-  const options = { shots: [], gitExecute: () => new Promise((_, reject) => { rejectDiscovery = reject; }) };
-  const f = fixture(t, options); t.after(() => rejectDiscovery?.(nonGit()));
+  const options = { shots: [] }, f = fixedGitFixture(t, options);
   await f.calls.commands.get('specspec.openGraph')(); await f.calls.commands.get('specspec.openGraph')();
   const reads = f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length;
   const path = join(f.root, '.specspec/local', 'annotations');
@@ -528,12 +533,35 @@ test('external annotation shots notify all project views without reloading their
 
 const fileNode = { id: 'node', type: 'requirement', parents: [], sources: [], body: '# Original', path: '.specspec/node.md' };
 test('native bootstrap supplies the first working render with one no-baseline read', async t => {
-  const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
+  const f = fixedGitFixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { panel } = await f.openDocument(fileNode);
   await waitFor(() => panel.messages.some(m => m.type === 'snapshot' && !m.provisional));
   assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read' && !JSON.parse(c.input).base).length, 1);
   assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).base).length, 1);
 });
+test('native bootstrap rereads when real initial Git discovery invalidates its pending context', async t => {
+  let rejectDiscovery, releaseRead, startedRead;
+  const started = new Promise(resolve => { startedRead = resolve; });
+  const firstRead = new Promise(resolve => { releaseRead = resolve; });
+  let workingReads = 0;
+  const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] },
+    gitExecute: () => new Promise((_, reject) => { rejectDiscovery = reject; }),
+    beforeCli: async ({ args, input }) => {
+      if (args[0] === 'api' && JSON.parse(input).op === 'read' && !JSON.parse(input).base && ++workingReads === 1) {
+        startedRead(); await firstRead;
+      }
+    } });
+  t.after(() => { releaseRead(); rejectDiscovery?.(nonGit()); });
+  const opening = f.openDocument(fileNode);
+  await started;
+  rejectDiscovery(nonGit()); await f.calls.gitWatchers[0].discovery;
+  releaseRead(); const { panel } = await opening;
+  await waitFor(() => panel.messages.some(m => m.type === 'snapshot' && !m.provisional));
+  assert.equal(workingReads, 2, 'Changed Git context requires a fresh bootstrap, not a one-read promise.');
+  assert.equal(lastSnapshot(panel).snapshot.nodes[0].body, fileNode.body);
+  assert.deepEqual(f.calls.errors, []);
+});
+
 test('custom text editor binds a real document, marks edits dirty, and saves without CLI update', async t => {
   const f = fixture(t, { snapshot: { ...snapshot, nodes: [fileNode] } });
   const { doc, panel } = await f.openDocument(fileNode);

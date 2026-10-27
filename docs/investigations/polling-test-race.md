@@ -90,4 +90,12 @@ teardown. It retains the strict unchanged graph-read count, real filesystem
 Spotlight watching and notifications to every view. Existing controlled-clock
 late-discovery tests still prove the real graph refresh/disposal behavior. The
 correction adds no sleeps, longer deadlines or production event suppression.
-[Release evidence](pypi-0.0.1.md) records the remote failure and final follow-up scope.
+The next CI run passed that test and exposed the same issue in an exact bootstrap
+read-count assertion. Initial discovery can invalidate a pending native context
+before the 200 ms redraw debounce: a correct bootstrap then reads again. A new causal
+regression blocks its first read, completes actual watcher discovery and verifies
+exactly two reads, fresh content and no error. The one-read test now explicitly fixes
+Git context. Canonical-watcher quiet-count and Spotlight-count tests share this
+provider isolation; all other fixtures retain real Git by default. No legitimate
+refresh/retry is prohibited just to satisfy a stable-input count.
+[Release evidence](pypi-0.0.1.md) records the remote failures and final follow-up scope.
