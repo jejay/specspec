@@ -107,6 +107,23 @@ choice is written to serve it, and the choice next to it is untouched.
   <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-light.svg" alt="Replacing a conclusion. The intention Make timing easy to read is unchanged. The weekday timeline and its implementation are marked D for deleted and kept in Git history; a milestone list and its implementation are marked A for added. A second choice under the same intention, highlighting what moved, stays as it is.">
 </picture>
 
+## What you work with: the graph in VS Code and in a desktop app
+
+The VS Code extension and the desktop app draw the same zoomable canvas and run the
+`specspec` command for every read and write.
+
+<img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode.png" alt="VS Code with the Explorer on the left, listing the Markdown node files in .specspec, and the specspec graph in an editor tab: about 250 nodes in columns, colored from purple to orange by their distance from the manifesto.">
+
+This is specspec's own graph in VS Code from far above: about 250 nodes, colored by
+their distance from the manifesto. The node files are in the Explorer on the left.
+
+<img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-desktop.png" alt="The desktop app comparing two stages of the example planner. Deleted nodes are red with a D, added nodes are green with an A and unchanged nodes are gray, under a toolbar and a legend.">
+
+The desktop app, closer in, compares two stages of the
+[example planner](#example-a-planning-app-that-changed-direction-twice): nodes marked D
+were deleted by the redirect, nodes marked A were added, and the gray ones stayed.
+Selecting a node opens its text, parents and sources for editing.
+
 ## How you and your agent work on the graph
 
 specspec works with the coding agent you already use, as long as it can run shell
