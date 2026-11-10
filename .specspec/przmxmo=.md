@@ -38,6 +38,8 @@ sources:
 - path: branding/specspec-logo-dark.svg
 - path: branding/specspec-logo-light.png
 - path: branding/specspec-logo-dark.png
+- path: branding/specspec-logo-tagline-light.png
+- path: branding/specspec-logo-tagline-dark.png
 - path: branding/app-icon.ico
 - path: .github/workflows/ci.yml
 - path: .github/workflows/release-build.yml
@@ -56,7 +58,7 @@ inspector checks versions, resources, runtime membership, asset/license presence
 and archive semantics, then writes artifact digests and a manifest.
 
 README and installation/contribution/host/release guides explain the specification
-spectrum before setup, show the selected exact light/dark logo imports, distinguish
+spectrum before setup, show the selected exact light/dark tagline-lockup imports, distinguish
 normal VSIX installation from developer F5, and explain global CLI/PATH ownership.
 The original supplied artwork and local experiments remain preserved.
 

@@ -1,221 +1,211 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-dark.png">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-light.png" alt="specspec" width="640">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-dark.png">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-light.png" alt="specspec — Engineering is on the spectrum now" width="640">
 </picture>
 
-# specspec
+specspec connects your intentions to revisable decisions and to the code that realizes
+them, so you can choose how much to direct or delegate at every step. The specification
+is a graph of Markdown files in your Git repository. You work on it in a visual graph
+editor or the terminal, and your coding agent uses the same CLI.
 
-**Keep the intention. Reconsider the solution. Know what the code is meant to do.**
+The name is short for *specification spectrum*.
 
-An agent can produce working code quickly. Keeping track of *why this solution*,
-which assumptions came from whom, and what should survive a change of approach is
-harder. A long conversation is a poor place to keep that understanding.
+## Why
 
-specspec connects **your intentions, revisable choices and implementation** in a
-Git-versioned Markdown graph. Read and edit it through a small CLI, your own VS Code
-instance, or a standalone desktop window. People and coding agents use the same
-specification, with full explanations rather than a pile of unchecked task titles.
+When you build with a coding agent, much of the specification gets written in
+conversation. You describe a goal, the agent proposes a way to reach it, you agree,
+and it builds. A few rounds later, what you wanted and what the agent suggested have
+merged into one plan. Some details are there because you need them, others because
+they were the first idea that worked, and the plan reads the same either way.
 
-> Engineering is on the spectrum now
+That matters once you want to try something else. With an agent, rebuilding the data
+model or the UI takes minutes. The hard part is knowing what the old one was for, so
+that the new one keeps it. specspec keeps that knowledge in the repository, next to
+the code.
 
-Hands-on engineering and delegated agent work are not a binary choice. You can
-direct one decision carefully and leave the next open. specspec makes that reasoning
-visible; it does not choose your level of delegation or run an agent for you.
+## The specification spectrum
 
-**0.0.1 is an early, local-first release.** The CLI and both graph editors are usable;
-expect rough edges and changing interfaces. There is no hosted service, Marketplace
-listing, automatic coding agent, or correctness guarantee. Your specification stays
-in your repository. [Scope and release notes](https://github.com/jejay/specspec/blob/main/CHANGELOG.md) · [Install](https://github.com/jejay/specspec/blob/main/docs/install.md)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-dark.svg">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-light.svg" alt="A specspec graph for a planning app. The manifesto, Help a small team agree on a plan, leads to two intentions, three choices that serve them and three implementation nodes that point to source lines. A color band underneath runs from intention to conclusion.">
+</picture>
 
-## A spectrum, not a checklist
+Every node is a short Markdown file in `.specspec/`. The root is the *manifesto*: what
+the project is for. Every other node names the parents it serves, either refining them
+or choosing a way to achieve them. *Implementation* nodes at the outer edge explain how
+the code realizes a requirement and link to the files and line ranges involved.
 
-```text
-Manifesto         Help a small team understand its plan
-  Requirement     Make timing and dependencies understandable
-    Requirement   Present tasks on an interactive timeline
-      Requirement Use a local browser view with explicit JSON export
-        Implementation  Explain the view and link its actual source/tests
+Near the manifesto, nodes are mostly intention: what you want and why. Further out,
+they are mostly conclusion: how it gets done. A node's place on that spectrum follows
+from its position in the graph. A requirement is a conclusion for its parents and an
+intention for its children.
+
+One choice can serve several intentions, which makes the graph a directed acyclic graph
+rather than a tree. In the file, that is simply a second parent:
+
+```markdown
+---
+id: OHYE-rI=
+type: requirement
+parents:
+- rrvyriU=
+- ABOH2aU=
+---
+# Highlight what moved since the last version
+
+Compare the plan with the previous commit and mark changed dates.
 ```
 
-The timeline is a choice serving an intention, not the intention itself. A later
-approach can replace it without quietly losing the goal. One conclusion can serve
-several intentions: the structure is a rooted DAG, not just a hierarchy.
+Giving each intention and each choice its own node is what keeps solutions revisable.
+"Show tasks on a weekday timeline" is one way to make timing easy to read. If a list of
+milestones works better, you replace that branch. The intention above it stays, and the
+new choice is written to serve it.
 
-- **Read the why.** Query a decision and every ancestor that justifies it.
-- **Revise deliberately.** Keep consequential choices separately addressable;
-  compare specification changes with Git and inspect potential downstream effects.
-- **Connect the realization.** Implementation explanations link to files or tracked
-  source regions, with explicit uncertainty when those links stop being reliable.
-- **Work visually or in the terminal.** Both UIs share one renderer and Python
-  backend. The CLI works well with an agent's existing shell tools.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-dark.svg">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-light.svg" alt="Replacing a conclusion. The intention Make timing easy to read is unchanged. The weekday timeline and its implementation are marked D for deleted and kept in Git history; a milestone list and its implementation are marked A for added.">
+</picture>
 
-Graph position is a relationship, not an approval or confidence score. Passing
-validation establishes structure, not whether a product actually meets its purpose.
+## The other spectrum
 
-## Choose how to use it
+The tagline, *Engineering is on the spectrum now*, refers to a second range: from
+hands-on engineering, where you make every decision yourself, to vibe coding, where the
+agent makes them for you. Most projects need both, in different places, and specspec
+lets you choose per branch.
 
-| Entry point | What you install | What you need |
-| --- | --- | --- |
-| **specspec CLI** | Global isolated Python tool | Python 3.11+, uv or pipx; Git including initialization |
-| **specspec-vscode** | Build a VSIX, install into your ordinary editor | Global CLI, VS Code 1.90+, Node 22.12+ and npm 10+ for building |
-| **specspec-desktop** | Run from source or build a portable Electron app | Global CLI and Git; Node/npm for source builds |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-dark.svg">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-light.svg" alt="The same planning graph with a shaded area for your decisions. You decided the timeline down to the code, chose to highlight moved dates, and stated only the goal for proposing changes. The remaining nodes were concluded by the agent.">
+</picture>
 
-The CLI needs **no Node, VS Code or Electron**. The UIs use `specspec` on PATH by
-default; neither bundles a second Python runtime. Desktop targets Windows/Linux;
-macOS users can use the CLI and VS Code. See [platform qualification](https://github.com/jejay/specspec/blob/main/docs/platforms.md).
+In this example you designed the timeline yourself, down to the code. You asked for
+moved dates to be highlighted and left the implementation to the agent. For proposing
+changes, you stated only the goal, and the agent chose a JSON file in the repository
+and wrote its validation. The agent's conclusions are nodes like any other: you can
+read them now and keep or replace them later.
 
-### Install the CLI globally
+## Working with an agent
 
-Install **[specspec from PyPI](https://pypi.org/project/specspec/)**:
+specspec works with the coding agent you already use, as long as it can run shell
+commands. `specspec init` writes an `AGENTS.md` that explains the graph and this
+workflow to it:
+
+1. You describe what you want and cover the breadth. The agent works out the depth:
+   it separates your intentions from the solutions you proposed, questions choices
+   that look weak and suggests its own. The graph stays as it is while you talk.
+   Skip this step when the request is clear.
+2. When you ask for it, the agent writes the graph with `specspec add`, `update` and
+   `delete`, building on any edits you made yourself, and reports its choices and open
+   questions. If you want commits, your edits and its changes go into separate ones.
+3. You review. The graph editor marks nodes added, changed or deleted since the last
+   commit, and `specspec diff` shows the full text. Edit any node directly, or select
+   a few nodes and leave the agent a message about them (a *spotlight*).
+4. The agent implements. Before it changes code, it reads the node and every ancestor
+   that justifies it. Where the graph leaves room for interpretation, it adds deeper
+   conclusions and implementation nodes linked to the code. Scope changes come back to
+   you; when it finds a contradiction, it builds a consistent part and reports the rest.
+5. When you change your mind, you change the intention or replace the choice. The
+   graph describes the current plan; Git keeps the earlier ones and the reasons they
+   changed.
+
+The goal is a graph precise enough that implementing it comes close to compiling it,
+with little left for the agent to guess. How closely you review on the way is up to
+you. Look hard where uncertainty and impact are high, and decide when the graph is clear
+enough to be worth an implementation attempt. Each attempt is evidence for the next
+revision. [Agent workflow and the AGENTS.md template](https://github.com/jejay/specspec/blob/main/docs/agents.md)
+
+## Try it
+
+The CLI needs Python 3.11+ and Git. Install it from
+[PyPI](https://pypi.org/project/specspec/):
 
 ```sh
-uv tool install specspec
-specspec --version
-specspec --help
+uv tool install specspec    # or: pipx install specspec
 ```
 
-Or use `pipx install specspec`. Both install a user-wide command in an isolated
-environment, not a dependency in every project. No source checkout or Node is needed
-for the CLI. Upgrade with `uv tool upgrade specspec` or `pipx upgrade specspec`.
-Restart your terminal/editor after fixing PATH with `uv tool update-shell` or
-`pipx ensurepath` if necessary. No administrator or `sudo pip` installation is needed.
-The [installation guide](https://github.com/jejay/specspec/blob/main/docs/install.md) covers source/wheel alternatives and
-replacing an older local build.
+In a project directory, create the manifesto. `init` sets up a Git repository if there
+is none and writes `AGENTS.md`, or appends to the one you have:
 
-### Use it in your own VS Code — no Marketplace
+```sh
+specspec init -m "# Help a small team agree on a plan" -m "Everyone sees the same dates and why they moved."
+```
 
-Only UI source builds need a checkout. After installing the CLI:
+It prints the manifesto's ID, such as `TZ971GA=`. IDs end in `=`; copy them whole.
+The everyday commands:
+
+```sh
+specspec query                                       # read the whole graph
+specspec query ID --max-distance 0 --with-ancestors  # one node and everything that justifies it
+specspec add --parent ID -m "# Make timing easy to read" -m "Everyone sees when each task happens."
+specspec update ID --replace "old wording" "new wording"
+specspec delete ID
+specspec diff                                        # changes since the last commit
+specspec check                                       # structural validation
+```
+
+Every command has `--help` with examples. See the
+[CLI guide](https://github.com/jejay/specspec/blob/main/docs/cli.md) and the
+[query guide](https://github.com/jejay/specspec/blob/main/docs/query.md).
+
+### Graph editors
+
+The VS Code extension and the desktop app draw the graph on a zoomable canvas, open
+each node in an editor and compare any two revisions. For now you build them from this
+repository, which needs Node 22.12+ and npm 10+. Both run the `specspec` command you
+installed.
 
 ```sh
 git clone https://github.com/jejay/specspec.git
 cd specspec
 npm ci
-npm run package:vscode
-code --install-extension dist/specspec-vscode-0.0.1.vsix
+npm run package:vscode    # then: code --install-extension dist/specspec-vscode-0.0.1.vsix
+npm run desktop           # or start the desktop app from source
 ```
 
-Reload VS Code, open your project and run **specspec: Open Graph** from the Command
-Palette. Or use **Extensions → … → Install from VSIX…** with that file. This is a
-normal installed extension, not an F5-only development window. No package is sent
-to the Marketplace. [Setup and troubleshooting](https://github.com/jejay/specspec/blob/main/vscode/README.md)
+In VS Code, run **specspec: Open Graph** from the Command Palette. The desktop app runs
+on Windows and Linux; on macOS, use VS Code. The
+[installation guide](https://github.com/jejay/specspec/blob/main/docs/install.md)
+covers portable desktop builds, PATH problems and upgrades.
 
-### Run the desktop
+## A planner that changed its mind
 
-From the repository root:
+[`example/gantt`](https://github.com/jejay/specspec/blob/main/example/gantt/README.md)
+is a small planning app built with specspec, with its own Git history. It changed
+direction twice: from a portfolio tool for business projects, to a personal planner
+with hand-picked dates, to a workshop planner that forecasts finish dates. Each
+redirect deleted the conclusions that no longer applied and kept the intentions that
+still did. From this repository, with the CLI installed:
 
 ```sh
-npm ci
-npm run desktop
-# Or open this checkout's graph directly:
-npm run desktop -- --project .
+python example/gantt/history/checkout.py    # clones it to ~/Projects/specspec-examples/gantt
 ```
 
-Choose **Open project**, select your project and **Trust and Open**. The explicit
-`--project` launch argument authorizes that folder instead. To create a portable
-Windows/Linux package, activate the development Python environment described in
-[contributing](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) and run `npm run package:electron`. Output is under
-`dist/`. End users of the portable archive need the global CLI and Git, **not Node**.
-[Desktop guide](https://github.com/jejay/specspec/blob/main/electron/README.md)
+Open the clone in either editor and compare `stage/01-code` with `stage/02-spec`, or
+run `specspec diff stage/01-code stage/02-spec` inside it.
 
-## Start a project
+## Status
 
-In a different directory — this checkout already has a graph:
+specspec 0.0.1 is the first public release. The CLI is on PyPI; the editors are built
+locally. Expect rough edges and changing commands.
 
-```sh
-mkdir my-project
-cd my-project
-specspec init -m "# Understand our plan" -m "Help a small team agree on timing."
-specspec query --max-distance 2
-```
+Everything runs on your machine. The graph is Markdown in your repository, and you
+stage and commit it like any other file. `specspec check` confirms that the graph is
+well formed: one manifesto, every node reachable from it, no cycles. Whether the
+product does what the nodes describe is for you, your tests and your agent to judge.
+Implementation nodes help by pointing at the exact code, and
+`specspec check --sources` flags linked code that has changed or disappeared since it
+was linked.
 
-Initialization requires Git and initializes a repository when needed. It creates
-`.specspec/` and creates root **`AGENTS.md`**, or appends the
-[shipped guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md) after existing instructions.
-The reserved `.specspec/local/` subtree holds ignored recovery and spotlight data,
-not nodes. Staging, commits, identity and hooks remain yours.
+specspec is developed with specspec. Its own graph is in
+[`.specspec/`](https://github.com/jejay/specspec/tree/main/.specspec), and the
+[tour](https://github.com/jejay/specspec/blob/main/docs/own-spec.md) explains where to
+start.
 
-Both UIs check for the CLI immediately and show a blocking installation message
-when it is missing. A directory without a graph offers a centered **Initialize
-specspec** action. Opening a folder alone does not create one.
+## Documentation
 
-Copy the full manifesto ID printed by `init`, including its trailing `=`, and use
-it in place of `MANIFESTO_ID` below:
+- [Installation and upgrades](https://github.com/jejay/specspec/blob/main/docs/install.md) · [Agent workflow](https://github.com/jejay/specspec/blob/main/docs/agents.md) · [Changelog](https://github.com/jejay/specspec/blob/main/CHANGELOG.md)
+- [CLI](https://github.com/jejay/specspec/blob/main/docs/cli.md) · [Query](https://github.com/jejay/specspec/blob/main/docs/query.md) · [Spotlights](https://github.com/jejay/specspec/blob/main/docs/spotlights.md) · [Canvas controls](https://github.com/jejay/specspec/blob/main/docs/node-canvas.md#canvas-controls)
+- [Graph structure](https://github.com/jejay/specspec/blob/main/docs/graph-structure.md) · [Source links](https://github.com/jejay/specspec/blob/main/docs/source-regions.md) · [Deletion](https://github.com/jejay/specspec/blob/main/docs/deletion.md) · [Repairing invalid graphs](https://github.com/jejay/specspec/blob/main/docs/invalid-graphs.md)
+- [Architecture](https://github.com/jejay/specspec/blob/main/docs/architecture.md) · [Contributing and repository layout](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) · [Releasing](https://github.com/jejay/specspec/blob/main/docs/releasing.md) · [Brand assets](https://github.com/jejay/specspec/blob/main/branding/README.md)
 
-```sh
-specspec add --parent MANIFESTO_ID -m "# Readable timing" -m "Show task timing clearly."
-specspec query NODE_ID --max-distance 0 --with-ancestors
-specspec update NODE_ID --replace "task timing" "timing and dependencies"
-specspec check --sources
-specspec diff --with-context
-```
-
-`NODE_ID` is another full ID from the result. Messages are literal Markdown; repeat
-`-m` for paragraphs. `--replace` selects unique passages while tolerating ordinary
-prose wrapping and line-ending differences; inserted text remains literal. Compose
-add/update/delete for one recoverable transaction. See [the CLI guide](https://github.com/jejay/specspec/blob/main/docs/cli.md)
-and each command's concise `--help`. Without messages, text comes from stdin;
-use shell redirection for large bodies.
-
-The hidden `.specspec/` directory contains direct `<id>.md` nodes and the reserved
-`local/` runtime subtree. Headings, query and the graph editor provide discovery.
-Internal schema/protocol details stay out of ordinary usage. The directory is `.specspec`, not the development-only underscore name;
-[upgrade notes](https://github.com/jejay/specspec/blob/main/docs/install.md#upgrading-pre-release-workspaces) explain the boundary.
-
-## See a project change its mind
-
-[The Gantt example](https://github.com/jejay/specspec/blob/main/example/gantt/README.md) has a runnable local planner and an
-independent Git history with two substantial changes of direction.
-Create a real example workspace outside this checkout:
-
-```sh
-python example/gantt/history/checkout.py
-```
-
-Open the resulting folder in either UI and compare `stage/01-code` → `stage/02-spec`
-or `stage/02-code` → `stage/03-spec`. Existing example clones are never reset.
-The tracked `example/gantt/` folder is a snapshot, not its own Git workspace.
-
-## Ownership and boundaries
-
-Markdown is editable directly as well as through the tools. A completed graph is
-rooted and shortcut-free; intermediate invalid graphs remain diagnosable and
-repairable. Deletion removes **exactly selected files** and retains surviving
-conclusions and their declarations. `--require-valid` checks a complete candidate;
-`check` remains strict. There are no stored approval states or parent-review gates.
-
-VS Code file tabs retain native Save, dirty state and undo/redo. Electron and
-managed project actions use locked, original-byte-checked, recoverable writes.
-Interrupted edits need `specspec recover`; this is not a universal Undo or a
-power-loss-safe database. Watchers are hints, with explicit Refresh available.
-
-The renderers load bundled assets and render project text literally. CLI execution
-requires trusted host/project configuration. Source symbols are descriptive; source
-tracking and passing tests supply evidence, not proof of semantic fulfillment.
-Large graphs are not virtualized. Signing, installers, auto-updates and hosted
-agent connectors are outside this initial release.
-
-## Go deeper
-
-- [Installation, upgrades and PATH](https://github.com/jejay/specspec/blob/main/docs/install.md) · [Agent process and template](https://github.com/jejay/specspec/blob/main/docs/agents.md)
-- [CLI reference](https://github.com/jejay/specspec/blob/main/docs/cli.md) · [Query selection](https://github.com/jejay/specspec/blob/main/docs/query.md) · [Canvas controls](https://github.com/jejay/specspec/blob/main/docs/node-canvas.md)
-- [Graph structure](https://github.com/jejay/specspec/blob/main/docs/graph-structure.md) · [Sources](https://github.com/jejay/specspec/blob/main/docs/source-regions.md) · [Deletion](https://github.com/jejay/specspec/blob/main/docs/deletion.md)
-- [Invalid-state repair](https://github.com/jejay/specspec/blob/main/docs/invalid-graphs.md) · [Native documents](https://github.com/jejay/specspec/blob/main/docs/native-editors.md) · [Remote workspaces](https://github.com/jejay/specspec/blob/main/docs/remote-workspaces.md)
-- [Architecture](https://github.com/jejay/specspec/blob/main/docs/architecture.md) · [specspec's own graph](https://github.com/jejay/specspec/blob/main/docs/own-spec.md) · [Brand provenance](https://github.com/jejay/specspec/blob/main/branding/README.md)
-- [Contributing and monorepo commands](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) · [Release and PyPI publishing](https://github.com/jejay/specspec/blob/main/docs/releasing.md) · [MIT license](https://github.com/jejay/specspec/blob/main/LICENSE)
-
-## Monorepo map
-
-| Path | Responsibility |
-| --- | --- |
-| `src/specspec/`, `pyproject.toml` | Python library/CLI and packaged initialization guide |
-| `vscode/` | VS Code adapter and local VSIX packaging |
-| `electron/` | Sandboxed desktop adapter and portable packaging |
-| `graph-ui-common/` | Shared renderer, session, host ports and bundled dependency notices |
-| `package.json`, `package-lock.json` | One private npm workspace, locked UI/build dependencies and root commands |
-| `branding/`, `docs/` | Selected identity, onboarding and detailed guides |
-| `.specspec/` | This product's own intentions, choices and implementation explanations |
-| `example/gantt/` | Maintained independent history fixture and runnable example snapshot |
-
-Source and release artifacts are built here; publishing remains an explicit owner
-action. The supplied original dog artwork stays archived, while the application
-and documentation use the selected Spectrum flow identity.
+specspec is [MIT licensed](https://github.com/jejay/specspec/blob/main/LICENSE).

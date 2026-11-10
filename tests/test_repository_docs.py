@@ -60,7 +60,11 @@ def test_current_documentation_uses_id_only_node_path_examples():
         assert not re.search(r"filename[- ]only|filename summary|summary-only", text, re.I), path
 
 
-@pytest.mark.parametrize("path", ["docs/architecture.svg", "docs/architecture-interfaces.svg"])
+@pytest.mark.parametrize(
+    "path",
+    ["docs/architecture.svg", "docs/architecture-interfaces.svg"]
+    + [p.relative_to(ROOT).as_posix() for p in sorted((ROOT / "docs/images").glob("*.svg"))],
+)
 def test_architecture_svg_is_accessible_self_contained_documentation(path):
     svg = ElementTree.parse(ROOT / path).getroot()
     namespace = "{http://www.w3.org/2000/svg}"

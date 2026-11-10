@@ -7,16 +7,22 @@ parents:
 ---
 # Package the selected identity with a concise product introduction
 
-Use locally imported final Spectrum flow light/dark primary logos in introductions,
-the optical symbol in application chrome and the supplied launcher for packages.
-Preserve selected artwork and record import digests/provenance. The optional tagline
-Engineering is on the spectrum now refers to the owner's continuous freedom between
-hands-on engineering and delegated work; explanatory copy makes that meaning clear.
+Keep locally imported final Spectrum flow light/dark primary logos and tagline
+lockups for introductions, the optical symbol in application chrome and the supplied
+launcher for packages. Preserve selected artwork and record import digests/provenance.
+The README opens with the light/dark tagline lockup at the brand guide's 640 px
+minimum, followed by the brand's literal product description. The tagline Engineering
+is on the spectrum now refers to the owner's continuous freedom between hands-on
+engineering and delegated work; a README section explains that meaning.
 
-The README leads with an accurate product description, a small intention/choice/
-realization example, supported entry points and concrete install/use commands. Link
-deeper installation, agent-process, CLI, canvas and release guides rather than making
-an engineer read internal maintenance history before trying the product. Release
-copy describes local-first Markdown/Git ownership, independent source explanations,
-early maturity and current host/runtime boundaries without implying hosted agents
-or semantic proof from graph validity, position or passing tests.
+The README explains the core idea before setup: intent merging with agent
+suggestions, the specification spectrum on a small planning example with an actual
+node file, a replaced choice beneath its unchanged intention, the second spectrum of
+direction and delegation, and the owner/agent working phases. Concise CLI install and
+everyday commands, editor build commands, the Gantt example, a candid status section
+and links to installation, agent-process, CLI, query, canvas, structure, release and
+brand guides follow. The repository map belongs to the contribution guide.
+
+Release copy describes local-first Markdown/Git ownership, independent source
+explanations, early maturity and current host/runtime boundaries without implying
+hosted agents or semantic proof from graph validity, position or passing tests.

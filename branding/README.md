@@ -17,8 +17,17 @@ local copies and need no sibling checkout or network access.
   drawing, not a scaled launcher or detailed mark.
 - [`specspec-logo-light.svg`](specspec-logo-light.svg) and
   [`specspec-logo-dark.svg`](specspec-logo-dark.svg) import the primary full logos
-  byte-for-byte; matching transparent PNGs support README/package introductions.
-  Keep the supplied geometry and continuous gradient. The wordmark needs no font.
+  byte-for-byte, with matching transparent PNGs. Keep the supplied geometry and
+  continuous gradient. The wordmark needs no font.
+- [`specspec-logo-tagline-light.png`](specspec-logo-tagline-light.png) and
+  [`specspec-logo-tagline-dark.png`](specspec-logo-tagline-dark.png) are byte-identical
+  copies of `final/png/specspec-logo-tagline-*@2x.png`: the primary logo with the
+  optional tagline *Engineering is on the spectrum now*. The README introduction uses
+  them at 640 px, the brand guide's minimum for the tagged logo, followed by a literal
+  product description that explains the tagline. Compact placements omit the tagline.
+- The README figures in [`docs/images/`](../docs/images/) use the identity's Manrope
+  type, neutral colors and spectrum stops. `python tools/readme_figures.py` redraws
+  them from the brand kit's font with fontTools; see the script for options.
 - [`app-icon.ico`](app-icon.ico) is a Windows launcher container generated from the
   unchanged supplied PNG, not another logo design. `python tools/build_icon.py`
   regenerates its native sizes using the developer-only Pillow dependency.

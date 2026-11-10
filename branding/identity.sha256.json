@@ -22,5 +22,13 @@
   "specspec-logo-dark.png": {
     "source": "final/png/specspec-logo-dark@2x.png",
     "sha256": "7ae42992c46e66fdd8fb6f8260b85fc490f92874f1d5eb675ff82f857b888950"
+  },
+  "specspec-logo-tagline-light.png": {
+    "source": "final/png/specspec-logo-tagline-light@2x.png",
+    "sha256": "fd10a195747ea6a935077d921fd0ebcc94f01d92963c3a28f3732a9caad2d514"
+  },
+  "specspec-logo-tagline-dark.png": {
+    "source": "final/png/specspec-logo-tagline-dark@2x.png",
+    "sha256": "6fe71199ad694c14f9ed85dc53bcd968b861104c0e0866d281cc30bcaaae4dff"
   }
 }

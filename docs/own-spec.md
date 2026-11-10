@@ -482,7 +482,10 @@ leaves Git metadata intact. See [agent guidance](agents.md) and [installation](i
 
 The [introduction intention](../.specspec/U6paNqA=.md) and
 [selected presentation choice](../.specspec/1ev9uZo=.md) lead the README with the
-reasoning problem, revisable choices and exact brand assets before setup detail.
+tagline lockup, the reasoning problem, both spectra and the owner/agent phases before
+setup detail, in a plain and candid voice. The [figure choice](../.specspec/YGhmCrA=.md)
+draws both spectra as outlined light/dark SVGs on one planning example; its
+[realization](../.specspec/wjRxWjA=.md) maps the generator, figures and accessibility checks.
 The [directory choice](../.specspec/79zOr-w=.md) coordinates the sole `.specspec/`
 location across the backend, hosts and every maintained Gantt revision. Original
 owner input remains archival, while current guides use the installed global command.

@@ -13,6 +13,18 @@ repository-specific agent instructions are in [AGENTS.md](AGENTS.md).
   Do not run independent installs or add nested lockfiles. Existing
   `npm --prefix FOLDER run SCRIPT` invocations still run scripts, not separate installs.
 
+| Path | Responsibility |
+| --- | --- |
+| `src/specspec/`, `pyproject.toml` | Python library/CLI and packaged initialization guide |
+| `vscode/` | VS Code adapter and local VSIX packaging |
+| `electron/` | Sandboxed desktop adapter and portable packaging |
+| `graph-ui-common/` | Shared renderer, session, host ports and bundled dependency notices |
+| `package.json`, `package-lock.json` | One private npm workspace, locked UI/build dependencies and root commands |
+| `branding/`, `docs/` | Selected identity, README figures, onboarding and detailed guides |
+| `.specspec/` | This product's own intentions, choices and implementation explanations |
+| `example/gantt/` | Maintained independent history fixture and runnable example snapshot |
+| `tools/` | Release, icon and README figure scripts |
+
 ## Development setup
 
 Use Python 3.11+, Git, Node 22.12+ and npm 10+:
