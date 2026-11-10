@@ -8,7 +8,7 @@ parents:
 # Discuss breadth, reasoning and significant changes in tandem planning
 
 Use tandem rounds to understand the owner's intention and proposed solutions.
-The owner focuses on breadth; the agent deepens reasoning, challenges conclusions
+The owner focuses on breadth; the agent focuses on depth and raises breadth where a gap is obvious. It deepens reasoning, challenges conclusions
 and offers alternatives and concise overviews ready for correction. Offer guidance
 questions with tentative answers when useful. Discuss potential removals, splits
 and modifications promptly. Keep the conversation on consequential choices, and

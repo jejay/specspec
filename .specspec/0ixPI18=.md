@@ -10,7 +10,4 @@ parents:
 A request to build or change the product includes agent planning for the work it
 covers. The agent inspects and commits the owner's pending specification edits,
 brings the graph to the maturity the requested work needs and commits that result, as
-in any agent planning, and then builds. Outcomes the owner names in the request enter
-the graph in this planning step as the owner's breadth. Conclusions and
-implementation leaves added while building stay uncommitted with the artifacts they
-describe until the owner asks for that commit.
+in any agent planning, and then builds. The specification and the product stay in sync at every step: the graph states what is about to be built before it is built, and what was built once it exists.
