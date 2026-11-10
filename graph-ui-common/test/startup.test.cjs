@@ -4,24 +4,30 @@ const { mkdtemp, mkdir, writeFile, symlink, rm } = require('node:fs/promises');
 const { join } = require('node:path');
 const { tmpdir } = require('node:os');
 const { probeCli, inspectProject, CliUnavailableError } = require('../host/startup.cjs');
+const { spawnOptions } = require('../host/cli.cjs');
 const { GraphSession } = require('../host/session.cjs');
 const { renderMatches, sameNode, displayGraph } = require('../media/graph-model.js');
 
 const fake = code => ['-e', code, '--'];
 test('CLI availability executes the configured shell-free command without a project read', async () => {
-  await probeCli(process.execPath, fake("if(process.argv.slice(-2).join(' ')!=='api --probe')process.exit(2);console.log(JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{features:['stdin-body','project-init','nested-local-state']}}))"), process.cwd());
-  await assert.rejects(probeCli('specspec-command-that-does-not-exist', [], process.cwd()), CliUnavailableError);
-  await assert.rejects(probeCli(process.execPath, fake("console.error('No module named specspec');process.exit(1)"), process.cwd()), CliUnavailableError);
-  await assert.rejects(probeCli(process.execPath, fake("console.log('unrelated program')"), process.cwd()), /not a compatible specspec CLI/);
-  await assert.rejects(probeCli(process.execPath, fake("console.log(JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{}}))"), process.cwd()), /incompatible/);
+  await probeCli(process.execPath, fake("if(process.argv.slice(-2).join(' ')!=='api --probe')process.exit(2);console.log(JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{features:['stdin-body','project-init','nested-local-state']}}))"));
+  await assert.rejects(probeCli('specspec-command-that-does-not-exist', []), CliUnavailableError);
+  await assert.rejects(probeCli(process.execPath, fake("console.error('No module named specspec');process.exit(1)")), CliUnavailableError);
+  await assert.rejects(probeCli(process.execPath, fake("console.log('unrelated program')")), /not a compatible specspec CLI/);
+  await assert.rejects(probeCli(process.execPath, fake("console.log(JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{}}))")), /incompatible/);
   for (const value of [null, [], { api_version: 7, ok: true, diagnostics: [], result: { features: 'stdin-body project-init nested-local-state' } }])
-    await assert.rejects(probeCli(process.execPath, fake(`console.log(${JSON.stringify(JSON.stringify(value))})`), process.cwd()), /incompatible/);
-  await assert.rejects(probeCli(process.execPath, fake("console.error('No such option --probe');process.exit(2)"), process.cwd()), /older than this UI/);
-  await assert.rejects(probeCli(process.execPath, fake("console.error('Broken configuration');process.exit(2)"), process.cwd()), /Broken configuration/);
+    await assert.rejects(probeCli(process.execPath, fake(`console.log(${JSON.stringify(JSON.stringify(value))})`)), /incompatible/);
+  await assert.rejects(probeCli(process.execPath, fake("console.error('No such option --probe');process.exit(2)")), /older than this UI/);
+  await assert.rejects(probeCli(process.execPath, fake("console.error('Broken configuration');process.exit(2)")), /Broken configuration/);
+});
+test('the probe starts outside any project with Python safe-path imports', async () => {
+  const neutral = spawnOptions().cwd;
+  assert.notEqual(neutral, process.cwd());
+  await probeCli(process.execPath, fake(`if(process.cwd()!==${JSON.stringify(neutral)}||process.env.PYTHONSAFEPATH!=='1'){console.error('cwd='+process.cwd()+' PYTHONSAFEPATH='+process.env.PYTHONSAFEPATH);process.exit(2)}console.log(JSON.stringify({api_version:7,ok:true,diagnostics:[],result:{features:['stdin-body','project-init','nested-local-state']}}))`));
 });
 test('availability checks retain bounded output and deadlines', async () => {
-  await assert.rejects(probeCli(process.execPath, fake("console.log('x'.repeat(70000))"), process.cwd()), /limit/);
-  await assert.rejects(probeCli(process.execPath, fake("setTimeout(()=>{},60000)"), process.cwd(), 30), /did not respond/);
+  await assert.rejects(probeCli(process.execPath, fake("console.log('x'.repeat(70000))")), /limit/);
+  await assert.rejects(probeCli(process.execPath, fake("setTimeout(()=>{},60000)"), 30), /did not respond/);
 });
 
 test('only absent or empty/local-only safe directories offer initialization', async t => {
@@ -78,9 +84,20 @@ function fixture(t, options = {}) {
       if (value.type === 'snapshot') session.receive({ type: 'rendered', renderToken: value.renderToken, view: 'overview', visibleIds: [...displayGraph(value).nodes.keys()], nodeCount: displayGraph(value).nodes.size });
     },
   });
-  t.after(() => session.dispose()); session.receive({ type: 'ready' });
+  t.after(() => session.dispose()); if (!options.late) session.receive({ type: 'ready' });
   return { session, calls, messages, install: () => { missing = false; }, repair: () => { failure = undefined; }, revoke: () => { authorized = false; } };
 }
+test('a view that reports ready after the startup deadline still opens instead of keeping its startup screen', async t => {
+  const f = fixture(t, { initialized: true, late: true });
+  await assert.rejects(f.session.open(), /still starting/);
+  assert.equal(f.messages.at(-1).type, 'error'); assert.equal(f.calls.length, 0);
+  f.session.receive({ type: 'ready' });
+  for (let i = 0; i < 100 && !f.messages.some(m => m.type === 'snapshot'); i++) await new Promise(resolve => setTimeout(resolve, 5));
+  assert.deepEqual(f.messages.filter(m => m.type === 'startup').map(m => m.stage), ['checking', 'loading']);
+  assert.equal(f.session.snapshot.nodes[0].id, 'AAAAAAA='); await f.session.queue;
+  const reads = f.calls.length; f.session.receive({ type: 'ready' }); await f.session.queue;
+  assert.equal(f.calls.length, reads, 'Only the late first ready reopens.');
+});
 test('missing CLI blocks reads/writes and retry can advance to the initialization screen', async t => {
   const f = fixture(t, { missing: true });
   assert.equal(await f.session.open(), undefined);

@@ -20,5 +20,9 @@ missing complete-document terminator. Raw reads and physical guards stay exact. 
 identify unsupported/unknown/coerced YAML data, unsafe paths, aliases/duplicate keys,
 invalid UTF-8 and entry/file budgets.
 
-Tests exercise current-schema Markdown, comments, CRLF/Unicode, optional structured
-sources/extensions, valid manual edits and explicit rejection diagnostics.
+Frontmatter that cannot load, such as nesting deeper than the parser's stack,
+integers beyond Python's digit limit or impossible dates, gives a FORMAT diagnostic
+for that file while other nodes still load; integers too large for JSON give SCHEMA.
+Frontmatter delimiters are whole LF, CRLF or CR lines. Tests exercise current-schema
+Markdown, comments, CRLF/Unicode, optional structured sources/extensions, valid
+manual edits and explicit rejection diagnostics.

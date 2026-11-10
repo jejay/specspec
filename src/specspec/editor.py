@@ -143,7 +143,7 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 fail("sources requires JSON text.", path)
             try:
                 sources = json.loads(edit["sources"])
-            except ValueError:
+            except (ValueError, RecursionError):
                 # Preserve intermediate JSON typing in the native dirty document.
                 # It is intentionally invalid schema until the user completes it.
                 sources = edit["sources"]
@@ -247,10 +247,13 @@ def editor_request(root: Path, request: Any, base: str | None = None) -> dict[st
                 and old.commit
                 and sum(map(len, old.files.values())) <= 2 * MAX_FILE_BYTES
             ):
-                result["base_cache"] = {
-                    "commit": old.commit,
-                    "files": {path: raw.decode("utf-8") for path, raw in old.files.items()},
-                }
+                hints = {}
+                for name, raw in old.files.items():
+                    try:
+                        hints[name] = raw.decode("utf-8")
+                    except UnicodeDecodeError:
+                        continue  # Uncached bytes are reread from Git with their diagnostic.
+                result["base_cache"] = {"commit": old.commit, "files": hints}
         except SpecError as error:
             result["note"] = "Diff unavailable: " + "; ".join(
                 item.message for item in error.diagnostics

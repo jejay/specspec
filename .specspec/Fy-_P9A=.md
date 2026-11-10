@@ -4,8 +4,6 @@ type: implementation
 parents:
 - BKekD_o=
 sources:
-- path: docs/cli.md
-- path: docs/invalid-graphs.md
 - path: example/gantt/history/cli.jsonl
 - path: example/gantt/history/gantt.bundle
 - path: example/gantt/history/revisions.json
@@ -16,7 +14,6 @@ sources:
 - path: tests/test_cli_arguments.py
 - path: tests/test_cli_compact.py
 - path: tests/test_invalid_workflow.py
-- path: docs/investigations/argument-authoring.md
 ---
 # Implement message and automatic-stdin authoring through the shared writer
 

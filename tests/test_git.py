@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import json
 import shlex
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from specspec.cli import main
 from specspec.git import git_snapshot, semantic_diff
-from specspec.workspace import add_node, load_snapshot, update_node
+from specspec.git_process import CONFIG, pathspec_chunks
+from specspec.workspace import add_node, initialize, load_snapshot, update_node
 
 
 def git(root: Path, *args: str):
@@ -183,3 +186,165 @@ def test_nested_project_paths(workspace):
     initialize(nested, "Nested\n")
     git(root, "add", "subproject/.specspec")
     assert git_snapshot(nested, staged=True).valid
+
+
+def test_pathspec_chunks_bound_command_lines_without_changing_membership():
+    paths = [f"dir/{'x' * (i % 40)}-{i}.py" for i in range(500)]
+    chunks = list(pathspec_chunks(paths, budget=1000))
+    assert len(chunks) > 1 and [p for chunk in chunks for p in chunk] == paths
+    assert all(sum(len(p) + 3 for p in chunk) <= 1000 for chunk in chunks)
+    assert list(pathspec_chunks(["x" * 5000], budget=1000)) == [["x" * 5000]]
+    assert list(pathspec_chunks([])) == []
+
+
+def test_source_impact_chunks_thousands_of_referenced_paths(workspace):
+    from specspec.application import compare
+    from specspec.editor import editor_request
+
+    root, manifesto = workspace
+    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n")
+    paths = [f"src/generated/module_{i:04d}_with_a_descriptive_name.py" for i in range(1400)]
+    for start in range(0, len(paths), 256):
+        references = [{"path": path} for path in paths[start : start + 256]]
+        add_node(root, "implementation", [requirement], f"Code {start}\n", references)
+    (root / "src/generated").mkdir(parents=True)
+    for path in (paths[0], paths[-1]):
+        (root / path).write_text("original\n", encoding="utf8")
+    setup_repository(root)
+    git(root, "add", "src")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Referenced code")
+    (root / paths[0]).write_text("changed\n", encoding="utf8")
+    (root / paths[700]).write_text("untracked realization\n", encoding="utf8")
+    # One literal pathspec list would exceed Windows' 32,767-character command line.
+    assert sum(len(path) + 1 for path in paths) > 32_767
+    expected = sorted([paths[0], paths[700]])
+    result, _ = compare(root)
+    assert [change["path"] for change in result["source_changes"]] == expected
+    response = CliRunner().invoke(main, ["--root", str(root), "diff", "--summary", "--json"])
+    assert response.exit_code == 0, response.output
+    changes = json.loads(response.stdout)["result"]["source_changes"]
+    assert [change["path"] for change in changes] == expected
+    read = editor_request(root, {}, "HEAD")
+    assert read["note"] == "" and read["diff"]["source_changes"] == result["source_changes"]
+
+
+def test_intent_to_add_placeholders_are_not_staged_nodes(workspace):
+    root, manifesto = workspace
+    setup_repository(root)
+    _, planned = add_node(root, "requirement", [manifesto], "# Planned\n")
+    path = f".specspec/{planned}.md"
+    git(root, "add", "-N", path)
+    staged = git_snapshot(root, staged=True)
+    assert staged.valid and path not in staged.files and planned not in staged.graph.nodes
+    result = CliRunner().invoke(main, ["--root", str(root), "check", "--staged", "--json"])
+    assert result.exit_code == 0, result.output
+    # A real empty blob in the index would be committed, so it stays diagnosed.
+    (root / path).write_bytes(b"")
+    git(root, "add", path)
+    staged = git_snapshot(root, staged=True)
+    assert [(d.code, d.path) for d in staged.diagnostics] == [("FORMAT", path)]
+
+
+def test_repository_fsmonitor_hook_never_runs_during_specspec_reads(tmp_path):
+    from specspec.annotations import submit
+    from specspec.editor import editor_request
+
+    root = tmp_path / "project"
+    root.mkdir()
+    manifesto = initialize(root, "# Project\n").nodes[0].id
+    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n")
+    add_node(root, "implementation", [requirement], "Code\n", [{"path": "code.py"}])
+    (root / "code.py").write_text("one\n", encoding="utf8")
+    setup_repository(root)
+    git(root, "add", "code.py")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Code")
+    marker = tmp_path / "fsmonitor-ran"
+    hook = tmp_path / "fsmonitor-hook"
+    hook.write_bytes(f"#!/bin/sh\necho ran >> '{marker.as_posix()}'\nexit 1\n".encode())
+    hook.chmod(0o755)
+    git(root, "config", "core.fsmonitor", hook.as_posix())
+    (root / "code.py").write_text("two\n", encoding="utf8")
+    for args in [
+        ["diff", "--json"],
+        ["query", "--json"],
+        ["check", "--staged", "--sources", "--json"],
+        ["delete", requirement, "--dry-run", "--json"],
+    ]:
+        CliRunner().invoke(main, ["--root", str(root), *args])
+    editor_request(root, {"cache": True}, "HEAD")
+    submit(root, {"message": "Review", "nodes": [manifesto]})
+    assert not marker.exists()
+    # The hook stays configured: ordinary worktree Git commands still execute it.
+    subprocess.run(["git", "-C", str(root), "diff", "--name-only", "HEAD"], capture_output=True)
+    if not marker.exists():
+        pytest.skip("This Git build does not execute fsmonitor hooks.")
+
+
+def test_every_git_subprocess_uses_the_hardened_invocation(tmp_path, monkeypatch):
+    from specspec.annotations import submit
+    from specspec.editor import editor_request
+    from specspec.sources import SourceReader
+
+    processes, deadlines, active = [], [], [False]
+    popen, run = subprocess.Popen, subprocess.run
+
+    def traced_popen(command, *args, **kwargs):
+        if active[0] and command[0] == "git":
+            processes.append((list(command), kwargs.get("env") or {}))
+        return popen(command, *args, **kwargs)
+
+    def traced_run(command, *args, **kwargs):
+        if active[0] and command[0] == "git":
+            deadlines.append(kwargs.get("timeout"))
+        return run(command, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "Popen", traced_popen)
+    monkeypatch.setattr(subprocess, "run", traced_run)
+    root = tmp_path / "project"
+    root.mkdir()
+    active[0] = True
+    manifesto = initialize(root, "# Project\n").nodes[0].id
+    editor_request(root, {}, "HEAD")  # Unborn HEAD probes.
+    active[0] = False
+    _, requirement = add_node(root, "requirement", [manifesto], "Behavior\n")
+    _, implementation = add_node(root, "implementation", [requirement], "Code\n")
+    (root / "code.py").write_text("one\ntwo\nthree\n", encoding="utf8")
+    setup_repository(root)
+    git(root, "add", "code.py")
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Code")
+    active[0] = True
+    source = SourceReader(root, ref="HEAD").capture("code.py", [[2, 2]], "strict")
+    active[0] = False
+    update_node(root, implementation, sources=[source, {"path": "code.py"}])
+    (root / "code.py").write_text("zero\none\ntwo\nthree\n", encoding="utf8")
+    active[0] = True
+    for args in [
+        ["diff", "--json"],
+        ["query", "--json"],
+        ["check", "--sources", "--json"],
+        ["check", "--staged", "--sources", "--json"],
+        ["sources", "show", "--ref", "HEAD", "--json"],
+        ["delete", requirement, "--dry-run", "--json"],
+    ]:
+        CliRunner().invoke(main, ["--root", str(root), *args])
+    editor_request(root, {"cache": True}, "HEAD")
+    submit(root, {"message": "Review", "nodes": [manifesto]})
+    active[0] = False
+    commands = {arg for command, _ in processes for arg in command[3 + len(CONFIG) :][:2]}
+    assert {
+        "init",
+        "rev-parse",
+        "symbolic-ref",
+        "show-ref",
+        "ls-files",
+        "ls-tree",
+        "diff",
+        "status",
+        "cat-file",
+        "check-ignore",
+    } <= commands
+    for command, env in processes:
+        assert command[3 : 3 + len(CONFIG)] == list(CONFIG), command
+        assert env.get("GIT_OPTIONAL_LOCKS") == "0" and env.get("GIT_NO_LAZY_FETCH") == "1"
+        assert env.get("GIT_ALLOW_PROTOCOL") == "" and env.get("GIT_TERMINAL_PROMPT") == "0"
+    assert deadlines and all(deadlines)

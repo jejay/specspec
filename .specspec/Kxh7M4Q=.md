@@ -12,15 +12,12 @@ sources:
 - path: tests/test_query.py
 - path: tests/test_cli_compact.py
 - path: tests/test_repository_spec.py
-- path: docs/query.md
-- path: docs/cli.md
 - path: example/gantt/history/verify.py
 - path: src/specspec/query_sources.py
 - path: tests/test_query_sources.py
 - path: src/specspec/sources.py
 - path: tests/test_sources.py
 - path: tools/benchmark_query.py
-- path: docs/investigations/query-performance.md
 - path: src/specspec/query_select.py
 - path: tests/test_query_select.py
 - path: tests/test_query_ancestors.py
@@ -51,8 +48,7 @@ in batches; identical selected commits share a code reader. Workspace contents s
 fresh and independent of the index. Shared batch admission charges accepted bytes,
 keeping oversized-object failures separate from eligible blobs. Process-count and
 fixed-input equivalence tests protect this optimization; tools/benchmark_query.py
-records fresh-process timings, cProfile stages and Git process counts. The performance
-investigation records measured scope and remaining subprocess/YAML costs.
+records fresh-process timings, cProfile stages and Git process counts.
 Bytes, trusted logical text and coordinates remain separate raw JSON facts. A
 contract comparison uses strict/expanding/path-only semantics: reliable permitted
 relocation/outside edits, expanding internal edits and whole-file content edits

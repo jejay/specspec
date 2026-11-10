@@ -14,7 +14,6 @@ sources:
 - path: src/specspec/wire.py
 - path: src/specspec/application.py
 - path: tests/test_cli_compact.py
-- path: docs/cli.md
 ---
 # Package the compact CLI and complete binding context
 

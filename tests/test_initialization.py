@@ -1,10 +1,12 @@
 """Initialization owns its exact node/guide bytes, not Git history or external edits."""
 
 import json
+import re
 import subprocess
 from importlib.resources import files
 from pathlib import Path
 
+import click
 import pytest
 from click.testing import CliRunner
 
@@ -262,23 +264,26 @@ def test_readable_receipt_mentions_create_or_append(tmp_path, existing):
 
 
 def test_packaged_guide_matches_current_behavior():
-    text = guide_bytes().decode("utf8")
+    raw = guide_bytes()
+    text = raw.decode("utf8")
+    assert len(raw) <= 8192
     for phrase in [
-        ".specspec/",
-        "<id>.md",
+        ".specspec/<id>.md",
+        "## Routine",
+        "spotlight show",
         "Tandem planning",
         "Agent planning",
         "Implementation",
         "--with-ancestors",
         "check --staged --sources --warnings-as-errors",
-        "exactly selected files",
-        "soft wrapping",
-        "NEW is literal",
-        "--replace",
+        "Owner specspec changes:",
+        "Agent specspec changes:",
+        "need the owner's explicit request",
+        "exactly the selected files",
         "without erasing its outcome",
-        "Do not silently stage",
+        "uv tool install specspec",
     ]:
-        assert phrase in text
+        assert phrase in text, phrase
     for obsolete in [
         "_specspec",
         "all descendants",
@@ -288,3 +293,26 @@ def test_packaged_guide_matches_current_behavior():
         "format 7",
     ]:
         assert obsolete not in text
+
+
+def visible_help_text():
+    texts = []
+
+    def walk(command, context):
+        texts.append(command.get_help(context))
+        if isinstance(command, click.Group):
+            for name in command.list_commands(context):
+                child = command.get_command(context, name)
+                if child is not None and not child.hidden:
+                    walk(child, click.Context(child, info_name=name, parent=context))
+
+    walk(main, click.Context(main, info_name="specspec"))
+    return "\n".join(texts)
+
+
+def test_packaged_guide_teaches_only_options_visible_in_help():
+    help_text = visible_help_text()
+    flags = set(re.findall(r"(?<![\w-])--[a-z][a-z-]*", guide_bytes().decode("utf8")))
+    assert flags
+    for flag in sorted(flags):
+        assert flag in help_text, flag

@@ -4,7 +4,6 @@ type: implementation
 parents:
 - ALlkmT0=
 sources:
-- path: branding/README.md
 - path: branding/activity-icon.svg
 - path: branding/app-icon.png
 - path: branding/identity.sha256.json

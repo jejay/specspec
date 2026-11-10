@@ -12,10 +12,6 @@ sources:
 - path: .vscode/tasks.json
 - path: AGENTS.md
 - path: README.md
-- path: branding/README.md
-- path: docs/node-canvas.md
-- path: docs/own-spec.md
-- path: electron/README.md
 - path: electron/test-host/run.cjs
 - path: example/gantt/README.md
 - path: example/gantt/history/verify.py
@@ -38,37 +34,32 @@ sources:
 - path: tests/test_example_checkout.py
 - path: tests/test_gantt_git.py
 - path: tests/test_repository_docs.py
-- path: docs/architecture.md
-- path: docs/architecture.svg
 - path: .gitattributes
 - path: .gitignore
 - path: graph-ui-common/test-host/budgets.cjs
 - path: vscode/test/budgets.test.cjs
 - path: graph-ui-common/test/host-ui.test.cjs
-- path: docs/investigations/host-smoke.md
 - path: graph-ui-common/test-host/platform.cjs
 ---
 # Validate and document the working graph and planning process
 
-CI and repository tests validate this current graph, complete agent context,
-source references and manual-edit behavior. Development launches open the working
-specification. `docs/own-spec.md` indexes current intentions, choices and realization
-links. `AGENTS.md` supplies owner/tandem/agent/implementation planning instructions.
-The graph defines current binding behavior; Git carries revision rationale.
+CI and repository tests validate this graph, its source references, complete agent
+context and manual-edit behavior. Repository tests also check node text for doubled
+words and lowercase sentence starts, keep AGENTS.md equal to a repository section
+followed by the shipped guide, resolve local links in the kept documents and check
+the README figures. Development launches open the working specification. AGENTS.md
+supplies the routine and phase rules; Git carries revision reasons and evidence.
 
-The offline architecture Markdown/SVG maps runtime/persistence/test ownership with
-local links and accessible scoped resources. Artifact tests check exact brand
-imports/non-text attributes and narrowly ignored machine-local settings with shared
-launch files tracked. Independent example histories supply temporal integration;
-local experiments and diagnostic/recovery state remain preserved.
+Artifact tests check exact brand imports, non-text attributes and narrowly ignored
+machine-local settings with shared launch files tracked. Independent example
+histories supply temporal integration; local experiments and diagnostic/recovery
+state stay intact.
 
 The shared smoke budget module covers complete shared, native and desktop-reload
 phases with separate bounded aggregate guards. CDP failure/foregrounding regressions
 and explicit-value Code launch arguments protect diagnostic meaning and workspace
 selection. Disposable profiles alone enable loading traces and background-throttling
 controls. Complete installed Windows suites exercise all backchannel,
-exact-deletion/repair/recovery and host-native checks. docs/investigations/host-smoke.md records
-complete-suite coverage, measurements and causal read/transport regressions. Individual operation
-deadlines and production settings remain unchanged. Binding-text regression guards
+exact-deletion/repair/recovery and host-native checks. Binding-text regression guards
 recognize retired-design sections while permitting current runtime read-supersession
 contracts. Static-help subprocess tests cover legacy Windows pipe encodings.

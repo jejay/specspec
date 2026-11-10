@@ -1,9 +1,12 @@
 import copy
+import secrets
 
 import pytest
 from test_git import git, setup_repository
 
+from specspec import format as format_module
 from specspec import git_objects
+from specspec.application import request
 from specspec.editor import editor_request
 from specspec.format import read_document
 from specspec.git import git_snapshot
@@ -81,6 +84,47 @@ def test_cache_cannot_hide_a_missing_git_blob(workspace):
 def test_invalid_cache_inputs_are_bounded_editor_errors(workspace, bad):
     with pytest.raises(SpecError):
         editor_request(workspace[0], {"base_cache": bad}, "HEAD")
+
+
+def test_cached_reads_keep_a_non_utf8_base_node_diagnosable(workspace):
+    root, _ = workspace
+    setup_repository(root)
+    path = ".specspec/AAAAAAA=.md"
+    (root / path).write_bytes(b"---\nid: AAAAAAA=\n# \xff\n---\nBody\n")
+    git(root, "add", path)
+    git(root, "-c", "core.hooksPath=/dev/null", "commit", "-m", "Non-UTF-8 node")
+    (root / path).unlink()
+    plain = editor_request(root, {}, "HEAD")
+    assert "diff" in plain and path in plain["diff"]["base"]["unreadable_paths"]
+    cached = editor_request(root, {"cache": True}, "HEAD")
+    assert {key: value for key, value in cached.items() if key != "base_cache"} == plain
+    assert cached["base_cache"]["files"] and path not in cached["base_cache"]["files"]
+    assert editor_request(root, {"base_cache": cached["base_cache"]}, "HEAD") == plain
+    result, _ = request(root, {"api_version": 7, "op": "read", "base": "HEAD", "cache": True})
+    assert result["snapshot"]["nodes"] and "diff" in result
+
+
+def test_header_memo_covers_graphs_beyond_hundreds_of_nodes(monkeypatch):
+    parses = 0
+    original = format_module.yaml_parser
+
+    def counted():
+        nonlocal parses
+        parses += 1
+        return original()
+
+    monkeypatch.setattr(format_module, "yaml_parser", counted)
+    token = secrets.token_hex(8)
+    documents = [
+        "---\nid: AAAAAAA=\ntype: requirement\nparents: []\n"
+        f"extensions:\n  org.example:n: {token}-{i}\n---\nBody\n".encode()
+        for i in range(600)
+    ]
+    # A query or editor read parses base and target headers; both passes must share them.
+    for _ in range(2):
+        for raw in documents:
+            read_document(raw, ".specspec/AAAAAAA=.md")
+    assert parses == len(documents)
 
 
 def test_frontmatter_memo_isolated_copies_body_bytes_and_current_diagnostics(workspace):

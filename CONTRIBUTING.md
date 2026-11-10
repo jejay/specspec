@@ -1,29 +1,24 @@
-# Work on the specspec monorepo
+# Contributing to specspec
 
-Start with the [product introduction](README.md), [architecture](docs/architecture.md)
-and [current specification tour](docs/own-spec.md). The binding graph is `.specspec/`;
-repository-specific agent instructions are in [AGENTS.md](AGENTS.md).
+specspec specifies itself. The graph in `.specspec/` is the design record for this
+repository: before changing behavior, read the relevant nodes with their ancestors
+(`python -m specspec query ID --max-distance 0 --with-ancestors`), and keep
+implementation nodes and their `sources` current with the code. Coding agents follow
+[AGENTS.md](AGENTS.md); the [README](README.md) explains the concepts.
 
-## One checkout, separate products
+## Repository layout
 
-- Python owns canonical schema, graph rules, Markdown plans, transactions and Git.
-- `graph-ui-common` owns the shared renderer and guarded host/session behavior.
-- `vscode` and `electron` own their native lifecycle, trust and persistence adapters.
-- One private root npm workspace/lock supplies JavaScript build/test dependencies.
-  Do not run independent installs or add nested lockfiles. Existing
-  `npm --prefix FOLDER run SCRIPT` invocations still run scripts, not separate installs.
-
-| Path | Responsibility |
+| Path | Contents |
 | --- | --- |
-| `src/specspec/`, `pyproject.toml` | Python library/CLI and packaged initialization guide |
-| `vscode/` | VS Code adapter and local VSIX packaging |
+| `src/specspec/`, `pyproject.toml` | Python library and CLI, the domain authority for every host |
+| `graph-ui-common/` | Shared renderer and host session used by both editors |
+| `vscode/` | VS Code adapter; its README is the editor guide shipped in the VSIX |
 | `electron/` | Sandboxed desktop adapter and portable packaging |
-| `graph-ui-common/` | Shared renderer, session, host ports and bundled dependency notices |
-| `package.json`, `package-lock.json` | One private npm workspace, locked UI/build dependencies and root commands |
-| `branding/`, `docs/` | Selected identity, README figures, onboarding and detailed guides |
-| `.specspec/` | This product's own intentions, choices and implementation explanations |
-| `example/gantt/` | Maintained independent history fixture and runnable example snapshot |
-| `tools/` | Release, icon and README figure scripts |
+| `package.json`, `package-lock.json` | One private npm workspace with root scripts and the only lockfile |
+| `.specspec/` | This product's own specification graph |
+| `example/gantt/` | Runnable example and tracked snapshot of its independent Git history |
+| `branding/`, `docs/images/` | Imported brand assets and README figures |
+| `tools/` | Release, icon, figure and palette tools |
 
 ## Development setup
 
@@ -31,66 +26,40 @@ Use Python 3.11+, Git, Node 22.12+ and npm 10+:
 
 ```sh
 python -m venv .venv
-# Activate one of:
-# Bash on Linux/macOS: source .venv/bin/activate
-# Git Bash on Windows: source .venv/Scripts/activate
-# PowerShell on Windows: .venv\Scripts\Activate.ps1
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1 or source .venv/Scripts/activate
 python -m pip install -e '.[dev]'
 npm ci
 ```
 
-Developer-only dependencies include test/format/build tools and Pillow for
-regenerating the tracked Windows icon. CLI end users need only the runtime package.
-If activation is unavailable, invoke `.venv/Scripts/python.exe` on Windows or
-`.venv/bin/python` explicitly and put its directory on PATH for npm's Python scripts.
-No global npm installation or Marketplace credentials are required.
+Run the development CLI as `python -m specspec`. The editors default to the
+`specspec` on PATH; point them at the development build instead:
 
-For normal product use, install from PyPI with `uv tool install specspec` or
-`pipx install specspec` instead. An editable development environment and a global installation can coexist;
-select the intended executable explicitly when testing changes.
+```sh
+npm run desktop -- --python .venv/Scripts/python.exe --project .   # Linux: .venv/bin/python
+```
 
-## Root commands
+In VS Code, F5 from the repository root starts **Run specspec on this repository** in
+a separate development window. The generated `.vscode/settings.json` stays local.
 
 | Command | Result |
 | --- | --- |
-| `npm ci` | Install all three workspaces from the single lock |
-| `npm run build` | Compile/bundle both UI adapters |
-| `npm run build:vscode` | Compile the extension and copy shared assets/runtime |
-| `npm run build:electron` | Build the desktop's shared assets/runtime |
-| `npm run desktop -- --project .` | Build and open this checkout in Electron |
+| `npm run build` | Compile both UI adapters |
 | `npm test` | Shared UI, VS Code adapter and Electron unit suites |
-| `npm run test:host:vscode` | Real installed VS Code in an isolated test profile |
-| `npm run test:host:electron` | Real Electron in an isolated test profile |
-| `npm run package:vscode` | Local versioned VSIX in `dist/`; does not install it |
-| `npm run package:cli` | Python wheel/source distribution in `dist/` |
-| `npm run package:electron` | Current-platform portable folder and archive |
-| `npm run package:all` | Build all artifacts and inspect their contents/versions |
-| `npm run verify:packages` | Recheck artifacts and write a manifest/SHA256SUMS |
-
-The Python packaging/archive commands use the active `python` executable. Runtime
-UIs default to the globally installed `specspec`. For an editable development CLI:
-
-```sh
-# Git Bash/PowerShell on Windows; paths relative to repository root:
-npm run desktop -- --python .venv/Scripts/python.exe --project .
-# Linux:
-npm run desktop -- --python .venv/bin/python --project .
-```
-
-VS Code F5 from this root runs **Run specspec on this repository** in a separate
-development window/profile using its tracked launch/task/workspace files. Opening
-`vscode/` and **Run specspec Extension** is an alternative. Both require root
-`npm ci` and the development Python environment. For actual user installation,
-build/install the [VSIX](vscode/README.md) instead; a development host is optional.
-The generated root `.vscode/settings.json` remains machine-local and ignored.
+| `npm run test:host:vscode` | Real VS Code in an isolated profile (set `SPECSPEC_PYTHON`) |
+| `npm run test:host:electron` | Real Electron in an isolated profile (set `SPECSPEC_PYTHON`) |
+| `npm run package:cli` | Python wheel and source distribution in `dist/` |
+| `npm run package:vscode` | Versioned VSIX in `dist/` |
+| `npm run package:electron` | Current-platform portable folder and archive in `dist/` |
+| `npm run package:all` | All artifacts, with content and version inspection |
+| `npm run verify:packages` | Recheck artifacts and write a manifest and SHA256SUMS |
 
 ## Checks
 
-With the development environment active:
+These match CI and AGENTS.md:
 
 ```sh
-specspec check --warnings-as-errors
-specspec check --sources --warnings-as-errors
+python -m specspec check --sources --warnings-as-errors
+python -m specspec --root example/gantt check --sources --warnings-as-errors
 python -m ruff check .
 python -m ruff format --check .
 python -m pytest
@@ -98,42 +67,45 @@ npm test
 python example/gantt/history/verify.py --history
 ```
 
-Real-host tests require an installed VS Code and a working Electron sandbox. Set
-`SPECSPEC_PYTHON` to the absolute development interpreter; `VSCODE_EXECUTABLE`
-overrides discovery. They clone the maintained example externally and use disposable
-profiles, never the owner's installed extension profile. Diagnostic artifacts stay
-available on failure. Physical/platform scope and aggregate budgets are documented
-in [host evidence](docs/investigations/host-smoke.md).
+Source anchors refer to Git objects, so `check --sources` needs the full history
+(CI checks out with `fetch-depth: 0`). Before a commit, stage the complete intended
+change and run both graph checks with `--staged`; they validate the exact index.
 
-## Specification and examples
+## Releasing
 
-Read relevant bindings and every ancestor before changing behavior:
+All products share one version: `pyproject.toml`, `specspec.__version__`, the four
+npm `package.json` files and their lockfile entries change together.
 
-```sh
-specspec query NODE_ID --max-distance 0 --with-ancestors
-specspec diff --with-context
-```
+1. Build and inspect locally with `npm run package:all` and `npm run verify:packages`.
+   Local builds never publish.
+2. Commit and push the release revision to `main`.
+3. Run **Actions → Publish CLI to PyPI** with the exact version. The `build` job tests,
+   builds and smoke-tests the wheel and source distribution; only the separate
+   `publish` job receives the short-lived OIDC identity for PyPI's trusted publisher
+   (repository `jejay/specspec`, workflow `pipy_publish.yaml`, environment `pypi`).
+4. Confirm the files on [PyPI](https://pypi.org/project/specspec/) and test a fresh
+   `uv tool install specspec`.
 
-Preserve owner changes and Git authorization. Keep meaningful choices separate from
-their intentions, keep source explanations current, and validate the complete graph.
-Before an authorized commit, stage the intended coherent graph/code slice and run
-`specspec check --staged --sources --warnings-as-errors` on that exact index; also
-check `specspec --root example/gantt check --staged --sources --warnings-as-errors`
-when maintained fixtures change. Builds/tests do not stage, commit or install hooks.
+Tags, signing, Marketplace submission and hook changes each need their own explicit
+authorization.
 
-The tracked Gantt directory is not a Git workspace. Use
-`python example/gantt/history/checkout.py` for a new external clone. Every canonical
-scheme change requires rewriting its **entire maintained history** through actual
-current tools; follow the [maintenance procedure](example/gantt/history/WALKTHROUGH.md).
-Preserve IDs, application behavior, manual experiments and unrelated product history.
+## Maintaining the Gantt example history
 
-## Branding and releases
+`example/gantt/` is a tracked snapshot; its real history is the bundle in
+`example/gantt/history/gantt.bundle`. `python example/gantt/history/checkout.py
+[DESTINATION]` clones it outside this repository for manual use, and
+`python example/gantt/history/verify.py --history` checks every revision.
 
-Builds use selected assets in `branding/`, not a sibling checkout. Imports retain
-source digests and exact bytes; keep UI status colors independent. Regenerate the
-Windows launcher with `python tools/build_icon.py` only when its source changes.
+Every node-format change rebuilds that entire history with current tools, as if it
+had always used today's specspec; [the walkthrough](example/gantt/history/WALKTHROUGH.md)
+gives the procedure. The example's README, AGENTS.md and STORY.md are part of that
+history, so edit them through a bundle update.
 
-[The release procedure](docs/releasing.md) covers artifact inspection, isolated
-qualification and the explicitly dispatched PyPI Trusted Publishing workflow.
-Local builds never publish. Tags, signing, owner hook changes and Marketplace
-submission require their own authorization.
+## Branding, figures and tools
+
+`branding/` holds byte-identical imports from the final brand kit, with sources and
+digests in `branding/identity.sha256.json`; `python tools/build_icon.py` regenerates
+the Windows launcher icon. `python tools/readme_figures.py` redraws the README
+figures in `docs/images/` (it needs `fonttools` and the brand kit's Manrope font). The
+palette playground is `tools/rainbow-playground/index.html`; open it directly in a
+browser to explore and export node palettes.

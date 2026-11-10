@@ -16,6 +16,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .format import parse_node, read_document, serialize
+from .git_process import GitProcessError, run_git_process
 from .graph import Graph, build_graph
 from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
 from .node_text import logical_bytes
@@ -312,8 +313,12 @@ def safe_state(root: Path) -> Path:
 @contextmanager
 def workspace_lock(root: Path, *, recovering: bool = False):
     state = safe_state(root)
-    if not recovering and ((state / "journal.json").exists() or any(state.glob("stage-*"))):
-        raise SpecError([Diagnostic("RECOVERY", "Run specspec recover before another edit.")])
+
+    def require_recovered() -> None:
+        if not recovering and ((state / "journal.json").exists() or any(state.glob("stage-*"))):
+            raise SpecError([Diagnostic("RECOVERY", "Run specspec recover before another edit.")])
+
+    require_recovered()
     lock = state / "lock"
     try:
         fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
@@ -324,6 +329,9 @@ def workspace_lock(root: Path, *, recovering: bool = False):
     try:
         with os.fdopen(fd, "w") as stream:
             stream.write(str(os.getpid()))
+        # A racing writer can leave its journal and release the lock between the
+        # first check and this acquisition; never overwrite that recovery state.
+        require_recovered()
         yield state
     finally:
         lock.unlink(missing_ok=True)
@@ -419,21 +427,14 @@ def initialize(root: Path, body: str) -> Snapshot:
             ],
             2,
         )
+    git: subprocess.CompletedProcess[bytes]
     try:
-        git = subprocess.run(
-            ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
-            capture_output=True,
-            env=environment,
-            timeout=30,
+        git = run_git_process(
+            root, "rev-parse", "--is-inside-work-tree", env=environment, timeout=30
         )
         if git.returncode or git.stdout.strip() != b"true":
-            git = subprocess.run(
-                ["git", "-C", str(root), "init", "--quiet"],
-                capture_output=True,
-                env=environment,
-                timeout=30,
-            )
-    except (OSError, subprocess.TimeoutExpired) as error:
+            git = run_git_process(root, "init", "--quiet", env=environment, timeout=30)
+    except GitProcessError as error:
         raise SpecError(
             [Diagnostic("GIT", f"Git is required for initialization: {error}")], 2
         ) from error

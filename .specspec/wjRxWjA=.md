@@ -21,7 +21,8 @@ applies GPOS pair kerning and balanced title wrapping, and emits compact relativ
 data on a 0.1 px grid; DejaVu Sans Mono outlines file references. It writes
 docs/images/{spectrum,revise,direct}-{light,dark}.svg with identical geometry per
 theme and repeatable bytes. The default Manrope path is the sibling brand kit; options
-select other font files. README.md embeds each pair.
+select other font files. README.md embeds each pair. When fontTools and the fonts are available, a
+repository test regenerates the figures and compares them byte for byte.
 
 The repository documentation test checks every figure as an accessible SVG image with
 a labelled title and description, unique IDs and only local gradient references,

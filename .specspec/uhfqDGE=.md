@@ -22,6 +22,7 @@ AGENTS.md; its separate
 initialization explanation supplies ownership and recovery details.
 
 `recover` restores only known original/replacement/absence states, retaining
-intervening external text for user resolution. Tests exercise competing writers,
-unsafe state, byte races, interruptions, canonical deletion and recovery. Its
+intervening external text for user resolution. The lock holder checks again for a journal or stage files after acquiring the
+lock. Tests exercise competing writers, unsafe state, byte races, interruptions,
+canonical deletion and recovery. Its
 scope is cooperating/process-interruption safety with explicit filesystem limits.

@@ -4,10 +4,11 @@ const {mkdtempSync,writeFileSync,rmSync}=require('node:fs');
 const {tmpdir}=require('node:os');
 const {join}=require('node:path');
 const {CliClient}=require('../host/client.cjs');
+const {spawnOptions}=require('../host/cli.cjs');
 function fixture(t){
   const root=mkdtempSync(join(tmpdir(),'specspec-channel-')),script=join(root,'worker.cjs'),client=new CliClient();
   writeFileSync(script,`const fs=require('node:fs'),rl=require('node:readline').createInterface({input:process.stdin});let count=0;
-  const answer=v=>({api_version:7,ok:!v.fail,diagnostics:v.fail?[{code:'TEST',message:'Rejected'}]:[],result:{pid:process.pid,count:++count,value:v,args:process.argv.slice(2)}});
+  const answer=v=>({api_version:7,ok:!v.fail,diagnostics:v.fail?[{code:'TEST',message:'Rejected'}]:[],result:{pid:process.pid,count:++count,value:v,args:process.argv.slice(2),cwd:process.cwd(),safePath:process.env.PYTHONSAFEPATH}});
   if(!process.argv.includes('--stream')){let raw='';process.stdin.on('data',c=>raw+=c);process.stdin.on('end',()=>console.log(JSON.stringify(answer({raw}))));}
   else rl.on('line',async raw=>{const v=JSON.parse(raw);if(v.die)process.exit(7);if(v.gate)await new Promise(r=>{const timer=setInterval(()=>{if(fs.existsSync(v.gate)){clearInterval(timer);r();}},5);});
     if(v.bad){process.stdout.write(v.bad);return;}const data=Buffer.from(JSON.stringify(answer(v))+'\\n');
@@ -25,6 +26,8 @@ test('API channels reuse interpreter lifetime, preserve JSON bodies and warm an 
   assert.equal(first.result.pid,second.result.pid);assert.equal(second.result.count,2);assert.equal(first.result.value.text,'Exact\nUTF-8 🦉');
   const source=await f.call({op:'source-view'});assert.notEqual(source.result.pid,first.result.pid);assert.equal(f.client.channels.size,2);
   assert.deepEqual(source.result.args,['--root',f.root,'api','--stream']);
+  // The project is only --root: a project cwd would let its modules shadow `python -m` imports.
+  for(const reply of [first,source]){assert.equal(reply.result.cwd,spawnOptions().cwd);assert.notEqual(reply.result.cwd,f.root);assert.equal(reply.result.safePath,'1');}
 });
 test('a held application read does not block the source channel; each channel preserves frame order',async t=>{
   const f=fixture(t),gate=join(f.root,'release'),blocked=f.call({op:'read',gate});
@@ -71,6 +74,7 @@ test('ordinary argv/stdin commands retain the one-shot bridge and new configurat
   const f=fixture(t);await f.call({op:'read'});const old=f.client.channels.get('main');
   const ordinary=await f.client.invoke(process.execPath,[f.script],f.root,['update','id','--json'],'# Exact\n');
   assert.equal(ordinary.result.value.raw,'# Exact\n');assert.deepEqual(ordinary.result.args,['--root',f.root,'update','id','--json']);
+  assert.equal(ordinary.result.cwd,spawnOptions().cwd);assert.notEqual(ordinary.result.cwd,f.root);assert.equal(ordinary.result.safePath,'1');
   const second=join(f.root,'second.cjs');writeFileSync(second,require('node:fs').readFileSync(f.script));
   await f.client.invoke(process.execPath,[second],f.root,['api'],JSON.stringify({op:'read'}));assert.equal(old.closed,true);
 });

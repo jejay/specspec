@@ -20,10 +20,8 @@ sources:
 - path: vscode/test-host/smoke.cjs
 - path: vscode/test-host/run.cjs
 - path: tests/test_editor.py
-- path: docs/native-editors.md
 - path: electron/main.cjs
 - path: branding/activity-icon.svg
-- path: docs/node-canvas.md
 - path: graph-ui-common/media/graph-camera.js
 - path: graph-ui-common/media/graph-model.js
 - path: graph-ui-common/media/graph.css
@@ -62,7 +60,9 @@ Native Save/autosave/undo/redo/dirty recovery persist TextDocuments. Per-view ba
 retain unapplied form text with explicit recovery. Shared typing/sequence handling
 preserves newer input and caret against late peer acknowledgements. Tests cover
 races, invalid-buffer repair, bound actions, split synchronization/cameras, independent
-tabs and CRLF/Unicode native saves. Executable/trust/startup errors are reported.
+tabs and CRLF/Unicode native saves. Executable/trust/startup errors are reported. Node-file editors hold their
+project during the CLI check and first read and release its watchers and CLI
+client when either fails.
 
 The adapter declares workspace-host execution for real remote filesystems and
 uses shared version-checked reads, native bootstrap context and working-first

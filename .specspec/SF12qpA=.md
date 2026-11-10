@@ -24,13 +24,11 @@ sources:
 - path: example/gantt/history/cli.jsonl
 - path: example/gantt/history/revisions.json
 - path: example/gantt/history/gantt.bundle
-- path: docs/cli.md
 - path: src/specspec/cli_help.py
 - path: src/specspec/annotation_commands.py
 - path: tests/test_cli_help.py
 - path: graph-ui-common/host/session.cjs
 - path: graph-ui-common/test/session.test.cjs
-- path: docs/investigations/cli-help.md
 - path: graph-ui-common/test-host/fixture.cjs
 - path: graph-ui-common/test-host/platform.cjs
 - path: src/specspec/workspace.py
@@ -91,5 +89,6 @@ text. Dedicated tests cover all help paths, removed-command rejection, safe raw
 repair/index/history reads and unchanged managed/native mutation ownership.
 
 Hidden integration controls stay out of all help and ordinary query headers omit
-internal versions. Tests assert 50–70 percent help-body lengths, automatic stdin
-preflight and a project/input-independent capability handshake.
+internal versions. Unexpected exceptions at the CLI boundary become one INTERNAL diagnostic with exit 2.
+Tests assert concise help bodies, automatic stdin preflight and a
+project/input-independent capability handshake.

@@ -11,9 +11,6 @@ sources:
 - path: graph-ui-common/test/influence.test.cjs
 - path: graph-ui-common/test/graph.test.cjs
 - path: graph-ui-common/test-host/ui.cjs
-- path: docs/own-spec.md
-- path: docs/node-canvas.md
-- path: docs/graph-structure.md
 ---
 # Render continuous absolute and cohort-relative influence
 

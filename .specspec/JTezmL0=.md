@@ -16,8 +16,6 @@ sources:
     - 333
   - - 345
     - 354
-- path: docs/own-spec.md
-- path: docs/spotlights.md
 - path: electron/main.cjs
 - path: electron/security.cjs
 - path: electron/test-host/run.cjs
@@ -37,10 +35,11 @@ sources:
 - path: vscode/test/extension.test.cjs
 - path: graph-ui-common/test-host/canvas.cjs
 ---
-# Render white identity highlights and switch spotlight comparisons
+# Render theme-aware identity highlights and switch spotlight comparisons
 
-The shared renderer uses one --spotlight-color CSS variable, initially white, for
-manual and spotlight-applied rings. Shift-click toggles IDs; Ctrl/Command+Shift
+The shared renderer uses one --spotlight-color CSS variable for manual and
+spotlight-applied rings: white by default and black on VS Code light and
+high-contrast-light themes, at least 4.5:1 against every card tint. Shift-click toggles IDs; Ctrl/Command+Shift
 removes them. Outline width max(5, 3 / k) and negative offset preserve camera-scaled
 inset geometry and independent focus/semantic/Git paint. A message modal captures
 IDs and current comparison through the authorized shared session.

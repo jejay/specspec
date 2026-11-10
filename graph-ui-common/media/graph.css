@@ -20,6 +20,9 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 #message { white-space: pre-wrap; padding: 0 14px; margin: 0; font-size: 12px; color: var(--vscode-editorWarning-foreground); }
 #message:not(:empty) { padding-bottom: 10px; }
 #sync-notice { margin: 0; padding: 6px 14px; font-size: 12px; color: var(--vscode-editorWarning-foreground, #e2c08d); border-block: 1px solid currentColor; }
+#discard-confirm { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 14px; font-size: 12px; background: var(--vscode-editorWidget-background); border-block: 1px solid var(--vscode-focusBorder); }
+#discard-question { margin-right: auto; }
+#discard-keep { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
 .canvas-shell { position: relative; flex: 1; min-height: 180px; }
 .startup-screen { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px; overflow: auto; background: var(--vscode-editor-background); }
 .startup-screen[hidden] { display: none; }
@@ -67,6 +70,8 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.hover-darkened { filter: brightness(.45); }
 .card { position: absolute; width: 264px; height: 112px; padding: 12px; text-align: left; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; --card-border-ink: var(--node-accent, #8993a4); border: 1px solid var(--card-border-ink); border-top: 4px solid var(--card-border-ink); border-radius: 7px; overflow: hidden; color: var(--vscode-foreground); background: var(--vscode-editorWidget-background); background: color-mix(in srgb, var(--card-border-ink) var(--node-fill-strength, 0%), color-mix(in srgb, var(--node-accent, #8993a4) 15%, var(--vscode-editor-background))); }
 .card:hover, .card.node-hovered { background: color-mix(in srgb, var(--card-border-ink) var(--node-fill-strength, 0%), color-mix(in srgb, var(--node-accent, #8993a4) 24%, var(--vscode-editor-background))); }
+/* Light themes outline the neutral manifesto in darker gray (over 3:1 against its tint); hover and Git inks still apply. */
+body.vscode-light .card.manifesto:not(.revision-colored) { --card-border-ink: #767676; }
 /* Stronger semantic hue everywhere except the intentionally neutral manifesto. */
 #cards .card:hover, #cards .card.node-hovered { --card-border-ink: oklch(from var(--node-accent, #8993a4) min(0.95, calc(l + 0.10)) calc(c * 1.30) h); }
 #cards .card.manifesto:not(.revision-colored):hover, #cards .card.manifesto:not(.revision-colored).node-hovered { --card-border-ink: #fff; }
@@ -83,8 +88,10 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .card.missing { border-style: dashed; border-radius: 7px; }
 path.unresolved { stroke-dasharray: 3 4; }
 .card.source-changed { border-bottom-style: dotted; }
-/* Change this one ink to experiment with spotlight/highlight colors in both hosts. */
+/* Change this one ink to experiment with spotlight/highlight colors in both hosts.
+   White suits dark and high-contrast dark themes; light themes use black. */
 :root { --spotlight-color: #ffffff; }
+body.vscode-light, body.vscode-high-contrast-light { --spotlight-color: #000000; }
 /* Identity-based highlights: paint never changes the card's box. */
 #cards .card[data-annotation-label] { outline: var(--annotation-ring-width, 5px) solid var(--spotlight-color); outline-offset: var(--annotation-ring-offset, -5px); }
 #annotation-warning { color: var(--vscode-editorWarning-foreground, #e2c08d); overflow-wrap: anywhere; }

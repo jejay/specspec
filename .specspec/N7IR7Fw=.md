@@ -17,8 +17,6 @@ sources:
 - path: vscode/test/extension.test.cjs
 - path: vscode/test/bridge.test.cjs
 - path: vscode/test-host/remote.cjs
-- path: docs/remote-workspaces.md
-- path: docs/loading.md
 - path: graph-ui-common/host/reads.cjs
 - path: graph-ui-common/host/wire.cjs
 - path: graph-ui-common/test/wire.test.cjs
@@ -43,8 +41,7 @@ current-state inspection; actions are not automatically replayed. Adapter/sessio
 regressions cover shared/bootstrap races, delayed comparisons, disposal, trust,
 resource boundaries, bound native documents and lost replies. The opt-in remote
 module checks actual workspace-host placement, native overlays, rendered membership
-and source objects on a disposable history clone. Transport qualification is reported
-from dispatched runs individually; setup and investigation guides expose its limits.
+and source objects on a disposable history clone. Transport qualification is reported from dispatched runs individually.
 
 Project reads tag superseded generations/document stamps distinctly from closed
 projects and validation failures. The session keeps current presentation during

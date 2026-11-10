@@ -7,8 +7,11 @@
   let state, graph = { nodes: new Map(), edges: [] }, targetMetrics, baseMetrics;
   let selected = restored.selected, view = restored.view || (selected || restored.creating ? 'focus' : 'overview');
   let colorMode = model.COLOR_MODES.includes(restored.colorMode) ? restored.colorMode : 'distance';
-  let dirty = false, pending = false, creating = false, originalNode, sourceInvalid = false, formParents = [];
+  // pending is the one outstanding add/save/delete request; only replies carrying its requestId settle it.
+  let dirty = false, pending, creating = false, originalNode, sourceInvalid = false, formParents = [];
   let editSequence = 0, documentVersion, sourceSequence = 0, sourceRequest;
+  // A random start keeps a reloaded view from matching replies to an earlier view's requests.
+  let requestSequence = Math.floor(Math.random() * 2 ** 30), discardAction, discardReturn;
   let startupBlocked = true, startupStage = 'checking';
   let layoutFrame, layout, layoutKey, cameraScene, snapshotReceivedAt;
   let drawnEdges = [], hoveredNode, hoverPoint;
@@ -138,6 +141,16 @@
     const card = target?.closest?.('.card');
     return card?.parentElement === $('cards') ? card.dataset.nodeId : undefined;
   }
+  let restoringFocus = false;
+  function focusCard(id) {
+    const card = [...$('cards').children].find(item => item.dataset.nodeId === id);
+    if (!card) return false;
+    // Restored focus is not navigation: the camera's reveal-on-focus keeps the user's view.
+    restoringFocus = true;
+    try { card.focus({ preventScroll: true }); } finally { restoringFocus = false; }
+    return true;
+  }
+  $('viewport').addEventListener('focusin', event => { if (restoringFocus) event.stopImmediatePropagation(); }, true);
 
   const annotations = window.specspecAnnotations.create({ restored, snapshot: () => state, cards: () => $('cards'),
     save: saveDraft, send, frame: frameAnnotations });
@@ -283,6 +296,8 @@
     // Move the SAME form DOM, preserving values, handlers and draft baseline.
     const activeInput = document.activeElement;
     const caret = activeInput?.tagName === 'TEXTAREA' ? [activeInput.selectionStart, activeInput.selectionEnd, activeInput.selectionDirection] : undefined;
+    // Cards are rebuilt below, so keyboard focus follows the node identity.
+    const focusedId = cardIdAt(activeInput), focusedForm = Boolean(activeInput?.closest?.('.card.expanded'));
     $('detail-parking').append($('node-details'));
     $('cards').replaceChildren();
     const kinds = changes(), related = neighbors();
@@ -298,17 +313,19 @@
     if (view === 'focus') {
       const card = document.createElement('article'), node = originalNode && orphaned() ? originalNode : graph.nodes.get(selected);
       card.className = `card expanded ${creating ? $('node-type').value : node?.type || 'requirement'} ${kinds.get(selected) || ''}`;
-      card.dataset.nodeId = focalId;
+      card.dataset.nodeId = focalId; card.tabIndex = -1; card.setAttribute('aria-labelledby', 'title');
       card.classList.toggle('revision-colored', colorMode === 'git-revision');
       card.style.setProperty('--node-accent', model.color(colorMode, node || { type: $('node-type').value },
         draftCard() && model.INFLUENCE_MODES.includes(colorMode) ? undefined : colorValueFor(selected), draftCard() ? 'draft' : revisionKind(kinds.get(selected))));
       card.append($('node-details')); if (!creating) gitCorner(card, kinds.get(selected)); $('cards').append(card);
     }
     annotations.changed();
-    drawLegend(); updateButtons(); applyLayout();
+    drawLegend(); updateButtons(); applyLayout(); orderCards();
     if ($('cards').contains(activeInput) && !activeInput.disabled) {
       activeInput.focus({ preventScroll: true });
       if (caret) activeInput.setSelectionRange(...caret);
+    } else if (focusedId !== undefined && !focusCard(focusedId) && focusedForm) {
+      [...$('cards').children].find(card => card.classList.contains('expanded'))?.focus({ preventScroll: true });
     }
     send({ type: 'rendered', renderToken: state.renderToken, view, selectedId: selected, creating: draftCard() && view === 'focus',
       visibleIds: ids, draftParents: draftCard() && view === 'focus' ? [...related.parents] : undefined,
@@ -374,6 +391,16 @@
         x: current.x + (oldFocus.x - box.x) * current.k, y: current.y + (oldFocus.y - box.y) * current.k });
     }
     syncHover();
+  }
+
+  // Tab order follows the drawn layout (rank columns left to right, then top to bottom), not file order.
+  function orderCards() {
+    const cards = [...$('cards').children], box = card => layout?.positions.get(card.dataset.nodeId);
+    if (!cards.every(box)) return;
+    const column = card => Math.round(box(card).x + box(card).width / 2);
+    cards.sort((a, b) => column(a) - column(b) || box(a).y - box(b).y).forEach((card, index) => {
+      if ($('cards').children[index] !== card) $('cards').insertBefore(card, $('cards').children[index]);
+    });
   }
 
   function drawEdges(routes, width, height) {
@@ -481,11 +508,32 @@
       if (view === 'overview') { rememberCamera(); view = 'focus'; draw(); saveDraft(); }
       return;
     }
-    if (dirty && !force && !confirm('Discard unsaved form changes before opening another node?')) return;
-    cancelSourcePreview(); rememberCamera();
+    if (dirty && !force) { confirmDiscard('Discard unsaved form changes to open this node?', () => select(id, true)); return; }
+    closeDiscard(); cancelSourcePreview(); rememberCamera();
     creating = false; dirty = false; selected = id; originalNode = currentNodeById(id) || repairNode(id);
     view = graph.nodes.has(id) ? 'focus' : 'overview'; loadForm(); draw(); saveDraft();
   }
+
+  // Webview sandboxes block window.confirm(), so both hosts ask in this keyboard-reachable bar.
+  function confirmDiscard(question, action) {
+    if ($('discard-confirm').hidden) discardReturn = { id: cardIdAt(document.activeElement), element: document.activeElement };
+    discardAction = action; $('discard-question').textContent = question;
+    $('discard-confirm').hidden = false; $('discard-keep').focus({ preventScroll: true });
+  }
+  function closeDiscard(restoreFocus = false) {
+    const target = discardReturn; discardAction = discardReturn = undefined;
+    if ($('discard-confirm').hidden) return;
+    $('discard-confirm').hidden = true;
+    if (restoreFocus && !(target?.id !== undefined && focusCard(target.id)) && target?.element?.isConnected) target.element.focus({ preventScroll: true });
+  }
+  $('discard-keep').addEventListener('click', () => closeDiscard(true));
+  $('discard-accept').addEventListener('click', () => {
+    const action = discardAction; closeDiscard();
+    if (action && !pending) action();
+  });
+  $('discard-confirm').addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeDiscard(true); }
+  });
 
   function rememberCamera() {
     camera.stop();
@@ -526,11 +574,11 @@
     colorMode = model.COLOR_MODES.includes($('color-mode').value) ? $('color-mode').value : 'distance'; draw(); saveDraft();
   });
 
-  $('new').addEventListener('click', () => {
+  function startDraft(confirmed = false) {
     if (!state || sourceInvalid || pending || state.readonly || state.snapshot.format_version !== 7) return;
-    if (dirty && !confirm('Discard unsaved form changes?')) return;
+    if (dirty && !confirmed) { confirmDiscard('Discard unsaved form changes to start a new node?', () => startDraft(true)); return; }
     const parent = currentNode();
-    cancelSourcePreview(); rememberCamera(); delete cameras.draft;
+    closeDiscard(); cancelSourcePreview(); rememberCamera(); delete cameras.draft;
     creating = true; dirty = false; selected = undefined; view = 'focus'; originalNode = undefined;
     $('editor').hidden = false; $('title').textContent = 'New node';
     $('identity').textContent = 'The CLI will generate its ID.'; $('focus-context').textContent = 'New node draft';
@@ -539,7 +587,8 @@
     $('sources-label').hidden = true;
     populateParents(parent && parent.type !== 'implementation' ? [parent.id] : [], 'requirement');
     draw(); saveDraft();
-  });
+  }
+  $('new').addEventListener('click', () => startDraft());
 
   for (const id of elements) $(id).addEventListener('input', formChanged);
   $('parent-candidate').addEventListener('change', updateButtons);
@@ -556,18 +605,18 @@
   });
   $('editor').addEventListener('submit', event => {
     event.preventDefault(); if ($('save').disabled) return;
-    pending = true; updateButtons();
-    send({ type: creating ? 'add' : 'save', id: selected, originalNode,
+    pending = { id: ++requestSequence, type: creating ? 'add' : 'save' }; updateButtons();
+    send({ type: pending.type, requestId: pending.id, id: selected, originalNode,
       body: $('body').value, parents: [...formParents], sources: $('sources').value, nodeType: $('node-type').value,
       ...(state.document ? { documentVersion, editSequence } : {}) });
   });
   $('delete').addEventListener('click', () => {
     if ($('delete').disabled) return;
-    pending = true; updateButtons(); send({ type: 'delete', id: selected });
+    pending = { id: ++requestSequence, type: 'delete' }; updateButtons(); send({ type: 'delete', requestId: pending.id, id: selected });
   });
   $('discard').addEventListener('click', () => {
     if (state?.document) send({ type: 'discard-form' });
-    dirty = false;
+    dirty = false; closeDiscard();
     if (creating) { rememberCamera(); creating = false; selected = undefined; view = 'overview'; draw(); saveDraft(); }
     else { originalNode = formRecord(); loadForm(); draw(); saveDraft(); }
   });
@@ -646,13 +695,26 @@
       updateButtons(); return;
     }
     if (message.type === 'notice' || message.type === 'sync-warning') { setMessage(message.message); return; }
-    if (message.type === 'sync-error') { sourceInvalid = true; pending = false; setMessage(message.message); updateButtons(); return; }
-    if (message.type === 'error') { pending = false; setMessage(sourceInvalid ? `Last valid graph · Repair ${state?.document ? 'the bound document' : 'Markdown and refresh'}.\n${message.message}` : message.message); updateButtons(); return; }
-    if (message.type === 'cancelled') { pending = false; updateButtons(); return; }
+    // Refreshes and unrelated failures keep a queued add/save/delete pending, so it cannot be submitted twice.
+    const request = pending && message.requestId === pending.id ? pending : undefined;
+    if (message.type === 'applied') {
+      if (!request) return;
+      // The write succeeded: even if the following refresh fails, this form never resubmits it.
+      request.applied = true; dirty = false;
+      if (request.type === 'add') { creating = false; selected = message.id; originalNode = undefined; }
+      saveDraft(); return;
+    }
+    if (['completed', 'error', 'cancelled'].includes(message.type) && request) {
+      pending = undefined;
+      if (message.type === 'error' && request.applied && request.type === 'add') select(selected, true);
+    }
+    if (message.type === 'sync-error') { sourceInvalid = true; setMessage(message.message); updateButtons(); return; }
+    if (message.type === 'error') { setMessage(sourceInvalid ? `Last valid graph · Repair ${state?.document ? 'the bound document' : 'Markdown and refresh'}.\n${message.message}` : message.message); updateButtons(); return; }
+    if (message.type === 'cancelled' || message.type === 'completed') { updateButtons(); return; }
     if (message.type !== 'snapshot') return;
     snapshotReceivedAt = performance.now();
     startupBlocked = false; $('startup').hidden = true;
-    state = message; sourceInvalid = false; pending = false; graph = model.displayGraph(state);
+    state = message; sourceInvalid = false; graph = model.displayGraph(state);
     if (state.document) documentVersion = state.document.version;
     if (!restored.used && state.document?.recoveredForm && !restored.draft) {
       const form = state.document.recoveredForm;

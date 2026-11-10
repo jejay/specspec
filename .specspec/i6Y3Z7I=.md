@@ -8,7 +8,6 @@ sources:
 - path: src/specspec/graph.py
 - path: tests/test_core.py
 - path: tests/test_shortcut_freedom.py
-- path: docs/graph-structure.md
 ---
 # Index and validate the shortcut-free rooted DAG iteratively
 
@@ -30,5 +29,3 @@ on failed writes, native repair and exact-index/history distinctions.
 An independent closure oracle checks generated arbitrary DAGs and reduced
 reachability equivalence. Maintained Gantt verification checks every retained
 revision, actual CLI receipt state, source anchor and runnable model stage.
-docs/graph-structure.md and docs/investigations/host-smoke.md record current
-verification evidence and its platform/diagnostic scope.

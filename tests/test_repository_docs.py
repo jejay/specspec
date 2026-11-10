@@ -1,9 +1,11 @@
-"""Versioned engineering docs/input artifacts remain usable without remote assets."""
+"""Repository documents, README figures and the self-specification stay consistent."""
 
 import hashlib
+import importlib.util
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -11,29 +13,44 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# The graph is the design record; these are the entry points, guides and procedures.
+DOCUMENTS = [
+    "README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "vscode/README.md",
+    "src/specspec/templates/AGENTS.md",
+    "example/gantt/README.md",
+    "example/gantt/AGENTS.md",
+    "example/gantt/history/WALKTHROUGH.md",
+]
+FIGURES = sorted((ROOT / "docs/images").glob("*.svg"))
+COMMAND_WORDS = {
+    "specspec",
+    "query",
+    "check",
+    "diff",
+    "add",
+    "update",
+    "delete",
+    "init",
+    "recover",
+    "sources",
+    "spotlight",
+    "npm",
+    "uv",
+    "pipx",
+    "git",
+    "python",
+    "e.g",
+    "i.e",
+    "vs",
+}
 
-@pytest.mark.parametrize(
-    "path",
-    [
-        "README.md",
-        "AGENTS.md",
-        "INTENTION_SPEC.md",
-        "CONCLUSION_SPEC.md",
-        "branding/README.md",
-        "CONTRIBUTING.md",
-        "CHANGELOG.md",
-        "vscode/README.md",
-        "electron/README.md",
-        "src/specspec/templates/AGENTS.md",
-    ]
-    + [p.relative_to(ROOT).as_posix() for p in sorted((ROOT / "docs").rglob("*.md"))]
-    + [
-        "example/gantt/README.md",
-        "example/gantt/AGENTS.md",
-        "example/gantt/history/WALKTHROUGH.md",
-    ],
-)
-def test_engineering_entry_point_local_links_resolve(path):
+
+@pytest.mark.parametrize("path", DOCUMENTS)
+def test_document_local_links_resolve(path):
     document = ROOT / path
     for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", document.read_text(encoding="utf-8")):
         if target.startswith(("https://", "http://", "mailto:", "#")):
@@ -42,13 +59,8 @@ def test_engineering_entry_point_local_links_resolve(path):
         assert (document.parent / target).exists(), (path, target)
 
 
-def test_current_documentation_uses_id_only_node_path_examples():
-    paths = [
-        ROOT / name
-        for name in ["README.md", "AGENTS.md", "INTENTION_SPEC.md", "CONCLUSION_SPEC.md"]
-    ]
-    paths += list((ROOT / "docs").rglob("*.md")) + list((ROOT / "docs").glob("*.svg"))
-    paths += list((ROOT / "example/gantt").rglob("*.md"))
+def test_documents_use_id_only_node_path_examples():
+    paths = [ROOT / name for name in DOCUMENTS] + list((ROOT / "example/gantt").rglob("*.md"))
     for path in paths:
         if ".specspec" in path.parts:
             continue
@@ -60,12 +72,32 @@ def test_current_documentation_uses_id_only_node_path_examples():
         assert not re.search(r"filename[- ]only|filename summary|summary-only", text, re.I), path
 
 
-@pytest.mark.parametrize(
-    "path",
-    ["docs/architecture.svg", "docs/architecture-interfaces.svg"]
-    + [p.relative_to(ROOT).as_posix() for p in sorted((ROOT / "docs/images").glob("*.svg"))],
-)
-def test_architecture_svg_is_accessible_self_contained_documentation(path):
+def test_repository_agents_md_is_a_repository_section_plus_the_shipped_guide():
+    guide = (ROOT / "src/specspec/templates/AGENTS.md").read_bytes().replace(b"\r\n", b"\n")
+    agents = (ROOT / "AGENTS.md").read_bytes().replace(b"\r\n", b"\n")
+    assert agents.endswith(guide)
+    assert len(agents) > len(guide)
+
+
+def node_text(path):
+    body = path.read_text(encoding="utf-8").split("\n---", 1)[1]
+    body = re.sub(r"```.*?```", " ", body, flags=re.S)
+    return re.sub(r"`[^`]*`", " CODE ", body)
+
+
+@pytest.mark.parametrize("path", sorted((ROOT / ".specspec").glob("*.md")), ids=lambda p: p.stem)
+def test_own_graph_text_has_no_doubled_words_or_lowercase_sentence_starts(path):
+    text = node_text(path)
+    for match in re.finditer(r"\b([A-Za-z]+)(?:[ \t]+|[ \t]*\r?\n[ \t]*)\1\b", text, re.I):
+        assert match.group(1).lower() in {"that", "had"}, match.group(0)
+    flat = " ".join(text.split())
+    for match in re.finditer(r"(?:^|[.!?]\s+)([a-z][^\s,;:()]*)", flat):
+        word = match.group(1)
+        assert word in COMMAND_WORDS or re.search(r"[_\-./=]", word), flat[match.start(1) :][:60]
+
+
+@pytest.mark.parametrize("path", [p.relative_to(ROOT).as_posix() for p in FIGURES])
+def test_readme_figures_are_accessible_self_contained_svgs(path):
     svg = ElementTree.parse(ROOT / path).getroot()
     namespace = "{http://www.w3.org/2000/svg}"
     elements = list(svg.iter())
@@ -81,66 +113,37 @@ def test_architecture_svg_is_accessible_self_contained_documentation(path):
             assert not key.lower().startswith("on"), key
             if key.endswith("href"):
                 assert value.startswith("#") and value[1:] in ids
-    # The only URLs are local SVG marker references; system font fallbacks need no download.
     for reference in re.findall(r"url\(([^)]+)\)", (ROOT / path).read_text(encoding="utf-8")):
         assert reference.startswith("#") and reference[1:] in ids
 
 
-def test_architecture_svg_exposes_actor_interfaces_and_distinct_save_workflows():
-    svg = ElementTree.parse(ROOT / "docs/architecture.svg").getroot()
-    groups = {
-        element.attrib["id"]: element
-        for element in svg.iter("{http://www.w3.org/2000/svg}g")
-        if "id" in element.attrib
-    }
-    # Check the overview's reading structure, not coordinates, paint or exact prose.
-    for group_id in (
-        "owner-entry",
-        "agent-entry",
-        "conversation",
-        "visual-workspace",
-        "cli-interface",
-        "python-authority",
-        "project-data",
-        "refresh-loop",
-        "managed-save",
-        "native-save",
-        "review-loop",
-    ):
-        assert group_id in groups, group_id
-        assert groups[group_id].attrib.get("aria-label", "").strip(), group_id
-        assert "".join(groups[group_id].itertext()).strip(), group_id
-    assert groups["managed-save"] is not groups["native-save"]
+def test_readme_shows_every_figure_in_light_and_dark():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    names = {path.stem.rsplit("-", 1)[0] for path in FIGURES}
+    assert names
+    for name in names:
+        for theme in ("light", "dark"):
+            assert (ROOT / f"docs/images/{name}-{theme}.svg").is_file()
+            assert f"docs/images/{name}-{theme}.svg" in readme
 
 
-def test_interface_zoom_names_the_contracts_and_shows_a_current_json_envelope():
-    from specspec.model import API_VERSION
-
-    svg = ElementTree.parse(ROOT / "docs/architecture-interfaces.svg").getroot()
-    elements = {element.attrib["id"]: element for element in svg.iter() if "id" in element.attrib}
-    for group_id in (
-        "renderer-port",
-        "host-coordination",
-        "message-contract",
-        "subprocess-contract",
-        "cli-facade",
-        "python-library",
-        "library-contract",
-        "agent-cli",
-        "python-embedding",
-        "validity-contract",
-        "render-handshake",
-        "native-edit-trace",
-        "command-routing",
-    ):
-        assert elements[group_id].attrib.get("aria-label", "").strip(), group_id
-    envelope = json.loads("".join(elements["json-envelope"].itertext()))
-    assert envelope == {
-        "api_version": API_VERSION,
-        "ok": True,
-        "result": {},
-        "diagnostics": [],
-    }
+def test_readme_figures_match_their_generator(tmp_path):
+    pytest.importorskip("fontTools")
+    script = ROOT / "tools/readme_figures.py"
+    spec = importlib.util.spec_from_file_location("readme_figures", script)
+    figures = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(figures)
+    mono = next((path for path in figures.MONO_CANDIDATES if path.exists()), None)
+    if not figures.MANROPE.exists() or mono is None:
+        pytest.skip("the brand kit's Manrope or a DejaVu Sans Mono font is not available")
+    subprocess.run(
+        [sys.executable, str(ROOT / "tools/readme_figures.py"), "--out", str(tmp_path)],
+        check=True,
+        capture_output=True,
+    )
+    for path in FIGURES:
+        expected = path.read_bytes().replace(b"\r\n", b"\n")
+        assert (tmp_path / path.name).read_bytes() == expected, path.name
 
 
 def test_original_brand_inputs_are_preserved_and_svg_import_is_exact():

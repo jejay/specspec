@@ -2,13 +2,14 @@
 const { spawn } = require('node:child_process');
 const { lstat, readdir } = require('node:fs/promises');
 const { join } = require('node:path');
+const { spawnOptions } = require('./cli.cjs');
 
 class CliUnavailableError extends Error {
   constructor(message) { super(message); this.code = 'CLI_UNAVAILABLE'; }
 }
-function probeCli(command, prefix, cwd, timeout = 10000) {
+function probeCli(command, prefix, timeout = 10000) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, [...prefix, 'api', '--probe'], { cwd, shell: false, windowsHide: true });
+    const child = spawn(command, [...prefix, 'api', '--probe'], spawnOptions());
     let output = '', failure, bytes = 0;
     const stop = error => { failure ||= error; child.kill(); };
     const timer = setTimeout(() => stop(new Error('The configured specspec CLI did not respond. Check its configuration and retry.')), timeout);

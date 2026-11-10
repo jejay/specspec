@@ -231,3 +231,36 @@ def test_large_integration_stdin_does_not_move_into_argv(tmp_path):
     )
     assert result.returncode == 0, result.stderr.decode("utf8", errors="replace")
     assert load_snapshot(tmp_path).nodes[0].body == body + "\n"
+
+
+def test_unexpected_failures_are_structured_errors_not_tracebacks(workspace, monkeypatch):
+    root, manifesto = workspace
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("unanticipated")
+
+    monkeypatch.setattr(cli, "read_query", broken)
+    monkeypatch.setattr(cli, "application_request", broken)
+    for args, stdin in [(["query", "--json"], None), (["api"], '{"api_version":7,"op":"read"}')]:
+        result = CliRunner().invoke(cli.main, ["--root", str(root), *args], input=stdin)
+        assert result.exit_code == 2 and not isinstance(result.exception, RuntimeError)
+        envelope = json.loads(result.stdout)
+        assert envelope["ok"] is False and envelope["result"] is None
+        assert [d["code"] for d in envelope["diagnostics"]] == ["INTERNAL"]
+        assert "RuntimeError: unanticipated" in envelope["diagnostics"][0]["message"]
+    result = CliRunner().invoke(cli.main, ["--root", str(root), "query"])
+    assert result.exit_code == 2 and result.stdout == ""
+    assert "error: INTERNAL: Unexpected RuntimeError: unanticipated" in result.stderr
+    # Deliberate command exits keep their own status and envelope.
+    (root / ".specspec/AAAAAAA=.md").write_text("not a node\n", encoding="utf8")
+    result, data = call(root, "check")
+    assert result.exit_code == 1 and [d["code"] for d in data["diagnostics"]] == ["FORMAT"]
+    assert call(root, "query", manifesto, "--raw")[0].exit_code == 0
+
+
+def test_deeply_nested_reviewed_plan_is_invalid_plan_json(workspace, tmp_path):
+    root, manifesto = workspace
+    plan = tmp_path / "plan.json"
+    plan.write_text("[" * 100_000 + "]" * 100_000, encoding="utf8")
+    result, data = call(root, "delete", manifesto, "--reviewed-plan", str(plan))
+    assert result.exit_code == 2 and [d["code"] for d in data["diagnostics"]] == ["DELETE_PLAN"]

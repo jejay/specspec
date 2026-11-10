@@ -7,42 +7,33 @@ No operation here writes objects, refs, indexes, commits or source files.
 from __future__ import annotations
 
 import difflib
-import os
-import subprocess
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 from .git import repository_paths, resolve_commit
+from .git_process import GitProcessError, pathspec_chunks, run_git_process
 from .model import Diagnostic, SpecError, SpecNode
+from .node_text import logical_lines
 from .source_schema import validate_source
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_TOTAL_BYTES = 32 * 1024 * 1024
+MAX_GIT_OUTPUT = 32 * 1024 * 1024
 MAX_LINES = 10_000
 MAX_CELLS = 20_000_000
+GIT_TIMEOUT = 20
 BAD_OUTCOMES = {"conflict", "missing", "ambiguous", "unavailable"}
-
-
-def git_environment():
-    return {
-        **os.environ,
-        "GIT_NO_LAZY_FETCH": "1",
-        "GIT_OPTIONAL_LOCKS": "0",
-        "GIT_ALLOW_PROTOCOL": "",
-    }
 
 
 def run_git(root: Path, *args: str) -> bytes:
     try:
-        result = subprocess.run(
-            ["git", "-C", str(root), "--literal-pathspecs", *args],
-            capture_output=True,
-            timeout=20,
-            env=git_environment(),
+        result = run_git_process(
+            root, "--literal-pathspecs", *args, timeout=GIT_TIMEOUT, max_output=MAX_GIT_OUTPUT
         )
-    except (OSError, subprocess.SubprocessError) as error:
+    except GitProcessError as error:
         raise SpecError([Diagnostic("SOURCE_GIT", str(error))]) from error
-    if result.returncode or len(result.stdout) > MAX_TOTAL_BYTES:
+    if result.returncode:
         raise SpecError(
             [Diagnostic("SOURCE_GIT", "Local Git source read failed or exceeded its budget.")]
         )
@@ -56,7 +47,9 @@ def text_lines(raw: bytes) -> list[str]:
         or raw.startswith(b"version https://git-lfs.github.com/spec/")
     ):
         raise ValueError("Line targets require bounded UTF-8 text, not binary/LFS pointer data.")
-    lines = raw.decode("utf-8-sig").splitlines()
+    # Editors, grep and Git agree on LF/CRLF (and CR) lines; form feeds and Unicode
+    # separators stay line content, so captured ranges match their line numbers.
+    lines = logical_lines(raw.decode("utf-8-sig"))
     if len(lines) > MAX_LINES:
         raise ValueError(f"Source exceeds the {MAX_LINES}-line resolution budget.")
     return lines
@@ -81,10 +74,11 @@ def occurrences(haystack: list[str], needle: list[str]) -> list[int]:
 def map_regions(old: list[str], new: list[str], ranges: list[list[int]], mode: str) -> dict:
     if any(end > len(old) for _, end in ranges):
         raise ValueError("Range exceeds its anchored source snapshot.")
+    if old == new:
+        # Identical lines need no diff, so the pair budget applies only to real diffs.
+        return {"outcome": "resolved", "ranges": ranges, "changed": False}
     if len(old) * len(new) > MAX_CELLS:
         raise ValueError("Source pair exceeds the bounded diff budget.")
-    if old == new:
-        return {"outcome": "resolved", "ranges": ranges, "changed": False}
     opcodes = difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes()
     all_ranges, changed, ambiguity = [], False, False
     for start, end in ranges:
@@ -143,7 +137,7 @@ def map_regions(old: list[str], new: list[str], ranges: list[list[int]], mode: s
 
 
 class SourceReader:
-    """One request: cache Git listings/blobs/mappings; batch anchor object reads."""
+    """One request: cache Git entries/blobs/mappings; batch path and anchor lookups."""
 
     def __init__(self, root: Path, *, ref: str | None = None, staged: bool = False):
         if ref and staged:
@@ -154,7 +148,12 @@ class SourceReader:
         self.repo: Path | None = None
         self.prefix = ""
         self.commit: str | None = None
+        # Referenced paths resolve through bounded pathspec lookups. The complete
+        # tree/index loads only to search other paths for an anchored blob.
         self.entries: dict[str, tuple[str, str]] = {}
+        self.lookups: dict[str, str | None] = {}
+        self.listed = False
+        self.listing_error: str | None = None
         self.blobs: dict[str, bytes | str] = {}
         self.mappings: dict[tuple, dict] = {}
         self.data_cache: dict[str, bytes] = {}
@@ -166,25 +165,71 @@ class SourceReader:
             self.prefix = prefix.removesuffix(".specspec")
             if ref:
                 self.commit = resolve_commit(self.repo, ref)
-                data = run_git(self.repo, "ls-tree", "-r", "-z", self.commit)
-            elif staged:
-                data = run_git(self.repo, "ls-files", "--stage", "-z")
-            else:
-                data = run_git(self.repo, "ls-files", "--stage", "-z")
-            for record in data.split(b"\0"):
-                if not record:
-                    continue
-                metadata, path = record.split(b"\t", 1)
-                fields = metadata.decode().split()
-                mode, oid = (fields[0], fields[2]) if ref else (fields[0], fields[1])
-                if not ref and fields[2] != "0":
-                    continue
-                self.entries[path.decode("utf-8", errors="surrogateescape")] = (mode, oid)
         except SpecError as error:
             if ref or staged:
                 raise
             self.git_error = str(error)
             self.repo = None  # Whole-file and working-text links still work without Git.
+
+    def record(self, data: bytes) -> None:
+        for record in data.split(b"\0"):
+            if not record:
+                continue
+            metadata, path = record.split(b"\t", 1)
+            fields = metadata.decode().split()
+            if self.ref:
+                if fields[1] == "tree":
+                    continue  # A directory path names no file entry.
+                mode, oid = fields[0], fields[2]
+            elif fields[2] != "0":
+                continue
+            else:
+                mode, oid = fields[0], fields[1]
+            self.entries[path.decode("utf-8", errors="surrogateescape")] = (mode, oid)
+
+    def lookup(self, paths: Iterable[str]) -> None:
+        """Resolve these project paths' revision/index entries in bounded batches."""
+        if self.listed or self.repo is None:
+            return
+        names = sorted({self.prefix + path for path in paths} - self.lookups.keys())
+        command = (
+            ["ls-tree", "-z", self.commit, "--"]
+            if self.commit
+            else ["ls-files", "--stage", "-z", "--"]
+        )
+        for chunk in pathspec_chunks(names):
+            try:
+                self.record(run_git(self.repo, *command, *chunk))
+                error = None
+            except (SpecError, ValueError, IndexError, UnicodeError) as failure:
+                error = f"Git source entry lookup failed: {failure}"
+            self.lookups.update(dict.fromkeys(chunk, error))
+
+    def entry(self, path: str) -> tuple[str, str] | None:
+        name = self.prefix + path
+        if not self.listed:
+            self.lookup([path])
+            if error := self.lookups.get(name):
+                raise ValueError(error)
+        return self.entries.get(name)
+
+    def listing(self) -> dict[str, tuple[str, str]]:
+        """Load the whole target tree/index once, only for blob-identity searches."""
+        if self.listing_error is not None:
+            raise ValueError(self.listing_error)
+        if not self.listed and self.repo is not None:
+            command = (
+                ["ls-tree", "-r", "-z", self.commit]
+                if self.commit
+                else ["ls-files", "--stage", "-z"]
+            )
+            try:
+                self.record(run_git(self.repo, *command))
+            except (SpecError, ValueError, IndexError, UnicodeError) as error:
+                self.listing_error = f"Git source listing failed: {error}"
+                raise ValueError(self.listing_error) from error
+            self.listed = True
+        return self.entries
 
     def batch(self, ids: set[str]) -> None:
         pending = sorted(ids - self.blobs.keys())
@@ -194,19 +239,24 @@ class SourceReader:
             for oid in pending:
                 self.blobs[oid] = "Git repository/object database is unavailable."
             return
+        try:
+            self.read_objects(pending)
+        except (SpecError, ValueError, IndexError, UnicodeError, OSError) as error:
+            # Failed requests become per-object outcomes, not command-level failures.
+            for oid in pending:
+                self.blobs.setdefault(oid, f"Git object read failed: {error}")
 
+    def read_objects(self, pending: list[str]) -> None:
         def request(arguments, payload):
             try:
-                result = subprocess.run(
-                    ["git", "-C", str(self.repo), *arguments],
-                    input=payload,
-                    capture_output=True,
-                    timeout=20,
-                    env=git_environment(),
-                    check=True,
+                result = run_git_process(self.repo, *arguments, input=payload, timeout=GIT_TIMEOUT)
+            except GitProcessError as error:
+                raise ValueError(str(error)) from error
+            if result.returncode:
+                raise ValueError(
+                    result.stderr.decode("utf-8", errors="replace").strip()
+                    or f"git cat-file exited with status {result.returncode}."
                 )
-            except (subprocess.SubprocessError, OSError) as error:
-                raise ValueError(f"Git object read failed: {error}") from error
             return result.stdout
 
         metadata = request(["cat-file", "--batch-check"], ("\n".join(pending) + "\n").encode())
@@ -256,7 +306,7 @@ class SourceReader:
     def read_data(self, path: str) -> bytes:
         self.safe_file(path)  # Also refuse current workspace symlink escapes for revision links.
         if self.ref or self.staged:
-            entry = self.entries.get(self.prefix + path)
+            entry = self.entry(path)
             if not entry:
                 raise FileNotFoundError(path)
             mode, oid = entry
@@ -280,7 +330,7 @@ class SourceReader:
             pass
         candidates = [
             p[len(self.prefix) :]
-            for p, (mode, value) in self.entries.items()
+            for p, (mode, value) in self.listing().items()
             if p.startswith(self.prefix) and mode in {"100644", "100755"} and value == oid
         ]
         if candidates:
@@ -352,7 +402,7 @@ class SourceReader:
             if "blob" not in source:
                 target = self.safe_file(source["path"])
                 if self.ref or self.staged:
-                    entry = self.entries.get(self.prefix + source["path"])
+                    entry = self.entry(source["path"])
                     if not entry:
                         raise FileNotFoundError(source["path"])
                     if entry[0] not in {"100644", "100755"}:
@@ -392,9 +442,14 @@ class SourceReader:
             return {**result, "outcome": "unavailable", "message": str(error)}
 
     def is_retained(self, oid: str) -> bool:
-        if any(
-            mode in {"100644", "100755"} and value == oid for mode, value in self.entries.values()
-        ):
+        def present(entries):
+            return any(
+                mode in {"100644", "100755"} and value == oid for mode, value in entries.values()
+            )
+
+        # Referenced entries already retain unchanged anchors; only others need the
+        # complete target tree/index before the reachability walk.
+        if present(self.entries) or present(self.listing()):
             return True
         if self.retained is None:
             if self.repo is None:
@@ -410,7 +465,7 @@ class SourceReader:
     ) -> dict:
         if not (self.ref or self.staged):
             raise ValueError("Capture requires a committed revision or the explicit staged index.")
-        entry = self.entries.get(self.prefix + path)
+        entry = self.entry(path)
         if not entry:
             raise ValueError("Stage or commit the source file before capture.")
         source = {"path": path, "blob": entry[1], "mode": mode, "ranges": ranges}
@@ -427,6 +482,7 @@ def resolve_nodes(
     root: Path, nodes: list[SpecNode], *, ref=None, staged=False, retention=False
 ) -> list[dict]:
     reader = SourceReader(root, ref=ref, staged=staged)
+    reader.lookup(s["path"] for n in nodes for s in n.sources)
     reader.batch({s["blob"] for n in nodes for s in n.sources if "blob" in s})
     return [
         {"id": n.id, "source": i, **reader.resolve(s, retention=retention)}

@@ -29,11 +29,6 @@ sources:
 - path: electron/test-host/run.cjs
 - path: example/gantt/history/verify.py
 - path: example/gantt/history/gantt.bundle
-- path: docs/deletion.md
-- path: docs/native-editors.md
-- path: docs/architecture.md
-- path: docs/architecture.svg
-- path: docs/own-spec.md
 - path: graph-ui-common/test/host-ui.test.cjs
 - path: tests/test_git.py
 ---
@@ -55,4 +50,5 @@ independent maintained current-schema Gantt history and exact fixture indexes.
 
 Git deletion regressions configure identities only in their disposable repositories.
 Commit fixtures run with global/system configuration excluded and inherited
-author/committer identities cleared, independently of an owner account.
+author/committer identities cleared, independently of an owner account. The
+editor's button reads Delete node.

@@ -70,6 +70,30 @@ def test_framing_loss_ends_bounded_channel_without_guessing_a_request(raw, works
     assert result["ok"] is False and result["diagnostics"][0]["code"] == "API"
 
 
+def test_unexpected_failures_and_nested_frames_keep_the_stream_running(workspace, monkeypatch):
+    root, _ = workspace
+    calls = 0
+    original = api_transport.request
+
+    def flaky(root, value):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("unanticipated")
+        return original(root, value)
+
+    monkeypatch.setattr(api_transport, "request", flaky)
+    request = frames({"api_version": 7, "op": "annotations"}).getvalue()
+    nested = b"[" * 100_000 + b"]" * 100_000 + b"\n"
+    output = io.BytesIO()
+    assert api_transport.serve(root, io.BytesIO(request + nested + request), output) == 0
+    failed, invalid, recovered = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert failed["ok"] is False and failed["diagnostics"][0]["code"] == "INTERNAL"
+    assert "RuntimeError: unanticipated" in failed["diagnostics"][0]["message"]
+    assert invalid["ok"] is False and invalid["diagnostics"][0]["code"] == "API"
+    assert recovered["ok"] is True and recovered["result"] == {"shots": []}
+
+
 def test_malformed_json_frame_is_an_error_and_next_valid_frame_still_runs(workspace):
     output = io.BytesIO()
     valid = frames({"api_version": 7, "op": "annotations"}).getvalue()

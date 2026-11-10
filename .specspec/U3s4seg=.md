@@ -23,9 +23,7 @@ sources:
 - path: graph-ui-common/media/graph-model.js
 - path: graph-ui-common/media/graph.js
 - path: tests/test_invalid_workflow.py
-- path: docs/invalid-graphs.md
 - path: tests/test_editor.py
-- path: docs/investigations/invalid-graph-authoring.md
 ---
 # Implement invalid-state authoring through shared backend evidence
 
@@ -42,7 +40,7 @@ exercise exclusive/shared/deep deletions, cyclic/disconnected/unreadable inputs,
 completeness and metrics, explicit repair choices, batching, consent, races/recovery,
 protocol boundaries and installed host editing. The independent Gantt history is
 reconstructed with actual current receipts and all retained refs remain checked.
-Verification scope and material uncertainty are recorded in the investigation guide.
+
 
 Native repair-form fields remain separate from canonical nodes. The current-format
 manifesto header retains version identity through an invalid body, and native

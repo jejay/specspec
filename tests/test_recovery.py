@@ -1,5 +1,9 @@
+import json
+from pathlib import Path
+
 import pytest
 
+from specspec import workspace as workspace_module
 from specspec.model import SpecError
 from specspec.workspace import (
     encode,
@@ -98,3 +102,26 @@ def test_recover_init_removes_only_known_node(workspace):
     assert not list((root / ".specspec").glob("*.md"))
     assert (root / ".specspec/local").is_dir()
     assert not (root / ".specspec/local" / "journal.json").exists()
+
+
+def test_lock_acquisition_rechecks_another_writers_recovery_state(workspace, monkeypatch):
+    root, manifesto = workspace
+    before = load_snapshot(root).files
+    state = root / ".specspec/local"
+    journal = {"kind": "edit", "files": {}}
+    original = workspace_module.os.open
+
+    def racing(path, flags, *args, **kwargs):
+        # Another writer journals, fails and releases its lock after our first check.
+        if Path(path).name == "lock" and not (state / "journal.json").exists():
+            write_journal(state, journal)
+        return original(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(workspace_module.os, "open", racing)
+    with pytest.raises(SpecError) as error:
+        update_node(root, manifesto, body="# Racing edit\n")
+    monkeypatch.undo()
+    assert [d.code for d in error.value.diagnostics] == ["RECOVERY"]
+    assert json.loads((state / "journal.json").read_text(encoding="utf-8")) == journal
+    assert not (state / "lock").exists()
+    assert load_snapshot(root, ignore_state=True).files == before

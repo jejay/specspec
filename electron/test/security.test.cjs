@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { mkdtempSync, readFileSync, writeFileSync, rmSync } = require('node:fs');
+const fs = require('node:fs');
+const { mkdtempSync, readFileSync, writeFileSync, rmSync } = fs;
 const { join } = require('node:path');
 const { tmpdir } = require('node:os');
 const { APP_URL, assetName, trustedSender, validMessage, webPreferences } = require('../security.cjs');
@@ -53,6 +54,33 @@ test('malformed presentation bytes remain protected rather than overwritten', t 
   const store = new PresentationStore(path); assert.match(store.error, /protected/);
   assert.throws(() => store.set('/root', { dirty: true }), /protected/); store.flush();
   assert.equal(readFileSync(path, 'utf8'), '{bad original');
+});
+test('each window merges only its own projects, so another window keeps its saved drafts', t => {
+  const dir = mkdtempSync(join(tmpdir(), 'specspec-state-')); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const path = join(dir, 'state.json'), first = new PresentationStore(path), second = new PresentationStore(path);
+  first.set('/root/a', { dirty: true, draft: { body: '# A' } }); first.flush();
+  second.set('/root/b', { dirty: true, draft: { body: '# B' } }); second.flush();
+  const restored = new PresentationStore(path);
+  assert.equal(restored.get('/root/a').draft.body, '# A'); assert.equal(restored.get('/root/b').draft.body, '# B');
+  assert.equal(second.get('/root/a').draft.body, '# A', 'Opening a project reads drafts another window saved.');
+  first.set('/root/a', { dirty: false }); first.flush();
+  assert.equal(new PresentationStore(path).get('/root/b').draft.body, '# B'); assert.equal(new PresentationStore(path).get('/root/a').dirty, false);
+});
+test('a failed presentation write is reported, keeps its changes and retries with the next update', t => {
+  const dir = mkdtempSync(join(tmpdir(), 'specspec-state-')); t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const path = join(dir, 'state.json'), reports = []; let failures = 1;
+  const filesystem = { ...fs, renameSync: (from, to) => {
+    if (failures-- > 0) throw Object.assign(new Error('EPERM: operation not permitted, rename'), { code: 'EPERM' });
+    return fs.renameSync(from, to);
+  } };
+  const store = new PresentationStore(path, filesystem); store.onError = message => reports.push(message);
+  store.set('/root/a', { draft: '# A' }); store.save();
+  assert.equal(reports.length, 1); assert.match(reports[0], /Presentation save failed: EPERM.*retry/);
+  assert.deepEqual(fs.readdirSync(dir), [], 'The temporary file is removed; nothing partial remains.');
+  assert.equal(store.error, undefined); assert.doesNotThrow(() => store.set('/root/b', { draft: '# B' }));
+  store.flush(); assert.equal(reports.length, 1);
+  const restored = new PresentationStore(path);
+  assert.equal(restored.get('/root/a').draft, '# A'); assert.equal(restored.get('/root/b').draft, '# B');
 });
 test('oversized state is rejected without pruning a retained draft', t => {
   const dir = mkdtempSync(join(tmpdir(), 'specspec-state-')); t.after(() => rmSync(dir, { recursive: true, force: true }));

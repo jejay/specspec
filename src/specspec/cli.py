@@ -21,7 +21,7 @@ from .deletion import deletion_plan, deletion_warnings
 from .edit_cli import EDIT_COMMANDS, CanonicalIdCommand, EditInvocation
 from .editor import MAX_REQUEST_BYTES
 from .inspection import findings, raw_document, walks
-from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError
+from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError, unexpected_error
 from .output import (
     envelope,
     json_text,
@@ -88,6 +88,12 @@ def guarded(function):
             raise click.exceptions.Exit(error.exit_code) from error
         except (OSError, UnicodeError) as error:
             emit(None, [Diagnostic("IO", str(error))], as_json=as_json, ok=False)
+            raise click.exceptions.Exit(2) from error
+        except (click.exceptions.Exit, click.exceptions.Abort, click.ClickException):
+            raise
+        except Exception as error:
+            # Unanticipated failures keep the structured channel instead of a traceback.
+            emit(None, [unexpected_error(error)], as_json=as_json, ok=False)
             raise click.exceptions.Exit(2) from error
 
     return wrapper
@@ -461,7 +467,7 @@ def read_deletion_plan(path):
         if not isinstance(plan, dict) or type(plan.get("git_available")) is not bool:
             raise ValueError("Expected the deletion plan object, not a response envelope.")
         return plan
-    except (ValueError, TypeError) as error:
+    except (ValueError, TypeError, RecursionError) as error:
         raise SpecError(
             [Diagnostic("DELETE_PLAN", f"Invalid reviewed plan: {error}")], 2
         ) from error

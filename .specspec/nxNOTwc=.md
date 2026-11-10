@@ -3,6 +3,7 @@ id: nxNOTwc=
 type: implementation
 parents:
 - J8H7P74=
+- toGiGP8=
 sources:
 - path: src/specspec/templates/AGENTS.md
 - path: src/specspec/workspace.py
@@ -11,14 +12,13 @@ sources:
 - path: pyproject.toml
 - path: tests/test_initialization.py
 - path: tests/test_release.py
-- path: docs/agents.md
-- path: docs/install.md
-- path: docs/investigations/release-0.1.md
 - path: tests/test_local_state.py
 ---
 # Package and safely concatenate initialization instructions
 
 The distribution contains one static generic guide, loaded through package resources.
+It opens with a numbered routine and stays under 8 KB; tests check its essentials,
+its size and that every option it teaches appears in visible help.
 Initialization validates a single manifesto and safe root instruction target, checks
 Git availability and ensures a Git working tree before publishing node/guide bytes,
 reusing a containing repository instead of creating nested Git metadata. Git metadata is not claimed by graph rollback. No staging, commit, identity

@@ -21,6 +21,8 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <p id="message" role="status">Loading specification graph…</p>
     <p id="annotation-warning" role="status" hidden></p>
     <p id="sync-notice" role="status" hidden>Last valid graph · Repair Markdown and refresh to resume editing.</p>
+    <div id="discard-confirm" role="alertdialog" aria-labelledby="discard-question" hidden><span id="discard-question">Discard unsaved form changes?</span>
+    <button id="discard-keep" type="button">Keep editing</button><button id="discard-accept" type="button">Discard changes</button></div>
     <p id="annotation-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     <div class="canvas-shell">
     <section id="startup" class="startup-screen" aria-labelledby="startup-title" aria-live="polite">
@@ -71,7 +73,7 @@ function graphHtml(resource, cspSource, nonce, options = {}) {
     <label>Tracking<select id="source-mode"><option value="strict">Strict (specific)</option><option value="expanding">Expanding (broad)</option></select></label>
     <label><input type="checkbox" id="source-staged"> Capture staged code · Default: HEAD</label>
     <button type="button" id="capture-source">Append source reference to this form</button></section>
-    <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="delete">Delete node &amp; descendants</button><button type="button" id="discard">Discard form edits</button></div></form></section></div>
+    <div class="actions"><button type="submit" id="save">Save node</button><button type="button" id="delete">Delete node</button><button type="button" id="discard">Discard form edits</button></div></form></section></div>
     <dialog id="source-preview" aria-labelledby="source-preview-title"><h2 id="source-preview-title">Source preview</h2><p id="source-preview-status"></p><pre id="source-preview-code" tabindex="0"></pre><button id="close-source-preview" type="button">Close</button></dialog>
     <dialog id="annotation-compose" aria-labelledby="annotation-compose-title"><form id="annotation-compose-form"><h2 id="annotation-compose-title">Create spotlight from highlights</h2><label for="annotation-message">Message for the agent</label><textarea id="annotation-message" rows="4" maxlength="500" required></textarea><p id="annotation-compose-error" role="status"></p><button id="annotation-compose-cancel" type="button">Cancel</button><button id="annotation-compose-save" type="submit">Create spotlight</button></form></dialog>
     <script nonce="${nonce}" src="${resource('host.js')}"></script>

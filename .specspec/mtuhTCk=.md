@@ -7,7 +7,6 @@ sources:
 - path: tools/rainbow-playground/index.html
 - path: tools/rainbow-playground/palette.js
 - path: tools/rainbow-playground/app.js
-- path: tools/rainbow-playground/README.md
 - path: graph-ui-common/test/playground.test.cjs
 - path: graph-ui-common/test-host/playground.cjs
 ---

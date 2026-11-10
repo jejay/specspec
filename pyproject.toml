@@ -31,7 +31,7 @@ Documentation = "https://github.com/jejay/specspec/tree/main/docs"
 Issues = "https://github.com/jejay/specspec/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10", "ruff>=0.11,<1", "build>=1,<2", "pillow>=12,<13"]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1", "build>=1,<2", "pillow>=12,<13", "fonttools>=4.50,<5"]
 
 [project.scripts]
 specspec = "specspec.cli:main"

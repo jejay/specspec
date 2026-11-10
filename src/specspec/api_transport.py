@@ -4,7 +4,7 @@ import json
 
 from .application import request
 from .editor import MAX_REQUEST_BYTES
-from .model import Diagnostic, SpecError
+from .model import Diagnostic, SpecError, unexpected_error
 from .output import envelope, json_text
 
 
@@ -13,7 +13,7 @@ def decode_request(raw):
         if len(raw) > MAX_REQUEST_BYTES:
             raise ValueError("Request exceeds the 16 MiB limit.")
         return json.loads(raw)
-    except (ValueError, UnicodeError) as error:
+    except (ValueError, UnicodeError, RecursionError) as error:
         raise SpecError([Diagnostic("API", f"Invalid application JSON: {error}")], 2) from error
 
 
@@ -40,3 +40,6 @@ def serve(root, reader, writer):
             send(diagnostics=error.diagnostics)
         except (OSError, UnicodeError) as error:
             send(diagnostics=[Diagnostic("IO", str(error))])
+        except Exception as error:
+            # The frame was complete, so later requests keep their boundaries.
+            send(diagnostics=[unexpected_error(error)])

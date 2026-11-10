@@ -6,12 +6,14 @@ jobs:
   python:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python: ['3.11', '3.14']
     runs-on: ${{ matrix.os }}
     steps:
-      # Temporal fixtures are self-contained; ordinary tests need no old root schemas.
+      # Source anchors refer to Git objects, so the graph checks need the full history.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -19,8 +21,8 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install -e ".[dev]"
-      - run: specspec check --warnings-as-errors
-      - run: specspec --root example/gantt check --warnings-as-errors
+      - run: specspec check --sources --warnings-as-errors
+      - run: specspec --root example/gantt check --sources --warnings-as-errors
       - run: python example/gantt/history/verify.py --history
       - run: python -m ruff check .
       - run: python -m ruff format --check .

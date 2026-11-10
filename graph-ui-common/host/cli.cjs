@@ -1,13 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.invoke = invoke;
+exports.spawnOptions = spawnOptions;
 const node_child_process_1 = require("node:child_process");
+const node_os_1 = require("node:os");
 const { expandResult } = require('./wire.cjs');
+/* Every CLI process starts outside the project, which it receives only as --root. A project
+ * working directory would put project modules first on `python -m` import paths (and, on
+ * Windows, project executables first in command search). PYTHONSAFEPATH keeps the start
+ * directory off sys.path. Windows temp is per-user; POSIX /tmp can be shared, / is not. */
+function spawnOptions() {
+    return { cwd: process.platform === 'win32' ? (0, node_os_1.tmpdir)() : '/', env: { ...process.env, PYTHONSAFEPATH: '1' }, shell: false, windowsHide: true };
+}
 function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutputBytes = 16 * 1024 * 1024) {
     return new Promise((resolve, reject) => {
-        const child = (0, node_child_process_1.spawn)(command, [...prefix, '--root', root, ...args], {
-            cwd: root, shell: false, windowsHide: true,
-        });
+        const child = (0, node_child_process_1.spawn)(command, [...prefix, '--root', root, ...args], spawnOptions());
         const stdout = [];
         const stderr = [];
         let size = 0;
@@ -22,7 +29,7 @@ function invoke(command, prefix, root, args, input, timeoutMs = 120000, maxOutpu
                 return;
             failure = error;
             clearTimeout(timer);
-            // Wait for close before settling: Windows keeps the cwd locked until exit.
+            // Wait for close before settling: a killed Windows child can still hold project files.
             child.kill();
         };
         const timer = setTimeout(() => fail(new Error('specspec CLI timed out.')), timeoutMs);

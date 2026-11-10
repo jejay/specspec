@@ -22,7 +22,7 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'specspec', privileges: { standa
 const option = name => { const i = process.argv.indexOf(name); return i < 0 ? undefined : process.argv[i + 1]; };
 if (option('--profile')) app.setPath('userData', resolve(option('--profile')));
 let window, root, graph, reads, client, store, watcher, gitWatcher, annotationWatcher, generation = randomBytes(16).toString('hex');
-let selection = Promise.resolve(), unselectedCheck; const prompts = new Map();
+let selection = Promise.resolve(), unselectedCheck, launchFailure; const prompts = new Map();
 const launchDirectory = process.cwd();
 const polling = pollInterval(Number(option('--poll-interval-ms') ?? process.env.SPECSPEC_POLL_INTERVAL_MS ?? 0));
 const pythonSetting = option('--python') || process.env.SPECSPEC_PYTHON;
@@ -45,7 +45,7 @@ function cancelPrompts() { for (const p of prompts.values()) { clearTimeout(p.ti
 async function loadProject(next) {
   cancelPrompts();
   if (graph) { await graph.run(async () => {}); graph.dispose(); }
-  reads?.dispose(); client?.dispose(); watcher?.close(); gitWatcher?.close(); annotationWatcher?.close(); store.flush(); root = next; generation = randomBytes(16).toString('hex');
+  reads?.dispose(); client?.dispose(); watcher?.close(); gitWatcher?.close(); annotationWatcher?.close(); store.save(); root = next; generation = randomBytes(16).toString('hex');
   if (root) {
     const scope = root;
     client = new CliClient();
@@ -59,7 +59,7 @@ async function loadProject(next) {
     const projectReads = new ProjectReads({ cli });
     reads = projectReads;
     graph = new GraphSession({
-      startup: async () => { await probeCli(command, prefix, scope); return inspectProject(scope); },
+      startup: async () => { await probeCli(command, prefix); return inspectProject(scope); },
       authorized: () => root === scope && !window.isDestroyed(),
       cli, initialGraph: () => projectReads.initial(), readGraph: (base, target) => projectReads.readGraph(base, false, target),
       post, log: text => console.log(text), renderMatches, sameNode, revisions,
@@ -85,7 +85,9 @@ function checkUnselectedStartup() {
   unselectedCheck = (async () => {
     post({ type: 'startup', stage: 'checking' });
     try {
-      await probeCli(command, prefix, launchDirectory);
+      // An unavailable --project keeps the normal error state until Retry or Open project.
+      if (launchFailure) throw launchFailure;
+      await probeCli(command, prefix);
       if (current === generation && !root) post({ type: 'startup', stage: 'select' });
     } catch (failure) {
       if (current === generation && !root) post({ type: 'startup', stage: failure.code === 'CLI_UNAVAILABLE' ? 'install' : 'error', message: failure.message });
@@ -133,9 +135,18 @@ app.whenReady().then(async () => {
     try { store.set(root, payload.value); } catch (failure) { error(failure); }
   });
   ipcMain.on('specspec:message', (event, payload) => {
-    if (!sender(event, payload) || !validMessage(payload.value)) return;
+    if (!sender(event, payload)) return;
+    if (!validMessage(payload.value)) {
+      // A rejected form request still settles, so the renderer's pending controls recover.
+      const requestId = payload.value?.requestId;
+      if (Number.isSafeInteger(requestId)) post({ type: 'error', requestId, message: 'The desktop host accepts form requests up to 3 MiB; shorten the form and save again.' });
+      return;
+    }
     if (payload.value.type === 'select-project') selectProject();
-    else if (['ready', 'retry-startup'].includes(payload.value.type) && !graph) void checkUnselectedStartup();
+    else if (['ready', 'retry-startup'].includes(payload.value.type) && !graph) {
+      if (payload.value.type === 'retry-startup') launchFailure = undefined;
+      void checkUnselectedStartup();
+    }
     else if (graph) {
       graph.receive(payload.value);
       // A normal renderer reload must receive a fresh snapshot, not wait forever.
@@ -162,6 +173,10 @@ app.whenReady().then(async () => {
   });
   // An explicit launch path is authorization by the local launcher, not project data.
   const initial = option('--project');
-  await loadProject(initial ? await findProjectRoot(resolve(initial)) : undefined);
+  let next;
+  // An unavailable path shows the normal startup error state, never a blank window.
+  try { next = initial ? await findProjectRoot(resolve(initial)) : undefined; }
+  catch (failure) { launchFailure = new Error(`The --project path ${resolve(initial)} is unavailable: ${failure.message}`); }
+  await loadProject(next);
 }).catch(failure => { console.error(failure); if (window) error(failure); else app.quit(); });
 app.on('window-all-closed', () => app.quit());

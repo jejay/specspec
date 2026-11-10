@@ -1,174 +1,95 @@
-# Working on specspec
+# This repository
 
-## Project specification and review
+specspec specifies itself: `.specspec/` is the product's own graph, and the guide
+below applies to it. Run the development CLI as `python -m specspec` from the
+checkout's virtual environment, so the code you change is the code you run; the
+`specspec` on PATH may be an older installation.
 
-The active specification is the tool-managed graph in `.specspec/`. Read
-`docs/own-spec.md` for entry points, current choices, and withdrawn design history.
-`INTENTION_SPEC.md` is the user's original source; `CONCLUSION_SPEC.md` records
-technical conclusions. The graph also records the user's later corrections.
-
-Use the installed CLI, or `python -m specspec` in the development environment:
+Run these checks before reporting work as done; CI runs the same list:
 
 ```sh
-python -m specspec query --max-distance 2
-python -m specspec query <node-id> --max-distance 0 --with-ancestors
-python -m specspec query <node-id>
-python -m specspec diff
-```
-
-Inspect owner changes with Git status and full specification/code diffs. Query's
-change hints are an orientation aid; `specspec diff` supplies canonical-file hunks
-and `git diff` supplies code patches. Read untracked files explicitly. Use `--json`
-when processing structured results; ordinary readable query output is complete.
-
-Before changing code, read the relevant node and its ancestors. Use
-`query <node-id> --max-distance 0 --with-ancestors` for a focused complete reading,
-or add `--with-ancestors` to a larger selected subgraph. Completion follows every
-parent path after metric selection; added ancestors consume no match quota. Skip
-redundant reads only when those complete bindings have already been read. CLI reads
-saved files, not unsaved editor buffers. Distinguish core
-intentions from revisable conclusions by their relationships and explanations,
-not proposed/accepted statuses. Review is risk-proportionate: earlier intentions
-will often receive more attention, but depth is not a confidence score or a review
-quota. When the user considers an implementation attempt worth its uncertainty and
-token cost, there is no additional per-node approval ceremony before proceeding.
-
-Keep conclusions revisable. Working code and passing tests are evidence, not proof
-of correctness or a reason to silently rewrite the user's intentions. Surface
-material uncertainty and conflicts rather than manufacturing agreement.
-
-## Release workspace and generated guides
-
-This checkout is a private npm workspace with one root `package-lock.json`.
-Run `npm ci` at the root; CLI users normally install from PyPI with
-`uv tool install specspec` or `pipx install specspec`. See `CONTRIBUTING.md` and `docs/releasing.md` for root build,
-VSIX, portable desktop and artifact-check commands. Builds do not publish or install
-into an owner's editor. Only separate explicit requests authorize release tags or publication.
-
-The generic guide created by `init` is `src/specspec/templates/AGENTS.md`, adapted
-from the owner drafting workspace and current tool contracts. Keep it generic and
-validate wheel/sdist resources, exact selected deletion, ID-only `.specspec/` paths,
-replacement defaults and explicit Git ownership. Init requires Git, initializes a
-repository when needed, and creates or appends the template after exact existing
-root instruction bytes. Preserve external edits through byte-checked recovery;
-Git metadata stays outside graph rollback. Runtime state lives in `.specspec/local/`. Repository-specific
-maintenance guidance remains here rather than being copied into every product.
-
-## Changes
-
-- Use `add`, `update`, and `delete` for ordinary canonical graph changes
-  in this checkout. The product permits manual Markdown edits, but CLI/UI editing
-  remains recommended. Current storage/protocol has no node hashes, fingerprints, or `--expect`; source blob IDs
-  are Git content addresses, not node edit gates.
-  The authorized compact-ID conversion is a one-time tool-managed migration,
-  not a permanent compatibility command.
-- Record a separate conclusion when a change introduces a meaningful choice.
-  Do not rewrite its parent intention to make a chosen implementation inevitable.
-- Do not introduce approval statuses, acceptance scores, or parent-review gates.
-  Git differences communicate newness and change relative to the selected base.
-- Withdraw by physically deleting node files; explain why in the Git commit.
-  No retired flag or retire/restore workflow. Managed `delete` removes exactly the
-  selected files and warns about uncommitted selected nodes before unlinking.
-  Survivors retain missing-parent declarations. Inspect with `query --issues
-  --with-ancestors` and `diff --with-context`; resolve deliberately with ordinary
-  edits or combined add/update/delete steps. Edits can save graph-invalid
-  intermediates; `--require-valid`
-  checks the whole final candidate before writes. `check` stays strict. Never
-  reparent or delete the manifesto. Default workspace compares to HEAD; D remains visible through staging
-  and vanishes after commit. See `docs/deletion.md`.
-- Keep implementation explanations and `sources` references current when code
-  or verification changes. Source symbols remain descriptive. Blob/range locations are resolved through
-  the shared backend; see `docs/source-regions.md`.
-- Present specification changes, code changes, and affected nodes together.
-- Account for earlier assistant-authored work as unfinished work, not somebody
-  else's edits. Before reporting completion, explicitly account for remaining
-  changes and finish authorized coherent spec/code slices with exact-index checks.
-- Never silently stage files, create commits, or install/replace local Git hooks.
-
-## Checks
-
-```sh
-python -m specspec check --warnings-as-errors
+python -m specspec check --sources --warnings-as-errors
+python -m specspec --root example/gantt check --sources --warnings-as-errors
 python -m ruff check .
 python -m ruff format --check .
 python -m pytest
-npm --prefix graph-ui-common test
-npm --prefix vscode test
-npm --prefix electron test
+npm test
+python example/gantt/history/verify.py --history
 ```
 
-Use `python -m specspec diff <current-scheme-ref> --json` for a review report
-when the baseline uses the current schema. Before an explicitly authorized commit,
-stage the complete intended graph change and run
-`python -m specspec check --staged --sources --warnings-as-errors` against that exact
-index; working-tree validation cannot substitute for staged validation.
+Before an authorized commit, stage the complete intended slice and run both graph
+checks with `--staged` added, against that exact index.
 
-Maintain only the current schema: current node format requires a shortcut-free rooted DAG.
-No direct parent may already be an indirect parent. Review ripple effects against
-both old and new graphs; related Markdown changes remain deliberate. See
-`docs/graph-structure.md`. Use padded Base64url IDs over five random bytes,
-including the final `=`, and `<id>.md` filenames. Do not retain overwritten
-schemas, UUID readers, old metadata normalization or permanent migration commands.
+- `src/specspec/templates/AGENTS.md` is the guide `specspec init` ships. This file
+  is this section followed by that guide byte for byte; a test keeps them in sync.
+- The tools support only the current node format, without readers or migrations
+  for earlier formats.
+- `example/gantt` is a tracked snapshot of the independent history in
+  `example/gantt/history/gantt.bundle`, not a Git workspace. Every node-format
+  change rebuilds that entire history with current tools, as described in
+  `example/gantt/history/WALKTHROUGH.md`; add no nested Git metadata there.
+- Development setup, packaging and the release procedure are in CONTRIBUTING.md.
+  Releases, tags and publication need separate explicit requests.
 
-This repository's own graph is self-referencing design documentation. Validate
-its working graph and current source references, but do not require Git tooling
-to work against its obsolete historical schemas. Rejected older revisions are
-expected. Use the independent, rewritten current-schema Gantt history in
-`example/gantt/history/gantt.bundle` for serious Git/temporal, host and application
-integration tests. `example/gantt` is a tracked fixture snapshot, NOT a Git workspace;
-Git there finds this repository. Run `python example/gantt/history/checkout.py` to
-create `~/Projects/specspec-examples/gantt` for manual UI comparisons, or give a new
-external destination for disposable tests. Do not install nested Git metadata.
+# Working with a specspec graph
 
-EVERY node-schema change requires rewriting the ENTIRE maintained history of Gantt
-and additional examples as if all revisions had always used today's specspec.
-Refresh all retained refs, earlier/deleted nodes, actual receipts, commit ledgers, bundle
-and tracked snapshot together; validate every revision with current tools. Updating
-only HEAD or retaining old readers is not a solution. See
-`example/gantt/history/WALKTHROUGH.md`. Preserve local experiments before explicitly
-recreating stale clones; never reset them silently or rewrite unrelated specspec
-history. Plausible graph emergence/revision is sufficient; fabricated AI dialogue
-is not required. Focused unit tests may use smaller independent current-schema graphs.
+This project keeps its specification as a specspec graph in `.specspec/`: Markdown nodes that run from the owner's intentions, through the conclusions that serve them, to the implementation that realizes them. Read it to learn why something exists before you change it, and keep it current as you work. The product can be software, a book, a slide deck or any other deliverable.
 
-If an edit is interrupted, retain `.specspec/local/` and run `recover`. Remove a
-stale lock with `recover --force-lock` only after confirming no writer is running.
+## Routine
 
-Part of this project is to work out a "specspec AGENTS.md" for specspec-driven development. The goal is to replace this whole AGENTS.md with the following text (or to work out a version of this text that will take this place). To keep the flexibility we need to accept that we cannot just do that, for example reliance on git history will break if we develop on breaking changes. Hence we need to approach/converge to the principles described in the following text: 
+1. Check for owner input: `git status`, the diffs of `.specspec/` and other files (including untracked ones), and `specspec spotlight show` for messages the owner attached to specific nodes. Treat earlier agent work in the working tree as your own unfinished work.
+2. Find the relevant nodes: `specspec query --max-distance 2` shows the top of the graph, and `specspec sources show` lists which implementation node links which file.
+3. Read each node you act on together with its ancestors: `specspec query ID --max-distance 0 --with-ancestors`. Ancestors bind as much as the node itself.
+4. Work in the phase the owner asked for (see Phases). Change the graph only in agent planning or implementation, through `specspec add`, `update` and `delete`.
+5. Run `specspec check`, and `specspec check --staged --sources --warnings-as-errors` on the exact index before any commit you are authorized to make.
+6. Report what you changed, the choices you made and what remains uncertain.
 
-# PRELIMINARY SPECSPEC AGENTS.MD
+## The graph
 
-# Intention-Conclusion Specification-Spectrum-Driven Development
+- The **manifesto** is the unique root and states the product's core purpose.
+- **Requirements** state outcomes, constraints and choices. Each names the parents it serves; several parents combine reasons.
+- **Implementation** nodes are leaves that explain actual artifacts and link them in `sources`.
 
-A specification spectrum (specspec) graph documents and specifies the spectrum of the owner's intent to the the agent's conclusions for the development of a product. The intention-conclusion spectrum is represented as a directed acyclic graph of requirements, in which a parent-child connection stands for an intention-conclusion relationship. The root parent node, the manifesto, contains the core goal of the product. At the opposite end, leaf nodes can state conclusions about implementation details.
+Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`, `parents`, `sources`) and a Markdown body. An edge means the child is a reasoned refinement, choice or realization serving its parents. Nodes near the manifesto read as intentions and nodes further out as conclusions: a requirement is a conclusion for its parents and an intention for its children. Position, not a label, carries this.
 
-A specspec graph records what "is" and what "ought to be" at a certain point in time using positive language. Negative language to contrast what "is not", "ought not to be" or "was" is avoided. Historic contrasting ("this button was blue but now it is purple") is avoided, the history is managed via git and specspec's git aware tools. A perfectly implementation-mature specspec graph aims at enabling metaphorical compiler-level determinism once it is implemented by an agent.
+Ask what should survive if an approach changes, and keep that outcome and each meaningful choice in separate nodes, so a solution can be replaced without erasing its outcome. Neither authorship nor specificity decides the split: an owner may require an exact technology, and an agent may articulate an intention. Split nodes when separate identities allow separate replacement, review or implementation mapping; merge fragments of one coherent decision. Keep the graph shortcut-free: when A reaches C through B, A links only B.
 
+Write node text in positive, present-tense language: what the product is or ought to be now. Git holds earlier versions and the reasons for change, so node text states the current target. To withdraw a node, delete its file and give the reason in the commit message. Requirements describe targets; implementation nodes describe what exists, including its limits. Nodes carry no approval or confidence status: review effort follows uncertainty and impact, and passing checks and tests are evidence rather than proof that the product meets its purpose.
 
-## Phases of Specification-Spectrum Driven Development
+## Phases
 
-### Owner Planning
+**Owner planning.** The owner may edit nodes directly. Before acting, inspect those edits and work out what they mean for intentions and conclusions.
 
-The owner can optionally directly manually modify the specspec. The agent needs to check whether the owner modified the specspec before any action.
- 
+**Tandem planning.** The owner describes what they want and covers breadth; you work out depth. Separate the owner's intentions from the solutions they suggested, challenge weak conclusions, and propose alternatives and your own conclusions. Give a concise overview ready for correction, with guiding questions and your tentative answers, so the owner keeps the lead. Raise planned removals, splits and changes of existing nodes right away; new nodes can wait for agent planning. The graph stays unchanged in this phase, which may take several rounds or be skipped.
 
-### Tandem Planning
+**Agent planning** starts when the owner asks you to draw or change the graph. That request authorizes two commits: first the owner's uncommitted specification edits as `Owner specspec changes: <your understanding of them>`, then your result as `Agent specspec changes: <description>`. Build the most implementation-mature graph the available understanding supports, precise enough that implementing it leaves little to guess, and state deliberately open choices as such. Validate the exact index, commit, and summarize changed intentions, choices, gaps and affected nodes.
 
-The owner tells the agent what they want or the agent infers it from the existing manual specspec changes. The agent tries to separate the owner's intention from the owner's own conclusions. The agent tries to understand and learn about the owner's intention and conclusions. The agent challenges and either validates the conclusions or proposes alternative conclusions. The agent proposes and discusses its own additional conclusions.
+**Implementation.** Before changing artifacts, read the relevant nodes and their ancestors. Where the graph is too coarse, add conclusions and implementation nodes under the existing intentions; breadth and scope stay with the owner. Keep `sources` and implementation explanations current. When you find a contradiction, implement a simple, broad, contradiction-free subset and report the conflict, your subset decisions and their consequences; a resolution can be proposed on a separate branch.
 
-In tandem planning the owner's focus is on breadth and the agent's focus is on depth. The agent can also focus on breadth either when asked explicitly or implicitly when the missing breadth is obvious.
+Code commits, pushes, tags and Git hook changes need the owner's explicit request.
 
-The agent never steers the conversation, instead it gives the owner an overview of its understanding of the owner's intention, of its critique, conclusions, etc, ready to be corrected. It can offer guidance questions together with its own answers. The agent focuses on the most important issues and leaves out less controversial conclusions that would bloat the conversation.
+## Commands
 
-The agent never discusses the planned addition of nodes to the specspec graph mid tandem planning. Contrary, the agent needs to discuss potential removals, split-ups and modifications of nodes immediately.
+Install with `uv tool install specspec` (or `pipx install specspec`) and run commands inside the project, like Git. IDs are full and case-sensitive, including the final `=`. The CLI reads saved files, so save editor buffers first.
 
-Tandem planning can have arbitrary number of rounds and also be skipped. In tandem planning the agent guides the owner and gathers information, understanding and approval; but in tandem planning the agent does not manipulate the specspec.
+```sh
+specspec query --max-distance 2                       # top of the graph
+specspec query ID --max-distance 0 --with-ancestors   # one node and its justification
+specspec query ID --max-distance 1                    # a node and its children
+specspec diff                                         # specification changes since HEAD
+specspec add --parent PARENT_ID -m '# Title' -m 'Paragraph.'
+specspec add --type implementation --parent REQUIREMENT_ID -m '# Realization'
+specspec update ID --replace 'old passage' 'new passage'
+specspec update ID --parent FIRST_ID --parent SECOND_ID   # replaces the parent list
+specspec delete ID --dry-run
+specspec check
+specspec spotlight show
+```
 
+Keep reads bounded with `--max-distance`; an unbounded query of a large graph is long. `-m` values are literal Markdown paragraphs; without `-m` or `--replace`, the body comes from standard input, as in `specspec update ID < body.md`. Several add, update and delete steps can form one invocation: `--as name` names a new node and `--parent '$name'` links to it, `--dry-run` previews the result, and `--require-valid` refuses to write an invalid final graph.
 
-### Agent Planning
+Deletion removes exactly the selected files. Descendants keep their files and their now-missing parent references; resolve those deliberately. The manifesto cannot be deleted. `specspec query --issues --with-ancestors` shows broken states and what they affect.
 
-Agent planning phase is entered once the user requests the agent to manipulate the specspec (e.g. "draw the graph", "change the spec"). The goal of the phase is for the agent to create a perfectly implementation-mature specspec. If available the agent uses the pre-existing specspec, the historical context and the understanding and approvals from the tandem planning phase. If there was no tandem phase, the agent tries to infer the owner's intention and conclusions from the specspec git history and uncommitted workbench state. The agent commits the uncommitted manual specspec changes by the owner as "Owner specspec changes: [intention/conclusion agent understanding description]" before changing it itself. The agent uses the specspec commandline tools to manipulate the specspec and creates the best implementation-mature version with the given knowledge. The agent commits its changes as "Agent specspec changes: [description]". The agent finally gives a summary of the changes. 
+Implementation sources: `specspec sources capture IMPL_ID PATH --range 10:40 --mode expanding --staged` anchors a line range to the exact staged blob (stage the code first); `--mode strict` reports any change inside the range for review. A whole-file reference is a `- path: FILE` entry under `sources:` in the node's frontmatter. `specspec check --sources` reports links whose code changed, moved ambiguously or disappeared; align the explanation and the code, then run `specspec sources reanchor`.
 
-
-### Implementation
-
-Whenever the specspec is not perfectly implementation-mature, the implementing agent has to close the gap by deepening the specspec by adding conclusion and implementation nodes. The agent never unilaterly adds breadth to or removes from the specspec in an implementation phase. If the implementing agent realizes that there is a contradiction in the spec (or even how to likely improve the product by any means), the agent implements a simple and large-spanning contradiction free subset of the specspec graph and communicates the found contradiction, its subset implementation decisions and the consequences. The agent can also propose a resolution or improvement as a specspec graph on a new proposal branch. 
+If an edit is interrupted, keep `.specspec/local/` and run `specspec recover`; use `--force-lock` only after confirming that no other writer is running. Every command has `--help` with purpose, defaults and examples.

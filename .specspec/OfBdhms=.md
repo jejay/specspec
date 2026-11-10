@@ -32,7 +32,6 @@ sources:
 - path: example/gantt/history/cli.jsonl
 - path: example/gantt/history/revisions.json
 - path: example/gantt/history/gantt.bundle
-- path: docs/own-spec.md
 - path: README.md
 - path: tests/test_directory.py
 ---

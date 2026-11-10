@@ -1,66 +1,61 @@
 # Changelog
 
-## 0.0.1 — initial PyPI CLI release
+## Unreleased
 
-specspec connects intentions, separately revisable choices and implementation in a
-local Git-versioned Markdown graph. This is an early release with evolving
-interfaces and bounded verification, not a production/correctness guarantee.
+**Agent guide.** `specspec init` ships a shorter AGENTS.md (under 8 KB) that opens with
+a working routine, reads spotlights as owner input and states which commits a planning
+request authorizes: the owner's pending specification edits, then the agent's result.
+Code commits, pushes, tags and hook changes need an explicit request.
 
-### Install and distribute
+**CLI fixes**
+- A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT
+  diagnostic of its own; the other nodes still load and raw reads still work.
+- Unexpected errors produce a structured INTERNAL diagnostic instead of a traceback, and
+  `api --stream` keeps serving after one.
+- `diff` and the editors' comparison work with thousands of source references on Windows.
+- `check --sources` accepts unchanged files of any length, reads only the referenced
+  paths in large repositories and reports Git read failures as diagnostics.
+- Source line numbers match editors, `grep` and Git for files with form feeds or other
+  Unicode line separators.
+- A second writer can no longer remove another writer's recovery journal.
+- Git runs with fsmonitor, signature display and prompts turned off at every call site.
+- `check --staged` ignores `git add -N` placeholders.
 
-- Install the CLI from [PyPI](https://pypi.org/project/specspec/) with
-  `uv tool install specspec` or `pipx install specspec`. No checkout or Node is
-  needed for the CLI. Current user/agent guides and both UIs recommend this path.
-- All maintained Python/runtime/npm workspace/product versions are `0.0.1`.
-  Internal schema/protocol and third-party dependency versions remain separate.
-- An explicitly dispatched GitHub Trusted Publishing workflow verifies/builds/smokes
-  the Python wheel and source distribution, then publishes them through environment
-  `pypi` with short-lived OIDC identity and attestations. Local builds and ordinary
-  pushes do not upload. [Release workflow](docs/releasing.md)
-- VS Code remains a locally built/installed VSIX; desktop remains a portable,
-  unsigned Windows/Linux app. They use the separately installed CLI and Git.
-  Marketplace/npm publication, installers and auto-updates are not included.
+**Editor fixes**
+- The CLI runs from a neutral directory with Python's safe import path, so a project's
+  own Python files are never imported.
+- Saving a new node twice in quick succession creates one node.
+- Unsaved-change prompts work in VS Code, as a keyboard-accessible bar in the panel.
+- The delete button reads "Delete node", matching what it does.
+- Focus stays on the selected card across refreshes, and Tab follows the layout.
+- Highlights and the manifesto outline are readable on light themes.
+- Startup recovers from a slow webview, and a missing `--project` path shows a Retry
+  screen.
+- Several desktop windows keep each other's saved drafts.
 
-Earlier development-only packages used `0.1.0`; this is the first public `0.0.1`,
-not a promise that ordinary numerical upgrades will downgrade those local builds.
-See [replacement/upgrade instructions](docs/install.md#upgrade-and-uninstall).
+**Documentation.** The README explains both spectra with figures. The editor guide is
+the extension's README. Design notes and evidence moved into the specification graph
+and commit messages.
 
-### Included behavior
+## 0.0.1 — first public release
 
-- Seven everyday CLI verbs, concise task-oriented help, complete ancestor readings,
-  Git-aware diffs and tracked source explanations. Integration controls and internal
-  version headers stay out of ordinary help/readings.
-- Literal repeatable messages, automatic bounded UTF-8 stdin without messages,
-  newline/Markdown-prose-tolerant selected-passage replacements, and composed
-  add/update/delete transactions with complete preflight and local aliases.
-- Grouped Added/Modified/Deleted/Unchanged receipts with full unpadded IDs. Logical
-  LF/CRLF/CR equivalence preserves meaningful text, blank lines and final-newline
-  evidence. Complete managed/native-planned documents append a terminator only when
-  missing; Git settings, attributes and raw-editor saves remain untouched.
-- Explicit initialization requires Git, reuses a containing working tree or creates
-  one, and creates/appends packaged `AGENTS.md` after exact original bytes. Node/guide
-  journaling and recovery protect external edits; Git metadata remains Git-owned.
-- Direct `.specspec/<id>.md` nodes and a reserved ignored `.specspec/local/` runtime
-  subtree. Canonical inventories and watchers exclude that subtree.
-- Shared graph UI with blocking compatible-CLI checks and centered explicit project
-  initialization. Electron has no menu bar; its project picker/shortcut remain.
-- Native VS Code Save/undo/dirty ownership; managed project/desktop byte-checked
-  writes, exact selected deletion, invalid-graph repair, source uncertainty,
-  spotlights, watchers and current/historical comparisons.
-- One private npm workspace/lock, offline UI assets/license notices, inspected local
-  artifacts, selected Spectrum flow branding and independent maintained Gantt history.
+The CLI is on PyPI (`uv tool install specspec` or `pipx install specspec`); the VS Code
+extension and the desktop app are built locally from this repository.
 
-### Workspace and qualification boundaries
+- Seven everyday commands with task-oriented `--help`: init, query, add, update, delete,
+  check and diff.
+- Node text from literal `-m` paragraphs or standard input; `update --replace` edits
+  single passages; add, update and delete combine into one recoverable invocation.
+- `query --with-ancestors` reads a node with everything that justifies it; distance and
+  influence options select parts of large graphs.
+- Implementation nodes link whole files or line ranges anchored to Git objects, and
+  `check --sources` follows them through edits.
+- Deleting a node removes exactly its file; descendants keep their references for
+  deliberate repair.
+- `init` sets up Git and adds the agent guide to AGENTS.md.
+- One graph canvas in VS Code and in a Windows/Linux desktop app, with native node
+  editing, revision comparisons and spotlights.
 
-Canonical storage is `.specspec/`, not development-only `_specspec/`; keep IDs and
-finish/recover old writes before changing paths/tools. Preserve recovery records,
-experiments and native drafts. No compatibility reader or automatic history rewrite
-is supplied. [Workspace upgrade](docs/install.md#upgrading-pre-release-workspaces)
-
-Large graphs are not virtualized. Watchers are hints; recovery is not universal
-Undo or guaranteed power-loss durability. No bundled Python/Git, hosted service or
-built-in coding agent is included. Target platforms and actual executed qualification
-remain separate. [Current release evidence](docs/investigations/pypi-0.0.1.md),
-[earlier preparation](docs/investigations/release-0.1.md) and
-[onboarding evidence](docs/investigations/owner-experience.md) retain their run scope.
-Passing tests and source mappings are evidence, not semantic proof.
+Development builds before 0.0.1 used `_specspec/` and the version 0.1.0. Rename the
+folder to `.specspec/` after finishing or recovering interrupted writes, and replace
+such a build with `uv tool install --force specspec`.

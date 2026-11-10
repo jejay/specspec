@@ -28,10 +28,6 @@ sources:
 - path: README.md
 - path: CONTRIBUTING.md
 - path: CHANGELOG.md
-- path: docs/install.md
-- path: docs/releasing.md
-- path: docs/platforms.md
-- path: docs/investigations/release-0.1.md
 - path: branding/identity.sha256.json
 - path: branding/specspec-logo-light.svg
 - path: branding/specspec-logo-dark.svg
@@ -42,8 +38,6 @@ sources:
 - path: branding/app-icon.ico
 - path: .github/workflows/ci.yml
 - path: .github/workflows/release-build.yml
-- path: docs/investigations/final-newline.md
-- path: docs/investigations/owner-experience.md
 ---
 # Build and qualify independent local CLI and visual-host artifacts
 
@@ -56,9 +50,9 @@ and creates a current-platform portable archive. The standard-library release
 inspector checks versions, resources, runtime membership, asset/license presence
 and archive semantics, then writes artifact digests and a manifest.
 
-README and installation/contribution/host/release guides explain the specification
-spectrum before setup, show the selected exact light/dark tagline-lockup imports, distinguish
-normal VSIX installation from developer F5, and explain global CLI/PATH ownership.
+README.md explains both spectra before setup with the tagline lockup and figures;
+the editor guide in vscode/README.md, CONTRIBUTING.md and CHANGELOG.md cover editor
+use, development and releases, and release notes.
 The original supplied artwork and local experiments remain preserved.
 
 Fresh isolated uv-tool installs from both wheel and source distribution exercise
@@ -68,12 +62,10 @@ VSIX in a disposable extensions directory with a separate test controller, and r
 the unpacked desktop executable against the isolated global-style CLI. Existing
 complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
 spotlight and reload suites retain their assertions and production safeguards.
-Current startup/naming qualification is recorded in the owner-experience
-investigation, with earlier release/audit evidence scoped to its checkpoint. Build
+ Build
 artifact workflows upload builds without publication, tags, owner installs or Git
 writes. Public CLI publication has its own explicitly authorized release workflow.
 
 Permission-sensitive Linux archive verification executes on a POSIX filesystem.
 Qualification records distinguish the executed Python/archive environment from
-unexecuted graphical hosts. The final-newline investigation records the terminator
-boundary, filesystem evidence and self-contained Git regression fixtures.
+unexecuted graphical hosts.

@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 from test_git import git, setup_repository
 
@@ -374,3 +375,47 @@ def test_api6_is_rejected_and_context_budget_is_exact(workspace):
     assert call(root, "diff", "--with-context", "--max-bytes", str(exact))[0].exit_code == 0
     result, data = call(root, "diff", "--with-context", "--max-bytes", str(exact - 1))
     assert result.exit_code == 1 and data["result"] is None
+
+
+@pytest.mark.parametrize(
+    "value,code",
+    [
+        ("[" * 3000 + "]" * 3000, "FORMAT"),  # Parser recursion depth.
+        ("9" * 5000, "FORMAT"),  # Interpreter integer digit limit.
+        ("2020-13-45", "FORMAT"),  # Impossible timestamp construction.
+        ("0x" + "f" * 5000, "SCHEMA"),  # Loadable, but not decimal JSON text.
+    ],
+    ids=["nesting", "digits", "date", "hexadecimal"],
+)
+def test_parser_limits_fail_only_the_malformed_node(workspace, value, code):
+    root, manifesto = workspace
+    _, child = add_node(root, "requirement", [manifesto], "# Valid conclusion\n")
+    setup_repository(root)
+    path = ".specspec/AAAAAAA=.md"
+    text = (
+        f"---\nid: AAAAAAA=\ntype: requirement\nparents:\n- {manifesto}\n"
+        f"extensions:\n  org.example:value: {value}\n---\n# Malformed\n"
+    )
+    (root / path).write_bytes(text.encode("utf8"))
+    snapshot = load_snapshot(root)
+    assert [(d.code, d.path) for d in snapshot.diagnostics] == [(code, path)]
+    assert set(snapshot.graph.nodes) == {manifesto, child}
+    result, data = call(root, "check")
+    assert result.exit_code == 1 and [d["code"] for d in data["diagnostics"]] == [code]
+    result, data = call(root, "query", "--raw", "--path", path)
+    assert result.exit_code == 0 and data["result"]["text"] == text
+    # Readable nodes remain usable; the unreadable file keeps the analysis incomplete.
+    for command in ["query", "diff"]:
+        result, data = call(root, command)
+        assert result.exit_code == 1 and not data["ok"], result.output
+        assert path in data["result"]["target"]["unreadable_paths"]
+        assert {n["id"] for n in data["result"]["target"]["nodes"]} == {manifesto, child}
+    frame = '{"api_version":7,"op":"read","base":"HEAD","cache":true}\n'
+    response = CliRunner().invoke(main, ["--root", str(root), "api", "--stream"], input=frame)
+    assert response.exit_code == 0, response.output
+    envelope = json.loads(response.stdout)
+    assert envelope["ok"] and {n["id"] for n in envelope["result"]["snapshot"]["nodes"]} == {
+        manifesto,
+        child,
+    }
+    assert [d["code"] for d in envelope["diagnostics"]] == [code]

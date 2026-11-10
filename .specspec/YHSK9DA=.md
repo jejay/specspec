@@ -13,8 +13,6 @@ sources:
 - path: tools/rainbow-playground/index.html
 - path: graph-ui-common/test/playground.test.cjs
 - path: graph-ui-common/test-host/playground.cjs
-- path: docs/node-canvas.md
-- path: docs/own-spec.md
 ---
 # Render square implementations, rounder requirements and circular roots
 

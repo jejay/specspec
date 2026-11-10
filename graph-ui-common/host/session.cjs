@@ -21,12 +21,20 @@ class GraphSession {
     const result = this.queue.then(() => { if (this.disposed) throw new Error('Graph panel is closed.'); return operation(); });
     this.queue = result.catch(() => {}); return result;
   }
-  enqueue(operation) {
-    void this.run(operation).catch(async error => { this.log(error); await this.post({ type: 'error', message: error.message }); });
+  enqueue(operation, reply = {}) {
+    // A renderer form request settles exactly once: completed, or an error carrying its requestId.
+    void this.run(operation).then(() => reply.requestId === undefined ? undefined : this.post({ type: 'completed', ...reply }),
+      async error => { this.log(error); await this.post({ type: 'error', message: error.message, ...reply }); });
   }
+  replyTo(message) { return Number.isSafeInteger(message?.requestId) ? { requestId: message.requestId } : {}; }
   receive(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return;
-    if (value.type === 'ready') { this.annotationInitial = true; this.restoredSpotlight = typeof value.spotlight === 'string' ? value.spotlight : undefined; this.resolveReady(); return; }
+    if (value.type === 'ready') {
+      this.annotationInitial = true; this.restoredSpotlight = typeof value.spotlight === 'string' ? value.spotlight : undefined; this.resolveReady();
+      // A view that reports ready after the startup deadline still opens instead of keeping its startup screen.
+      if (this.readyLate && !this.disposed) { this.readyLate = false; void this.open().catch(error => this.log(error)); }
+      return;
+    }
     if (value.type === 'client-error' && typeof value.message === 'string') {
       this.renderError = new Error(`Graph renderer failed: ${value.message}`); this.log(this.renderError);
       this.listeners.forEach(f => f()); return;
@@ -53,7 +61,7 @@ class GraphSession {
       });
       return;
     }
-    this.enqueue(() => this.handle(value));
+    this.enqueue(() => this.handle(value), this.replyTo(value));
   }
   async open() {
     try {
@@ -130,7 +138,10 @@ class GraphSession {
     let timer;
     try {
       await Promise.race([this.ready, new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error('Graph startup timed out. Restart the host; see specspec output.')), this.host.timeout || 10_000);
+        timer = setTimeout(() => {
+          this.readyLate = true;
+          reject(new Error('The graph view is still starting; it opens once the view reports ready. See specspec output.'));
+        }, this.host.timeout || 10_000);
       })]);
       if (this.disposed) throw new Error('Graph panel was closed before loading.');
     } finally { clearTimeout(timer); }
@@ -417,7 +428,7 @@ class GraphSession {
       if (message.id !== this.host.document.state().nodeId) throw new Error('A node-file editor can only edit its bound node.');
       await this.flushDocument();
       const applied = await this.host.document.edit(message);
-      if (!applied) { await this.post({ type: 'cancelled' }); return; }
+      if (!applied) { await this.post({ type: 'cancelled', ...this.replyTo(message) }); return; }
       await this.host.document.save();
       const document = this.host.document.state();
       if (Number.isInteger(applied?.version)) document.version = applied.version;
@@ -452,7 +463,7 @@ class GraphSession {
         args = ['add', '--type', message.nodeType, ...parents];
       } else {
         // No graph-wide stale gate: only overwriting this node needs user attention.
-        if (!this.host.sameNode(message.originalNode, nodes.get(id)) && !await this.host.confirm('This node changed outside your draft (or its original contents are unavailable). Save your draft over its current text, parents and sources? Cancel keeps your unsaved text.')) { await this.post({ type: 'cancelled' }); return; }
+        if (!this.host.sameNode(message.originalNode, nodes.get(id)) && !await this.host.confirm('This node changed outside your draft (or its original contents are unavailable). Save your draft over its current text, parents and sources? Cancel keeps your unsaved text.')) { await this.post({ type: 'cancelled', ...this.replyTo(message) }); return; }
         args = ['update', id, ...parents];
       }
       if (typeof message.sources !== 'string' || Buffer.byteLength(message.sources, 'utf8') > 1024 * 1024) throw new Error('Invalid source references.');
@@ -465,13 +476,17 @@ class GraphSession {
       if (!Array.isArray(plan?.deleted_ids) || plan.deleted_ids.length !== 1 || plan.deleted_ids[0] !== id) throw new Error('Deletion plan must contain exactly the selected node.');
       const warnings = (preview.diagnostics || []).filter(d => d.severity === 'warning').map(d => d.message);
       const text = `Delete only this node (${plan.deleted_ids.length} Markdown file)? Descendants and their parent declarations remain. ${plan.broken_references?.length || 0} unresolved references; ${plan.potentially_affected?.length || 0} potentially affected surviving nodes. The result ${plan.graph_valid ? 'is structurally valid' : 'needs structural repair'}. HEAD shows committed deletions as D until commit; earlier text remains historical context.${warnings.length ? '\n\nWARNING — uncommitted selected files / unavailable Git assessment:\n' + warnings.join('\n') : ''}`;
-      if (!await this.host.confirm(text)) { await this.post({ type: 'cancelled' }); return; }
+      if (!await this.host.confirm(text)) { await this.post({ type: 'cancelled', ...this.replyTo(message) }); return; }
       args = ['delete', id, '--yes', '--reviewed-plan', '-'];
       input = JSON.stringify(plan);
     } else throw new Error('Unknown graph action.');
     const response = await this.cli([...args, ...common], input);
     this.reads?.changed();
-    await this.refresh(true, response.result.changed_ids?.[0]);
+    const changed = response.result.changed_ids?.[0], reply = this.replyTo(message);
+    // Report the write before refreshing: a failed refresh must never invite a duplicate add.
+    if (reply.requestId !== undefined) await this.post({ type: 'applied', ...reply, id: changed });
+    try { await this.refresh(true, changed); }
+    catch (error) { throw new Error(`${{ add: 'Node created', save: 'Node saved', delete: 'Node deleted' }[message.type]}. Refresh to show the result.\n${error.message}`); }
   }
   dispose() {
     this.disposed = true; clearTimeout(this.refreshTimer); clearTimeout(this.annotationTimer); clearInterval(this.pollTimer); clearTimeout(this.retryTimer);

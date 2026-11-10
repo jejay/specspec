@@ -8,6 +8,8 @@ const model = require('../media/graph-model.js');
 
 const root = { id: 'root', type: 'manifesto', parents: [], body: '# Purpose\n', path: '.specspec/root.md', sources: [] };
 const child = { id: 'child', type: 'requirement', parents: ['root'], body: '# Child\n', path: '.specspec/child.md', sources: [] };
+// Hosts settle add/save/delete only with replies that carry the request's ID.
+const lastRequest = messages => messages.findLast(message => message.requestId !== undefined)?.requestId;
 
 function fixture(t, options = {}) {
   const dom = new JSDOM(graphHtml(name => name, 'local', 'test', options.html), { runScripts: 'outside-only', pretendToBeVisual: true });
@@ -19,7 +21,8 @@ function fixture(t, options = {}) {
   let saved = options.restored;
   dom.window.specspecHost = { postMessage: message => messages.push(message), getState: () => saved, setState: value => { saved = value; },
     onMessage: listener => dom.window.addEventListener('message', event => listener(event.data)) };
-  dom.window.confirm = () => true;
+  // VS Code webview sandboxes make window.confirm() return false without showing anything.
+  dom.window.confirm = () => { throw new Error('Use the in-panel confirmation; webviews block window.confirm().'); };
   dom.window.structuredClone = structuredClone; // Browser APIs not supplied by jsdom.
   dom.window.Range.prototype.getClientRects = () => [];
   dom.window.Range.prototype.getBoundingClientRect = () => ({ left: 0, right: 0, top: 0, bottom: 0 });
@@ -116,7 +119,7 @@ test('fresh graph-invalid snapshots show missing endpoint stubs and keep current
   assert.match(f.$('parent-links').textContent,/gone/);
   f.$('body').value='# Deliberate repair';f.$('body').dispatchEvent(new f.dom.window.Event('input'));
   f.$('save').click();assert.equal(f.messages.at(-1).type,'save');assert.deepEqual([...f.messages.at(-1).parents],['gone','root']);
-  f.send({type:'cancelled'});f.$('discard').click();f.$('back').click();
+  f.send({type:'cancelled',requestId:lastRequest(f.messages)});f.$('discard').click();f.$('back').click();
   f.dom.window.document.querySelector('[data-node-id="gone"]').click();
   assert.equal(f.$('save').disabled,true);assert.equal(f.$('delete').disabled,true);assert.equal(f.$('body').readOnly,true);
   assert.equal(f.dom.window.document.querySelector('.git-corner'),null,'A missing never-committed identity is not a fabricated D.');
@@ -159,7 +162,7 @@ test('Ctrl/Command+S submits the focused managed form, preserves draft/caret and
   assert.equal(messages.at(-1).type, 'save'); assert.equal(messages.at(-1).body, '# Keyboard draft');
   const count = messages.filter(m => m.type === 'save').length;
   saveKey(f, $('sources')); assert.equal(messages.filter(m => m.type === 'save').length, count);
-  send({ type: 'error', message: 'Save failed' });
+  send({ type: 'error', message: 'Save failed', requestId: lastRequest(messages) });
   assert.equal($('body').value, '# Keyboard draft'); assert.equal(f.saved().dirty, true);
   assert.deepEqual([$('body').selectionStart, $('body').selectionEnd], [2, 8]);
   saveKey(f, $('sources'), { repeat: true });
@@ -171,7 +174,7 @@ test('Ctrl/Command+S submits the focused managed form, preserves draft/caret and
   $('source-preview').removeAttribute('open');
   saveKey(f, $('sources'), { ctrlKey: false, metaKey: true, key: 'S' });
   assert.equal(messages.filter(m => m.type === 'save').length, count + 1);
-  send({ type: 'cancelled' }); $('back').click();
+  send({ type: 'cancelled', requestId: lastRequest(messages) }); $('back').click();
   assert.equal(saveKey(f, $('viewport')).defaultPrevented, false);
 });
 
@@ -1020,13 +1023,19 @@ test('nodes are editable without approval states or an acceptance action', t => 
 test('delete sends a physical deletion action; HEAD ghosts are copyable but never editable and vanish after commit', t => {
   const { dom, snapshot, send, messages, $, saved } = fixture(t);
   dom.window.document.querySelector('[data-node-id="child"]').click();
+  assert.equal($('delete').textContent, 'Delete node', 'Deletion removes exactly the selected node.');
+  assert.match($('delete').title, /only this node; keep descendants/);
   $('delete').click();
   assert.equal(messages.at(-1).type, 'delete');
   assert.equal('expect' in messages.at(-1), false);
   assert.equal($('save').disabled, true);
   const target = { ...snapshot, nodes: [root], edges: [] };
   const diff = { base: snapshot, target, changes: [{ id: 'child', kind: 'removed' }], added_edges: [], removed_edges: snapshot.edges, base_ref: 'HEAD', target_ref: 'workspace' };
+  const requestId = messages.at(-1).requestId; assert.ok(Number.isSafeInteger(requestId));
+  send({ type: 'applied', requestId, id: 'child' });
   send({ type: 'snapshot', snapshot: target, diff, diagnostics: [], readonly: false, force: true, selectedId: 'child' });
+  assert.equal($('body').disabled, true, 'The request stays pending until its completion reply.');
+  send({ type: 'completed', requestId });
   assert.match($('identity').textContent, /deleted/);
   assert.equal($('delete').disabled, true); assert.equal($('save').disabled, true);
   assert.equal($('body').disabled, false); assert.equal($('body').readOnly, true);
@@ -1107,7 +1116,7 @@ test('parent list displays actual links; adding and removing are explicit draft 
   const { dom, messages, snapshot, send, $, saved } = fixture(t);
   const branch = { ...child, id: 'branch', body: '# Branch\n' };
   send({ type: 'snapshot', snapshot: { ...snapshot, nodes: [...snapshot.nodes, branch] }, diagnostics: [], readonly: false });
-  dom.window.document.querySelector('.card.requirement').click();
+  dom.window.document.querySelector('[data-node-id="child"]').click();
   assert.equal($('parent-links').children.length, 1);
   assert.equal($('parent-links').firstElementChild.dataset.parentId, 'root');
   assert.ok(![...$('parent-candidate').options].some(option => ['root', 'child'].includes(option.value)));
@@ -1310,8 +1319,8 @@ test('back and resume preserve the same dirty form and switching nodes requires 
   $('back').click();
   assert.equal(saved().view, 'overview');
   assert.equal($('resume').hidden, false);
-  dom.window.confirm = () => false;
   dom.window.document.querySelector('[data-node-id="root"]').click();
+  assert.equal($('discard-confirm').hidden, false); $('discard-keep').click();
   assert.equal(saved().selected, 'child');
   $('resume').click();
   assert.equal($('body'), body);
@@ -1319,6 +1328,125 @@ test('back and resume preserve the same dirty form and switching nodes requires 
   $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
   assert.equal(messages.at(-1).originalNode, child);
   assert.equal(messages.at(-1).body, '# Draft\n');
+});
+
+test('unsaved form changes are confirmed in the panel with keyboard focus before opening a node or a new draft', t => {
+  const { dom, messages, $, saved } = fixture(t);
+  const card = id => dom.window.document.querySelector(`#cards > [data-node-id="${id}"]`);
+  card('child').click(); const body = $('body'); body.value = '# Draft\n'; body.dispatchEvent(new dom.window.Event('input'));
+  assert.equal($('discard-confirm').hidden, true);
+  card('root').focus(); card('root').click();
+  assert.equal($('discard-confirm').hidden, false); assert.equal($('discard-confirm').getAttribute('role'), 'alertdialog');
+  assert.equal($('discard-question').textContent, 'Discard unsaved form changes to open this node?');
+  assert.equal(dom.window.document.activeElement, $('discard-keep'), 'Keyboard focus starts on the safe choice.');
+  assert.equal(saved().selected, 'child'); assert.equal(body.value, '# Draft\n');
+  $('discard-keep').dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  assert.equal($('discard-confirm').hidden, true); assert.equal(saved().dirty, true); assert.equal(body.value, '# Draft\n');
+  assert.equal(dom.window.document.activeElement, card('root'), 'Keep editing returns focus to the requesting node.');
+  card('root').click(); $('discard-keep').click(); assert.equal(saved().selected, 'child');
+  card('root').click(); $('discard-accept').click();
+  assert.equal($('discard-confirm').hidden, true); assert.equal(saved().selected, 'root'); assert.equal(saved().dirty, false);
+  body.value = '# Purpose draft'; body.dispatchEvent(new dom.window.Event('input'));
+  $('new').click(); assert.equal($('discard-question').textContent, 'Discard unsaved form changes to start a new node?');
+  assert.equal(saved().creating, false); assert.equal(body.value, '# Purpose draft');
+  $('discard-accept').click(); assert.equal(saved().creating, true); assert.equal(body.value, '');
+  assert.ok(!messages.some(m => ['save', 'add', 'delete'].includes(m.type)));
+});
+
+test('a queued add stays pending through unrelated replies, and an applied add never resubmits after a failed refresh', t => {
+  const f = fixture(t), { dom, $, send, messages, snapshot, saved } = f;
+  const adds = () => messages.filter(m => m.type === 'add');
+  $('new').click(); $('body').value = '# Fresh'; $('body').dispatchEvent(new dom.window.Event('input'));
+  $('save').click(); const { requestId } = adds()[0];
+  assert.ok(Number.isSafeInteger(requestId));
+  // A refresh queued ahead of the add and other requests' replies keep this one pending.
+  send({ type: 'snapshot', snapshot, diagnostics: [], readonly: false });
+  send({ type: 'error', message: 'Unrelated refresh failed' }); send({ type: 'cancelled' });
+  send({ type: 'completed', requestId: requestId + 1 });
+  assert.equal($('save').disabled, true); $('save').click(); saveKey(f, $('sources'));
+  $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true }));
+  assert.equal(adds().length, 1);
+  // The CLI wrote the node; its follow-up refresh failed. The draft closes instead of offering a duplicate.
+  send({ type: 'applied', requestId, id: 'fresh' });
+  assert.equal(saved().creating, false); assert.equal(saved().draft, undefined);
+  send({ type: 'error', requestId, message: 'Node created. Refresh to show the result.\nDocuments changed during graph loading.' });
+  assert.match($('message').textContent, /Node created/);
+  assert.equal($('cards').querySelector('[data-node-id="__draft__"]'), null); assert.equal($('save').disabled, true);
+  $('editor').dispatchEvent(new dom.window.Event('submit', { cancelable: true })); saveKey(f, $('sources'));
+  assert.equal(adds().length, 1);
+  const fresh = { ...child, id: 'fresh', body: '# Fresh' }, next = { ...snapshot, nodes: [root, child, fresh], edges: [...snapshot.edges, ['root', 'fresh']] };
+  send({ type: 'snapshot', snapshot: next, diagnostics: [], readonly: false });
+  assert.ok(dom.window.document.querySelector('[data-node-id="fresh"]')); assert.equal(adds().length, 1);
+  // The ordinary success path selects the new node only when its own request completes.
+  $('new').click(); $('body').value = '# Second'; $('body').dispatchEvent(new dom.window.Event('input')); $('save').click();
+  const second = adds().at(-1).requestId, made = { ...child, id: 'second', body: '# Second' };
+  send({ type: 'applied', requestId: second, id: 'second' });
+  send({ type: 'snapshot', snapshot: { ...next, nodes: [...next.nodes, made], edges: [...next.edges, ['root', 'second']] }, diagnostics: [], readonly: false, force: true, selectedId: 'second' });
+  assert.equal(dom.window.document.querySelector('.expanded').dataset.nodeId, 'second'); assert.equal($('save').disabled, true);
+  send({ type: 'completed', requestId: second });
+  assert.equal($('save').disabled, false); assert.equal(saved().creating, false); assert.equal(adds().length, 2);
+});
+
+test('keyboard focus follows node identity across redraws and tab order follows the layout, not file order', t => {
+  const { dom, $, send, snapshot } = fixture(t);
+  const late = { ...child, id: 'a-late', parents: ['child'], body: '# Late\n' }, sibling = { ...child, id: 'b-sibling', body: '# Sibling\n' };
+  const target = { ...snapshot, nodes: [late, sibling, child, root], edges: [['child', 'a-late'], ['root', 'b-sibling'], ['root', 'child']] };
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  const cards = () => [...$('cards').children], card = id => cards().find(c => c.dataset.nodeId === id);
+  const place = c => [Math.round(parseFloat(c.style.left) + parseFloat(c.style.width) / 2), parseFloat(c.style.top)];
+  const layoutOrder = cards().slice().sort((a, b) => place(a)[0] - place(b)[0] || place(a)[1] - place(b)[1]).map(c => c.dataset.nodeId);
+  assert.deepEqual(cards().map(c => c.dataset.nodeId), layoutOrder);
+  assert.equal(layoutOrder[0], 'root'); assert.equal(layoutOrder.at(-1), 'a-late');
+  let reveals = 0; $('viewport').addEventListener('focusin', () => reveals++);
+  card('b-sibling').focus(); const previous = card('b-sibling'); assert.equal(reveals, 1, 'Navigation still reaches the camera.');
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  assert.notEqual(card('b-sibling'), previous, 'Refresh rebuilds every card.');
+  assert.equal(dom.window.document.activeElement, card('b-sibling'));
+  assert.equal(reveals, 1, 'Restored focus leaves the camera where the user left it.');
+  card('child').focus(); card('child').click();
+  const expanded = dom.window.document.querySelector('.expanded');
+  assert.equal(dom.window.document.activeElement, expanded); assert.equal(expanded.dataset.nodeId, 'child');
+  assert.equal(expanded.getAttribute('aria-labelledby'), 'title'); assert.equal(expanded.tabIndex, -1);
+  send({ type: 'snapshot', snapshot: target, diagnostics: [], readonly: false });
+  assert.equal(dom.window.document.activeElement.dataset.nodeId, 'child'); assert.ok(dom.window.document.activeElement.classList.contains('expanded'));
+  assert.deepEqual(cards().map(c => c.dataset.nodeId), cards().slice().sort((a, b) => place(a)[0] - place(b)[0] || place(a)[1] - place(b)[1]).map(c => c.dataset.nodeId));
+});
+
+test('highlight ink and the neutral manifesto outline stay legible on light themes while dark themes keep their inks', t => {
+  const { dom } = fixture(t), document = dom.window.document;
+  const style = document.createElement('style'); style.textContent = readFileSync(join(__dirname, '../media/graph.css'), 'utf8'); document.head.append(style);
+  const declared = (element, name) => dom.window.getComputedStyle(element).getPropertyValue(name).trim();
+  const channels = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const mix = (accent, background, amount) => channels(accent).map((value, i) => value * amount + channels(background)[i] * (1 - amount));
+  const luminance = rgb => rgb.map(v => v / 255).map(c => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4).reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const contrast = (a, b) => { const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x); return (high + 0.05) / (low + 0.05); };
+  const manifesto = document.querySelector('#cards .card.manifesto');
+  assert.equal(declared(document.documentElement, '--spotlight-color'), '#ffffff');
+  assert.equal(manifesto.style.getPropertyValue('--node-accent'), '#d3d3d3'); assert.equal(model.TYPE_COLORS.manifesto, '#d3d3d3');
+  for (const [theme, outline] of [['vscode-dark', 'var(--node-accent, #8993a4)'], ['vscode-high-contrast', 'var(--vscode-contrastBorder, var(--vscode-foreground, #fff))']]) {
+    document.body.className = theme;
+    assert.equal(declared(document.body, '--spotlight-color'), '', `${theme} inherits the white ink`);
+    assert.equal(declared(manifesto, '--card-border-ink'), outline, `${theme} keeps its outline`);
+  }
+  // White rings almost vanish on light 15% tints; the light-gray outline measured 1.41:1.
+  const accents = [...model.RAINBOW_COLORS, ...Object.values(model.TYPE_COLORS), ...Object.values(model.REVISION_COLORS), ...model.INFLUENCE_COLORS, '#e5be32'];
+  assert.ok(accents.every(accent => contrast(channels('#ffffff'), mix(accent, '#ffffff', 0.15)) < 1.5));
+  for (const theme of ['vscode-light', 'vscode-high-contrast-light']) {
+    document.body.className = theme;
+    const ink = declared(document.body, '--spotlight-color');
+    assert.match(ink, /^#[0-9a-f]{6}$/, theme);
+    for (const accent of accents) {
+      assert.ok(contrast(channels(ink), mix(accent, '#ffffff', 0.15)) >= 4.5, `${theme} ring on ${accent}`);
+      assert.ok(contrast(channels(ink), mix(accent, '#ffffff', 0.24)) >= 4.5, `${theme} ring on hovered ${accent}`);
+    }
+  }
+  document.body.className = 'vscode-light';
+  const outline = declared(manifesto, '--card-border-ink'), tint = mix('#d3d3d3', '#ffffff', 0.15);
+  assert.ok(contrast(channels('#d3d3d3'), tint) < 1.5);
+  assert.ok(contrast(channels(outline), tint) >= 3, `manifesto outline ${outline}`);
+  assert.ok(contrast(channels(outline), channels('#ffffff')) >= 3);
+  manifesto.classList.add('node-hovered'); assert.equal(declared(manifesto, '--card-border-ink'), '#fff', 'Hover keeps its own ink.');
+  manifesto.classList.replace('node-hovered', 'revision-colored'); assert.equal(declared(manifesto, '--card-border-ink'), 'var(--node-accent, #8993a4)', 'Git colors keep their accents.');
 });
 
 test('new-node drafts survive the total-graph view and produce valid render reports', t => {

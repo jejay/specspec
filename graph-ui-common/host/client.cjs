@@ -1,6 +1,6 @@
 /* Project-scoped API transport. Files/refs are read afresh by each application request. */
 const { spawn } = require('node:child_process');
-const { invoke } = require('./cli.cjs');
+const { invoke, spawnOptions } = require('./cli.cjs');
 const { expandResult } = require('./wire.cjs');
 const LIMIT = 16 * 1024 * 1024;
 const uncertain = (error, job) => job?.sent && ['annotation-create', 'annotation-flush'].includes(job.op)
@@ -9,7 +9,7 @@ const uncertain = (error, job) => job?.sent && ['annotation-create', 'annotation
 class Channel {
   constructor(command, prefix, root) {
     this.queue = []; this.parts = []; this.bytes = 0; this.output = 0; this.errors = [];
-    this.child = spawn(command, [...prefix, '--root', root, 'api', '--stream'], { cwd: root, shell: false, windowsHide: true });
+    this.child = spawn(command, [...prefix, '--root', root, 'api', '--stream'], spawnOptions());
     this.child.on('spawn', () => { this.started = true; });
     this.child.stdout.on('data', chunk => this.data(chunk));
     this.child.stderr.on('data', chunk => {

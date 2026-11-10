@@ -7,6 +7,7 @@ parents:
 sources:
 - path: src/specspec/git_objects.py
 - path: src/specspec/git.py
+- path: src/specspec/git_process.py
 - path: src/specspec/format.py
 - path: src/specspec/editor.py
 - path: src/specspec/workspace.py
@@ -33,5 +34,13 @@ derived; canonical current node format / application protocol and the one-shot C
 
 Resolve ordinary HEAD directly. Only a failed resolution checks for a genuinely
 unborn symbolic branch; missing objects, detached corruption and invalid named
-revisions retain their errors. Fresh HEAD movement and staged-byte checks remain
-authoritative while successful reads avoid the two extra unborn-branch processes.
+revisions retain their errors. Fresh HEAD movement and staged-byte checks remain authoritative while successful
+reads avoid the two extra unborn-branch processes.
+
+Every Git subprocess runs through git_process.run_git_process, which turns off
+fsmonitor and signature display, disables lazy fetch, optional locks, remote
+protocols and terminal prompts, closes stdin and applies per-site timeouts and
+output caps. Source-impact reads pass referenced paths in chunks of at most 8 KiB
+so command lines stay within Windows limits. The header cache holds 65,536 parsed
+headers. Cached editor reads leave non-UTF-8 HEAD files to a fresh Git read with
+their FORMAT diagnostic, and staged snapshots leave out intent-to-add placeholders.

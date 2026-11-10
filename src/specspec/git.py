@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-import subprocess
 from pathlib import Path
 from typing import Any
 
-from .git_objects import read_blobs
+from .git_objects import blob_id, read_blobs
+from .git_process import GitProcessError, pathspec_chunks, run_git_process
 from .model import Diagnostic, SpecError
 from .node_text import logical_bytes
 from .workspace import SPEC_DIR, Snapshot, snapshot_from_files
@@ -15,18 +14,8 @@ from .workspace import SPEC_DIR, Snapshot, snapshot_from_files
 
 def run_git(root: Path, *args: str) -> bytes:
     try:
-        completed = subprocess.run(
-            ["git", "-C", str(root), *args],
-            capture_output=True,
-            check=False,
-            env={
-                **os.environ,
-                "GIT_NO_LAZY_FETCH": "1",
-                "GIT_OPTIONAL_LOCKS": "0",
-                "GIT_ALLOW_PROTOCOL": "",
-            },
-        )
-    except OSError as error:
+        completed = run_git_process(root, *args)
+    except GitProcessError as error:
         raise SpecError([Diagnostic("GIT", str(error))], 2) from error
     if completed.returncode:
         raise SpecError(
@@ -54,12 +43,9 @@ def unborn_head(root: Path) -> bool:
     """Only an unresolved symbolic HEAD is an empty baseline, not a bad user ref."""
     try:
         branch = run_git(root, "symbolic-ref", "--quiet", "HEAD").decode().strip()
-    except SpecError:
+        completed = run_git_process(root, "show-ref", "--verify", "--quiet", branch)
+    except (SpecError, GitProcessError):
         return False
-    completed = subprocess.run(
-        ["git", "-C", str(root), "show-ref", "--verify", "--quiet", branch],
-        capture_output=True,
-    )
     return completed.returncode == 1
 
 
@@ -114,6 +100,9 @@ def git_snapshot(
             diagnostics.append(Diagnostic("ENTRY", "Only direct Markdown nodes are allowed.", path))
             continue
         entries.append((path, object_id))
+    if staged:
+        placeholders = intent_to_add(repository, prefix, entries)
+        entries = [(path, oid) for path, oid in entries if path not in placeholders]
     hints = {}
     if not staged and cache and cache.get("commit") == commit:
         for path, oid in entries:
@@ -131,6 +120,40 @@ def git_snapshot(
     if not staged:
         result.commit = commit
     return result
+
+
+def intent_to_add(repository: Path, prefix: str, entries: list[tuple[str, str]]) -> set[str]:
+    """`git add -N` placeholders hold the empty blob but never enter a commit.
+
+    Git diffs only those index entries as additions against working files.
+    Without that evidence, keep the entry so a real empty node stays diagnosed.
+    """
+    empty = {path for path, oid in entries if oid == blob_id(b"", oid)}
+    if not empty:
+        return set()
+    names = [prefix + path[len(SPEC_DIR) :] for path in sorted(empty)]
+    found: set[str] = set()
+    try:
+        for chunk in pathspec_chunks(names):
+            output = run_git(
+                repository,
+                "--literal-pathspecs",
+                "diff",
+                "--name-only",
+                "-z",
+                "--no-renames",
+                "--diff-filter=A",
+                "--",
+                *chunk,
+            )
+            found.update(
+                SPEC_DIR + name.decode("utf-8", errors="surrogateescape")[len(prefix) :]
+                for name in output.split(b"\0")
+                if name
+            )
+    except SpecError:
+        return set()
+    return found & empty
 
 
 def semantic_diff(base: Snapshot, target: Snapshot) -> dict[str, Any]:
@@ -236,35 +259,42 @@ def source_change_impact(
     commits = [] if empty_head else [resolve_commit(repository, base_ref)]
     if target_ref is not None:
         commits.append(resolve_commit(repository, target_ref))
+    # Bounded pathspec chunks keep command lines portable; their union is one listing.
+    chunks = list(pathspec_chunks(full_paths))
     changed = (
         [path.encode("utf-8") for path in full_paths]
         if empty_head
-        else run_git(
-            repository,
-            "--literal-pathspecs",
-            "diff",
-            "--name-only",
-            "-z",
-            "--no-renames",
-            *commits,
-            "--",
-            *full_paths,
-        ).split(b"\0")
+        else [
+            name
+            for chunk in chunks
+            for name in run_git(
+                repository,
+                "--literal-pathspecs",
+                "diff",
+                "--name-only",
+                "-z",
+                "--no-renames",
+                *commits,
+                "--",
+                *chunk,
+            ).split(b"\0")
+        ]
     )
     if target_ref is None:
         # git diff excludes untracked files, including new referenced realizations.
-        changed.extend(
-            run_git(
-                repository,
-                "--literal-pathspecs",
-                "ls-files",
-                "--others",
-                "--exclude-standard",
-                "-z",
-                "--",
-                *full_paths,
-            ).split(b"\0")
-        )
+        for chunk in chunks:
+            changed.extend(
+                run_git(
+                    repository,
+                    "--literal-pathspecs",
+                    "ls-files",
+                    "--others",
+                    "--exclude-standard",
+                    "-z",
+                    "--",
+                    *chunk,
+                ).split(b"\0")
+            )
     changed_paths = {
         name.decode("utf-8", errors="surrogateescape")[len(project_prefix) :]
         for name in changed

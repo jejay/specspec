@@ -28,9 +28,6 @@ sources:
 - path: tests/test_api_transport.py
 - path: vscode/src/bridge.ts
 - path: electron/main.cjs
-- path: docs/loading.md
-- path: docs/architecture.md
-- path: docs/investigations/host-smoke.md
 ---
 # Implement responsive source and metadata read scheduling
 
@@ -57,5 +54,5 @@ Provider-specific exact-read-count tests hold independent initial Git discovery
 pending until teardown. This scopes stable-input bootstrap, canonical-watcher and
 Spotlight assertions without changing default real-Git fixtures. Separate causal
 regressions exercise a valid late discovery hint, its graph refresh, and a blocked
-native bootstrap requiring a fresh read after context invalidation. Production
-notifications and debounce/deadline budgets remain unchanged.
+native bootstrap requiring a fresh read after context invalidation. An unexpected failure in api --stream answers that frame with an INTERNAL envelope
+and the channel keeps serving.

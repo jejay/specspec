@@ -26,7 +26,6 @@ sources:
 - path: graph-ui-common/test/session.test.cjs
 - path: graph-ui-common/view.cjs
 - path: vscode/src/host.js
-- path: docs/node-canvas.md
 - path: graph-ui-common/src/graph-vendor.js
 - path: graph-ui-common/test/host-ui.test.cjs
 - path: graph-ui-common/test/camera.test.cjs
@@ -71,6 +70,14 @@ distinct onsets and camera propagation. Controller tests cover every drag direct
 modifier release, capture, cancellation, native boundaries, world/caret preservation
 and synthetic Mac mapping. The early common installed-host canvas probe checks
 dark/light/contrast fills at three scales, actual pointer capture/outside release,
-contextual icons and editing. Complete installed suites combine these probes with
-source, backchannel, native lifecycle, watcher recovery and persisted reload/revision
-checks.
+contextual icons and editing. Complete installed suites combine these probes with source, backchannel, native
+lifecycle, watcher recovery and persisted reload/revision checks.
+
+Each add, save and delete carries a requestId, and its form stays pending until a
+completed, error or cancelled reply with that id; an applied message closes a
+created node's form before the follow-up refresh, so it cannot be submitted twice.
+Unsaved-change prompts use an in-panel alertdialog bar with Keep editing (focused)
+and Discard changes in both hosts. Redraws restore focus to the card with the same
+node id, and cards follow layout order, by rank then vertical position, for tabbing.
+Renderer tests cover queued adds with failed refreshes, the confirmation bar's
+keyboard behavior, focus restoration and tab order.

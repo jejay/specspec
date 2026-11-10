@@ -15,8 +15,6 @@ sources:
 - path: vscode/src/extension.ts
 - path: vscode/test/extension.test.cjs
 - path: electron/main.cjs
-- path: docs/node-canvas.md
-- path: docs/investigations/header-identity.md
 ---
 # Render compact host chrome and submit focused forms by keyboard
 

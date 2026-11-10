@@ -41,11 +41,6 @@ sources:
 - path: example/gantt/history/gantt.bundle
 - path: example/gantt/history/revisions.json
 - path: example/gantt/history/cli.jsonl
-- path: docs/deletion.md
-- path: docs/native-editors.md
-- path: docs/own-spec.md
-- path: docs/architecture.md
-- path: docs/architecture.svg
 ---
 # Display HEAD ghosts and reconcile Git notifications in both hosts
 

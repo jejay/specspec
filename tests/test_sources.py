@@ -7,10 +7,12 @@ import pytest
 from click.testing import CliRunner
 from test_git import git
 
+from specspec import sources as sources_module
 from specspec.cli import main
 from specspec.git_objects import blob_id
+from specspec.source_commands import preview_source
 from specspec.source_schema import validate_source
-from specspec.sources import SourceReader, map_regions
+from specspec.sources import SourceReader, map_regions, text_lines
 from specspec.workspace import add_node, load_snapshot, update_node
 
 
@@ -349,3 +351,97 @@ def test_sha256_repository_and_binary_target(workspace, without_git):
     git(root, "add", "binary")
     with pytest.raises(ValueError, match="UTF-8"):
         SourceReader(root, staged=True).capture("binary", [[1, 1]], "expanding")
+
+
+def test_unchanged_long_sources_need_no_pair_diff_budget(project):
+    root, node_id = project
+    lines = [f"line {i}" for i in range(5000)]  # 25 million cells exceed the diff budget.
+    assert map_regions(lines, list(lines), [[10, 20]], "strict") == {
+        "outcome": "resolved",
+        "ranges": [[10, 20]],
+        "changed": False,
+    }
+    with pytest.raises(ValueError, match="budget"):
+        map_regions(lines, ["prefix", *lines], [[10, 20]], "strict")
+    (root / "long.py").write_text("\n".join(lines) + "\n", encoding="utf8")
+    git(root, "add", "long.py")
+    capture = ["sources", "capture", node_id, "long.py", "--range", "10:20", "--mode", "strict"]
+    assert invoke(root, *capture, "--staged")[0] == 0
+    git(root, "add", ".specspec")
+    code, data = invoke(root, "check", "--staged", "--sources")
+    assert code == 0, data
+    assert data["result"]["sources"][0]["outcome"] == "resolved"
+
+
+def test_source_lines_end_only_at_lf_crlf_or_cr(project):
+    raw = "a\x0cb\nc\u2028d\r\ne\rf\x85g\x1ch\x0bi\n".encode()
+    assert text_lines(raw) == ["a\x0cb", "c\u2028d", "e", "f\x85g\x1ch\x0bi"]
+    assert text_lines(b"") == [] and text_lines(b"\n") == [""] and text_lines(b"x") == ["x"]
+    root, _ = project
+    # Editors, grep and Git count four lines: form feeds/separators are content.
+    (root / "paged.py").write_text("one\n\x0c\ntwo\u2028still two\nthree\n", encoding="utf8")
+    git(root, "add", "paged.py")
+    git(root, "commit", "-m", "Paged source")
+    source = SourceReader(root, ref="HEAD").capture("paged.py", [[3, 3]], "strict")
+    preview = preview_source(root, source, ref="HEAD")
+    chunk = preview["chunks"][0]
+    assert chunk["lines"] == ["one", "\x0c", "two\u2028still two", "three"]
+    assert chunk["lines"][3 - chunk["start"]] == "two\u2028still two"
+    assert preview["resolution"]["outcome"] == "resolved"
+    with pytest.raises(ValueError, match="Range exceeds"):
+        SourceReader(root, ref="HEAD").capture("paged.py", [[5, 5]], "strict")
+
+
+def test_revision_and_index_checks_read_only_referenced_entries(project, monkeypatch):
+    root, node_id = project
+    for i in range(300):
+        (root / f"unrelated-{i:03d}.txt").write_text(f"{i}\n", encoding="utf8")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "Large tree")
+    capture = ["sources", "capture", node_id, "code.py", "--range", "2:3", "--mode", "strict"]
+    assert invoke(root, *capture, "--staged")[0] == 0
+    git(root, "add", ".specspec")
+    git(root, "commit", "-m", "Anchored mapping")
+    calls = []
+    original = sources_module.run_git
+
+    def traced(repository, *args):
+        calls.append(args)
+        return original(repository, *args)
+
+    monkeypatch.setattr(sources_module, "run_git", traced)
+    # Complete tree/index listings exceed this budget; referenced lookups do not.
+    monkeypatch.setattr(sources_module, "MAX_GIT_OUTPUT", 4096, raising=False)
+    for target in (["--staged"], ["--ref", "HEAD"], []):
+        code, data = invoke(root, "check", "--sources", *target)
+        assert code == 0, data
+        assert data["result"]["sources"][0]["outcome"] == "resolved"
+    listings = [
+        a for a in calls if a[:2] == ("ls-tree", "-r") or a == ("ls-files", "--stage", "-z")
+    ]
+    assert calls and not listings
+    # Only a search for other paths by blob identity needs the complete listing.
+    git(root, "mv", "code.py", "moved.py")
+    code, data = invoke(root, "check", "--staged", "--sources")
+    assert code == 1 and data["result"]["sources"][0]["outcome"] == "unavailable"
+    assert "budget" in data["result"]["sources"][0]["message"]
+
+
+def test_object_read_failures_become_source_link_diagnostics(project, monkeypatch):
+    root, node_id = project
+    capture = ["sources", "capture", node_id, "code.py", "--range", "2:3", "--mode", "strict"]
+    assert invoke(root, *capture)[0] == 0
+    git(root, "add", ".specspec")
+    original = subprocess.run
+
+    def timed_out(command, *args, **kwargs):
+        if "cat-file" in command:
+            raise subprocess.TimeoutExpired(command, kwargs.get("timeout"))
+        return original(command, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", timed_out)
+    for target in ([], ["--staged"]):
+        code, data = invoke(root, "check", "--sources", *target)
+        assert code == 1 and data["ok"] is False
+        assert [d["code"] for d in data["diagnostics"]] == ["SOURCE_LINK"]
+        assert "Git object read failed" in data["diagnostics"][0]["message"]

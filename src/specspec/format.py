@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import io
 import math
+import re
 import threading
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -46,6 +47,12 @@ def yaml_parser() -> YAML:
     return parser
 
 
+# Delimiters are whole logical lines ended by LF, CRLF or CR (or the end of the
+# file), never by form feeds, NEL or Unicode separators inside a line.
+OPENING_DELIMITER = re.compile(r"---(?:\r\n|\r|\n|\Z)")
+CLOSING_DELIMITER = re.compile(r"(?<=[\r\n])---(?:\r\n|\r|\n|\Z)")
+
+
 def split_document(raw: bytes, path: str) -> tuple[str, str]:
     def fail(message: str) -> None:
         raise SpecError([Diagnostic("FORMAT", message, path)])
@@ -56,31 +63,41 @@ def split_document(raw: bytes, path: str) -> tuple[str, str]:
         text = raw.decode("utf-8")
     except UnicodeDecodeError:
         fail("Node must be UTF-8 without a byte-order mark.")
-    lines = text.splitlines(keepends=True)
-    if not lines or lines[0].rstrip("\r\n") != "---":
+    opening = OPENING_DELIMITER.match(text)
+    if not opening:
         fail("Node must begin with a YAML frontmatter delimiter (---).")
-    for index, line in enumerate(lines[1:], 1):
-        if line.rstrip("\r\n") == "---":
-            return "".join(lines[1:index]), "".join(lines[index + 1 :])
-    fail("Missing closing YAML frontmatter delimiter (---).")
-    raise AssertionError("unreachable")
+    closing = CLOSING_DELIMITER.search(text, opening.end())
+    if not closing:
+        fail("Missing closing YAML frontmatter delimiter (---).")
+    return text[opening.end() : closing.start()], text[closing.end() :]
 
 
 # Exact header bytes, isolated round-trip copies; body and current validation stay fresh.
+# Sized for large graphs: one query or editor read parses the base and target headers.
 _HEADER_CACHE: OrderedDict[str, Mapping[str, Any]] = OrderedDict()
 _HEADER_LOCK = threading.RLock()
-HEADER_CACHE_BYTES = 8 * 1024 * 1024
-HEADER_CACHE_COUNT = 256
+HEADER_CACHE_BYTES = 16 * 1024 * 1024
+HEADER_CACHE_COUNT = 65_536
 _header_bytes = 0
 
 
 def read_document(raw: bytes, path: str) -> tuple[Mapping[str, Any], str]:
-    global _header_bytes
     header, body = split_document(raw, path)
+    try:
+        return header_data(header, path), body
+    except RecursionError as error:
+        # The parser's depth limit depends on the call stack; it fails only this node.
+        raise SpecError(
+            [Diagnostic("FORMAT", "Frontmatter nesting is too deep to load.", path)]
+        ) from error
+
+
+def header_data(header: str, path: str) -> Mapping[str, Any]:
+    global _header_bytes
     with _HEADER_LOCK:
         if header in _HEADER_CACHE:
             _HEADER_CACHE.move_to_end(header)
-            return copy.deepcopy(_HEADER_CACHE[header]), body
+            return copy.deepcopy(_HEADER_CACHE[header])
     parser = yaml_parser()
     try:
         for token in parser.scan(header):
@@ -101,6 +118,11 @@ def read_document(raw: bytes, path: str) -> tuple[Mapping[str, Any], str]:
                 )
             ]
         ) from error
+    except (ValueError, TypeError, OverflowError) as error:
+        # Value construction limits, such as integer digits or impossible dates.
+        raise SpecError(
+            [Diagnostic("FORMAT", f"Frontmatter value cannot be loaded: {error}", path)]
+        ) from error
     if not isinstance(data, Mapping):
         raise SpecError([Diagnostic("SCHEMA", "Frontmatter must be a mapping.", path)])
     size = len(header.encode("utf-8"))
@@ -111,7 +133,7 @@ def read_document(raw: bytes, path: str) -> tuple[Mapping[str, Any], str]:
             while len(_HEADER_CACHE) > HEADER_CACHE_COUNT or _header_bytes > HEADER_CACHE_BYTES:
                 old_header, _ = _HEADER_CACHE.popitem(last=False)
                 _header_bytes -= len(old_header.encode("utf-8"))
-    return data, body
+    return data
 
 
 def json_value(value: Any) -> Any:
@@ -120,6 +142,11 @@ def json_value(value: Any) -> Any:
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         if isinstance(value, float) and not math.isfinite(value):
             raise ValueError("Non-finite numbers are not JSON metadata.")
+        if isinstance(value, int):
+            try:
+                str(int(value))  # Hexadecimal/binary YAML can exceed decimal output limits.
+            except ValueError as error:
+                raise ValueError("Integer metadata exceeds the decimal text limit.") from error
         return value
     if isinstance(value, list):
         return [json_value(item) for item in value]

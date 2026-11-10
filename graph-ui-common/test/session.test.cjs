@@ -30,6 +30,7 @@ function fixture(t, options = {}) {
       if (failure || remainingFailures-- > 0) throw new Error('YAML: partial external save');
       if (options.slow) await pause(options.slow);
       if (args[0] === 'update') current = { ...current, nodes: current.nodes.map(n => n.id === args[1] ? { ...n, body: input } : n), changed_ids: [args[1]] };
+      if (args[0] === 'add') { const id = `added${current.nodes.length}`; current = { ...current, nodes: [...current.nodes, { ...node, id, body: input }], changed_ids: [id] }; }
       if (args[0] === 'delete') {
         if (args.includes('--dry-run')) return { api_version: 7, ok: true, diagnostics: options.deleteWarnings || [], result: options.deletePlan || { requested_ids: [args[1]], deleted_ids: [args[1]], nodes: [{ id: args[1], path: node.path }], uncommitted: [], git_available: true, git_note: '' } };
         if (options.deleteError) throw new Error(options.deleteError);
@@ -246,6 +247,28 @@ test('serialized operations pass body as stdin, never renderer commands', async 
   assert.ok(!write.args.includes(write.input)); assert.ok(!write.args.includes('--expect'));
   assert.ok(!write.args.includes('--slug'));
   await assert.rejects(f.s.handle({ type: 'exec', command: 'anything' }), /Select a current node|Unknown graph/);
+});
+test('form requests settle once by requestId, and an applied write is announced before its refresh can fail', async t => {
+  const f = fixture(t); await f.s.open();
+  const replies = id => f.messages.filter(m => m.requestId === id);
+  f.s.receive({ type: 'add', requestId: 41, nodeType: 'requirement', parents: [], body: '# Added', sources: '[]' });
+  await waitFor(() => replies(41).some(m => m.type === 'completed'));
+  assert.deepEqual(replies(41).map(m => m.type), ['applied', 'completed']);
+  const applied = f.messages.indexOf(replies(41)[0]), forced = f.messages.findIndex(m => m.type === 'snapshot' && m.force);
+  assert.ok(applied < forced, 'The renderer learns about the write before any refresh.');
+  assert.equal(f.messages[forced].selectedId, replies(41)[0].id); assert.match(replies(41)[0].id, /^added/);
+  const cli = f.s.host.cli;
+  f.s.host.cli = async (args, input) => { const result = await cli(args, input); if (args[0] === 'add') f.failNext(3); return result; };
+  f.s.receive({ type: 'add', requestId: 42, nodeType: 'requirement', parents: [], body: '# Again', sources: '[]' });
+  await waitFor(() => replies(42).some(m => m.type === 'error'));
+  assert.deepEqual(replies(42).map(m => m.type), ['applied', 'error']);
+  assert.match(replies(42)[1].message, /^Node created\. Refresh to show the result\.\nYAML/);
+  assert.equal(f.calls.filter(c => c.args[0] === 'add').length, 2, 'Nothing replays the applied write.');
+  const declined = fixture(t, { confirm: false }); await declined.s.open();
+  declined.s.receive({ type: 'delete', id: 'node', requestId: 7 }); declined.s.receive({ type: 'refresh' });
+  await waitFor(() => declined.messages.some(m => m.type === 'completed'));
+  await declined.s.queue;
+  assert.deepEqual(declined.messages.filter(m => 'requestId' in m).map(m => [m.type, m.requestId]), [['cancelled', 7], ['completed', 7]]);
 });
 test('unrelated changes do not block drafts; every save re-reads actual files', async t => {
   const f = fixture(t); await f.s.open(); f.change({ ...snapshot, nodes: [node, { ...node, id: 'another', body: '# External' }] });

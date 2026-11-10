@@ -206,7 +206,7 @@ test('missing CLI opens a blocking install screen before any project read, with 
   assert.equal(await f.calls.commands.get('specspec.openGraph')(), undefined);
   const panel = f.calls.panels[0];
   assert.equal(panel.messages.at(-1).stage, 'install'); assert.equal(f.calls.cli.length, 0);
-  assert.equal(f.calls.probes[0][0], '/trusted/specspec'); assert.equal(f.calls.probes[0][2], f.root);
+  assert.deepEqual(f.calls.probes[0], ['/trusted/specspec', []], 'The probe needs no project directory.');
   options.missingCli = false; panel.send({ type: 'retry-startup' });
   await waitFor(() => panel.messages.at(-1).stage === 'initialize');
   assert.equal(f.calls.cli.length, 0);
@@ -664,6 +664,21 @@ test('unapplied form input survives a closed tab/backend failure without claimin
   assert.equal(reopened.doc.isDirty, false);
   reopened.panel.send({ type: 'discard-form' });
   await waitFor(() => f.context.workspaceState.keys().length === 0);
+});
+test('a node editor whose CLI check or first graph read fails releases the project watchers it created', async t => {
+  for (const options of [{ missingCli: true }, { cliError: true }]) {
+    const f = fixture(t, options);
+    await f.openDocument(fileNode); assert.ok(f.calls.fallbackHtml);
+    assert.equal(f.calls.watchers.length, 1); assert.equal(f.calls.watchers[0].disposed, true);
+    assert.equal(f.calls.gitWatchers[0].closed, true);
+    await f.openDocument(fileNode); assert.equal(f.calls.watchers.length, 2, 'A later attempt starts with fresh watchers.');
+    assert.equal(f.calls.watchers[1].disposed, true);
+  }
+  const options = { snapshot: { ...snapshot, nodes: [fileNode] } }, shared = fixedGitFixture(t, options);
+  await shared.calls.commands.get('specspec.openGraph')(); options.missingCli = true;
+  await shared.openDocument(fileNode); assert.ok(shared.calls.fallbackHtml);
+  assert.equal(shared.calls.watchers.length, 1); assert.notEqual(shared.calls.watchers[0].disposed, true, 'An open graph keeps its shared watchers.');
+  shared.calls.panels[0].dispose(); await waitFor(() => shared.calls.watchers[0].disposed);
 });
 test('unparseable files have an escaped actionable fallback instead of a blank custom editor', async t => {
   const f = fixture(t, { cliError: true, cliErrorMessage: 'Bad <script>project text</script>' });

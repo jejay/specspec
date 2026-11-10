@@ -8,7 +8,6 @@ sources:
 - path: .github/workflows/ci.yml
 - path: AGENTS.md
 - path: README.md
-- path: docs/own-spec.md
 - path: electron/test-host/run.cjs
 - path: example/gantt/AGENTS.md
 - path: example/gantt/README.md

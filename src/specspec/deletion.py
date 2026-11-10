@@ -32,13 +32,10 @@ def deletion_plan(snapshot: Snapshot, ids: list[str]) -> dict[str, Any]:
     try:
         repository, prefix = repository_paths(snapshot.root)
         # status accounts for clean filters/CRLF, staged changes and untracked/ignored
-        # files. Disable optional index refresh/cache writes and executable fsmonitor.
+        # files. run_git disables optional index refresh/cache writes and fsmonitor.
         output = run_git(
             repository,
-            "--no-optional-locks",
             "--literal-pathspecs",
-            "-c",
-            "core.fsmonitor=false",
             "status",
             "--porcelain=v1",
             "-z",

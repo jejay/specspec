@@ -6,6 +6,18 @@ def logical_text(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
+def logical_lines(text: str) -> list[str]:
+    """Lines ended by LF, CRLF or CR only, as in logical node text.
+
+    Form feeds, vertical tabs, NEL and Unicode line/paragraph separators remain
+    line content: editors, grep and Git count no line break there.
+    """
+    lines = logical_text(text).split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    return lines
+
+
 def logical_bytes(raw: bytes | None) -> bytes | None:
     """Compare UTF-8 nodes logically; unavailable/binary material stays literal."""
     if raw is None or b"\r" not in raw:

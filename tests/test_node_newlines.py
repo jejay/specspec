@@ -10,6 +10,7 @@ from specspec import cli
 from specspec import workspace as workspace_module
 from specspec.body_replacements import replace_body
 from specspec.editor import editor_request
+from specspec.format import split_document
 from specspec.git import git_snapshot, semantic_diff
 from specspec.model import MAX_FILE_BYTES, SpecError
 from specspec.node_text import document_eol, logical_bytes, logical_text, terminated_document
@@ -169,3 +170,17 @@ def test_unavailable_binary_and_absent_documents_are_not_folded_together():
     assert logical_bytes(b"") == b""
     assert logical_bytes(b"\xff\r\n") == b"\xff\r\n"
     assert logical_bytes(b"a\r\nb\r") == b"a\nb\n"
+
+
+def test_frontmatter_delimiters_are_whole_lf_crlf_or_cr_lines():
+    # A Unicode separator or form feed inside a line never ends it before "---".
+    header = "id: AAAAAAA=\n# note\u2028---\ntype: requirement\nparents: []\n"
+    raw = ("---\n" + header + "---\n# Body\x0c---\n").encode()
+    assert split_document(raw, ".specspec/AAAAAAA=.md") == (header, "# Body\x0c---\n")
+    for eol in ["\n", "\r\n", "\r"]:
+        document = f"---{eol}id: x{eol}---{eol}body{eol}".encode()
+        assert split_document(document, "x") == (f"id: x{eol}", f"body{eol}")
+    assert split_document(b"---\n---", "x") == ("", "")
+    for invalid in [b"", b"---", b"--- \n---\n", b"---\x0c\n---\n", b"---\nid: x\n--- \n"]:
+        with pytest.raises(SpecError):
+            split_document(invalid, "x")

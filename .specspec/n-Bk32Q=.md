@@ -5,8 +5,6 @@ parents:
 - rQTg56g=
 - RY5LFw8=
 sources:
-- path: docs/spotlights.md
-- path: docs/cli.md
 - path: src/specspec/annotation_commands.py
 - path: src/specspec/annotations.py
 - path: src/specspec/application.py

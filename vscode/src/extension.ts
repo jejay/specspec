@@ -68,16 +68,21 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
     panel.onDidDispose(() => {
       this.views.delete(view); project.references--;
       // Already-received document edits finish before releasing their project.
-      void view.flushDocument().finally(() => {
-        view.dispose();
-        if (!project.references) { project.dispose(); for (const [key, value] of this.projects) if (value === project) this.projects.delete(key); }
-      });
+      void view.flushDocument().finally(() => { view.dispose(); this.release(project); });
     });
     return view;
   }
+  /** Closes a project's watchers and CLI channels once no view or starting editor holds it. */
+  private release(project: GraphProject): void {
+    if (project.references) return;
+    project.dispose(); for (const [key, value] of this.projects) if (value === project) this.projects.delete(key);
+  }
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel): Promise<void> {
+    let project: GraphProject | undefined, starting = false;
     try {
-      const project = await this.project(document.uri);
+      project = await this.project(document.uri);
+      // Hold the watchers created for this editor; a failed CLI check or first read releases them.
+      project.references++; starting = true;
       const path = project.documentPath(document);
       if (!path) throw new Error('Only direct canonical .specspec node files can use the graph editor.');
       await project.probe();
@@ -91,10 +96,12 @@ class GraphEditors implements vscode.CustomTextEditorProvider, vscode.Disposable
       const recovery = key && form && form.id === node.id && typeof form.body === 'string' && typeof form.sources === 'string'
         && Array.isArray(form.parents) && form.parents.every(p => typeof p === 'string') ? { key, form } : undefined;
       const view = this.attach(project, panel, document, node, recovery, bootstrap);
+      project.references--; starting = false;
       // VS Code completes custom-editor wiring after resolve returns. Awaiting a
       // webview render acknowledgement here can deadlock that lifecycle.
       void view.open().catch(error => this.report(error, document.uri));
     } catch (error) {
+      if (project) { if (starting) project.references--; this.release(project); }
       const text = (error instanceof Error ? error.message : String(error)).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
       const missing = error instanceof Error && 'code' in error && error.code === 'CLI_UNAVAILABLE';
       panel.webview.html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><style>body{font-family:system-ui;padding:10vh 8vw}h1{font-size:36px}pre{white-space:pre-wrap}</style></head><body><h1>${missing ? 'Install the specspec CLI' : 'specspec graph unavailable'}</h1>${missing ? '<p>Install specspec from PyPI with uv or pipx on this workspace host, then reopen the graph.</p><pre>uv tool install specspec</pre>' : ''}<pre>${text}</pre><p>Use Reopen Editor With → Text Editor to repair or copy the Markdown.</p></body></html>`;
@@ -202,7 +209,7 @@ class GraphProject implements vscode.Disposable {
   }
   async probe(): Promise<void> {
     const invocation = this.invocation();
-    await probeCli(invocation.command, invocation.args, this.root.fsPath);
+    await probeCli(invocation.command, invocation.args);
     this.verifiedInvocation = JSON.stringify(invocation);
   }
   async startup() { await this.probe(); return inspectProject(this.root.fsPath); }
@@ -210,7 +217,7 @@ class GraphProject implements vscode.Disposable {
     const invocation = this.invocation();
     const signature = JSON.stringify(invocation);
     if (signature !== this.verifiedInvocation) {
-      await probeCli(invocation.command, invocation.args, this.root.fsPath);
+      await probeCli(invocation.command, invocation.args);
       this.verifiedInvocation = signature;
     }
     if (!vscode.workspace.isTrusted) throw new Error('Workspace trust is required to run specspec.');

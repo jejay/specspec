@@ -1,107 +1,101 @@
-# specspec for VS Code
+# specspec graph editor
 
-Connect your intentions, revisable choices and implementation in a Git-versioned
-Markdown graph, inside your ordinary VS Code editor. Open a node's justification,
-edit its binding text, compare revisions and follow source references without
-turning the specification into a task board or an approval score.
+specspec keeps a project's specification as a graph of Markdown files, from the
+owner's intentions through revisable conclusions to the implementation. This guide
+covers the two graph editors: the VS Code extension (**specspec-vscode**) and the
+standalone desktop app (**specspec-desktop**). Both draw the same canvas and run the
+`specspec` command-line tool for every read and write.
+[What specspec is and how it works with coding agents](https://github.com/jejay/specspec#readme)
 
-**0.0.1 is an early release. This extension is not on the Marketplace.**
-[Product overview](https://github.com/jejay/specspec) ·
-[Full installation guide](https://github.com/jejay/specspec/blob/main/docs/install.md)
+## Install
 
-## Install the CLI first
+1. Install the CLI (Python 3.11+ and Git): `uv tool install specspec` or
+   `pipx install specspec`. Check it with `specspec --version`. If the command is
+   missing, run `uv tool update-shell` or `pipx ensurepath` and restart the editor.
+2. Build the editors from the repository (Node 22.12+ and npm 10+):
 
-Install the Python CLI globally from [PyPI](https://pypi.org/project/specspec/):
+   ```sh
+   git clone https://github.com/jejay/specspec.git
+   cd specspec
+   npm ci
+   npm run package:vscode     # creates dist/specspec-vscode-<version>.vsix
+   npm run desktop            # starts the desktop app from source
+   ```
 
-```sh
-uv tool install specspec
-# Or: pipx install specspec
-specspec --version
-```
+3. Install the extension with
+   `code --install-extension dist/specspec-vscode-<version>.vsix`, or use
+   **Extensions → … → Install from VSIX…**, then reload the window.
 
-Python 3.11+ and Git are prerequisites. CLI dependencies are isolated; do not add
-them to every product's runtime. Restart VS Code if its inherited PATH does not yet
-include your tool-bin directory. A VSIX includes the extension/shared UI, not Python,
-Git or a bundled CLI.
+The desktop app runs on Windows and Linux; `npm run package:electron` creates a
+portable folder and archive in `dist/`. On macOS, use the VS Code extension.
 
-Opening a graph immediately checks CLI availability on the workspace host. A
-blocking installation message and Retry action replace an unusable empty canvas;
-the extension never installs Python packages automatically. Its package/display name
-is **specspec-vscode**.
+## Open a project
 
-## Build and install the VSIX
+- **VS Code:** open the project folder, trust it, and run **specspec: Open Graph**
+  from the Command Palette (also in the Explorer context menu). **specspec: Select
+  Project** picks another graph in the workspace.
+- **Desktop:** choose **Open project** (Ctrl+O, Command+O on macOS) and confirm that
+  you trust the folder, or start with `npm run desktop -- --project PATH`.
 
-Use Node 22.12+ and npm 10+. From the **monorepo root**, not `vscode/`:
+A folder without a graph shows an **Initialize specspec** form: enter the
+manifesto, the project's core goal. Initialization creates `.specspec/`, sets up Git
+if needed and adds the agent guide to `AGENTS.md`. If the CLI is missing, the editor
+shows installation steps and a **Retry** button.
 
-```sh
-npm ci
-npm run package:vscode
-code --install-extension dist/specspec-vscode-0.0.1.vsix
-```
+## Read the canvas
 
-Without the `code` shell command, open VS Code's Extensions view, choose **… → Install
-from VSIX…**, select that file and reload the window. No Marketplace credentials,
-publication, global npm install or F5 development window is involved. To replace an
-existing local build, reinstall that file with `--force` or use the same UI command.
-The local identifier is `specspec-dev.specspec-vscode`.
+The manifesto is the circle on the left; requirements are rounded cards and
+implementation nodes square cards, with every relationship drawn from parent to
+child. **Color by** switches between distance from the manifesto, node type,
+influence and revision status; the legend names the current meaning.
 
-## Open your graph
+- Zoom with the mouse wheel or the − / + buttons; drag the background to pan.
+- **Frame graph** (Home or F) fits everything; **Actual size** (1) returns to 100%.
+- **Frame rectangle**: hold Ctrl (Command on macOS) or click the icon, then drag
+  around the area to fit. Escape cancels.
+- Hovering a node emphasizes its relationships and darkens unrelated context.
 
-1. In a product directory, create a graph with `specspec init -m "# Product purpose"`
-   if it does not already have one. This initializes Git when needed and creates
-   or appends the packaged guide to `AGENTS.md`. Alternatively, use the graph's
-   centered **Initialize specspec** form after opening an empty directory.
-2. Open the folder in VS Code and trust it only if appropriate.
-3. Run **specspec: Open Graph** from the Command Palette. Explorer's folder context
-   menu also offers it. **specspec: Select Project** chooses another containing graph.
-4. Open a `.specspec/<id>.md` file for its native node editor. Use **Reopen Editor
-   With → Text Editor** for raw Markdown.
+## Edit
 
-The graph opens in the main editor area. Split/file tabs share native document text
-and retain independent cameras. File editing uses normal Save/autosave/undo/redo;
-managed project actions require clean project documents. Historical views are
-read-only. **specspec: Compare Revisions** opens a separate comparison panel; default
-working views compare saved/native-overlaid content against fresh HEAD.
+Select a node to edit its text, parents and sources in place; **Save node** or
+Ctrl+S (Command+S) saves it. **+ New node** opens a form with the selected node as
+its parent. If a
+form has unsaved changes when you move on, the editor asks whether to discard or
+keep editing. **Delete node** removes exactly that node's file; its children keep
+their now-missing parent references until you reconnect or delete them.
 
-**Ctrl+S** (Command+S on macOS) saves through the current native or managed owner.
-Shift-click node chrome toggles highlights; spotlights save IDs/messages locally
-for agent discussion. The CLI remains available beside the visual editor.
+In VS Code, `.specspec/<id>.md` files open in a node editor with normal Save, undo
+and autosave; **Reopen Editor With → Text Editor** shows the raw Markdown. Graph
+panels and the desktop app save through the CLI's protected writer, and
+`specspec recover` repairs an interrupted write.
 
-## CLI settings and diagnostics
+## Review changes
 
-Default settings invoke `specspec` directly, without a shell. If PATH is unavailable,
-set an absolute executable path in your own VS Code settings:
+By default the canvas compares the working files with the last commit: added,
+modified and deleted nodes carry A, M and D marks, and deleted nodes stay visible
+until the deletion is committed. **Compare revisions** (in VS Code also **specspec:
+Compare Revisions**) shows any two commits or a commit against the working files.
 
-```json
-{
-  "specspec.command": "/absolute/path/to/specspec",
-  "specspec.args": []
-}
-```
+## Leave messages for your agent
 
-On Windows use a real executable path, with doubled backslashes in JSON. To run a
-specific development Python, set its absolute path as `specspec.command` and
-`["-m", "specspec"]` as `specspec.args`. Do not put an entire shell command into the
-command string. Explicit machine-overridable settings take precedence over the
-optional development `SPECSPEC_PYTHON` environment variable.
+Shift-click nodes to highlight them; Ctrl+Shift-click (Command+Shift-click) removes
+one and **Clear highlight** removes all. **Create spotlight** saves the highlighted
+nodes with a message and the current comparison. Your agent reads it with
+`specspec spotlight show`; agents can leave spotlights for you the same way, and the
+**Spotlights** menu lists them. Spotlights stay on your machine in
+`.specspec/local/` until you flush them.
 
-Errors and optional `specspec.traceLoading` diagnostics appear in **View → Output →
-specspec**. File watchers are enabled; polling defaults to off
-(`specspec.pollIntervalMs: 0`). Use Refresh when filesystem notifications are missed.
-Invalid graphs remain inspectable/repairable; raw text is available for unreadable
-nodes. No automatic repair, staging, commits or hook installation occurs.
+## Settings
 
-SSH/tunnel workspaces run the adapter, CLI and Git on the workspace host. Install
-the local VSIX there too. Virtual/browser-only filesystems are not supported.
-[Remote setup and qualification](https://github.com/jejay/specspec/blob/main/docs/remote-workspaces.md)
+- **VS Code:** `specspec.command` and `specspec.args` select the CLI (an absolute
+  executable path, or a Python interpreter with `["-m", "specspec"]`).
+  `specspec.pollIntervalMs` adds polling to file watching (0 disables it), and
+  `specspec.traceLoading` writes load timings to **View → Output → specspec**.
+- **Desktop:** `--python PATH`, or the environment variables `SPECSPEC_COMMAND` and
+  `SPECSPEC_ARGS`, select the CLI; `--poll-interval-ms` enables polling. Drafts and
+  view state are stored per project in the app's user-data directory.
+- **Remote workspaces:** with VS Code Remote (SSH or tunnels), install the VSIX and
+  the CLI on the remote host; the extension, CLI and Git run there.
 
-## Development and boundaries
-
-For source work, root `npm run build:vscode` compiles TypeScript and the shared
-renderer. F5 remains an optional development workflow; see
-[contributing](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md).
-
-Local assets are bundled, project Markdown is rendered literally, and untrusted
-workspaces cannot run the CLI. This is not a security certification or proof of
-specification fulfillment. Large graphs are not virtualized; source symbols are
-descriptive. The product is local-first and does not run a hosted coding agent.
+Use the refresh button when a change made outside the editor does not appear. The
+editors render project text literally and run the CLI only for trusted folders.

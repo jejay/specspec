@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 import subprocess
 import threading
 from pathlib import Path
 
+from .git_process import git_command, git_environment
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
 
 BATCH_COUNT = 256
@@ -21,21 +21,19 @@ def fail(message: str) -> None:
 
 
 def batch_request(root: Path, option: str, ids: list[str], limit: int) -> bytes:
-    """Kill on oversized output or timeout; never fetch missing local objects."""
+    """Kill on oversized output or timeout; never fetch missing local objects.
+
+    Streaming keeps this call's per-batch limits; command and environment stay shared.
+    """
     streams: dict[str, bytes] = {}
     errors: list[str] = []
     try:
         child = subprocess.Popen(
-            ["git", "-C", str(root), "cat-file", option],
+            git_command(root, "cat-file", option),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env={
-                **os.environ,
-                "GIT_NO_LAZY_FETCH": "1",
-                "GIT_OPTIONAL_LOCKS": "0",
-                "GIT_ALLOW_PROTOCOL": "",
-            },
+            env=git_environment(),
         )
     except OSError as error:
         fail(str(error))

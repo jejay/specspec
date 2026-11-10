@@ -7,7 +7,6 @@ parents:
 - ALlkmT0=
 sources:
 - path: .github/workflows/ci.yml
-- path: electron/README.md
 - path: electron/launch.cjs
 - path: electron/main.cjs
 - path: package-lock.json
@@ -19,6 +18,7 @@ sources:
 - path: electron/test-host/run.cjs
 - path: electron/test/launch.test.cjs
 - path: electron/test/security.test.cjs
+- path: electron/test/main.test.cjs
 - path: electron/theme.css
 - path: graph-ui-common/test-host/platform.cjs
 - path: graph-ui-common/test-host/ui.cjs
@@ -32,8 +32,10 @@ port; renderer scripts use shared graph/session assets. Native menus/dialogs sup
 normal editing, revision selection and destructive/overwrite confirmation.
 
 `launch.cjs` captures path-bearing executable settings relative to the launch
-folder, keeping absolute/PATH meanings across project cwd changes. `store.cjs`
-retains bounded project-scoped presentation/drafts and protects corrupt state bytes.
+folder, and the CLI runs from a neutral working directory. `store.cjs` retains bounded project-scoped presentation/drafts and protects
+corrupt state bytes. It re-reads on project open, merges only this window's
+changed projects on save and retries after a failed write, so several app
+instances keep each other's drafts.
 Build/package scripts include shared runtime, icons and project/vendor licenses.
 
 Unit tests check launch/state/security boundaries; isolated installed-host tests

@@ -112,7 +112,7 @@ The goal is a graph precise enough that implementing it comes close to compiling
 with little left for the agent to guess. How closely you review on the way is up to
 you. Look hard where uncertainty and impact are high, and decide when the graph is clear
 enough to be worth an implementation attempt. Each attempt is evidence for the next
-revision. [Agent workflow and the AGENTS.md template](https://github.com/jejay/specspec/blob/main/docs/agents.md)
+revision. The [agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md) is the file `init` adds.
 
 ## Try it
 
@@ -134,7 +134,7 @@ It prints the manifesto's ID, such as `TZ971GA=`. IDs end in `=`; copy them whol
 The everyday commands:
 
 ```sh
-specspec query                                       # read the whole graph
+specspec query --max-distance 2                      # the top of the graph
 specspec query ID --max-distance 0 --with-ancestors  # one node and everything that justifies it
 specspec add --parent ID -m "# Make timing easy to read" -m "Everyone sees when each task happens."
 specspec update ID --replace "old wording" "new wording"
@@ -143,9 +143,9 @@ specspec diff                                        # changes since the last co
 specspec check                                       # structural validation
 ```
 
-Every command has `--help` with examples. See the
-[CLI guide](https://github.com/jejay/specspec/blob/main/docs/cli.md) and the
-[query guide](https://github.com/jejay/specspec/blob/main/docs/query.md).
+Every command has `--help` with examples. If `specspec` isn't found, run
+`uv tool update-shell` (or `pipx ensurepath`) and open a new terminal; upgrade with
+`uv tool upgrade specspec`.
 
 ### Graph editors
 
@@ -164,8 +164,8 @@ npm run desktop           # or start the desktop app from source
 
 In VS Code, run **specspec: Open Graph** from the Command Palette. The desktop app runs
 on Windows and Linux; on macOS, use VS Code. The
-[installation guide](https://github.com/jejay/specspec/blob/main/docs/install.md)
-covers portable desktop builds, PATH problems and upgrades.
+[editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md) covers the canvas, reviewing changes,
+spotlights and settings.
 
 ## A planner that changed its mind
 
@@ -197,15 +197,14 @@ Implementation nodes help by pointing at the exact code, and
 was linked.
 
 specspec is developed with specspec. Its own graph is in
-[`.specspec/`](https://github.com/jejay/specspec/tree/main/.specspec), and the
-[tour](https://github.com/jejay/specspec/blob/main/docs/own-spec.md) explains where to
-start.
+[`.specspec/`](https://github.com/jejay/specspec/tree/main/.specspec), and
+[CONTRIBUTING](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) explains how to work on it.
 
-## Documentation
+## More
 
-- [Installation and upgrades](https://github.com/jejay/specspec/blob/main/docs/install.md) · [Agent workflow](https://github.com/jejay/specspec/blob/main/docs/agents.md) · [Changelog](https://github.com/jejay/specspec/blob/main/CHANGELOG.md)
-- [CLI](https://github.com/jejay/specspec/blob/main/docs/cli.md) · [Query](https://github.com/jejay/specspec/blob/main/docs/query.md) · [Spotlights](https://github.com/jejay/specspec/blob/main/docs/spotlights.md) · [Canvas controls](https://github.com/jejay/specspec/blob/main/docs/node-canvas.md#canvas-controls)
-- [Graph structure](https://github.com/jejay/specspec/blob/main/docs/graph-structure.md) · [Source links](https://github.com/jejay/specspec/blob/main/docs/source-regions.md) · [Deletion](https://github.com/jejay/specspec/blob/main/docs/deletion.md) · [Repairing invalid graphs](https://github.com/jejay/specspec/blob/main/docs/invalid-graphs.md)
-- [Architecture](https://github.com/jejay/specspec/blob/main/docs/architecture.md) · [Contributing and repository layout](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) · [Releasing](https://github.com/jejay/specspec/blob/main/docs/releasing.md) · [Brand assets](https://github.com/jejay/specspec/blob/main/branding/README.md)
+- [Agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md): the routine and rules your agent follows
+- [Editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md): the VS Code extension and the desktop app
+- [Contributing](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md): development setup, checks and releases
+- [Changelog](https://github.com/jejay/specspec/blob/main/CHANGELOG.md)
 
 specspec is [MIT licensed](https://github.com/jejay/specspec/blob/main/LICENSE).

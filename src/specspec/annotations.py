@@ -7,13 +7,13 @@ import json
 import os
 import re
 import secrets
-import subprocess
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 
 from .git import git_snapshot, repository_paths, run_git, semantic_diff
 from .git_objects import OBJECT_ID
+from .git_process import GitProcessError, run_git_process
 from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError
 from .workspace import SPEC_DIR, STATE_DIR, load_snapshot, snapshot_from_files, workspace_lock
 
@@ -262,22 +262,11 @@ def ensure_ignored(root):
 
     def ignored():
         try:
-            result = subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(repository),
-                    "check-ignore",
-                    "--quiet",
-                    "--",
-                    relative + "/annotations/",
-                ],
-                capture_output=True,
-                check=False,
-                timeout=20,
+            result = run_git_process(
+                repository, "check-ignore", "--quiet", "--", relative + "/annotations/", timeout=20
             )
-        except subprocess.TimeoutExpired:
-            fail("Git exclusion verification timed out; no spotlight published.")
+        except GitProcessError as error:
+            fail(f"Git exclusion verification failed; no spotlight published. {error}")
         if result.returncode not in (0, 1):
             fail("Cannot verify the Git exclusion for local spotlights.")
         return result.returncode == 0

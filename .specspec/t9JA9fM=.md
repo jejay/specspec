@@ -16,7 +16,6 @@ sources:
 - path: graph-ui-common/host/startup.cjs
 - path: graph-ui-common/test/startup.test.cjs
 - path: tests/test_cli_stdin.py
-- path: docs/investigations/owner-experience.md
 - path: graph-ui-common/test-host/startup.cjs
 - path: electron/test-host/startup.cjs
 - path: electron/test-host/run.cjs
@@ -35,5 +34,7 @@ Unit and installed-host probes cover missing CLI, no graph, initialization and r
 alongside normal graph and native-document persistence.
 
 A static CLI capability probe prevents an older same-envelope CLI from silently
-ignoring a managed stdin body. Missing modules, incompatible capabilities and
-project repair failures retain distinct blocking diagnostics.
+ignoring a managed stdin body. Missing modules, incompatible capabilities and project repair failures retain
+distinct blocking diagnostics. A view that reports ready after the 10 s deadline
+still opens, and an unresolvable Electron --project path shows the error screen
+with Retry.

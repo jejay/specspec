@@ -50,6 +50,7 @@ class CodeVersion:
             # Populate the existing invocation-local blob cache in bulk, not via
             # one cat-file pair on each first path read. Never use index entries
             # as a substitute for saved workspace bytes.
+            self.reader.lookup(s["path"] for s in sources)
             for source in sources:
                 entry = self.reader.entries.get(self.reader.prefix + source["path"])
                 if entry and entry[0] in {"100644", "100755"}:

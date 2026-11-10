@@ -11,8 +11,6 @@ sources:
 - path: tests/test_cli_replacements.py
 - path: tests/test_cli_chains.py
 - path: tests/test_transactions.py
-- path: docs/cli.md
-- path: docs/investigations/exact-replacements.md
 - path: src/specspec/replacement_matching.py
 - path: tests/test_replacement_matching.py
 - path: pyproject.toml

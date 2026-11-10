@@ -21,8 +21,6 @@ sources:
 - path: vscode/test/bridge.test.cjs
 - path: vscode/test/extension.test.cjs
 - path: vscode/test-host/remote.cjs
-- path: docs/loading.md
-- path: docs/investigations/polling-test-race.md
 ---
 # Share current graph reads while preserving host persistence owners
 
@@ -53,5 +51,6 @@ fixture exposes actual sessions/watchers so tests await their queues and disposa
 A late initial discovery remains a valid watcher refresh while polling is off;
 periodic shutdown and pending-discovery disposal are asserted independently. Shared
 session tests cover exact interval replacement and coalesced pending reads without
-wall-clock quiet sleeps. The polling investigation records a deterministic 5-to-6
-call reproduction and the corrected oracle. Product scheduling remains unchanged.
+wall-clock quiet sleeps. Every CLI spawn uses spawnOptions in cli.cjs: a neutral working directory (the
+per-user temp directory on Windows, / elsewhere), PYTHONSAFEPATH=1 and the
+project passed only as --root, so project files stay out of Python's import path.

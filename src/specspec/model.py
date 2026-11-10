@@ -40,6 +40,11 @@ class SpecError(Exception):
         super().__init__("; ".join(d.message for d in diagnostics))
 
 
+def unexpected_error(error: Exception) -> Diagnostic:
+    """CLI/API boundaries report an unanticipated failure as one structured diagnostic."""
+    return Diagnostic("INTERNAL", f"Unexpected {type(error).__name__}: {error}")
+
+
 @dataclass
 class SpecNode:
     id: str
