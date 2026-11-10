@@ -6,7 +6,8 @@
 what the graph is for and a working routine, shows a small example graph, reads
 spotlights as owner input and states which commits a planning request authorizes: the
 owner's pending specification edits, then the agent's result. A request to build includes
-that planning, and every other commit follows the project's own rules.
+that planning, and every other commit follows the project's own rules. The agent leaves a
+spotlight on the nodes it discusses, so the owner can open them in a graph editor.
 
 **CLI fixes**
 - A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT

@@ -7,6 +7,7 @@ parents:
 - ge_uqBs=
 - o079tIM=
 - 0ixPI18=
+- gdf33gI=
 sources:
 - path: src/specspec/templates/AGENTS.md
 - path: src/specspec/workspace.py
@@ -21,7 +22,7 @@ sources:
 
 The distribution contains one static generic guide, loaded through package resources.
 It says what the graph is for in two opening paragraphs, continues with a numbered routine and stays under 10 KB; tests check its essentials,
-its size and that every option it teaches appears in visible help. Its concept sections use the outcome/choice and intention/conclusion vocabulary with one example graph, each phase names what starts it, and the implementation phase begins with agent planning.
+its size and that every option it teaches appears in visible help. Its concept sections use the outcome/choice and intention/conclusion vocabulary with one example graph, each phase names what starts it, the implementation phase begins with agent planning, and the report step asks for a spotlight on the nodes discussed.
 Initialization validates a single manifesto and safe root instruction target, checks
 Git availability and ensures a Git working tree before publishing node/guide bytes,
 reusing a containing repository instead of creating nested Git metadata. Git metadata is not claimed by graph rollback. No staging, commit, identity

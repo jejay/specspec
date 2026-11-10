@@ -1,6 +1,6 @@
 # Working with a specspec graph
 
-This project is developed with specspec, short for *specification spectrum*. Its specification is a graph of Markdown nodes in `.specspec/`, whose root states what the product is for. Every other node is a *conclusion* drawn from its parents, which are its *intentions*: it refines them, chooses a way to achieve them or explains what was built. From the root outward, the nodes run from what the owner (the person you work for) wants, through ever more concrete conclusions, to the actual files. That range is the spectrum. The product can be software, a book or any other deliverable.
+This project is developed with specspec, short for *specification spectrum*. Its specification is a graph of Markdown nodes in `.specspec/`, whose root states what the product is for. Every other node is a *conclusion* drawn from its parents, which are its *intentions*: it refines them, chooses a way to achieve them or explains what was built. From the root outward, the nodes run from what the owner (the person you work for) wants, through ever more concrete conclusions, to the actual files. That range is the spectrum.
 
 The graph exists because a specification worked out with a coding agent blends two things: the outcomes the owner wants, and choices that were proposed and accepted along the way. A few rounds later it is hard to tell which details are essential. Here each outcome and each meaningful choice is a node of its own, so a choice can be replaced while the outcome it serves stays, and the owner can specify one branch in detail and delegate another. Many choices will be yours. Record each as its own node under the intention it serves, where the owner can review and replace it.
 
@@ -11,7 +11,7 @@ The graph exists because a specification worked out with a coding agent blends t
 3. Before you change a node or the artifacts it describes, read it with its ancestors: `specspec query ID --max-distance 0 --with-ancestors`. Its ancestors are the reasons it exists, and they bind as much as the node itself.
 4. Work in the phase the owner asked for (see Phases). You change the graph only in agent planning and implementation, with `specspec add`, `update` and `delete`.
 5. After changing the graph or linked artifacts, run `specspec check --sources`. Before any commit, stage the complete change and run `specspec check --staged --sources --warnings-as-errors`, which validates exactly what will be committed.
-6. Report what you changed, the choices you made on the owner's behalf and what remains uncertain.
+6. Report what you changed, the choices you made on the owner's behalf and what remains uncertain. Whenever you discuss specific nodes, also spotlight them and say so: `specspec spotlight add ID... 'message'` shows them in the owner's graph editor.
 
 ## The graph
 

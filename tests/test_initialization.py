@@ -272,6 +272,7 @@ def test_packaged_guide_matches_current_behavior():
         ".specspec/<id>.md",
         "## Routine",
         "spotlight show",
+        "spotlight add",
         "Tandem planning",
         "Agent planning",
         "Implementation",

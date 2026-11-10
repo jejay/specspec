@@ -5,8 +5,8 @@
 
 specspec connects your intentions to revisable decisions and to the code that realizes
 them, so you can choose how much to direct or delegate at every step. The specification
-is a graph of Markdown files in your Git repository. You work on it in a visual graph
-editor or the terminal, and your coding agent uses the same CLI.
+is a graph of Markdown files in your Git repository. You read and edit it in a visual
+graph editor, and your coding agent works on it through a command-line tool.
 
 The name is short for *specification spectrum*.
 
@@ -20,14 +20,16 @@ The name is short for *specification spectrum*.
   [replacing a choice](#replacing-a-choice-keeps-the-intention-it-served)
 - In practice: [the editors](#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app),
   [working with your agent](#how-you-and-your-agent-work-on-the-graph),
-  [everyday commands](#everyday-commands), [building the editors](#build-the-graph-editors)
+  [building the editors](#build-the-graph-editors),
+  [the command line](#the-command-line-your-agent-uses)
 - [Example](#example-a-planning-app-that-changed-direction-twice),
   [status and limits](#status-and-limits), [guides](#guides)
 
 ## Quick start
 
-You need Python 3.11+ and Git. Install the CLI from [PyPI](https://pypi.org/project/specspec/)
-and describe your project in a sentence or two:
+You need Python 3.11+ and Git. Install the command-line tool, which your agent and the
+graph editors run, from [PyPI](https://pypi.org/project/specspec/) and describe your
+project in a sentence or two:
 
 ```sh
 uv tool install specspec    # or: pipx install specspec
@@ -43,10 +45,10 @@ uncertain. `init` also sets up Git if the folder has none and appends to an `AGE
 you already have. If your agent reads a different instructions file, point it to
 `AGENTS.md`.
 
-You can leave it at that. When you want more control, look at the top of the graph with
-`specspec query --max-distance 2` or in a graph editor, change a node or replace a
-choice, and tell the agent to carry on. The rest of this page explains what you are
-looking at.
+You can leave it at that. When you want more control, open the graph in
+[a graph editor](#build-the-graph-editors): look at it from as far above as you like,
+open the nodes the agent pointed you to, change a node or replace a choice, and tell
+the agent to carry on. The rest of this page explains what you are looking at.
 
 ## The problem: your intent and the agent's suggestions merge into one plan
 
@@ -128,9 +130,9 @@ coding, where the agent makes them for you. With specspec you pick a point on it
 each part of a project and move it as the project goes on: go deep where something
 surprised you, and step back where things have settled.
 
-The tools read at the depth you ask for. `specspec query --max-distance 2` prints the
-top two levels, `specspec query ID` prints one branch down to the code, and the graph
-editor can color nodes by their distance from the manifesto. The shaded areas in the
+The graph editors are made for this. Zoomed out, you see the whole graph, colored by
+distance from the manifesto if you like. Zoom into one branch and select a node, and
+you read its text with its parents and children around it. The shaded areas in the
 figure are yours alone; the graph holds the nodes on both sides of them.
 
 ## Replacing a choice keeps the intention it served
@@ -147,7 +149,8 @@ choice is written to serve it, and the choice next to it is untouched.
 
 ## What you work with: the graph in VS Code and in a desktop app
 
-The VS Code extension and the desktop app draw the same zoomable canvas.
+As the owner you read and edit the graph in a graph editor: the VS Code extension or
+the desktop app, which draw the same zoomable canvas.
 
 <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode.png" alt="VS Code with the Explorer on the left, listing the Markdown node files in .specspec, and the specspec graph in an editor tab: about 250 nodes in columns, colored from purple to orange by their distance from the manifesto.">
 
@@ -169,14 +172,15 @@ The guide in `AGENTS.md` sets out how the agent works with you:
    gaps: it separates your intentions from the solutions you proposed, questions
    choices that look weak and suggests its own. The graph stays as it is while you
    talk. Skip this step when the request is clear.
-2. When you ask for it, the agent writes the graph with `specspec add`, `update` and
-   `delete`, building on any edits you made yourself. It completes the depth that
-   building needs, fills gaps you evidently left to it and reports its choices and open
-   questions. Your edits and its changes go into two separate commits.
-3. You review as much of it as you want. The graph editor marks nodes added, changed
-   or deleted since the last commit, and `specspec diff` shows the full text. Edit any
-   node directly, or select a few nodes and leave the agent a message about them (a
-   *spotlight*).
+2. When you ask for it, the agent writes the graph through the command line, building
+   on any edits you made yourself. It completes the depth that building needs, fills
+   gaps you evidently left to it and reports its choices and open questions. Whenever it
+   talks about particular nodes, it leaves a *spotlight* on them, so the editor shows
+   you which ones it means. Your edits and its changes go into two separate commits.
+3. You review as much of it as you want in a graph editor. It marks nodes added,
+   changed or deleted since the last commit and shows each change inside the node's
+   text. Edit any node there, or select a few nodes and leave the agent a spotlight of
+   your own.
 4. The agent implements, after planning whatever the graph does not cover yet. Before
    it changes code, it reads the node and every ancestor that justifies it. It keeps
    graph and code in sync: further choices become conclusions, and implementation nodes
@@ -192,24 +196,6 @@ high, and decide when the graph is clear enough to be worth an implementation at
 Each attempt is evidence for the next revision. The
 [agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md)
 is the file `init` adds.
-
-## Everyday commands
-
-`init` prints the manifesto's ID, such as `TZ971GA=`. IDs end in `=`; copy them whole.
-
-```sh
-specspec query --max-distance 2                      # the top of the graph
-specspec query ID --max-distance 0 --with-ancestors  # one node and everything that justifies it
-specspec add --parent ID -m "# Make timing easy to read" -m "Everyone sees when each task happens."
-specspec update ID --replace "old wording" "new wording"
-specspec delete ID
-specspec diff                                        # changes since the last commit
-specspec check                                       # structural validation
-```
-
-Every command has `--help` with examples. If `specspec` isn't found, run
-`uv tool update-shell` (or `pipx ensurepath`) and open a new terminal; upgrade with
-`uv tool upgrade specspec`.
 
 ## Build the graph editors
 
@@ -228,6 +214,26 @@ In VS Code, run **specspec: Open Graph** from the Command Palette. The desktop a
 on Windows and Linux; on macOS, use VS Code. The
 [editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md) covers the canvas, reviewing changes,
 spotlights and settings.
+
+## The command line your agent uses
+
+Your agent works through the `specspec` command, and both editors run it for every read
+and write. You can use it yourself. `init` prints the manifesto's ID, such as
+`TZ971GA=`; IDs end in `=`, so copy them whole.
+
+```sh
+specspec query --max-distance 2                      # the top of the graph
+specspec query ID --max-distance 0 --with-ancestors  # one node and everything that justifies it
+specspec add --parent ID -m "# Make timing easy to read" -m "Everyone sees when each task happens."
+specspec update ID --replace "old wording" "new wording"
+specspec delete ID
+specspec diff                                        # changes since the last commit
+specspec check                                       # structural validation
+```
+
+Every command has `--help` with examples. If `specspec` isn't found, run
+`uv tool update-shell` (or `pipx ensurepath`) and open a new terminal; upgrade with
+`uv tool upgrade specspec`.
 
 ## Example: a planning app that changed direction twice
 
