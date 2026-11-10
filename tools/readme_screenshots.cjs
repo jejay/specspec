@@ -1,8 +1,8 @@
 /* Take the README screenshots of both graph editors.
 
    node tools/readme_screenshots.cjs            # both
-   node tools/readme_screenshots.cjs vscode     # docs/images/editor-vscode.png
-   node tools/readme_screenshots.cjs desktop    # docs/images/editor-desktop.png
+   node tools/readme_screenshots.cjs vscode     # docs/images/editor-vscode.png and -small.png
+   node tools/readme_screenshots.cjs desktop    # docs/images/editor-desktop.png and -small.png
 
    Build the editors first (npm run build). Each host starts in an isolated, disposable
    profile and is captured through the DevTools protocol on the loopback interface.
@@ -18,6 +18,7 @@ const { join, relative, resolve } = require('node:path');
 const ROOT = resolve(__dirname, '..');
 const delay = ms => new Promise(done => setTimeout(done, ms));
 const SCALE = 2; // twice the display resolution, for sharp images when opened full size
+const SMALL = 0.5; // half of it, for the small versions under the README's introduction
 
 if (require.main !== module) {
   exports.run = async function run() {
@@ -58,10 +59,15 @@ async function main() {
   });
   const targets = async port => (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
   const remove = path => { try { rmSync(path, { recursive: true, force: true, maxRetries: 30, retryDelay: 200 }); } catch { /* keep */ } };
-  const save = async (client, name) => {
-    const image = await client.send('Page.captureScreenshot', { format: 'png' });
-    writeFileSync(join(images, name), Buffer.from(image.data, 'base64'));
-    console.log(`docs/images/${name}`);
+  // Capture the posed page at full and at small scale; the layout stays the same.
+  const save = async (client, name, width, height) => {
+    for (const [scale, file] of [[SCALE, `${name}.png`], [SMALL, `${name}-small.png`]]) {
+      await client.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: scale, mobile: false });
+      await delay(700);
+      const image = await client.send('Page.captureScreenshot', { format: 'png' });
+      writeFileSync(join(images, file), Buffer.from(image.data, 'base64'));
+      console.log(`docs/images/${file}`);
+    }
   };
   const pose = (evaluate, mode) => evaluate(
     `const s=document.getElementById('color-mode');s.value=${JSON.stringify(mode)};s.dispatchEvent(new Event('change'));`
@@ -138,7 +144,7 @@ async function main() {
         await mouse('mouseReleased', spot, to, 0);
         await delay(600);
       }
-      await save(client, 'editor-desktop.png');
+      await save(client, 'editor-desktop', 1240, 800);
     } finally {
       client?.close(); child.kill(); await exit; remove(work);
     }
@@ -207,7 +213,7 @@ async function main() {
       await delay(1500);
       await pose(evaluate, 'distance');
       await delay(1500);
-      await save(workbench, 'editor-vscode.png');
+      await save(workbench, 'editor-vscode', 1280, 800);
     } finally {
       writeFileSync(done, 'done');
       const timer = setTimeout(() => child.kill(), 15_000);

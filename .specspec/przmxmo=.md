@@ -50,7 +50,7 @@ and creates a current-platform portable archive. The standard-library release
 inspector checks versions, resources, runtime membership, asset/license presence
 and archive semantics, then writes artifact digests and a manifest.
 
-README.md explains both spectra before setup with the tagline lockup and figures;
+README.md opens with the tagline lockup, small editor screenshots, a table of contents and a quick start, then explains both spectra with figures and screenshots;
 the editor guide in vscode/README.md, CONTRIBUTING.md and CHANGELOG.md cover editor
 use, development and releases, and release notes.
 The original supplied artwork and local experiments remain preserved.

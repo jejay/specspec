@@ -10,6 +10,44 @@ editor or the terminal, and your coding agent uses the same CLI.
 
 The name is short for *specification spectrum*.
 
+<a href="#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app"><img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode-small.png" alt="The specspec graph in VS Code, seen from far above." height="190"></a>
+<a href="#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app"><img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-desktop-small.png" alt="The specspec desktop app comparing two revisions of a graph." height="190"></a>
+
+- [Quick start](#quick-start)
+- The idea: [the problem](#the-problem-your-intent-and-the-agents-suggestions-merge-into-one-plan),
+  [the graph](#the-specification-is-a-graph-from-intention-to-conclusion),
+  [your depth](#you-choose-how-deep-you-go-in-each-part-of-the-graph),
+  [replacing a choice](#replacing-a-choice-keeps-the-intention-it-served)
+- In practice: [the editors](#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app),
+  [working with your agent](#how-you-and-your-agent-work-on-the-graph),
+  [everyday commands](#everyday-commands), [building the editors](#build-the-graph-editors)
+- [Example](#example-a-planning-app-that-changed-direction-twice),
+  [status and limits](#status-and-limits), [guides](#guides)
+
+## Quick start
+
+You need Python 3.11+ and Git. Install the CLI from [PyPI](https://pypi.org/project/specspec/)
+and describe your project in a sentence or two:
+
+```sh
+uv tool install specspec    # or: pipx install specspec
+cd your-project
+specspec init -m "# Help a small team agree on a plan" -m "Everyone sees the same dates and why they moved."
+```
+
+Then start your coding agent in the project and tell it what you want, as you would
+anyway. Any agent that can run shell commands works. `init` wrote an `AGENTS.md` that
+teaches it the rest: it plans in the graph before it builds, records the choices it
+makes for you, keeps graph and code in sync and reports what it decided and what is
+uncertain. `init` also sets up Git if the folder has none and appends to an `AGENTS.md`
+you already have. If your agent reads a different instructions file, point it to
+`AGENTS.md`.
+
+You can leave it at that. When you want more control, look at the top of the graph with
+`specspec query --max-distance 2` or in a graph editor, change a node or replace a
+choice, and tell the agent to carry on. The rest of this page explains what you are
+looking at.
+
 ## The problem: your intent and the agent's suggestions merge into one plan
 
 When you build with a coding agent, much of the specification gets written in
@@ -109,8 +147,7 @@ choice is written to serve it, and the choice next to it is untouched.
 
 ## What you work with: the graph in VS Code and in a desktop app
 
-The VS Code extension and the desktop app draw the same zoomable canvas and run the
-`specspec` command for every read and write.
+The VS Code extension and the desktop app draw the same zoomable canvas.
 
 <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode.png" alt="VS Code with the Explorer on the left, listing the Markdown node files in .specspec, and the specspec graph in an editor tab: about 250 nodes in columns, colored from purple to orange by their distance from the manifesto.">
 
@@ -126,9 +163,7 @@ Selecting a node opens its text, parents and sources for editing.
 
 ## How you and your agent work on the graph
 
-specspec works with the coding agent you already use, as long as it can run shell
-commands. `specspec init` writes an `AGENTS.md` that explains the graph and this
-workflow to it:
+The guide in `AGENTS.md` sets out how the agent works with you:
 
 1. You describe what you want. The agent works out the depth and points out obvious
    gaps: it separates your intentions from the solutions you proposed, questions
@@ -152,29 +187,15 @@ workflow to it:
    changed.
 
 The goal is a graph precise enough that implementing it comes close to compiling it,
-with little left for the agent to guess. How closely you review on the way is up to
-you. Look hard where uncertainty and impact are high, and decide when the graph is clear
-enough to be worth an implementation attempt. Each attempt is evidence for the next
-revision. The [agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md) is the file `init` adds.
+with little left for the agent to guess. Look hard where uncertainty and impact are
+high, and decide when the graph is clear enough to be worth an implementation attempt.
+Each attempt is evidence for the next revision. The
+[agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md)
+is the file `init` adds.
 
-## Install the CLI and create a graph
+## Everyday commands
 
-The CLI needs Python 3.11+ and Git. Install it from
-[PyPI](https://pypi.org/project/specspec/):
-
-```sh
-uv tool install specspec    # or: pipx install specspec
-```
-
-In a project directory, create the manifesto. `init` sets up a Git repository if there
-is none and writes `AGENTS.md`, or appends to the one you have:
-
-```sh
-specspec init -m "# Help a small team agree on a plan" -m "Everyone sees the same dates and why they moved."
-```
-
-It prints the manifesto's ID, such as `TZ971GA=`. IDs end in `=`; copy them whole.
-The everyday commands:
+`init` prints the manifesto's ID, such as `TZ971GA=`. IDs end in `=`; copy them whole.
 
 ```sh
 specspec query --max-distance 2                      # the top of the graph
@@ -190,12 +211,10 @@ Every command has `--help` with examples. If `specspec` isn't found, run
 `uv tool update-shell` (or `pipx ensurepath`) and open a new terminal; upgrade with
 `uv tool upgrade specspec`.
 
-### Build the graph editors
+## Build the graph editors
 
-The VS Code extension and the desktop app draw the graph on a zoomable canvas, open
-each node in an editor and compare any two revisions. For now you build them from this
-repository, which needs Node 22.12+ and npm 10+. Both run the `specspec` command you
-installed.
+For now you build both editors from this repository, which needs Node 22.12+ and npm
+10+. Both run the `specspec` command you installed.
 
 ```sh
 git clone https://github.com/jejay/specspec.git

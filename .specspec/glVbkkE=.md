@@ -7,13 +7,15 @@ sources:
 - path: tools/readme_screenshots.cjs
 - path: docs/images/editor-vscode.png
 - path: docs/images/editor-desktop.png
+- path: docs/images/editor-vscode-small.png
+- path: docs/images/editor-desktop-small.png
 - path: README.md
 ---
 # Capture both editors with a repository script
 
 tools/readme_screenshots.cjs starts each editor in a disposable profile with a
 loopback DevTools port and writes docs/images/editor-vscode.png and
-docs/images/editor-desktop.png at twice the display resolution. README.md embeds both
+docs/images/editor-desktop.png at twice the display resolution, each with a -small.png version at half of it. README.md shows the small versions under its introduction, linked to the section with the full ones. README.md embeds both
 after the concept sections.
 
 VS Code runs the development extension on this repository with the default dark
