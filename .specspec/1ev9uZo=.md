@@ -4,6 +4,7 @@ type: requirement
 parents:
 - U6paNqA=
 - 4PzVJho=
+- egHqZxY=
 ---
 # Package the selected identity with a concise product introduction
 
@@ -15,10 +16,7 @@ minimum, followed by the brand's literal product description. The tagline Engine
 is on the spectrum now refers to the owner's continuous freedom between hands-on
 engineering and delegated work; a README section explains that meaning.
 
-The README explains the core idea before setup: intent merging with agent
-suggestions, the specification spectrum on a small planning example with an actual
-node file, a replaced choice beneath its unchanged intention, the second spectrum of
-direction and delegation, and the owner/agent working phases. Concise CLI install and
+The README explains the core idea before setup: intent merging with agent suggestions and the lack of a place to stop reading in a mixed plan, the specification spectrum on a small planning example with an actual node file, the owner's chosen depth of writing and understanding in each region and its change over time, a replaced choice beneath its unchanged intention, and the owner/agent working phases. Section headings say what their sections contain. Concise CLI install and
 everyday commands, editor build commands, the Gantt example, a candid status section
 and links to the agent guide, the editor guide, contributor notes and release notes
 follow. The repository map belongs to the contribution guide.
