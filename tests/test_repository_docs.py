@@ -127,11 +127,13 @@ def test_readme_shows_every_figure_in_light_and_dark():
             assert f"docs/images/{name}-{theme}.svg" in readme
 
 
-def test_readme_figures_match_their_generator(tmp_path):
+def test_readme_figures_match_their_generator(tmp_path, monkeypatch):
     pytest.importorskip("fontTools")
     script = ROOT / "tools/readme_figures.py"
     spec = importlib.util.spec_from_file_location("readme_figures", script)
     figures = importlib.util.module_from_spec(spec)
+    # Dataclasses in Python 3.11 look their module up in sys.modules while loading.
+    monkeypatch.setitem(sys.modules, spec.name, figures)
     spec.loader.exec_module(figures)
     mono = next((path for path in figures.MONO_CANDIDATES if path.exists()), None)
     if not figures.MANROPE.exists() or mono is None:

@@ -58,7 +58,7 @@ async function startupChecks(port, { root = '', missing = true, restore, initial
     assert.equal(snapshot.nodes.length, 1); assert.equal(snapshot.nodes[0].body, 'Test\n');
     assert.ok(existsSync(join(root, '.git'))); assert.ok(existsSync(join(root, '.specspec/local')));
     const guide = readFileSync(join(root, 'AGENTS.md'), 'utf8');
-    assert.ok(guide.startsWith('# Existing owner instructions\n')); assert.ok(guide.includes('## Working phases'));
+    assert.ok(guide.startsWith('# Existing owner instructions\n')); assert.ok(guide.includes('## Routine')); assert.ok(guide.includes('## Phases'));
     assert.equal(await evaluate(`document.getElementById('new').disabled`), false);
     console.log('SPECSPEC_STARTUP_HOST_OK: blocking CLI guidance, explicit init, Git, appended guide, centered button and current graph.');
   } finally { for (const client of clients.values()) client.close(); }
