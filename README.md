@@ -90,20 +90,22 @@ specspec works with the coding agent you already use, as long as it can run shel
 commands. `specspec init` writes an `AGENTS.md` that explains the graph and this
 workflow to it:
 
-1. You describe what you want and cover the breadth. The agent works out the depth:
-   it separates your intentions from the solutions you proposed, questions choices
-   that look weak and suggests its own. The graph stays as it is while you talk.
-   Skip this step when the request is clear.
+1. You describe what you want. The agent works out the depth and points out obvious
+   gaps: it separates your intentions from the solutions you proposed, questions
+   choices that look weak and suggests its own. The graph stays as it is while you
+   talk. Skip this step when the request is clear.
 2. When you ask for it, the agent writes the graph with `specspec add`, `update` and
-   `delete`, building on any edits you made yourself, and reports its choices and open
-   questions. If you want commits, your edits and its changes go into separate ones.
+   `delete`, building on any edits you made yourself. It completes the depth that
+   building needs, fills gaps you evidently left to it and reports its choices and open
+   questions. Your edits and its changes go into two separate commits.
 3. You review. The graph editor marks nodes added, changed or deleted since the last
    commit, and `specspec diff` shows the full text. Edit any node directly, or select
    a few nodes and leave the agent a message about them (a *spotlight*).
-4. The agent implements. Before it changes code, it reads the node and every ancestor
-   that justifies it. Where the graph leaves room for interpretation, it adds deeper
-   conclusions and implementation nodes linked to the code. Scope changes come back to
-   you; when it finds a contradiction, it builds a consistent part and reports the rest.
+4. The agent implements, after planning whatever the graph does not cover yet. Before
+   it changes code, it reads the node and every ancestor that justifies it. It keeps
+   graph and code in sync: further choices become conclusions, and implementation nodes
+   link to the code. When it finds a contradiction, it builds a consistent part and
+   reports the rest.
 5. When you change your mind, you change the intention or replace the choice. The
    graph describes the current plan; Git keeps the earlier ones and the reasons they
    changed.

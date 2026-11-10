@@ -268,6 +268,7 @@ def test_packaged_guide_matches_current_behavior():
     text = raw.decode("utf8")
     assert len(raw) <= 10240
     for phrase in [
+        "specification spectrum",
         ".specspec/<id>.md",
         "## Routine",
         "spotlight show",
@@ -278,7 +279,7 @@ def test_packaged_guide_matches_current_behavior():
         "check --staged --sources --warnings-as-errors",
         "Owner specspec changes:",
         "Agent specspec changes:",
-        "need the owner's explicit request",
+        "in sync",
         "exactly the selected files",
         "without erasing its outcome",
         "uv tool install specspec",

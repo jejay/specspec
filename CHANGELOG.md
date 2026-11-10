@@ -2,10 +2,11 @@
 
 ## Unreleased
 
-**Agent guide.** `specspec init` ships a shorter AGENTS.md (under 8 KB) that opens with
-a working routine, reads spotlights as owner input and states which commits a planning
-request authorizes: the owner's pending specification edits, then the agent's result.
-Code commits, pushes, tags and hook changes need an explicit request.
+**Agent guide.** `specspec init` ships a shorter AGENTS.md (about 10 KB). It starts with
+what the graph is for and a working routine, shows a small example graph, reads
+spotlights as owner input and states which commits a planning request authorizes: the
+owner's pending specification edits, then the agent's result. A request to build includes
+that planning, and every other commit follows the project's own rules.
 
 **CLI fixes**
 - A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT

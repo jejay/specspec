@@ -5,7 +5,8 @@ below applies to it. Run the development CLI as `python -m specspec` from the
 checkout's virtual environment, so the code you change is the code you run; the
 `specspec` on PATH may be an older installation.
 
-Run these checks before reporting work as done; CI runs the same list:
+Before reporting work as done, run the checks that cover what you changed. CI runs
+the whole list on every push:
 
 ```sh
 python -m specspec check --sources --warnings-as-errors
@@ -16,6 +17,17 @@ python -m pytest
 npm test
 python example/gantt/history/verify.py --history
 ```
+
+Changes to graph nodes, documents or the agent guide need the first graph check and
+four test files, which take seconds:
+
+```sh
+python -m pytest tests/test_repository_docs.py tests/test_repository_spec.py tests/test_initialization.py tests/test_release_workflow.py
+```
+
+The complete `python -m pytest` takes about ten minutes. Run it only when Python code
+changed; for a change confined to one test file, run that file. `npm test` is for UI
+code, and the Gantt graph check and history verifier are for `example/gantt`.
 
 Before an authorized commit, stage the complete intended slice and run both graph
 checks with `--staged` added, against that exact index.
@@ -33,65 +45,87 @@ checks with `--staged` added, against that exact index.
 
 # Working with a specspec graph
 
-This project keeps its specification as a specspec graph in `.specspec/`: Markdown nodes that run from the owner's intentions, through the conclusions that serve them, to the implementation that realizes them. Read it to learn why something exists before you change it, and keep it current as you work. The product can be software, a book, a slide deck or any other deliverable.
+This project is developed with specspec, short for *specification spectrum*. Its specification is a graph of Markdown nodes in `.specspec/`, whose root states what the product is for. Every other node is a *conclusion* drawn from its parents, which are its *intentions*: it refines them, chooses a way to achieve them or explains what was built. From the root outward, the nodes run from what the owner (the person you work for) wants, through ever more concrete conclusions, to the actual files. That range is the spectrum. The product can be software, a book or any other deliverable.
+
+The graph exists because a specification worked out with a coding agent blends two things: the outcomes the owner wants, and choices that were proposed and accepted along the way. A few rounds later it is hard to tell which details are essential. Here each outcome and each meaningful choice is a node of its own, so a choice can be replaced while the outcome it serves stays, and the owner can specify one branch in detail and delegate another. Many choices will be yours. Record each as its own node under the intention it serves, where the owner can review and replace it.
 
 ## Routine
 
-1. Check for owner input: `git status`, the diffs of `.specspec/` and other files (including untracked ones), and `specspec spotlight show` for messages the owner attached to specific nodes. Treat earlier agent work in the working tree as your own unfinished work.
-2. Find the relevant nodes: `specspec query --max-distance 2` shows the top of the graph, and `specspec sources show` lists which implementation node links which file.
-3. Read each node you act on together with its ancestors: `specspec query ID --max-distance 0 --with-ancestors`. Ancestors bind as much as the node itself.
-4. Work in the phase the owner asked for (see Phases). Change the graph only in agent planning or implementation, through `specspec add`, `update` and `delete`.
-5. Run `specspec check`, and `specspec check --staged --sources --warnings-as-errors` on the exact index before any commit you are authorized to make.
-6. Report what you changed, the choices you made and what remains uncertain.
+1. Check for owner input first: `git status`, `specspec diff` for specification changes since the last commit, the diffs of other files (including untracked ones), and `specspec spotlight show` for messages the owner attached to nodes. Uncommitted changes from an earlier agent session are your own unfinished work; ask when unsure whose a change is.
+2. Find the nodes your task touches: `specspec query --max-distance 2` shows the top of the graph, and `specspec sources show` lists which implementation node links which file.
+3. Before you change a node or the artifacts it describes, read it with its ancestors: `specspec query ID --max-distance 0 --with-ancestors`. Its ancestors are the reasons it exists, and they bind as much as the node itself.
+4. Work in the phase the owner asked for (see Phases). You change the graph only in agent planning and implementation, with `specspec add`, `update` and `delete`.
+5. After changing the graph or linked artifacts, run `specspec check --sources`. Before any commit, stage the complete change and run `specspec check --staged --sources --warnings-as-errors`, which validates exactly what will be committed.
+6. Report what you changed, the choices you made on the owner's behalf and what remains uncertain.
 
 ## The graph
 
-- The **manifesto** is the unique root and states the product's core purpose.
-- **Requirements** state outcomes, constraints and choices. Each names the parents it serves; several parents combine reasons.
-- **Implementation** nodes are leaves that explain actual artifacts and link them in `sources`.
+Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`, `parents`, `sources`) and a Markdown body. The *manifesto* is the root. A *requirement* states an outcome the product should achieve, a constraint it must respect or a choice of how, and names the parents it serves. An *implementation* node is a leaf under requirements: it explains how actual artifacts realize them and links them in `sources`.
 
-Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`, `parents`, `sources`) and a Markdown body. An edge means the child is a reasoned refinement, choice or realization serving its parents. Nodes near the manifesto read as intentions and nodes further out as conclusions: a requirement is a conclusion for its parents and an intention for its children. Position, not a label, carries this.
+```text
+manifesto: Help a small team agree on a plan
+  requirement: Make timing easy to read
+    requirement: Show tasks on a weekday timeline
+      implementation: Timeline rendering (sources: app.js)
+```
 
-Ask what should survive if an approach changes, and keep that outcome and each meaningful choice in separate nodes, so a solution can be replaced without erasing its outcome. Neither authorship nor specificity decides the split: an owner may require an exact technology, and an agent may articulate an intention. Split nodes when separate identities allow separate replacement, review or implementation mapping; merge fragments of one coherent decision. Keep the graph shortcut-free: when A reaches C through B, A links only B.
+Each indented line is a conclusion from the line above it, and that line is its intention; the two middle lines are both at once. No field stores this; it follows from the `parents` links. If a milestone list turns out to read better, the timeline node and its implementation are deleted and a new choice is added under "Make timing easy to read", which stays as it is.
 
-Node text describes the product as it is and as it ought to be, in positive, present-tense language. Git keeps the history: earlier versions of a node and the reasons for changing it belong in commits, not in the text. Avoid historic contrasting, both about what changed and about what stayed the same: each sentence should make sense to someone who never saw an earlier version. To withdraw a node, delete its file and give the reason in the commit message.
+To decide what belongs in a node, ask what should survive a change of approach. That outcome gets a node, and each choice with a real alternative gets its own node beneath it, so a choice can be replaced without erasing its outcome. Neither authorship nor specificity decides where a statement goes: a technology the owner must use is a constraint near the root, and one the owner merely suggested is a choice under the outcome it serves. Split a node when its parts could be replaced or reviewed separately; keep one coherent decision together.
 
-Requirements state what the product ought to do; implementation nodes describe what actually exists, including its limits. Nodes carry no approval or confidence status: review effort follows uncertainty and impact, and passing checks and tests are evidence, not proof that the product meets its purpose.
+A node may name several parents: every intention it serves or must respect. Keep the graph shortcut-free: a node serving both P and a descendant of P names only the descendant.
+
+## Writing nodes
+
+Node text describes the product as it is and as it ought to be now: requirements say what it ought to do, and implementation nodes say what exists, including its limits. A conclusion states the choice and how it serves its parents. Write positive, present-tense sentences about what the product does.
+
+Git keeps the history: earlier versions stay in earlier commits, the reason for a change goes into the commit message, and a node that no longer applies is deleted. Avoid historic contrasting, about what changed and about what stayed the same: "the button is purple" is complete, while "the button is now purple instead of blue" and "the button remains purple" lean on an earlier version. Each sentence should make sense to a reader who knows only the current text.
+
+Aim for an implementation-mature graph, precise enough that implementing it is close to compiling it: state observable behavior and every meaningful choice, and say in the node where a choice is deliberately left open. Every node in the graph is in force; there are no approval or confidence marks. The owner reviews where uncertainty and impact are highest, with passing checks and tests as evidence.
 
 ## Phases
 
-**Owner planning.** The owner may edit nodes directly. Before acting, inspect those edits and work out what they mean for intentions and conclusions.
+The owner's request decides which phase applies.
 
-**Tandem planning.** The owner describes what they want and covers breadth; you work out depth. Separate the owner's intentions from the solutions they suggested, challenge weak conclusions, and propose alternatives and your own conclusions. Give a concise overview ready for correction, with guiding questions and your tentative answers, so the owner keeps the lead. Raise planned removals, splits and changes of existing nodes right away; new nodes can wait for agent planning. The graph stays unchanged in this phase, which may take several rounds or be skipped.
+### Owner planning
 
-**Agent planning** starts when the owner asks you to draw or change the graph. That request authorizes two commits: first the owner's uncommitted specification edits as `Owner specspec changes: <your understanding of them>`, then your result as `Agent specspec changes: <description>`. Build the most implementation-mature graph the available understanding supports, precise enough that implementing it leaves little to guess, and state deliberately open choices as such. Validate the exact index, commit, and summarize changed intentions, choices, gaps and affected nodes.
+The owner may edit nodes directly. Routine step 1 finds those edits; work out what they mean for outcomes and choices before you do anything else.
 
-**Implementation.** Before changing artifacts, read the relevant nodes and their ancestors. Where the graph is too coarse, add conclusions and implementation nodes under the existing intentions; breadth and scope stay with the owner. Keep `sources` and implementation explanations current. When you find a contradiction, implement a simple, broad, contradiction-free subset and report the conflict, your subset decisions and their consequences; a resolution can be proposed on a separate branch.
+### Tandem planning
 
-Code commits, pushes, tags and Git hook changes need the owner's explicit request.
+The owner talks about what they want without yet asking for the graph or the product; you discuss it and leave the graph as it is. The owner's focus is breadth, the outcomes the product should have; yours is depth, the choices that achieve them, and breadth too where a gap is obvious. Separate what the owner wants from the choices they suggested, confirm or challenge those choices, and propose alternatives and your own conclusions. The owner leads: give a concise overview of your understanding, ready for correction, with guiding questions and your tentative answers, and concentrate on the choices that matter. Talk about the product rather than about nodes, with one exception: mention removals, splits and changes of existing nodes as soon as you consider them. The phase can take several rounds or be skipped.
+
+### Agent planning
+
+This phase starts when the owner asks you to create or change the graph ("draw the graph", "change the spec"). The request authorizes two commits. First commit the owner's uncommitted specification edits, if any, as `Owner specspec changes: <your understanding of them>`. Then work from the existing graph, its Git history, the owner's edits and the tandem rounds to make the graph implementation-mature: complete the depth that building needs, and fill breadth where the owner evidently left a gap for you. Commit it as `Agent specspec changes: <description>`. Run the staged check before each commit, and finish with a summary of changed outcomes, your choices, open questions and affected nodes.
+
+### Implementation
+
+This phase starts when the owner asks you to build or change the product, and it includes agent planning: first plan what you are asked to build, with the same two commits. Then keep graph and product in sync as you build: record each choice the graph still leaves to you as a requirement under the intention it serves, describe what you built in implementation nodes, and keep existing explanations and `sources` current. Removing nodes is the owner's decision. When nodes contradict each other, implement a simple, broad subset of the graph that is free of the contradiction, and report the conflict, the subset you chose and its consequences. When you see a way to improve the product, report the idea. You can offer to work either out as a graph on a separate branch.
 
 ## Commands
 
-Install with `uv tool install specspec` (or `pipx install specspec`) and run commands inside the project, like Git. IDs are full and case-sensitive, including the final `=`. The CLI reads saved files, so save editor buffers first.
+Install with `uv tool install specspec` (or `pipx install specspec`) and run commands inside the project, like Git. IDs such as `TZ971GA=` are written in full, including the final `=`. `add` prints the ID it creates.
 
 ```sh
-specspec query --max-distance 2                       # top of the graph
-specspec query ID --max-distance 0 --with-ancestors   # one node and its justification
-specspec query ID --max-distance 1                    # a node and its children
-specspec diff                                         # specification changes since HEAD
-specspec add --parent PARENT_ID -m '# Title' -m 'Paragraph.'
+specspec query ID --max-distance 1   # a node and its children
+specspec add --parent PARENT_ID -m '# Title' -m 'Paragraph.'   # a requirement
 specspec add --type implementation --parent REQUIREMENT_ID -m '# Realization'
 specspec update ID --replace 'old passage' 'new passage'
 specspec update ID --parent FIRST_ID --parent SECOND_ID   # replaces the parent list
 specspec delete ID --dry-run
-specspec check
-specspec spotlight show
 ```
 
-Keep reads bounded with `--max-distance`; an unbounded query of a large graph is long. `-m` values are literal Markdown paragraphs; without `-m` or `--replace`, the body comes from standard input, as in `specspec update ID < body.md`. Several add, update and delete steps can form one invocation: `--as name` names a new node and `--parent '$name'` links to it, `--dry-run` previews the result, and `--require-valid` refuses to write an invalid final graph.
+A bare `specspec query` prints the whole graph, so bound reads with `--max-distance`. `-m` values are literal Markdown paragraphs; long bodies can come from standard input instead.
 
-Deletion removes exactly the selected files. Descendants keep their files and their now-missing parent references; resolve those deliberately. The manifesto cannot be deleted. `specspec query --issues --with-ancestors` shows broken states and what they affect.
+Several add, update and delete steps can form one invocation. `--as name` names a new node and `--parent '$name'` links to it; `--dry-run` (preview), `--require-valid` (refuse an invalid result) and `--yes` apply to all steps. Replacing a choice and its implementation under their intention:
 
-Implementation sources: `specspec sources capture IMPL_ID PATH --range 10:40 --mode expanding --staged` anchors a line range to the exact staged blob (stage the code first); `--mode strict` reports any change inside the range for review. A whole-file reference is a `- path: FILE` entry under `sources:` in the node's frontmatter. `specspec check --sources` reports links whose code changed, moved ambiguously or disappeared; align the explanation and the code, then run `specspec sources reanchor`.
+```sh
+specspec delete CHOICE_ID IMPL_ID add --parent INTENTION_ID -m '# New choice' --require-valid
+```
 
-If an edit is interrupted, keep `.specspec/local/` and run `specspec recover`; use `--force-lock` only after confirming that no other writer is running. Every command has `--help` with purpose, defaults and examples.
+Deletion removes exactly the selected files: descendants keep their files and their now-missing parent references, so reconnect, rewrite or delete them deliberately. Deleting a node with uncommitted changes needs `--yes`.
+
+Source links: `specspec sources capture IMPL_ID PATH --range 10:40 --mode expanding --staged` anchors a line range to the staged version of a file (stage the code first). `expanding` lets edits inside the range pass; `strict` reports them for review. A whole-file link is the one hand edit: a `- path: FILE` line under `sources:` in the node's frontmatter. When `check --sources` reports a link whose code changed, moved or disappeared, align the explanation and the code, stage the code, then run `specspec sources reanchor IMPL_ID --source N --staged`.
+
+After an interrupted write, keep `.specspec/local/` (local state that Git ignores) and run `specspec recover`. Every command explains itself with `--help`.

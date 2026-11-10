@@ -6,6 +6,7 @@ parents:
 - 1aSOZOs=
 - FU5NaYc=
 - qwZfjCk=
+- Skan1U4=
 sources:
 - path: .github/workflows/ci.yml
 - path: .vscode/launch.json
@@ -47,8 +48,7 @@ CI and repository tests validate this graph, its source references, complete age
 context and manual-edit behavior. Repository tests also check node text for doubled
 words and lowercase sentence starts, keep AGENTS.md equal to a repository section
 followed by the shipped guide, resolve local links in the kept documents and check
-the README figures. Development launches open the working specification. AGENTS.md
-supplies the routine and phase rules; Git carries revision reasons and evidence.
+the README figures. Development launches open the working specification. AGENTS.md supplies the routine and phase rules, and its repository section names the checks that cover each kind of change; Git carries revision reasons and evidence.
 
 Artifact tests check exact brand imports, non-text attributes and narrowly ignored
 machine-local settings with shared launch files tracked. Independent example
