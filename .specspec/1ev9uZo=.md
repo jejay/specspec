@@ -6,6 +6,7 @@ parents:
 - 4PzVJho=
 - egHqZxY=
 - M3CC8tI=
+- 9SBLCm8=
 ---
 # Package the selected identity with a concise product introduction
 
@@ -17,7 +18,7 @@ minimum, followed by the brand's literal product description. Small versions of 
 is on the spectrum now refers to the owner's continuous freedom between hands-on
 engineering and delegated work; a README section explains that meaning.
 
-The README then explains the core idea: intent merging with agent suggestions and the lack of a place to stop reading in a mixed plan, the specification spectrum on a small planning example with an actual node file, the owner's chosen depth of writing and understanding in each region and its change over time, a replaced choice beneath its unchanged intention, screenshots of both graph editors, and the owner/agent working phases. Section headings say what their sections contain. Everyday commands, editor build commands, the Gantt example, a candid status section
+The README then explains the core idea: intent merging with agent suggestions and the lack of a place to stop reading in a mixed plan, the specification spectrum on a small planning example with an actual node file, the owner's chosen depth of writing and understanding in each region and its change over time, a replaced choice beneath its unchanged intention, screenshots of both graph editors, and the owner/agent working phases. Section headings say what their sections contain. The README presents the graph editors as the owner's way to read and change the graph and the command line as the agent's tool. Editor build commands, the agent's commands, the Gantt example, a candid status section
 and links to the agent guide, the editor guide, contributor notes and release notes
 follow. The repository map belongs to the contribution guide.
 
