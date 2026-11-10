@@ -3,7 +3,6 @@ id: 8O0LYEM=
 type: requirement
 parents:
 - rt-nZHM=
-- B71bAFk=
 ---
 # Bound rooted metric walks with inclusive cutoffs and exact population quotas
 
@@ -18,9 +17,6 @@ reachable through its full selected edges. Distances count directed edges from
 that query root, with zero at the root; influence counts self plus all unique
 reachable descendants, independent of which records are subsequently selected.
 UI paint continues to use its complete individual revision metrics. Cyclic scopes
-use finite shortest/reachability walks; maximum distance is unavailable there.
-Cycles outside the rooted population do not invalidate its finite local metrics.
-Incomplete parsed scope receives an explicit unavailable-selection diagnostic. Cyclic scopes
 use finite shortest/reachability walks; maximum distance is unavailable there.
 Cycles outside the rooted population do not invalidate its finite local metrics.
 Incomplete parsed scope receives an explicit unavailable-selection diagnostic.

@@ -8,7 +8,7 @@ parents:
 # Explain ordinary commands with concise static terminal help
 
 Keep root, command and subgroup help task-oriented, ASCII-safe and project-independent.
-Reduce explanatory bodies to 50–70 percent of their prior length while retaining
+Keep explanatory bodies short while retaining
 purpose, defaults, complete useful examples and critical safety distinctions. Option
 descriptions can carry local detail. Help does not read stdin, payloads or projects.
 
@@ -20,5 +20,4 @@ versions still produce actionable diagnostics. Pipes do not change output mode.
 
 Explain message/stdin input, complete-body versus passage edits, parent-list
 replacement, invocation-wide flags, exact deletion/consent, final validity, recovery,
-query selection/ancestors and deliberate source metadata. Link technical guides for
-integration detail rather than exposing transport mechanics in everyday examples.
+query selection/ancestors and deliberate source metadata. Keep transport mechanics out of everyday examples.

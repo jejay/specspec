@@ -3,7 +3,6 @@ id: P2i_png=
 type: requirement
 parents:
 - DG-JpDc=
-- 0dvOn3A=
 ---
 # Keep immutable spotlight metadata in a checkout-local store
 

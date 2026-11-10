@@ -4,10 +4,10 @@ type: requirement
 parents:
 - DFS2oJM=
 ---
-# Align maintained product versions at 0.0.1
+# Give all maintained products one release version
 
-Use 0.0.1 for the Python project and runtime, private root npm workspace, shared
-UI workspace, specspec-vscode and specspec-desktop. Their local lockfile records
-and versioned distribution filenames agree. Source/UI builds remain private/local
-unless their own publication is authorized. Product release versions are separate
-from internal node/protocol fields and third-party dependency versions.
+The Python project and runtime, the private root npm workspace, the shared UI
+workspace, specspec-vscode and specspec-desktop share one release version, recorded
+consistently in lockfiles and distribution filenames. Source and UI builds stay local
+until their own publication is authorized. Release versions are independent of
+internal node/protocol fields and third-party dependency versions.

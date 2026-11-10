@@ -8,7 +8,7 @@ parents:
 
 The current node format requires a rooted, transitively reduced intention-conclusion DAG.
 Five-byte padded Base64url identities, node fields and source grammar retain their
-contracts. Application application protocol separates operation success from graph validity. Current-only readers diagnose
+contracts. The application protocol separates operation success from graph validity. Current-only readers diagnose
 other node versions explicitly. Maintained Gantt revisions and actual receipts use
 this same current contract throughout; existing manual clones retain experiments.
 

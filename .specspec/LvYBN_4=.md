@@ -2,22 +2,16 @@
 id: LvYBN_4=
 type: requirement
 parents:
-- apEb_pM=
 - WpYvGUo=
+- PL1IogE=
 ---
 # Share one Python domain library and versioned JSON CLI
 
-Use a reusable Python backend for schema validation, DAG rules, Markdown planning,
-workspace transactions, Git snapshots and source-region operations. Host adapters
-invoke it using shell-free argument arrays and bounded UTF-8 stdin/output.
+A reusable Python backend owns schema validation, DAG rules, Markdown planning,
+workspace transactions, Git snapshots and source-region operations. Hosts start its
+CLI with shell-free argument arrays and bounded UTF-8 stdin and output, from a
+neutral working directory with Python's safe import path, so project files stay data.
 
-application protocol responses contain `api_version`, `ok`, `result` and structured diagnostics.
-Exit codes are 0 for success, 1 for validation/rejected actions and 2 for invocation
-or I/O failure. JSON stdout contains one machine-readable envelope. Ordinary body
-input uses literal -m/--message arguments. Absent messages select bounded UTF-8 stdin; updates replace an explicitly supplied parent list. Native
-editor operations return non-writing overlays/plans; host documents
-own their persistence. Managed project/Electron saves use the transaction writer.
-
-Canonical the installed node format is current. Compact structured presentation and shared host
-read operations follow the compact-interface conclusions; native planning and
-managed persistence retain their separate owners.
+The installed tools version the node format and the application protocol together.
+Native editor operations return non-writing plans that host documents persist;
+managed project and desktop saves use the transaction writer.

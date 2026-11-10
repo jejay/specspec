@@ -3,7 +3,6 @@ id: i7aT1lc=
 type: implementation
 parents:
 - qowy5AI=
-- evfMtUM=
 sources:
 - path: src/specspec/model.py
 - path: src/specspec/format.py

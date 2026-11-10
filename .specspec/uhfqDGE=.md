@@ -17,8 +17,8 @@ sources:
 journals original/replacement states, byte-checks targets and applies replacements.
 Null states physically delete files. `add_node` generates collision-checked IDs
 inside the lock; `update_node` preserves identity with explicit field changes.
-`delete_nodes` executes the reviewed exact selected-file plan. Initialization
-additionally publishes a packaged root guide only when absent; its separate
+`delete_nodes` executes the reviewed exact selected-file plan. Initialization also creates the packaged root guide, or appends it after an existing
+AGENTS.md; its separate
 initialization explanation supplies ownership and recovery details.
 
 `recover` restores only known original/replacement/absence states, retaining

@@ -27,6 +27,7 @@ hints, independent of canonical node schema and mutation protection.
 
 Local spotlight format 2 has one metadata file per shot, bounded count and metadata
 size, protected malformed records, atomic publication and reviewed explicit flush.
-Older local records remain untouched with an actionable flush diagnostic. Explicit
+Records in an unsupported storage format stay in place with an actionable flush
+diagnostic. Explicit
 flush also clears obsolete retained blob files. The current canonical schema and
 maintained example history remain unchanged.

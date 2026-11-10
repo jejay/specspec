@@ -2,9 +2,8 @@
 id: jsIUeP0=
 type: requirement
 parents:
-- v6xn2GU=
-- Yfy0414=
 - qowy5AI=
+- v6xn2GU=
 ---
 # Anchor source snapshots and derive target locations
 

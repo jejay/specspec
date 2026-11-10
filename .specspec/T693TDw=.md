@@ -27,4 +27,4 @@ logical canonical text.
 Query diagnoses the selected graphs and reads code from those versions. Invalid
 components use finite deterministic cycle-safe presentation with complete bindings.
 --json uses reconstructible application protocol records for the selected scope; explicit
-subgraphs identify their population, boundary parents and induced edges. current node format and existing application operations retain their definitions.
+subgraphs identify their population, boundary parents and induced edges.

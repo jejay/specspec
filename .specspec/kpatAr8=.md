@@ -7,6 +7,6 @@ parents:
 ---
 # Protect Git-versioned graph consistency
 
-Keep canonical specifications under Git and offer an opt-in hook that checks the
-exact graph about to enter a commit. Integrate consistency checking with ordinary
+Keep canonical specifications under Git and let owners check the exact graph about
+to enter a commit from their own hooks and CI. Integrate consistency checking with ordinary
 Git development and CI. Users retain control of staging, commits and hook setup.

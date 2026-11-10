@@ -28,7 +28,7 @@ query.py/query_select.py supply complete selected bindings and optional ancestor
 completion through one pipeline. output.py renders readable node summaries and canonical
 file review patches with relationship and separate linked-source impact. Compact application protocol
 emits one UTF-8 envelope, small mutation receipts and reconstructible comparisons.
-node schema is managed internally. Byte budgets cover the actual chosen representation and required
+The installed tools manage the node schema. Byte budgets cover the actual chosen representation and required
 ancestors are never silently truncated. Terminal controls are rendered visibly.
 CLI/host regressions exercise protocol/exit boundaries, full hunk/EOL/comment changes,
 source operations, guarded deletion, parent replacement and hyphen-leading identities.

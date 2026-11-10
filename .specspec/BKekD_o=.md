@@ -3,8 +3,6 @@ id: BKekD_o=
 type: requirement
 parents:
 - rgGL5FY=
-- 7tMgRa8=
-- 0piRXe0=
 ---
 # Use literal message paragraphs or automatic standard input
 

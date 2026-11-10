@@ -12,5 +12,5 @@ host dialogs and bundled palette playground. Keep user/project text and structur
 validation evidence literal. Preserve actionable failure causes and safety checks.
 
 Reserve the graph's screen space for navigation, editing and actual color legends.
-Legends pair colors with short labels or scale endpoints. Put tutorials, conceptual
-contrasts, normalization explanations and interaction walkthroughs in documentation.
+Legends pair colors with short labels or scale endpoints. Put tutorials, normalization explanations and interaction walkthroughs in the
+editor guide.

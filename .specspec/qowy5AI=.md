@@ -18,7 +18,7 @@ reasoning under a missing parent identity. Validate casefold aliases for portabl
 filename safety. Random IDs are project references; branch-merge collision checking
 remains part of graph validation.
 
-Current current node format fields are: required `id`, `type`, unique `parents`; manifesto
+Node fields are: required `id`, `type`, unique `parents`; manifesto
 internal integer `format_version`; optional implementation `sources`; optional namespaced
 JSON-compatible `extensions`. Types are manifesto, requirement and implementation.
 Requirement parents are manifesto/requirement; implementation parents are requirements.

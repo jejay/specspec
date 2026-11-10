@@ -13,8 +13,7 @@ including hoisted/scoped/nested packages. Packaging retains project and upstream
 licenses and allowlists application runtime files; the portable runtime remains
 unpacked and directly inspectable.
 
-Electron uses patched 44.9.3; overrides select undici 7.30.1 and build-tool MSAL
-7.1.1. The MSAL major override serves tested local VSIX creation; Azure login and
-Marketplace publication are outside this local release qualification. Those build
-dependencies enter neither shipped UI runtime. Report current audit findings as
-bounded observations and revisit the override with compatible upstream updates.
+The root manifest pins the Electron runtime and overrides selected transitive
+versions: undici, and the VSIX tool's MSAL dependency for local VSIX creation.
+Build dependencies stay out of both shipped UI runtimes. Audit findings are
+reported with their scope, and overrides follow compatible upstream releases.

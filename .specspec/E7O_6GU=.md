@@ -8,8 +8,9 @@ parents:
 # Paint one adjustable highlight ink inside unchanged card outlines
 
 One editable highlight set paints a solid equal-inset outline on selected node
-IDs available in the displayed target or deleted comparison base. The shared CSS
-variable --spotlight-color supplies one easily editable ink, initially white.
+IDs available in the displayed target or deleted comparison base. The shared CSS variable --spotlight-color supplies one easily editable ink: white
+on dark themes and a dark ink on light themes, each with at least 3:1 contrast
+against cards.
 Keep it independent of semantic fills and Git accents. Use width max(5, 3 / k)
 world units at camera scale k and its negative as outline offset, preserving at
 least 3 CSS screen pixels. Follow type shape and unrelated-card darkening, with an

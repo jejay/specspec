@@ -2,7 +2,7 @@
 id: 79zOr-w=
 type: requirement
 parents:
-- ezHjLDs=
+- _wJJQko=
 ---
 # Discover canonical nodes and reserve .specspec/local for runtime state
 
@@ -16,5 +16,4 @@ Backend discovery, raw/editor paths, Git snapshots, source roots, spotlights and
 both hosts use this layout. The nearest canonical entry wins even if invalid.
 Working self-documentation and every maintained Gantt revision/ref, earlier/deleted
 node, actual receipt, ledger and bundle use the current contract. Existing local
-experiments and unrelated development history remain preserved. The storage move
-changes no node fields or application envelope grammar.
+experiments and unrelated development history remain preserved.

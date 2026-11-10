@@ -2,12 +2,11 @@
 id: MmfPuhY=
 type: requirement
 parents:
-- aILBxDs=
-- DFS2oJM=
+- qTT_OhY=
 ---
 # Distinguish logical node records from physical document evidence
 
-application protocol parsed records carry complete logical bodies with newline encodings normalized
+Application protocol records carry complete logical bodies with newline encodings normalized
 to LF, sorted parent/source fields and unchanged identities. Readable projections
 and logical diffs use the same content. Spaces, indentation, blank lines and final
 newline presence stay meaningful. Physical newline encoding alone is equivalent.

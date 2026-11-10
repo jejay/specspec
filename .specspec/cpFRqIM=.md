@@ -2,14 +2,16 @@
 id: cpFRqIM=
 type: requirement
 parents:
-- 0dvOn3A=
-- 5d5oDCM=
+- LvYBN_4=
 ---
-# Use compact reconstructible application protocol data with current node format
+# Use compact reconstructible application protocol data
 
-The shared application protocol stays internal; canonical Markdown remains current node format with the same IDs, fields and source grammar. Negotiate/reject protocol
-versions explicitly and update host adapters together. Emit one compact UTF-8 JSON
-envelope with api_version, ok, result and diagnostics. Keep descriptive field names,
+The shared application protocol stays internal; canonical Markdown keeps its node
+format, IDs, fields and source grammar. Negotiate/reject protocol
+versions explicitly and update host adapters together. Emit one compact UTF-8 JSON envelope with api_version, ok, result and diagnostics.
+Exit code 0 reports a delivered operation or read, 1 a failed check or rejected
+request, and 2 an invocation or I/O failure; an edit that leaves the graph invalid
+still succeeds. Keep descriptive field names,
 structured diagnostics and explicit successful-plan versus valid-graph meaning.
 
 Return purpose-shaped records: mutation receipts contain changed ID/path and affected
@@ -29,5 +31,4 @@ shared host adapter; avoid duplicating targets inside an outer loaded snapshot.
 HEAD is resolved freshly. Staged deletion leaves HEAD membership and D ghosts intact;
 commit removes that membership on reread. Missing comparisons stay explicitly
 unavailable. Verified hints remain derived and bounded; no transport payload becomes
-canonical tombstones, node fingerprints or write consent. There are no separate slim,
-full, UI or LLM JSON dialect switches.
+canonical tombstones, node fingerprints or write consent. One JSON dialect serves every caller.

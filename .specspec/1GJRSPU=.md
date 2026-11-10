@@ -35,4 +35,4 @@ Count OLD and NEW UTF-8 bytes together with other body input against the 16 MiB
 authoring budget; each replacement value and resulting canonical node retains the
 1 MiB bound. Operating-system argument limits remain independent. OLD/NEW remain
 explicit argument text. The same replacement option provides its complete default
-matching behavior. API and node format remain 7.
+matching behavior.

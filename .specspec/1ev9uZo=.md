@@ -20,8 +20,8 @@ suggestions, the specification spectrum on a small planning example with an actu
 node file, a replaced choice beneath its unchanged intention, the second spectrum of
 direction and delegation, and the owner/agent working phases. Concise CLI install and
 everyday commands, editor build commands, the Gantt example, a candid status section
-and links to installation, agent-process, CLI, query, canvas, structure, release and
-brand guides follow. The repository map belongs to the contribution guide.
+and links to the agent guide, the editor guide, contributor notes and release notes
+follow. The repository map belongs to the contribution guide.
 
 Release copy describes local-first Markdown/Git ownership, independent source
 explanations, early maturity and current host/runtime boundaries without implying

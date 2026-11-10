@@ -3,16 +3,13 @@ id: ezHjLDs=
 type: requirement
 parents:
 - qowy5AI=
-- 7tMgRa8=
-- GQdmCrA=
-- YaXJpGE=
 ---
 # Use exact ID-only paths across creation, editors and maintained history
 
 Canonical current node format requires each direct Markdown filename to equal its full
 frontmatter ID followed by .md: .specspec/<id>.md, ending in =.md. The validator
 checks exact case and spelling. Existing IDs, bodies, parent links and source
-reference grammar keep their contracts. application protocol envelopes retain their structure.
+reference grammar keep their contracts.
 Current-only readers diagnose other versions and noncanonical paths explicitly.
 
 Init, add and the library generate their paths solely from the random full ID.
@@ -23,8 +20,8 @@ Body and heading changes retain the same path. Revision node changes are
 additions, modifications and removals, with paths derived from identity. ID-leading hyphens and portable
 casefold collision checks keep their existing protections.
 
-Cut over the working self-graph and tracked example together, preserving IDs and
-binding bytes through path changes. Refresh local documentation links, diagrams,
+The working self-graph and the tracked example use the same paths, with stable IDs
+and binding bytes. Refresh local documentation links, diagrams,
 agent planning recipes and editor examples. Reconstruct every maintained Gantt
 revision/ref, including earlier/deleted files, through actual current CLI calls;
 refresh source anchors, receipts, ledgers, bundle and snapshot together. Validate

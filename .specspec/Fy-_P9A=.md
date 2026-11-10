@@ -21,7 +21,7 @@ sources:
 # Implement message and automatic-stdin authoring through the shared writer
 
 The CLI shares bounded literal paragraph joining and automatic UTF-8 stdin input
-across init/add/update. It rejects obsolete body options. Body-mode selection happens
+across init/add/update. Body-mode selection happens
 after complete grammar/field preflight; replacements do not read stdin, empty metadata
 updates retain their body, and a nonempty stream cannot target multiple steps.
 
