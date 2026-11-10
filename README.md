@@ -10,7 +10,7 @@ editor or the terminal, and your coding agent uses the same CLI.
 
 The name is short for *specification spectrum*.
 
-## Why
+## The problem: your intent and the agent's suggestions merge into one plan
 
 When you build with a coding agent, much of the specification gets written in
 conversation. You describe a goal, the agent proposes a way to reach it, you agree,
@@ -20,14 +20,21 @@ they were the first idea that worked, and the plan reads the same either way.
 
 That matters once you want to try something else. With an agent, rebuilding the data
 model or the UI takes minutes. The hard part is knowing what the old one was for, so
-that the new one keeps it. specspec keeps that knowledge in the repository, next to
-the code.
+that the new one keeps it.
 
-## The specification spectrum
+It also decides how closely you can follow the work. A plan that mixes goals with
+details has no good place to stop reading: you go through all of it or you take it on
+trust. Most projects need something in between, close attention to a few parts and a
+rough idea of the rest.
+
+specspec keeps the plan in the repository as a graph, next to the code, ordered from
+what you want to how it gets done.
+
+## The specification is a graph from intention to conclusion
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-dark.svg">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-light.svg" alt="A specspec graph for a planning app. The manifesto, Help a small team agree on a plan, leads to two intentions, three choices that serve them and three implementation nodes that point to source lines. A color band underneath runs from intention to conclusion.">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-light.svg" alt="A specspec graph for a planning app in five levels. The manifesto, Help a small team agree on a plan, leads to two intentions and three choices that serve them. Two choices lead straight to implementation nodes that point to source lines; the third is refined by two more requirements first. A color band underneath runs from intention to conclusion.">
 </picture>
 
 Every node is a short Markdown file in `.specspec/`. The root is the *manifesto*: what
@@ -38,7 +45,7 @@ the code realizes a requirement and link to the files and line ranges involved.
 Near the manifesto, nodes are mostly intention: what you want and why. Further out,
 they are mostly conclusion: how it gets done. A node's place on that spectrum follows
 from its position in the graph. A requirement is a conclusion for its parents and an
-intention for its children.
+intention for its children. Branches go as deep as they need to.
 
 One choice can serve several intentions, which makes the graph a directed acyclic graph
 rather than a tree. In the file, that is simply a second parent:
@@ -56,35 +63,51 @@ parents:
 Compare the plan with the previous commit and mark changed dates.
 ```
 
-Giving each intention and each choice its own node is what keeps solutions revisable.
-"Show tasks on a weekday timeline" is one way to make timing easy to read. If a list of
-milestones works better, you replace that branch. The intention above it stays, and the
-new choice is written to serve it.
+## You choose how deep you go in each part of the graph
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-dark.svg">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-light.svg" alt="Replacing a conclusion. The intention Make timing easy to read is unchanged. The weekday timeline and its implementation are marked D for deleted and kept in Git history; a milestone list and its implementation are marked A for added.">
-</picture>
-
-## The other spectrum
-
-The tagline, *Engineering is on the spectrum now*, refers to a second range: from
-hands-on engineering, where you make every decision yourself, to vibe coding, where the
-agent makes them for you. Most projects need both, in different places, and specspec
-lets you choose per branch.
+The graph runs from intention to conclusion, so every depth is a place where you can
+stop. You can write only the manifesto and let the agent draw everything below it. You
+can pin one branch down choice by choice, as far as the code. Reading works the same
+way: skim the top two levels of what the agent drew, or follow one branch node by node
+until you understand every decision in it. Past the point where you stop, the agent
+concludes on its own and records its conclusions as nodes like any other.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-dark.svg">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-light.svg" alt="The same planning graph with a shaded area for your decisions. You decided the timeline down to the code, chose to highlight moved dates, and stated only the goal for proposing changes. The remaining nodes were concluded by the agent.">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-light.svg" alt="The same planning graph with two shaded areas. The darker one marks where you started: the manifesto and the two intentions. The lighter one marks where you went deeper since: the timeline down to its code, and the choice to highlight moved dates. The rest, including the whole branch about proposing changes, is left to the agent.">
 </picture>
 
-In this example you designed the timeline yourself, down to the code. You asked for
-moved dates to be highlighted and left the implementation to the agent. For proposing
-changes, you stated only the goal, and the agent chose a JSON file in the repository
-and wrote its validation. The agent's conclusions are nodes like any other: you can
-read them now and keep or replace them later.
+In this example you started with the goal and the two things the team wants, and the
+agent drew the rest. Later the timeline turned out to matter, so you took that branch
+over, down to the code, and decided yourself that moved dates get highlighted. How
+proposals work is still the agent's part: a JSON file in the repository, pull requests
+and a schema check. You have never read that branch closely, and it is there whenever
+you want to.
 
-## Working with an agent
+The tagline, *Engineering is on the spectrum now*, refers to this range. At one end is
+hands-on engineering, where you make every decision yourself. At the other is vibe
+coding, where the agent makes them for you. With specspec you pick a point on it for
+each part of a project and move it as the project goes on: go deep where something
+surprised you, and step back where things have settled.
+
+The tools read at the depth you ask for. `specspec query --max-distance 2` prints the
+top two levels, `specspec query ID` prints one branch down to the code, and the graph
+editor can color nodes by their distance from the manifesto. The shaded areas in the
+figure are yours alone; the graph holds the nodes on both sides of them.
+
+## Replacing a choice keeps the intention it served
+
+Each intention and each choice has its own node, and that keeps solutions revisable.
+"Show tasks on a weekday timeline" is one way to make timing easy to read. If a list of
+milestones works better, you replace that branch. The intention above it stays, the new
+choice is written to serve it, and the choice next to it is untouched.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-dark.svg">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-light.svg" alt="Replacing a conclusion. The intention Make timing easy to read is unchanged. The weekday timeline and its implementation are marked D for deleted and kept in Git history; a milestone list and its implementation are marked A for added. A second choice under the same intention, highlighting what moved, stays as it is.">
+</picture>
+
+## How you and your agent work on the graph
 
 specspec works with the coding agent you already use, as long as it can run shell
 commands. `specspec init` writes an `AGENTS.md` that explains the graph and this
@@ -98,9 +121,10 @@ workflow to it:
    `delete`, building on any edits you made yourself. It completes the depth that
    building needs, fills gaps you evidently left to it and reports its choices and open
    questions. Your edits and its changes go into two separate commits.
-3. You review. The graph editor marks nodes added, changed or deleted since the last
-   commit, and `specspec diff` shows the full text. Edit any node directly, or select
-   a few nodes and leave the agent a message about them (a *spotlight*).
+3. You review as much of it as you want. The graph editor marks nodes added, changed
+   or deleted since the last commit, and `specspec diff` shows the full text. Edit any
+   node directly, or select a few nodes and leave the agent a message about them (a
+   *spotlight*).
 4. The agent implements, after planning whatever the graph does not cover yet. Before
    it changes code, it reads the node and every ancestor that justifies it. It keeps
    graph and code in sync: further choices become conclusions, and implementation nodes
@@ -116,7 +140,7 @@ you. Look hard where uncertainty and impact are high, and decide when the graph 
 enough to be worth an implementation attempt. Each attempt is evidence for the next
 revision. The [agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md) is the file `init` adds.
 
-## Try it
+## Install the CLI and create a graph
 
 The CLI needs Python 3.11+ and Git. Install it from
 [PyPI](https://pypi.org/project/specspec/):
@@ -149,7 +173,7 @@ Every command has `--help` with examples. If `specspec` isn't found, run
 `uv tool update-shell` (or `pipx ensurepath`) and open a new terminal; upgrade with
 `uv tool upgrade specspec`.
 
-### Graph editors
+### Build the graph editors
 
 The VS Code extension and the desktop app draw the graph on a zoomable canvas, open
 each node in an editor and compare any two revisions. For now you build them from this
@@ -169,7 +193,7 @@ on Windows and Linux; on macOS, use VS Code. The
 [editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md) covers the canvas, reviewing changes,
 spotlights and settings.
 
-## A planner that changed its mind
+## Example: a planning app that changed direction twice
 
 [`example/gantt`](https://github.com/jejay/specspec/blob/main/example/gantt/README.md)
 is a small planning app built with specspec, with its own Git history. It changed
@@ -185,7 +209,7 @@ python example/gantt/history/checkout.py    # clones it to ~/Projects/specspec-e
 Open the clone in either editor and compare `stage/01-code` with `stage/02-spec`, or
 run `specspec diff stage/01-code stage/02-spec` inside it.
 
-## Status
+## Status and limits
 
 specspec 0.0.1 is the first public release. The CLI is on PyPI; the editors are built
 locally. Expect rough edges and changing commands.
@@ -202,7 +226,7 @@ specspec is developed with specspec. Its own graph is in
 [`.specspec/`](https://github.com/jejay/specspec/tree/main/.specspec), and
 [CONTRIBUTING](https://github.com/jejay/specspec/blob/main/CONTRIBUTING.md) explains how to work on it.
 
-## More
+## Guides
 
 - [Agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md): the routine and rules your agent follows
 - [Editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md): the VS Code extension and the desktop app

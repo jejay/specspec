@@ -25,9 +25,9 @@ four test files, which take seconds:
 python -m pytest tests/test_repository_docs.py tests/test_repository_spec.py tests/test_initialization.py tests/test_release_workflow.py
 ```
 
-The complete `python -m pytest` takes about ten minutes. Run it only when Python code
-changed; for a change confined to one test file, run that file. `npm test` is for UI
-code, and the Gantt graph check and history verifier are for `example/gantt`.
+The complete `python -m pytest` takes about ten minutes. Run it only when code under
+`src/` changed; for another Python file, run the test files that use it. `npm test` is
+for UI code, and the Gantt graph check and history verifier are for `example/gantt`.
 
 Before an authorized commit, stage the complete intended slice and run both graph
 checks with `--staged` added, against that exact index.

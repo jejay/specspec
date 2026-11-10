@@ -21,7 +21,7 @@ applies GPOS pair kerning and balanced title wrapping, and emits compact relativ
 data on a 0.1 px grid; DejaVu Sans Mono outlines file references. It writes
 docs/images/{spectrum,revise,direct}-{light,dark}.svg with identical geometry per
 theme and repeatable bytes. The default Manrope path is the sibling brand kit; options
-select other font files. README.md embeds each pair. When fontTools and the fonts are available, a
+select other font files. README.md embeds each pair. The shared planning graph has five levels with branches of different depth. The direct figure shades the area where the owner started and the area they went into since in two neutral tones, and the revise figure keeps a sibling choice beside the replaced one. When fontTools and the fonts are available, a
 repository test regenerates the figures and compares them byte for byte.
 
 The repository documentation test checks every figure as an accessible SVG image with

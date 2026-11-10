@@ -43,7 +43,8 @@ THEMES = {
         faint="#8A95A5",
         node="#FFFFFF",
         line="#C3CCD7",
-        shade="#E2E7EE",
+        shade="#E6EAF0",
+        deep="#D6DCE6",
         shade_line="#AEB8C5",
         stops=[
             (0, "#8C4FC2"),
@@ -61,9 +62,10 @@ THEMES = {
         ink="#ECF1FA",
         muted="#B8C4D4",
         faint="#7D8A9C",
-        node="#263142",
+        node="#2A3649",
         line="#465568",
-        shade="#1F2836",
+        shade="#1C2532",
+        deep="#232E3E",
         shade_line="#5A6A80",
         stops=[
             (0, "#AE89E2"),
@@ -320,10 +322,11 @@ class Canvas:
         )
 
 
-TITLE = 16
-LEADING = 20.5
-LABEL = 12
-PAD = 16
+TITLE = 14.5
+LEADING = 18.5
+LABEL = 11.5
+MONO = 11
+PAD = 14
 
 
 @dataclass
@@ -348,9 +351,9 @@ class Node:
 
 def fit(c: Canvas, node: Node) -> Node:
     if node.kind != "manifesto":
-        reserve = 26 if node.badge else 0
+        reserve = 24 if node.badge else 0
         node.rows = c.wrap(node.title, node.size, node.w - 2 * PAD - reserve)
-        node.h = 63 + (len(node.rows) - 1) * LEADING
+        node.h = 57 + (len(node.rows) - 1) * LEADING
     return node
 
 
@@ -360,52 +363,52 @@ def draw(c: Canvas, node: Node) -> None:
     muted = t["faint"] if node.ghost else t["muted"]
     if node.kind == "manifesto":
         c.add(
-            f'<circle cx="{num(node.x)}" cy="{num(node.y)}" r="{num(node.r - 3)}" '
-            f'fill="{t["node"]}" stroke="{c.spectrum_at(node.x - node.r)}" stroke-width="6"/>'
+            f'<circle cx="{num(node.x)}" cy="{num(node.y)}" r="{num(node.r - 2.5)}" '
+            f'fill="{t["node"]}" stroke="{c.spectrum_at(node.x - node.r)}" stroke-width="5"/>'
         )
         leading = node.size * 1.3
         rows = c.wrap(node.title, node.size, node.r * 1.62)
         top = node.y - (len(rows) - 1) * leading / 2 - 4
         for index, row in enumerate(rows):
             c.text(row, node.x, top + index * leading, node.size, ink, "title", "middle")
-        below = top + (len(rows) - 1) * leading + 23
+        below = top + (len(rows) - 1) * leading + 21
         c.text("manifesto", node.x, below, LABEL, muted, "body", "middle")
         return
     stroke = t["line"] if node.ghost else c.spectrum_at(node.x + node.w / 2)
     dash = ' stroke-dasharray="6 5"' if node.ghost else ""
     c.add(
         f'<rect x="{num(node.x)}" y="{num(node.top)}" width="{num(node.w)}" '
-        f'height="{num(node.h)}" rx="{14 if node.kind == "requirement" else 0}" '
+        f'height="{num(node.h)}" rx="{12 if node.kind == "requirement" else 0}" '
         f'fill="{t["bg"] if node.ghost else t["node"]}" stroke="{stroke}" '
         f'stroke-width="1.6"{dash}/>'
     )
-    baseline = node.top + 27
+    baseline = node.top + 24.5
     for index, row in enumerate(node.rows):
         c.text(row, node.x + PAD, baseline + index * LEADING, node.size, ink, "title")
-    below = baseline + (len(node.rows) - 1) * LEADING + 8
+    below = baseline + (len(node.rows) - 1) * LEADING + 7
     if node.source:
-        c.text(node.source, node.x + PAD, below + 13.5, 12, muted, "mono")
+        c.text(node.source, node.x + PAD, below + 12.5, MONO, muted, "mono")
     else:
-        c.text(node.kind, node.x + PAD, below + 12.5, LABEL, muted)
+        c.text(node.kind, node.x + PAD, below + 11.5, LABEL, muted)
     if node.badge:
         color = t["added"] if node.badge == "A" else t["deleted"]
-        bx, by = node.x + node.w - 18, node.top + 18
+        bx, by = node.x + node.w - 16, node.top + 16
         c.add(
-            f'<circle cx="{num(bx)}" cy="{num(by)}" r="9.5" fill="none" '
-            f'stroke="{color}" stroke-width="1.7"/>'
+            f'<circle cx="{num(bx)}" cy="{num(by)}" r="8.5" fill="none" '
+            f'stroke="{color}" stroke-width="1.6"/>'
         )
-        c.text(node.badge, bx, by + 4.3, 12, color, "bold", "middle")
+        c.text(node.badge, bx, by + 3.9, 11, color, "bold", "middle")
 
 
 def link(c: Canvas, a: Node, b: Node, ghost: bool = False) -> None:
     t = c.theme
-    tx, ty = (b.x - b.r if b.kind == "manifesto" else b.x) - 8, b.y
+    tx, ty = (b.x - b.r if b.kind == "manifesto" else b.x) - 7, b.y
     if a.kind == "manifesto":
         angle = max(-0.8, min(0.8, math.atan2(ty - a.y, tx - a.x)))
         sx, sy = a.x + a.r * math.cos(angle), a.y + a.r * math.sin(angle)
     else:
         sx, sy = a.x + a.w, a.y
-    dx = max(16.0, (tx - sx) * 0.55)
+    dx = max(13.0, (tx - sx) * 0.55)
     curve = (
         f"M{num(sx)} {num(sy)}C{num(sx + dx)} {num(sy)} {num(tx - dx)} {num(ty)} "
         f"{num(tx)} {num(ty)}"
@@ -413,11 +416,11 @@ def link(c: Canvas, a: Node, b: Node, ghost: bool = False) -> None:
     dash = ' stroke-dasharray="6 5"' if ghost else ""
     c.add(
         f'<path d="{curve}" fill="none" stroke="{t["line"] if ghost else "url(#spectrum)"}" '
-        f'stroke-width="2.4" stroke-linecap="round"{dash}/>'
+        f'stroke-width="2.2" stroke-linecap="round"{dash}/>'
     )
     c.add(
-        f'<path d="M{num(tx - 1)} {num(ty - 5.5)}L{num(tx + 8)} {num(ty)}'
-        f'L{num(tx - 1)} {num(ty + 5.5)}Z" '
+        f'<path d="M{num(tx - 1)} {num(ty - 5)}L{num(tx + 7)} {num(ty)}'
+        f'L{num(tx - 1)} {num(ty + 5)}Z" '
         f'fill="{t["line"] if ghost else c.spectrum_at(tx)}"/>'
     )
 
@@ -438,26 +441,46 @@ def rounded_polygon(points: list[tuple[float, float]], radius: float) -> str:
 
 # the example planning graph ----------------------------------------------------
 
-COLUMNS = dict(manifesto=(114, 84), intention=(240, 204), choice=(490, 222), code=(758, 176))
-ROWS = (78, 209, 340)
+# Five levels: manifesto, what the team wants, choices, deeper choices or code, code.
+COLUMNS = dict(
+    manifesto=(104, 72),
+    intention=(208, 152),
+    choice=(394, 160),
+    detail=(588, 160),
+    code=(782, 152),
+)
+ROWS = (64, 176, 280, 382)
 
 
 def planner(c: Canvas):
     mx, mr = COLUMNS["manifesto"]
     ix, iw = COLUMNS["intention"]
     cx, cw = COLUMNS["choice"]
+    dx, dw = COLUMNS["detail"]
     xx, xw = COLUMNS["code"]
-    r1, r2, r3 = ROWS
-    root = Node("manifesto", "Help a small team agree on a plan", mx, (r1 + r3) / 2, r=mr, size=15)
+    r1, r2, r3, r4 = ROWS
+    low = (r3 + r4) / 2
+    timing_y, share_y = (r1 + r2) / 2, (r2 + low) / 2
+    root = Node(
+        "manifesto",
+        "Help a small team agree on a plan",
+        mx,
+        (timing_y + share_y) / 2,
+        r=mr,
+        size=13.5,
+    )
     n = {
-        "timing": Node("requirement", "Make timing easy to read", ix, (r1 + r2) / 2 - 3, iw),
-        "share": Node("requirement", "Let anyone propose changes", ix, (r2 + r3) / 2 + 3, iw),
+        "timing": Node("requirement", "Make timing easy to read", ix, timing_y, iw),
+        "share": Node("requirement", "Let anyone propose changes", ix, share_y, iw),
         "timeline": Node("requirement", "Show tasks on a weekday timeline", cx, r1, cw),
         "moved": Node("requirement", "Highlight what moved since the last version", cx, r2, cw),
-        "json": Node("requirement", "Keep the plan as a JSON file in the repository", cx, r3, cw),
-        "draw": Node("implementation", "Draw the timeline", xx, r1, xw, "timeline.ts:12-80"),
-        "mark": Node("implementation", "Mark moved dates", xx, r2, xw, "changes.ts:5-41"),
-        "check": Node("implementation", "Validate plan files", xx, r3, xw, "plan.schema.json"),
+        "json": Node("requirement", "Keep the plan as a JSON file in the repository", cx, low, cw),
+        "draw": Node("implementation", "Draw the timeline", dx, r1, dw, "timeline.ts:12-80"),
+        "mark": Node("implementation", "Mark moved dates", dx, r2, dw, "changes.ts:5-41"),
+        "pulls": Node("requirement", "Propose changes as pull requests", dx, r3, dw),
+        "schema": Node("requirement", "Check every change against a schema", dx, r4, dw),
+        "ci": Node("implementation", "Check proposals", xx, r3, xw, "ci.yml:8-21"),
+        "check": Node("implementation", "Validate plan files", xx, r4, xw, "plan.schema.json"),
     }
     for node in n.values():
         fit(c, node)
@@ -470,7 +493,10 @@ def planner(c: Canvas):
         (n["share"], n["json"]),
         (n["timeline"], n["draw"]),
         (n["moved"], n["mark"]),
-        (n["json"], n["check"]),
+        (n["json"], n["pulls"]),
+        (n["json"], n["schema"]),
+        (n["pulls"], n["ci"]),
+        (n["schema"], n["check"]),
     ]
     return root, n, links
 
@@ -489,46 +515,119 @@ def draw_planner(c: Canvas, root, nodes, links) -> None:
 def spectrum(theme: dict, fonts: dict) -> str:
     c = Canvas(
         960,
-        472,
+        512,
         theme,
         fonts=fonts,
         title="The specification spectrum",
-        desc="A specspec graph for a small planning app. A circular manifesto states the goal: "
-        "help a small team agree on a plan. Two requirements state what the team wants: make "
-        "timing easy to read, and let anyone propose changes. Three requirements to their "
-        "right are choices that serve them; the middle one, highlight what moved since the "
-        "last version, serves both. Three square implementation nodes explain the code and "
-        "link to source lines. A color band underneath runs from intention on the left to "
-        "conclusion on the right.",
+        desc="A specspec graph for a small planning app, drawn from left to right in five "
+        "levels. A circular manifesto states the goal: help a small team agree on a plan. Two "
+        "requirements state what the team wants: make timing easy to read, and let anyone "
+        "propose changes. Three requirements to their right are choices that serve them; the "
+        "middle one, highlight what moved since the last version, serves both. Two of the "
+        "choices lead straight to square implementation nodes that link to source lines. The "
+        "third, keep the plan as a JSON file in the repository, is refined by two more "
+        "requirements before its implementation nodes. A color band underneath runs from "
+        "intention on the left to conclusion on the right.",
     )
     draw_planner(c, *planner(c))
-    y = 416
+    y = 458
     c.add(f'<rect x="32" y="{y}" width="902" height="6" rx="3" fill="url(#spectrum)"/>')
-    w = c.text("intention", 32, y + 34, 15, theme["ink"], "title")
-    c.text("what you want and why", 32 + w + 9, y + 34, 15, theme["muted"])
-    tail = c.text("how it gets done", 934, y + 34, 15, theme["muted"], anchor="end")
-    c.text("conclusion", 934 - tail - 9, y + 34, 15, theme["ink"], "title", "end")
+    w = c.text("intention", 32, y + 32, 14.5, theme["ink"], "title")
+    c.text("what you want and why", 32 + w + 9, y + 32, 14.5, theme["muted"])
+    tail = c.text("how it gets done", 934, y + 32, 14.5, theme["muted"], anchor="end")
+    c.text("conclusion", 934 - tail - 9, y + 32, 14.5, theme["ink"], "title", "end")
+    return c.svg()
+
+
+def direct(theme: dict, fonts: dict) -> str:
+    c = Canvas(
+        960,
+        498,
+        theme,
+        fonts=fonts,
+        title="How deep you go in each part of the graph",
+        desc="The same planning graph with two shaded areas. The darker area is where the "
+        "owner started: the manifesto and the two things the team wants. The lighter area is "
+        "where the owner went deeper since: the weekday timeline down to its code, and the "
+        "choice to highlight what moved. Everything else is left to the agent: the code that "
+        "marks moved dates, and the whole branch below let anyone propose changes, with its "
+        "JSON file, pull requests, schema check and code.",
+    )
+    root, nodes, links = planner(c)
+    ix, iw = COLUMNS["intention"]
+    cx, cw = COLUMNS["choice"]
+    dx, dw = COLUMNS["detail"]
+    xx, _ = COLUMNS["code"]
+    after_intention = (ix + iw + cx) / 2
+    after_choice = (cx + cw + dx) / 2
+    after_detail = (dx + dw + xx) / 2
+    timing, share = nodes["timing"], nodes["share"]
+    top, bottom = timing.top - 24, share.top + share.h + 24
+    roof = nodes["timeline"].top - 14
+    below_timeline = (nodes["timeline"].top + nodes["timeline"].h + nodes["moved"].top) / 2
+    below_moved = (nodes["moved"].top + nodes["moved"].h + nodes["json"].top) / 2
+    start = [(16, top), (after_intention, top), (after_intention, bottom), (16, bottom)]
+    later = [
+        (16, top),
+        (after_intention, top),
+        (after_intention, roof),
+        (after_detail, roof),
+        (after_detail, below_timeline),
+        (after_choice, below_timeline),
+        (after_choice, below_moved),
+        (after_intention, below_moved),
+        (after_intention, bottom),
+        (16, bottom),
+    ]
+    c.add(
+        f'<path d="{rounded_polygon(later, 14)}" fill="{theme["shade"]}" '
+        f'stroke="{theme["shade_line"]}" stroke-width="1.4" stroke-dasharray="7 6"/>'
+    )
+    c.add(f'<path d="{rounded_polygon(start, 14)}" fill="{theme["deep"]}"/>')
+    draw_planner(c, root, nodes, links)
+    y = 468
+    x = 34.0
+    for fill, dashed, label in (
+        (theme["deep"], False, "where you started"),
+        (theme["shade"], True, "where you went deeper since"),
+        (theme["bg"], False, "left to your agent"),
+    ):
+        dash = ' stroke-dasharray="4 3"' if dashed else ""
+        c.add(
+            f'<rect x="{num(x)}" y="{y - 12}" width="22" height="15" rx="5" fill="{fill}" '
+            f'stroke="{theme["shade_line"]}" stroke-width="1.2"{dash}/>'
+        )
+        x += 31 + c.text(label, x + 31, y, 13.5, theme["ink"], "title") + 30
     return c.svg()
 
 
 def revise(theme: dict, fonts: dict) -> str:
     c = Canvas(
         960,
-        330,
+        398,
         theme,
         fonts=fonts,
         title="Replacing a conclusion",
         desc="The intention make timing easy to read stays unchanged. Its earlier conclusion, "
         "show tasks on a weekday timeline, and the implementation node below it are drawn "
         "dashed and marked D for deleted. A new conclusion, list milestones by date, and its "
-        "implementation are marked A for added. Git keeps the deleted branch in its history.",
+        "implementation are marked A for added. A second conclusion of the same intention, "
+        "highlight what moved since the last version, and its implementation stay as they "
+        "are. Git keeps the deleted branch in its history.",
     )
-    root = Node("manifesto", "Help a small team agree on a plan", 96, 160, r=64, size=12.5)
-    timing = fit(c, Node("requirement", "Make timing easy to read", 214, 160, 202))
+    rows = (66, 170, 286)
+    root = Node("manifesto", "Help a small team agree on a plan", 104, rows[1], r=72, size=13.5)
+    timing = fit(c, Node("requirement", "Make timing easy to read", 228, rows[1], 172))
     old = fit(
         c,
         Node(
-            "requirement", "Show tasks on a weekday timeline", 474, 84, 220, ghost=True, badge="D"
+            "requirement",
+            "Show tasks on a weekday timeline",
+            468,
+            rows[0],
+            196,
+            ghost=True,
+            badge="D",
         ),
     )
     old_code = fit(
@@ -536,93 +635,49 @@ def revise(theme: dict, fonts: dict) -> str:
         Node(
             "implementation",
             "Draw the timeline",
-            752,
-            84,
-            182,
+            732,
+            rows[0],
+            196,
             "timeline.ts:12-80",
             ghost=True,
             badge="D",
         ),
     )
-    new = fit(c, Node("requirement", "List milestones by date", 474, 236, 220, badge="A"))
+    new = fit(c, Node("requirement", "List milestones by date", 468, rows[1], 196, badge="A"))
     new_code = fit(
         c,
         Node(
             "implementation",
             "Draw the milestone list",
-            752,
-            236,
-            182,
+            732,
+            rows[1],
+            196,
             "milestones.ts:3-36",
             badge="A",
         ),
+    )
+    moved = fit(
+        c, Node("requirement", "Highlight what moved since the last version", 468, rows[2], 196)
+    )
+    moved_code = fit(
+        c, Node("implementation", "Mark moved dates", 732, rows[2], 196, "changes.ts:5-41")
     )
     link(c, root, timing)
     link(c, timing, old, ghost=True)
     link(c, old, old_code, ghost=True)
     link(c, timing, new)
     link(c, new, new_code)
-    for node in (root, timing, old, old_code, new, new_code):
+    link(c, timing, moved)
+    link(c, moved, moved_code)
+    for node in (root, timing, old, old_code, new, new_code, moved, moved_code):
         draw(c, node)
-    centre = timing.x + timing.w / 2
-    c.text("unchanged", centre, timing.top + timing.h + 24, 12.5, theme["muted"], anchor="middle")
-    x, y = 474, 304
+    y = 368
+    x = 228.0
     x += c.text("D", x, y, 12.5, theme["deleted"], "bold") + 6
-    x += c.text("deleted, kept in Git history", x, y, 12.5, theme["muted"]) + 22
+    x += c.text("deleted, kept in Git history", x, y, 12.5, theme["muted"]) + 24
     x += c.text("A", x, y, 12.5, theme["added"], "bold") + 6
-    c.text("added", x, y, 12.5, theme["muted"])
-    return c.svg()
-
-
-def direct(theme: dict, fonts: dict) -> str:
-    c = Canvas(
-        960,
-        478,
-        theme,
-        fonts=fonts,
-        title="How far you direct",
-        desc="The same planning graph with a shaded area for the decisions the owner made. In "
-        "the top branch the owner decided down to the code. In the middle branch the owner "
-        "chose the approach and the agent wrote the code. In the bottom branch the owner "
-        "stated only the intention; the agent chose the JSON file and wrote the validation. "
-        "Everything outside the shaded area was concluded by the agent and can be reviewed "
-        "and replaced.",
-    )
-    root, nodes, links = planner(c)
-    ix, iw = COLUMNS["intention"]
-    cx, cw = COLUMNS["choice"]
-    xx, xw = COLUMNS["code"]
-    between_12 = (ROWS[0] + ROWS[1]) / 2 + 2
-    between_23 = (ROWS[1] + ROWS[2]) / 2 + 2
-    after_intention = (ix + iw + cx) / 2
-    after_choice = (cx + cw + xx) / 2
-    right = xx + xw + 14
-    area = [
-        (16, 18),
-        (right, 18),
-        (right, between_12),
-        (after_choice, between_12),
-        (after_choice, between_23),
-        (after_intention, between_23),
-        (after_intention, 404),
-        (16, 404),
-    ]
-    c.add(
-        f'<path d="{rounded_polygon(area, 14)}" fill="{theme["shade"]}" '
-        f'stroke="{theme["shade_line"]}" stroke-width="1.4" stroke-dasharray="7 6"/>'
-    )
-    draw_planner(c, root, nodes, links)
-    y = 448
-    c.add(
-        f'<rect x="34" y="{y - 13}" width="22" height="16" rx="5" fill="{theme["shade"]}" '
-        f'stroke="{theme["shade_line"]}" stroke-width="1.2" stroke-dasharray="4 3"/>'
-    )
-    x = 66 + c.text("you decided", 66, y, 14, theme["ink"], "title") + 28
-    c.add(
-        f'<rect x="{num(x)}" y="{y - 13}" width="22" height="16" rx="5" fill="{theme["bg"]}" '
-        f'stroke="{theme["shade_line"]}" stroke-width="1.2"/>'
-    )
-    c.text("your agent concluded", x + 32, y, 14, theme["ink"], "title")
+    x += c.text("added", x, y, 12.5, theme["muted"]) + 24
+    c.text("everything else stays as it is", x, y, 12.5, theme["muted"])
     return c.svg()
 
 
