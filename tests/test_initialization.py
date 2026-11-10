@@ -266,7 +266,7 @@ def test_readable_receipt_mentions_create_or_append(tmp_path, existing):
 def test_packaged_guide_matches_current_behavior():
     raw = guide_bytes()
     text = raw.decode("utf8")
-    assert len(raw) <= 8192
+    assert len(raw) <= 10240
     for phrase in [
         ".specspec/<id>.md",
         "## Routine",

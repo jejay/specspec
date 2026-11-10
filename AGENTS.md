@@ -54,7 +54,9 @@ Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`,
 
 Ask what should survive if an approach changes, and keep that outcome and each meaningful choice in separate nodes, so a solution can be replaced without erasing its outcome. Neither authorship nor specificity decides the split: an owner may require an exact technology, and an agent may articulate an intention. Split nodes when separate identities allow separate replacement, review or implementation mapping; merge fragments of one coherent decision. Keep the graph shortcut-free: when A reaches C through B, A links only B.
 
-Write node text in positive, present-tense language: what the product is or ought to be now. Git holds earlier versions and the reasons for change, so node text states the current target. To withdraw a node, delete its file and give the reason in the commit message. Requirements describe targets; implementation nodes describe what exists, including its limits. Nodes carry no approval or confidence status: review effort follows uncertainty and impact, and passing checks and tests are evidence rather than proof that the product meets its purpose.
+Node text describes the product as it is and as it ought to be, in positive, present-tense language. Git keeps the history: earlier versions of a node and the reasons for changing it belong in commits, not in the text. Avoid historic contrasting, both about what changed and about what stayed the same: each sentence should make sense to someone who never saw an earlier version. To withdraw a node, delete its file and give the reason in the commit message.
+
+Requirements state what the product ought to do; implementation nodes describe what actually exists, including its limits. Nodes carry no approval or confidence status: review effort follows uncertainty and impact, and passing checks and tests are evidence, not proof that the product meets its purpose.
 
 ## Phases
 

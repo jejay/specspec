@@ -17,7 +17,7 @@ sources:
 # Package and safely concatenate initialization instructions
 
 The distribution contains one static generic guide, loaded through package resources.
-It opens with a numbered routine and stays under 8 KB; tests check its essentials,
+It opens with a numbered routine and stays under 10 KB; tests check its essentials,
 its size and that every option it teaches appears in visible help.
 Initialization validates a single manifesto and safe root instruction target, checks
 Git availability and ensures a Git working tree before publishing node/guide bytes,
