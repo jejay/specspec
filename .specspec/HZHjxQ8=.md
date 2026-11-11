@@ -45,7 +45,7 @@ watcher recovery, native lifecycle and persisted reload/revision switching.
 
 Both adapters use the shared HEAD/ref watcher, with canonical text watched
 independently. Index stat-cache updates and Git-extension status notifications
-leave working presentation unchanged; explicit staged operations remain fresh.
+leave working presentation unchanged; explicit staged operations are fresh.
 
 Project-scoped bounded API channels reuse interpreter lifetime, with independent
 source previews, current per-request reads and guarded disposal/failure semantics.

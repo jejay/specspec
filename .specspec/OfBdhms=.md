@@ -44,7 +44,7 @@ inside the lock/collision/transaction boundary independently of body text.
 CLI init/add and the library take binding fields directly. Human dependent labels
 reuse Markdown headings. query.py prints full IDs in its complete parent headers.
 Git node comparisons classify additions, semantic modifications and removals;
-source-file rename tracking remains a separate source-resolution capability.
+source-file rename tracking is a separate source-resolution capability.
 
 The shared creation form, persisted drafts and guarded host messages contain body,
 type, parents and sources. VS Code's custom editor discovers ???????=.md resources;

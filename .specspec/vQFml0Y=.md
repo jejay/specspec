@@ -56,7 +56,7 @@ Text/context and bounded rename evidence aid relocation with explicit uncertaint
 index retention checks. Tree membership supplies Git retention. Shared forms show
 literal previews, original contents when mapping is unreliable, and capture into
 native/managed forms with normal save ownership. Historical sources are viewable.
-Source impact stays conservative per file. Identical source versions resolve before the pair-diff budget applies. Source lines
+Source impact is conservative per file. Identical source versions resolve before the pair-diff budget applies. Source lines
 end only at LF, CRLF or CR, like logical node text. SourceReader looks up referenced
 paths in chunks and loads a complete tree listing only for rename searches and
 retention checks; Git read failures become per-object unavailable results with

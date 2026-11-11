@@ -31,5 +31,5 @@ checks their full identity spelling as well as portable aliases.
 CLI ID arguments retain full identities, including hyphen-leading IDs. Cards/messages and the native-editor glob retain
 `=`. Tests cover fixed byte vectors/all final octets, padding/alphabet errors,
 collision timing, casefold aliases, filenames and CLI/editor identities.
-Schema errors have current-format diagnostics. Existing presentation is project/view
+Schema errors have format diagnostics. Existing presentation is project/view
 scoped, with identity changes requiring explicitly preserved/copied user input.

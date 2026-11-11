@@ -83,5 +83,4 @@ the recorded calls cost. `scorecard.py` prints about thirty behaviours in plain 
 The tool lies outside `src/` and the npm workspaces, so no artifact contains it.
 `tests/test_guide_quiz.py` checks that boundary, the ignore rule and the tool's logic,
 with scripted replies in place of model calls. CONTRIBUTING.md gives the procedure. The
-tool reaches models only through Claude Code. What a grader finds about wording stays a
-model's judgment, and the briefs and the answer key are this repository's own. Answers are kept under the name of their task or dilemma. `tasks.py` gives every answer a mark of its brief's wording, and the tool counts the answers whose mark fits the brief as it reads now; a reworded dilemma takes a new ID.
+tool reaches models only through Claude Code. What a grader finds about wording is a model's judgment, and the briefs and the answer key are this repository's own. Answers are kept under the name of their task or dilemma. `tasks.py` gives every answer a mark of its brief's wording, and the tool counts the answers whose mark fits the brief as it reads now; a reworded dilemma takes a new ID.

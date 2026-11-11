@@ -48,7 +48,7 @@ sources:
 retains removed base records/edges/text through staging. Ghost/history details
 are selectable read-only and working actions follow target membership. Clean focus
 returns to overview when commit removes its base record; dirty orphan forms remain
-copyable/unsavable. Metrics and per-view comparisons stay revision-local.
+copyable/unsavable. Metrics and per-view comparisons are revision-local.
 
 Shared `GitWatcher` observes private HEAD/index and shared packed/symbolic-ref
 directory ancestry, handling ordinary atomic replacements, new/unborn/detached refs

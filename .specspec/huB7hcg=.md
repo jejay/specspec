@@ -44,9 +44,9 @@ operation success. Recovery restores recognized bytes, including invalid origina
 Regression coverage includes shared/exclusive/deep descendants, overlapping explicit
 selections, unchanged survivor bytes/parents, staged/new/ignored/comment/mode/rename/
 unmerged warnings, cancellation, changed plans, byte races and recovery. Historical
-D context remains distinct from current missing endpoints through stage/commit.
+D context is distinct from current missing endpoints through stage/commit.
 Native dirty resources and linked code are protected. Shared host probes use the
-independent maintained current-schema Gantt history and exact fixture indexes.
+independent maintained Gantt history and exact fixture indexes.
 
 Git deletion regressions configure identities only in their disposable repositories.
 Commit fixtures run with global/system configuration excluded and inherited

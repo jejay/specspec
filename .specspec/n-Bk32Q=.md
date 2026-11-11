@@ -29,7 +29,7 @@ state for shared UI warnings. UI creation uses trusted native overlays without
 saving documents or managed drafts. Explicit flush also cleans obsolete local
 blob files; unsupported previous metadata gets an actionable diagnostic.
 
-Backend and current-schema Gantt regressions cover explicit commit/branch contexts,
+Backend and Gantt regressions cover explicit commit/branch contexts,
 added/deleted/unchanged selection, literal dirty-only checksums, native overlays,
 HEAD movement and drift, absence/unavailable refs, atomic rejection/publication,
 immutable messages, local exclusion, bounded metadata and reviewed flush races.

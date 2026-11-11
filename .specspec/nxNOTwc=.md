@@ -37,7 +37,7 @@ The workspace lock and bounded byte journal live inside .specspec/local. An abse
 guide is exclusively created; an existing regular file retains its exact byte prefix
 and receives the template after a separating paragraph. Changed targets reject
 publication and recovery. Initialization recovery permits AGENTS.md originals while
-ordinary edit journals remain direct-node-only. Direct nodes and the runtime subtree
+ordinary edit journals are direct-node-only. Direct nodes and the runtime subtree
 have separate inventories. Interrupted initialization can recover partial publication.
 
 Tests cover real Git setup and missing/failing Git, invalid bodies, empty/binary

@@ -41,4 +41,4 @@ permissions. Renderer tests cover retained form lifecycle. Complete installed
 Windows Electron and VS Code runs verify actual contenteditable typing, diff theme
 paint, draft/caret refresh, 80-column fit, resizable root geometry, managed saves,
 reloads and native dirty/save/undo/split/raw-edit/repair lifecycle. These runs use
-independent current-schema Gantt history and bounded native fixtures; other host platforms have their separate qualification boundary.
+independent Gantt history and bounded native fixtures; other host platforms have their separate qualification boundary.

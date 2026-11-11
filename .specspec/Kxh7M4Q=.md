@@ -44,19 +44,18 @@ logical canonical patch review; raw query owns exact physical documents.
 
 query_sources.py retains exact declaration multisets and cached shared readers.
 Known committed source blobs and anchors populate the per-invocation cache
-in batches; identical selected commits share a code reader. Workspace contents stay
-fresh and independent of the index. Shared batch admission charges accepted bytes,
+in batches; identical selected commits share a code reader. Workspace contents are fresh and independent of the index. Shared batch admission charges accepted bytes,
 keeping oversized-object failures separate from eligible blobs. Process-count and
 fixed-input equivalence tests protect this optimization; tools/benchmark_query.py
 records fresh-process timings, cProfile stages and Git process counts.
-Bytes, trusted logical text and coordinates remain separate raw JSON facts. A
+Bytes, trusted logical text and coordinates are separate raw JSON facts. A
 contract comparison uses strict/expanding/path-only semantics: reliable permitted
 relocation/outside edits, expanding internal edits and whole-file content edits
 stay quiet. Missing/strict-conflicting links and their restoration are known
 contract transitions; ambiguous/unavailable evidence stays uncertain. Binary or
 budget-limited whole-file contents do not invalidate an existing path-only link.
 One-line readable rows show the selected location, reference +/- and relevant
-broken/uncertain/restored hints. Complete metadata and diagnostics remain in JSON.
+broken/uncertain/restored hints. Complete metadata and diagnostics are in JSON.
 
 Tests combine independent literal unfolding and selected-parent overlay oracles,
 reparenting/full-union cycles, ghosts with shared parents, changed node types,
@@ -73,7 +72,7 @@ with " ¶ ", without truncating text or changing original bodies. The readable
 renderer spells out types and change hints, carries revisions/notes without a legend,
 and aligns root content at column zero. Golden and newline-run matrices cover
 paragraphs, headless text, Markdown markers, other whitespace, controls and deleted
-bodies. Complete logical bodies remain reconstructible in JSON with CRLF normalized to LF;
+bodies. Complete logical bodies are reconstructible in JSON with CRLF normalized to LF;
 raw query documents retain literal canonical layout and diff retains logical layout. The
 one-line projection is the ordinary reading behavior; --human retains logical body lines.
 
