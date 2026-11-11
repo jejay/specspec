@@ -4,18 +4,18 @@ the review must point at the node (by ID or unmistakable description) and name e
 this problem. A different complaint about the same node does not count.
 
 Planted problems:
-- F01_category: Ft9sKe2= 'Features' is only a category heading: it states no outcome, constraint or choice and should go (its children move up or under a real intention).
+- F01_category: Ft9sKe2= 'Features' is only a category heading: it states nothing of its own about the product and should go (its children move up or under a real intention).
 - F02_label_title: Cl6ndr8= has a bare topic label as title ('Calendar') and should be titled by what it states.
-- F03_damage_parent: Dm2gRp4= (members report damage) is under the wrong parent: it does not follow from the calendar and belongs elsewhere (under the manifesto or a returns outcome).
-- F04_sqlite_placement: Sq1Lte7= (Use SQLite) is a constraint imposed from outside and belongs near the root, not under the reservation outcome.
+- F03_damage_parent: Dm2gRp4= (members report damage) is under the wrong parent: it does not follow from the calendar and belongs elsewhere (under the manifesto or a node about returns).
+- F04_sqlite_placement: Sq1Lte7= (Use SQLite) is a constraint imposed from outside and belongs near the root, not under the reservation node.
 - F05_historic: Hr5Day3= describes a change over time ('now ... instead of ... earlier') and should state the current behaviour only.
 - F06_hr5_redundant: Hr5Day3= repeats what its parent Rs3vDy5= already says (reserving whole days) and can be merged or dropped.
-- F07_impl_decision: ImRs0v6= holds a decision (JSON files, not the database) that belongs in a requirement; the implementation node should only explain the code.
+- F07_impl_decision: ImRs0v6= holds a conclusion (JSON files, not the database) that belongs in a requirement; the implementation node should only explain the code.
 - F08_json_vs_sqlite: The JSON-file storage in ImRs0v6= contradicts the SQLite requirement Sq1Lte7=.
-- F09_reminder_blend: Rm8ndE1= blends an outcome (tools come back on time) with a means (e-mail the evening before); the e-mail belongs as a choice under the outcome Bk7Tim2= (or its branch), which already exists.
+- F09_reminder_blend: Rm8ndE1= blends an intention (tools come back on time) with a way (e-mail the evening before); the e-mail belongs as a conclusion under Bk7Tim2= (or its branch), which already states that intention.
 - F10_steps: St4pOn9= records an order of work (steps), which is not a requirement of the product and should go.
 - F11_restatement: Tm3Rtn5= 'Ensure timely returns' only rephrases its parent Bk7Tim2= and should be dropped, with its children moving up.
-- F12_option: Op9Blk0= is an undecided alternative ('Option B ... to be decided'); only decisions in force belong in the graph.
+- F12_option: Op9Blk0= is an undecided alternative ('Option B ... to be decided'); only what is in force belongs in the graph.
 - F13_duplicate_day: The definition 'A day is the shed's opening time, 8:00 to 20:00' is duplicated in Cl6ndr8= and Fe6Lat8= and should be stated once (one node that both depend on).
 
 Fill in this JSON object:

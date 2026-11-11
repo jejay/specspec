@@ -17,20 +17,20 @@ Fill in this JSON object. Use null where no such node exists.
  "email_wording_node": "key of the node that settles what the e-mail says (its wording or content), or null",
  "mail_sender": {
   "node": "key of the node that records how or through which mailbox or service the e-mails are sent, or null if no node settles that",
-  "own_node": "true if that choice is the main subject of a node of its own; false if it is only a sentence in a broader node",
+  "own_node": "true if that is the main subject of a node of its own; false if it is only a sentence in a broader node",
   "left_open_explicitly": "true if a node says that this is deliberately left open"
  },
  "ready": {
-  "outcome_node": "key of a node that states the purpose of the notice (customers know when their order is ready / nobody waits in the shop for nothing), or null",
-  "means_node": "key of the node that says the customer is told by e-mail, or null",
-  "separate_nodes": "true if outcome_node and means_node are two different nodes and means_node has outcome_node among its ancestors",
-  "outcome_text_free_of_means": "true if neither the title nor the body of outcome_node says that the notice is an e-mail"
+  "intention_node": "key of a node that states the purpose of the notice (customers know when their order is ready / nobody waits in the shop for nothing), or null",
+  "way_node": "key of the node that says the customer is told by e-mail, or null",
+  "separate_nodes": "true if intention_node and way_node are two different nodes and way_node has intention_node among its ancestors",
+  "intention_text_free_of_way": "true if neither the title nor the body of intention_node says that the notice is an e-mail"
  },
  "board": {
-  "outcome_node": "key of a node that states the purpose (the bakers know what to bake, or what to bake first), or null",
-  "means_node": "key of the node that settles the board on the screen in the bakehouse, or null",
-  "separate_nodes": "true if these are two different nodes and means_node has outcome_node among its ancestors",
-  "outcome_text_free_of_means": "true if neither title nor body of outcome_node describes a board or a screen"
+  "intention_node": "key of a node that states the purpose (the bakers know what to bake, or what to bake first), or null",
+  "way_node": "key of the node that settles the board on the screen in the bakehouse, or null",
+  "separate_nodes": "true if these are two different nodes and way_node has intention_node among its ancestors",
+  "intention_text_free_of_way": "true if neither title nor body of intention_node describes a board or a screen"
  },
  "handout_once_own_node": "true if the rule that an order is handed out only once is the main subject of a node of its own",
  "limits": {
@@ -45,18 +45,18 @@ Fill in this JSON object. Use null where no such node exists.
   "order_nodes": ["keys of nodes whose subject is an order of work, a step, a phase, a priority or a setup task"],
   "order_in_text": ["keys of other nodes whose text states when something gets built or what comes first, later or last"]
  },
- "category_nodes": ["keys of requirement nodes that are only a topic or category heading for their children and state no outcome, constraint or choice of their own"],
+ "category_nodes": ["keys of requirement nodes that are only a topic or category heading for their children and state nothing of their own about the product"],
  "historic_contrast": [{"key": "node key", "quote": "the words that refer to the old way of working (phone calls, paper notes, lost orders) or to a change over time (now, no longer, instead of, replaces)"}],
- "root_children_means": ["keys of nodes directly under ROOT that record a means or technical choice (such as a mail service, a database, a framework, a file format or the board on a screen) rather than an outcome the owner wants or a constraint the owner imposed"],
+ "root_children_ways": ["keys of nodes directly under ROOT whose main subject is a way that could be another (such as a mail service, a database, a framework, a file format or the board on a screen) rather than something the owner intends or holds as fixed"],
  "email_wording": "one of: decided (a node gives what the e-mail says), left_open_stated (a node says the wording is left open), absent",
  "label_titles": ["keys of requirement nodes whose title is a bare topic label without a verb, such as 'Notifications' or 'Data storage'"],
- "implementation_nodes_that_are_choices": ["keys of nodes of type implementation whose text records a decision about the product or its technology rather than explaining files that exist"],
- "blended_nodes": [{"key": "node key", "why": "names the two or more decisions in this node that serve different purposes and could clearly be replaced independently"}],
- "own_choice_nodes": ["keys of nodes whose main subject is a decision that the owner's brief neither states nor suggests, so that the agent made it on its own, such as how the assistant finds an order at the counter or what a customer sees after the deadline; leave out nodes that record what the owner said, the purpose behind it or a choice the owner suggested"],
+ "implementation_nodes_that_conclude": ["keys of nodes of type implementation whose text records a conclusion about the product or its technology rather than explaining files that exist"],
+ "blended_nodes": [{"key": "node key", "why": "names the two or more statements in this node that serve different intentions and could clearly be replaced independently"}],
+ "own_conclusion_nodes": ["keys of nodes whose main subject is a conclusion that the owner's brief neither states nor suggests, so that the agent drew it on its own, such as how the assistant finds an order at the counter or what a customer sees after the deadline; leave out nodes that record what the owner said, the intention behind it or a way the owner suggested"],
  "report": {
-  "names_own_choices": "true if the report tells the owner which choices the agent made on its own",
+  "names_own_conclusions": "true if the report tells the owner which conclusions the agent drew on its own",
   "names_open_points": "true if the report names open questions or uncertainty",
-  "names_added_outcomes": "true if the report says which outcomes or constraints the agent added that the owner had not asked for, or true if it added none"
+  "names_read_intentions": "true if the report tells the owner which intentions the agent worded itself or read into the owner's words, such as the purpose it placed above something the owner named, so that the owner can correct them; false if the report presents everything as what the owner asked for"
  }
 }
 

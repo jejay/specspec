@@ -2,13 +2,22 @@
 
 ## Unreleased
 
-**Agent guide.** `specspec init` ships a shorter AGENTS.md (about 12 KB). It starts with
+**Agent guide.** `specspec init` ships a shorter AGENTS.md (about 14 KB). It starts with
 what the graph is for and a working routine, shows a small example graph and reads
 spotlights as owner input. The agent leaves a spotlight on the nodes it discusses, so the
-owner can open them in a graph editor. Three worked examples show how a sentence from the
-owner becomes an outcome and a choice beneath it. The guide keeps a list of limits in one
-node and names what stays out of the graph, such as an order of work. Node text leaves out
-the time before the product and what the product is not.
+owner can open them in a graph editor. The guide keeps a list of limits in one node and
+names what stays out of the graph, such as an order of work. Node text leaves out the time
+before the product and what the product is not.
+
+Intention and conclusion are the two ends of a link. Every node except the manifesto is a
+conclusion from its parents and an intention for its children, and a conclusion is one
+valid conclusion that another can replace at any depth. With anything the owner says, the
+agent first tells intention from conclusion and finds out what the owner holds as fixed;
+it asks when it cannot tell. It holds every conclusion against its intention, also a
+statement right beneath the manifesto that makes no sense for the product, and points out
+a conclusion in a manifesto's wording. Three worked examples show how a sentence from the
+owner becomes an intention and a conclusion beneath it, and the agent's summary names the
+intentions it read into the owner's words.
 
 The guide names two kinds of commits. `Owner specspec changes:` holds the owner's hand
 edits exactly as they wrote them; the agent makes this commit before it questions
@@ -18,9 +27,8 @@ the owner asks for a review, and makes no remarks about their structure otherwis
 request to build includes that planning, and every other commit follows the project's own
 rules. What the owner changed by hand since the newest such commit, committed or not, gets
 a structure review: the agent says what it would split, merge, move or reword, and what
-the owner does not accept stays as they wrote it. In a discussion before any planning, the
-agent tells what the owner wants apart from the ways they suggested and closes with
-guiding questions and its own tentative answers.
+the owner does not accept stays as they wrote it. A discussion before any planning closes
+with guiding questions and the agent's own tentative answers.
 
 **CLI fixes**
 - A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT
@@ -48,7 +56,8 @@ guiding questions and its own tentative answers.
   screen.
 - Several desktop windows keep each other's saved drafts.
 
-**Documentation.** The README explains both spectra with figures. The editor guide is
+**Documentation.** The README explains both spectra with figures, and intention and
+conclusion as a relation that holds at every depth. The editor guide is
 the extension's README. Design notes and evidence moved into the specification graph
 and commit messages.
 

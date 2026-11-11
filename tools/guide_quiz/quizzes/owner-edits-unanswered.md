@@ -91,11 +91,11 @@ You answered:
 
 I read your edits against the rules for structure and wording. Nothing is changed yet. I would suggest six changes:
 
-1. Qr5Tag0= names a way and its purpose in one node. I would make "No two bikes get mixed up" an outcome and put the QR tag beneath it as a choice.
-2. Jb1Brd8= now also says "Invoices are numbered per year." That is a separate decision, so I would move it into a node of its own.
+1. Qr5Tag0= names a way and its purpose in one node. I would give "No two bikes get mixed up" a node of its own and put the QR tag beneath it as a conclusion.
+2. Jb1Brd8= now also says "Invoices are numbered per year." That is a separate statement, so I would move it into a node of its own.
 3. Sm5Txt4= refers to how you call customers today. I would reword it to say only what the product does.
 4. St3Pln8= is an order of work. I would take it out of the graph and simply follow it.
-5. Lm1Nte0=, Lm2Prt4= and Lm3Pht8= are three limits of one decision. I would merge them into one node.
+5. Lm1Nte0=, Lm2Prt4= and Lm3Pht8= are three limits that belong together. I would merge them into one node.
 6. Wr8Nty0= hangs under the card view, which is not its reason. I would move it under the manifesto.
 
 Du2Srt4= is fine as it is. Tell me which of these you want.

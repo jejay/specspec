@@ -270,6 +270,9 @@ def test_packaged_guide_matches_current_behavior():
     assert len(raw.replace(b"\r\n", b"\n")) <= 14336
     for phrase in [
         "specification spectrum",
+        "The same node is in turn an intention for the nodes beneath it",
+        "first tell intention from conclusion",
+        "ask where you cannot tell",
         ".specspec/<id>.md",
         "## Routine",
         "spotlight show",
@@ -281,7 +284,9 @@ def test_packaged_guide_matches_current_behavior():
         "stays in the owner's words",
         "Close with guiding questions",
         "on its own as `Agent specspec changes:",
-        "Separate what the owner wants from the choices they suggested",
+        "Tell the owner's intentions from the conclusions they have already drawn",
+        "Hold every conclusion against its intention",
+        "the intentions you read into the owner's words",
         "Tandem planning",
         "Agent planning",
         "Implementation",
@@ -291,7 +296,10 @@ def test_packaged_guide_matches_current_behavior():
         "Agent specspec changes:",
         "in sync",
         "exactly the selected files",
-        "without erasing its outcome",
+        "ask what it is for",
+        "without erasing its intention",
+        "can be held against its intentions",
+        "The manifesto itself is intention only",
         "such as a list of limits",
         "are not nodes",
         "Each becomes two nodes",
@@ -309,6 +317,8 @@ def test_packaged_guide_matches_current_behavior():
         "format 7",
     ]:
         assert obsolete not in text
+    # Intention and conclusion are the guide's one pair of words for what nodes are.
+    assert not re.search(r"\b(outcome|choice)s?\b", text, re.I)
 
 
 def visible_help_text():

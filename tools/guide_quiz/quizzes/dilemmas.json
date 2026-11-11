@@ -1,33 +1,33 @@
 [
  {
-  "id": "I01",
-  "rule": "A technology the owner must use is a constraint near the root",
+  "id": "I01b",
+  "rule": "A technology the owner must use is an intention near the root",
   "stated": "yes",
-  "stem": "You are planning the graph for a physiotherapy practice's appointment app. The owner says: \"It has to run on the PostgreSQL server our IT contractor already hosts. He supports nothing else.\" The graph has the manifesto and beneath it the outcome 'Appointments are still there after a restart'. Where does the PostgreSQL statement go?",
+  "stem": "You are planning the graph for a physiotherapy practice's appointment app. The owner says: \"It has to run on the PostgreSQL server our IT contractor already hosts. He supports nothing else.\" The graph has the manifesto and beneath it the requirement 'Appointments are still there after a restart'. Where does the PostgreSQL statement go?",
   "options": [
    "A requirement directly under the manifesto, 'Store all data in the contractor's PostgreSQL server'; nodes about how data is stored name it as a parent.",
-   "A requirement under 'Appointments are still there after a restart', as the way that outcome is achieved.",
-   "A sentence added to that outcome, so that it reads 'Appointments are still there after a restart, kept in the contractor's PostgreSQL server'.",
+   "A requirement under 'Appointments are still there after a restart', as the way that is achieved.",
+   "A sentence added to that requirement, so that it reads 'Appointments are still there after a restart, kept in the contractor's PostgreSQL server'.",
    "An implementation node under 'Appointments are still there after a restart' that names PostgreSQL."
   ],
   "topic": "structure"
  },
  {
-  "id": "I02",
-  "rule": "A technology the owner suggested is a choice under the outcome it serves",
+  "id": "I02b",
+  "rule": "A technology the owner suggested is a conclusion under the intention it serves",
   "stated": "yes",
-  "stem": "The owner of an appointment app says: \"For the reminder texts maybe use Twilio, or whatever you find best.\" You look into it and Twilio fits. The graph has the manifesto, beneath it the outcome 'Patients are reminded of their appointment in time', and beneath that the choice 'Send the reminder as a text message the day before'. Where does Twilio go?",
+  "stem": "The owner of an appointment app says: \"For the reminder texts maybe use Twilio, or whatever you find best.\" You look into it and Twilio fits. The graph has the manifesto, beneath it the requirement 'Patients are reminded of their appointment in time', and beneath that the requirement 'Send the reminder as a text message the day before'. Where does Twilio go?",
   "options": [
    "A requirement under 'Send the reminder as a text message the day before': 'Send the texts through Twilio'.",
    "A requirement directly under the manifesto, since the owner named it.",
-   "A sentence added to the outcome, so that it reads 'Patients are reminded of their appointment in time through Twilio'.",
+   "A sentence added to the upper requirement, so that it reads 'Patients are reminded of their appointment in time through Twilio'.",
    "Nowhere in the graph; which provider sends the texts is a detail for the code and its configuration."
   ],
   "topic": "structure"
  },
  {
   "id": "I03",
-  "rule": "Separate the outcome from the choice that achieves it (depth)",
+  "rule": "Separate the intention from the conclusion that achieves it (depth)",
   "stated": "yes",
   "stem": "The owner of an appointment app says: \"Patients get a text message the day before, so fewer of them forget their appointment.\" Nothing else is known about why it should be a text message. The graph has only the manifesto so far. How do you record this?",
   "options": [
@@ -39,28 +39,28 @@
   "topic": "structure"
  },
  {
-  "id": "I04",
-  "rule": "A choice that builds on another choice goes below that choice, not beside it",
+  "id": "I04b",
+  "rule": "A conclusion that builds on another conclusion goes below it, not beside it",
   "stated": "no",
-  "stem": "A graph has the outcome 'Everyone sees the week at a glance' and beneath it the choice 'Show the week as a grid with one column per therapist'. You now decide how the grid treats time: 'Rows are 15-minute slots from 7:00 to 20:00.' The owner may well want to change this later without touching anything else. Where does it go?",
+  "stem": "A graph has the requirement 'Everyone sees the week at a glance' and beneath it the requirement 'Show the week as a grid with one column per therapist'. You now settle how the grid treats time: 'Rows are 15-minute slots from 7:00 to 20:00.' The owner may well want to change this later without touching anything else. Where does it go?",
   "options": [
    "A new requirement under 'Show the week as a grid with one column per therapist'.",
-   "A new requirement under 'Everyone sees the week at a glance', next to the grid choice.",
-   "A new requirement that names both 'Everyone sees the week at a glance' and the grid choice as parents.",
+   "A new requirement under 'Everyone sees the week at a glance', next to the grid node.",
+   "A new requirement that names both 'Everyone sees the week at a glance' and the grid node as parents.",
    "A sentence added to 'Everyone sees the week at a glance'."
   ],
   "topic": "structure"
  },
  {
-  "id": "I05",
+  "id": "I05b",
   "rule": "One conclusion that serves two intentions is one node with two parents",
   "stated": "yes",
-  "stem": "A graph has two outcomes under the manifesto: 'The front desk can settle who changed an appointment' and 'Insurers get evidence for a disputed invoice'. You conclude that one thing serves both: 'Keep a change history for every appointment: who, when, old and new value.' How do you record it?",
+  "stem": "A graph has two requirements under the manifesto: 'The front desk can settle who changed an appointment' and 'Insurers get evidence for a disputed invoice'. You conclude that one thing serves both: 'Keep a change history for every appointment: who, when, old and new value.' How do you record it?",
   "options": [
-   "One requirement that names both outcomes as parents.",
-   "Two requirements with the same text, one under each outcome.",
-   "One requirement directly under the manifesto, because it serves more than one outcome.",
-   "One requirement under the first outcome; the text of the second outcome mentions the change history."
+   "One requirement that names both as parents.",
+   "Two requirements with the same text, one under each.",
+   "One requirement directly under the manifesto, because it serves more than one intention.",
+   "One requirement under the first; the text of the second mentions the change history."
   ],
   "topic": "structure"
  },
@@ -104,25 +104,25 @@
   "topic": "structure"
  },
  {
-  "id": "I09",
+  "id": "I09b",
   "rule": "A topic or category is not a node; group only under a shared intention",
   "stated": "no",
-  "stem": "The manifesto of a shop's inventory app has eleven requirements directly beneath it, each an outcome the owner asked for. To make the graph easier to take in, you consider adding three requirements between the manifesto and those eleven, 'Frontend', 'Backend' and 'Operations', and moving each outcome under the one it belongs to. Neither the owner nor any node says anything about frontend, backend or operations as such. What do you do?",
+  "stem": "The manifesto of a shop's inventory app has eleven requirements directly beneath it, each something the owner asked for. To make the graph easier to take in, you consider adding three requirements between the manifesto and those eleven, 'Frontend', 'Backend' and 'Operations', and moving each of the eleven under the one it belongs to. Neither the owner nor any node says anything about frontend, backend or operations as such. What do you do?",
   "options": [
-   "Leave the eleven outcomes directly under the manifesto.",
-   "Add the three nodes and move each outcome under the one it belongs to.",
-   "Add the three nodes as second parents, so that each outcome names the manifesto and its area.",
-   "Add the three nodes, move the outcomes, and write into each of the three a summary of the outcomes beneath it."
+   "Leave the eleven requirements directly under the manifesto.",
+   "Add the three nodes and move each requirement under the one it belongs to.",
+   "Add the three nodes as second parents, so that each requirement names the manifesto and its area.",
+   "Add the three nodes, move the requirements, and write into each of the three a summary of the requirements beneath it."
   ],
   "topic": "structure"
  },
  {
-  "id": "I10",
-  "rule": "A need noticed while detailing a choice goes under the intention it would survive with",
+  "id": "I10b",
+  "rule": "A need noticed while detailing a conclusion goes under the intention it would survive with",
   "stated": "no",
-  "stem": "A graph has the outcome 'Patients are reminded of their appointment in time' and beneath it the choice 'Send the reminder as a text message the day before'. While you detail the text message, you realise that some patients have no mobile phone and need reminding too. Where does 'Patients without a mobile phone are reminded as well' go?",
+  "stem": "A graph has the requirement 'Patients are reminded of their appointment in time' and beneath it the requirement 'Send the reminder as a text message the day before'. While you detail the text message, you realise that some patients have no mobile phone and need reminding too. Where does 'Patients without a mobile phone are reminded as well' go?",
   "options": [
-   "Under 'Patients are reminded of their appointment in time', next to the text-message choice.",
+   "Under 'Patients are reminded of their appointment in time', next to the text-message node.",
    "Under 'Send the reminder as a text message the day before', as one of its details.",
    "As a sentence added to 'Send the reminder as a text message the day before'.",
    "Directly under the manifesto."
@@ -130,49 +130,49 @@
   "topic": "structure"
  },
  {
-  "id": "I11",
-  "rule": "An outcome's text does not name the means chosen beneath it",
+  "id": "I11b",
+  "rule": "An intention's text does not name the way concluded beneath it",
   "stated": "no",
-  "stem": "A graph has the outcome node 'Everyone sees the week at a glance in a grid with one column per therapist' and beneath it the choice node 'Show the week as a grid with one column per therapist'. You are asked to review the structure. What do you change?",
+  "stem": "A graph has the requirement 'Everyone sees the week at a glance in a grid with one column per therapist' and beneath it the requirement 'Show the week as a grid with one column per therapist'. You are asked to review the structure. What do you change?",
   "options": [
-   "Reword the outcome to 'Everyone sees the week at a glance' and leave the grid to the choice beneath it.",
-   "Nothing; the outcome and the choice agree with each other.",
-   "Delete the choice node; the outcome already says it.",
-   "Move the choice node up, so that it sits next to the outcome."
+   "Reword the upper node to 'Everyone sees the week at a glance' and leave the grid to the node beneath it.",
+   "Nothing; the two nodes agree with each other.",
+   "Delete the lower node; the upper one already says it.",
+   "Move the lower node up, so that it sits next to the upper one."
   ],
   "topic": "structure"
  },
  {
-  "id": "I12",
-  "rule": "A choice made while building becomes a requirement; the implementation node explains the code",
+  "id": "I12b",
+  "rule": "A conclusion drawn while building becomes a requirement; the implementation node explains the code",
   "stated": "yes",
-  "stem": "You are building a notes app. The graph has the outcome 'Notes are still there after a restart' and nothing beneath it. You decide to keep the notes in the browser's localStorage rather than in a file or on a server, and you write `storage.js`. How do you record this?",
+  "stem": "You are building a notes app. The graph has the requirement 'Notes are still there after a restart' and nothing beneath it. You decide to keep the notes in the browser's localStorage rather than in a file or on a server, and you write `storage.js`. How do you record this?",
   "options": [
-   "A requirement 'Keep notes in the browser's localStorage' under the outcome, and an implementation node under that requirement which explains `storage.js` and links it.",
-   "An implementation node directly under the outcome which explains `storage.js`, says that it uses localStorage and links it.",
-   "Change the outcome to 'Notes are still there after a restart, kept in localStorage', and add an implementation node under it that links `storage.js`.",
+   "A requirement 'Keep notes in the browser's localStorage' under it, and an implementation node under that requirement which explains `storage.js` and links it.",
+   "An implementation node directly under it which explains `storage.js`, says that it uses localStorage and links it.",
+   "Change it to 'Notes are still there after a restart, kept in localStorage', and add an implementation node under it that links `storage.js`.",
    "An implementation node under the manifesto, since storage concerns the whole app."
   ],
   "topic": "structure"
  },
  {
-  "id": "I13",
-  "rule": "Only what is in force is a node; an option not chosen goes into the report",
+  "id": "I13b",
+  "rule": "Only what is in force is a node; a conclusion set aside goes into the report",
   "stated": "partly",
-  "stem": "For the outcome 'Notes are still there after a restart' you hesitate between localStorage and IndexedDB. Both would work; IndexedDB handles more data. The owner asked you to draw the graph and build the app today. What goes into the graph?",
+  "stem": "For the requirement 'Notes are still there after a restart' you hesitate between localStorage and IndexedDB. Both would work; IndexedDB handles more data. The owner asked you to draw the graph and build the app today. What goes into the graph?",
   "options": [
    "One requirement for the option you pick, with its reason; your report tells the owner about the other option.",
-   "Two requirements under the outcome, 'Option A: localStorage' and 'Option B: IndexedDB', for the owner to pick from.",
+   "Two requirements under it, 'Option A: localStorage' and 'Option B: IndexedDB', for the owner to pick from.",
    "One requirement that describes both options with their advantages and drawbacks.",
    "Nothing yet; you add a node once the owner has decided."
   ],
   "topic": "structure"
  },
  {
-  "id": "I14",
-  "rule": "A constraint is a parent of the choice it shaped",
+  "id": "I14b",
+  "rule": "A constraint is a parent of the conclusion it shaped",
   "stated": "yes",
-  "stem": "Directly under the manifesto of an appointment app there is the requirement 'Patient data stays on servers in the EU'. Elsewhere, under 'Send the reminder as a text message the day before', you add your choice of SMS gateway. You picked this gateway because it is hosted in Frankfurt. Which parents does the gateway node name?",
+  "stem": "Directly under the manifesto of an appointment app there is the requirement 'Patient data stays on servers in the EU'. Elsewhere, under 'Send the reminder as a text message the day before', you add a node for the SMS gateway you picked. You picked this gateway because it is hosted in Frankfurt. Which parents does the gateway node name?",
   "options": [
    "'Send the reminder as a text message the day before' and 'Patient data stays on servers in the EU'.",
    "Only 'Send the reminder as a text message the day before'; the EU requirement applies to the whole graph anyway.",
@@ -195,23 +195,23 @@
   "topic": "structure"
  },
  {
-  "id": "I16",
+  "id": "I16b",
   "rule": "A node that only rephrases its parent is dropped",
   "stated": "no",
   "stem": "You drafted this chain for a notes app: 'Notes are still there after a restart', beneath it 'Persist the notes', beneath that 'Save notes to storage', beneath that 'Keep notes in the browser's localStorage'. Before you write it into the graph, you review it. What do you do?",
   "options": [
-   "Drop the two middle nodes, which leaves the outcome and beneath it the localStorage choice.",
+   "Drop the two middle nodes, which leaves the first node and beneath it the localStorage node.",
    "Keep the chain; each step is a little more concrete than the one before.",
-   "Keep the four nodes, but place the three lower ones next to each other under the outcome.",
+   "Keep the four nodes, but place the three lower ones next to each other under the first.",
    "Add a fifth node at the end that names the storage key."
   ],
   "topic": "structure"
  },
  {
-  "id": "I17",
-  "rule": "A node that relies on a decision in another branch names it as a parent",
+  "id": "I17b",
+  "rule": "A node that relies on a statement in another branch names it as a parent",
   "stated": "no",
-  "stem": "In a planning app, the requirement 'A workday is Monday to Friday; public holidays count as workdays' sits under 'Forecast finish dates'. In another branch, under 'Show tasks on a timeline', you write the choice 'Shade the days that are not workdays'. It only makes sense with that definition of a workday. How do you connect them?",
+  "stem": "In a planning app, the requirement 'A workday is Monday to Friday; public holidays count as workdays' sits under 'Forecast finish dates'. In another branch, under 'Show tasks on a timeline', you write the requirement 'Shade the days that are not workdays'. It only makes sense with that definition of a workday. How do you connect them?",
   "options": [
    "The shading node names two parents: 'Show tasks on a timeline' and the workday requirement.",
    "The shading node has the one parent 'Show tasks on a timeline' and repeats the definition of a workday in its text.",
@@ -222,7 +222,7 @@
  },
  {
   "id": "I18",
-  "rule": "A title states the outcome or choice, not a topic or a task",
+  "rule": "A title states what its node says, not a topic or a task",
   "stated": "partly",
   "stem": "You add a requirement to a library app. Its text says that a librarian finds a member's overdue books within a few seconds, by name or card number. Which title do you give the node?",
   "options": [
@@ -247,12 +247,12 @@
   "topic": "structure"
  },
  {
-  "id": "I20",
-  "rule": "Use more separate nodes where a decision is uncertain or contested",
+  "id": "I20b",
+  "rule": "Use more separate nodes where a conclusion is uncertain or contested",
   "stated": "partly",
   "stem": "Two parts of a booking app need detailing. Part one is the sign-in form: e-mail, password, the usual. Part two is what happens when two people book the same slot at the same moment; you see three reasonable behaviours and the owner has not said which they want. Where do you use more separate nodes?",
   "options": [
-   "In part two: the conflict behaviour and each choice it involves get their own nodes, while sign-in is one node.",
+   "In part two: the conflict behaviour and each conclusion it involves get their own nodes, while sign-in is one node.",
    "In both alike: every sentence that could change gets its own node.",
    "In both alike: one node per part keeps the graph even.",
    "In part one: sign-in has more fields and rules to list."
@@ -260,25 +260,25 @@
   "topic": "structure"
  },
  {
-  "id": "I21",
-  "rule": "Replacing a choice keeps its outcome and re-homes what still applies",
+  "id": "I21b",
+  "rule": "Replacing a conclusion keeps its intention and re-homes what still applies",
   "stated": "partly",
-  "stem": "Under the outcome 'Everyone sees who is treated when' the choice 'Show the week as a grid with one column per therapist' has two children: 'Rows are 15-minute slots' and 'Colour each appointment by treatment type'. The owner replaces the grid with a list per day. Slots no longer apply; colouring by treatment type still does. What is the resulting structure?",
+  "stem": "Under the requirement 'Everyone sees who is treated when' the requirement 'Show the week as a grid with one column per therapist' has two children: 'Rows are 15-minute slots' and 'Colour each appointment by treatment type'. The owner replaces the grid with a list per day. Slots no longer apply; colouring by treatment type still does. What is the resulting structure?",
   "options": [
-   "The outcome stays. The grid node and the slot node are deleted. A new choice 'Show each day as a list' goes under the outcome, and the colouring node gets the new choice as its parent.",
-   "The outcome stays. The grid node is rewritten in place to describe the day list and keeps both children.",
-   "The outcome stays. A new choice 'Show each day as a list' is added under the grid node, which is kept as the earlier approach.",
-   "The outcome, the grid node and both children are deleted, and a new outcome with the day list beneath it is added."
+   "'Everyone sees who is treated when' stays. The grid node and the slot node are deleted. A new requirement 'Show each day as a list' goes under it, and the colouring node gets the new node as its parent.",
+   "'Everyone sees who is treated when' stays. The grid node is rewritten in place to describe the day list and keeps both children.",
+   "'Everyone sees who is treated when' stays. A new requirement 'Show each day as a list' is added under the grid node, which is kept as the earlier approach.",
+   "All four nodes are deleted, and a new requirement with the day list beneath it is added."
   ],
   "topic": "structure"
  },
  {
-  "id": "I22",
-  "rule": "A broad technical choice of the agent hangs under the outcomes it serves, not at the root",
+  "id": "I22b",
+  "rule": "A broad technical conclusion of the agent hangs under the intentions it serves, not at the root",
   "stated": "yes",
-  "stem": "Nobody told you how a notes app should be built. You decide it is a single HTML page without a server, because the graph has the outcomes 'Works offline on any laptop' and 'Needs no installation', both directly under the manifesto. Where does 'Ship one self-contained HTML page' go?",
+  "stem": "Nobody told you how a notes app should be built. You conclude that it is a single HTML page without a server, because the graph has the requirements 'Works offline on any laptop' and 'Needs no installation', both directly under the manifesto. Where does 'Ship one self-contained HTML page' go?",
   "options": [
-   "One requirement that names both outcomes as parents.",
+   "One requirement that names both as parents.",
    "Directly under the manifesto, since it shapes the whole app.",
    "Under 'Works offline on any laptop' only, so that every node keeps a single parent.",
    "Into the text of the manifesto."
@@ -286,8 +286,150 @@
   "topic": "structure"
  },
  {
+  "id": "S01",
+  "rule": "A node is a conclusion from its parents and an intention for its children",
+  "stated": "yes",
+  "stem": "A graph has the manifesto 'Help a small team agree on a plan', beneath it 'Make timing easy to read', and beneath that 'Show tasks on a weekday timeline'. What is 'Make timing easy to read'?",
+  "options": [
+   "A conclusion from the manifesto and, at the same time, the intention of the timeline node.",
+   "An intention only: it is what the owner wants, and conclusions begin beneath it.",
+   "A conclusion only: the manifesto is the one intention of the graph.",
+   "Neither; the two words apply to the manifesto and to implementation nodes."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S02",
+  "rule": "Replacing a node keeps what is above it and puts what is beneath it up for review, at any depth",
+  "stated": "partly",
+  "stem": "A graph has the manifesto 'Help a small team agree on a plan', beneath it 'Make timing easy to read', and beneath that 'Show tasks on a weekday timeline' with its implementation node. The owner writes: \"Timing is not the point any more. The team needs to see who is responsible for what. Change the spec.\" What do you do?",
+  "options": [
+   "Replace 'Make timing easy to read' by a node for the new intention under the manifesto, go through the timeline node and its implementation, remove what no longer follows, and name all of it in your summary.",
+   "Keep 'Make timing easy to read', because what the owner wants near the root stays, and add the view of responsibilities as a new node beneath it.",
+   "Rewrite the manifesto, since a node directly beneath it changed.",
+   "Add 'Show who is responsible for what' next to 'Make timing easy to read' and leave the timing branch as it is, so that nothing is lost."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S03",
+  "rule": "What the owner holds as intention belongs near the root, whatever its kind",
+  "stated": "partly",
+  "stem": "An owner starts a project with the sentence: \"A Python library that reads GPX files and returns the track as plain Python objects.\" Where does Python belong?",
+  "options": [
+   "In the manifesto: for a Python library the language is part of what the product is.",
+   "In a requirement far down, as the language you concluded for reading GPX files.",
+   "Nowhere in the graph; the language shows in the code.",
+   "In a requirement under the manifesto that says the language is open until the owner confirms it."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S04",
+  "rule": "Where the wording does not show how firmly a statement holds, the agent says how it reads it and asks",
+  "stated": "no",
+  "stem": "The owner describes a party game that friends play on their own phones and adds: \"It should be written in Kotlin.\" Nothing else says why. You are discussing the idea; no graph is asked for yet. How do you treat the Kotlin sentence?",
+  "options": [
+   "Say that you cannot tell whether Kotlin is a given or a conclusion you may question, ask which it is, and say what you would conclude if it is open.",
+   "Take it as fixed without comment; the owner said it plainly.",
+   "Treat it as yours to settle and plan with the language you find best, without mentioning it.",
+   "Leave it out of the discussion; the language matters only when you build."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S05",
+  "rule": "A statement that makes no sense for the manifesto's product is raised, also directly beneath the manifesto",
+  "stated": "no",
+  "stem": "A manifesto reads: 'A hidden-role party game: nobody learns who is on which side before the final reveal.' In a discussion the owner adds: \"A timeline on the TV shows who did what and when, so everyone can follow the game.\" The timeline would be a node directly beneath the manifesto. What do you do?",
+  "options": [
+   "Tell the owner that a timeline of who did what gives the roles away, which works against the manifesto, and propose a way for everyone to follow the game that keeps the roles secret.",
+   "Record it as stated: a node directly beneath the manifesto is what the owner wants and is not yours to question.",
+   "Propose to change the manifesto so that the roles are public, since the timeline needs it.",
+   "Leave the timeline out of your picture of the product without mentioning it."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S06",
+  "rule": "An open manifesto may be questioned for conclusions in its wording",
+  "stated": "no",
+  "stem": "A project was initialized an hour ago; no agent planning commit exists. Its manifesto reads: 'A React web app with a week grid in which a physiotherapy practice books its appointments.' The owner asks you to have a look at it. What do you say about the manifesto?",
+  "options": [
+   "That the week grid and React read as conclusions; you ask whether they are a given, suggest nodes beneath the manifesto for them and leave the manifesto as written until the owner answers.",
+   "Nothing; the manifesto is the owner's intention and is not questioned.",
+   "That the practice might be better served by an off-the-shelf calendar, so the product itself should be reconsidered.",
+   "Nothing yet: you rewrite the manifesto to 'A physiotherapy practice books its appointments', move React and the week grid into nodes and report it afterwards."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S07",
+  "rule": "The manifesto holds intentions only and is not held against anything",
+  "stated": "no",
+  "stem": "The manifesto of a graph reads 'Help a small team agree on a plan'. The owner asks for a way to export the plan as a PDF. While planning, it occurs to you that a tool for large organisations would find more users. What do you do?",
+  "options": [
+   "Plan the PDF export for a small team, as the manifesto says; the manifesto is the owner's intention and you hold nothing against it.",
+   "Tell the owner that the manifesto is too narrow and plan the export for large organisations as well.",
+   "Add a requirement 'Serve large organisations' beneath the manifesto, since it would improve the product.",
+   "Ask the owner to give reasons for the manifesto before you plan the export."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S08",
+  "rule": "An intention the agent words for the owner is reported as the agent's reading",
+  "stated": "no",
+  "stem": "The owner wrote: \"An SMS when the parcel ships.\" You added 'Customers know when their parcel ships' under the manifesto and 'Send an SMS when the parcel ships' beneath it. What does your summary say about the upper node?",
+  "options": [
+   "That you worded it yourself as your reading of what the SMS is for, so that the owner can correct it.",
+   "Nothing; it only restates what the owner asked for.",
+   "That the owner asked for it.",
+   "That it is a placeholder which you delete once the SMS works."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S09",
+  "rule": "How firmly a node holds is in the owner's head, not in its depth",
+  "stated": "partly",
+  "stem": "In a graph, the node 'Round every price to 5 cents' sits four levels beneath the manifesto. The owner wrote it and told you last week that the cashiers insist on it. Today's request, a new receipt layout, would be simpler with exact prices. What do you do?",
+  "options": [
+   "Keep the rounding and design the receipt around it; how firmly a node holds does not depend on how deep it sits.",
+   "Change the rounding node, since nodes that deep are details for you to settle.",
+   "Delete the rounding node and mention it in your summary.",
+   "Write into the node that it is uncertain and plan with exact prices."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S10",
+  "rule": "A conclusion is one valid conclusion and can be replaced at any time",
+  "stated": "partly",
+  "stem": "You concluded 'Keep the plan as a JSON file in the repository' and built on it: three nodes and two source files hang beneath it. The owner writes: \"I want the plan in SQLite instead. Change the spec.\" What happens to your conclusion?",
+  "options": [
+   "The SQLite node replaces it under the same intention; you go through the three nodes beneath it, keep what still follows under the new node, remove the rest and name all of it in your summary.",
+   "It stays, because nodes with an implementation beneath them are settled; SQLite is added next to it.",
+   "You explain that the JSON file followed from its intention and cannot change unless the intention changes.",
+   "It is rewritten in place to say SQLite, and its children stay as they are."
+  ],
+  "topic": "relation"
+ },
+ {
+  "id": "S11",
+  "rule": "In 'a way, so that a purpose' the purpose is the intention and the way its conclusion",
+  "stated": "yes",
+  "stem": "In a discussion, the owner of a parcel shop's app says: \"A map with the courier's position, so customers stop calling us.\" How do you read the sentence back to the owner?",
+  "options": [
+   "The intention is that customers have no need to call; the map is one conclusion from it, and you say whether you see a better one.",
+   "The intention is a map with the courier's position; fewer calls are a side effect.",
+   "Both are intentions and get nodes directly beneath the manifesto.",
+   "The sentence is one requirement; splitting it would lose the reason."
+  ],
+  "topic": "relation"
+ },
+ {
   "id": "P01",
-  "topic": "routine",
   "rule": "A session starts by checking for the owner's input",
   "stated": "yes",
   "stem": "You open a new session in a specspec project. The owner writes: \"Add a CSV export.\" What do you do first?",
@@ -296,11 +438,11 @@
    "Run `specspec query` to print the whole graph and read it from the top.",
    "Search the code for existing export functions and start on the CSV export.",
    "Run `specspec add` to record the CSV export as a requirement under the manifesto."
-  ]
+  ],
+  "topic": "routine"
  },
  {
   "id": "P02",
-  "topic": "routine",
   "rule": "Uncommitted changes of an earlier agent session are the agent's own unfinished work",
   "stated": "yes",
   "stem": "`git status` shows uncommitted changes to two node files. The owner has not mentioned them, and they look like the unfinished work of an earlier agent session. How do you treat them?",
@@ -309,11 +451,11 @@
    "As the owner's edits, which you commit as `Owner specspec changes: ...` before you do anything else.",
    "As leftovers, which you discard with `git checkout` so that you start from a clean tree.",
    "As none of your business; you leave them and work around the two files."
-  ]
+  ],
+  "topic": "routine"
  },
  {
   "id": "P03",
-  "topic": "commands",
   "rule": "A node is read with its ancestors before it or its artifacts change",
   "stated": "yes",
   "stem": "You are about to change the node `Qm3xT7A=` and the code it describes. Which command gives you what you need to read first?",
@@ -322,11 +464,11 @@
    "`specspec query Qm3xT7A= --max-distance 1`",
    "`specspec query`",
    "`specspec sources show`"
-  ]
+  ],
+  "topic": "commands"
  },
  {
   "id": "P04",
-  "topic": "commands",
   "rule": "Reads of the graph are bounded",
   "stated": "yes",
   "stem": "You want an overview of a graph with several hundred nodes. Which command do you run?",
@@ -335,11 +477,11 @@
    "`specspec query`",
    "`specspec diff`",
    "`specspec check --sources`"
-  ]
+  ],
+  "topic": "commands"
  },
  {
   "id": "P05",
-  "topic": "routine",
   "rule": "The exact index is checked before a commit",
   "stated": "yes",
   "stem": "You changed three nodes and the code they link, and the owner's request authorizes a commit. What do you run right before you commit?",
@@ -348,11 +490,11 @@
    "`specspec check --sources` on the working tree, then stage and commit.",
    "`git diff` to read the change once more, then commit.",
    "`specspec recover`, then stage and commit."
-  ]
+  ],
+  "topic": "routine"
  },
  {
   "id": "P06",
-  "topic": "routine",
   "rule": "Nodes that the agent discusses get a spotlight",
   "stated": "yes",
   "stem": "Your report to the owner discusses three nodes you added. What goes with that report?",
@@ -361,11 +503,11 @@
    "A copy of the three node files, pasted into the report in full.",
    "A new node under the manifesto that lists the three IDs.",
    "Nothing; the owner finds the nodes through `git log`."
-  ]
+  ],
+  "topic": "routine"
  },
  {
   "id": "P07",
-  "topic": "phases",
   "rule": "In tandem planning the graph stays as it is",
   "stated": "yes",
   "stem": "The owner writes: \"I am thinking about letting customers pay online. What do you think?\" Which phase is this, and what do you do with the graph?",
@@ -374,11 +516,11 @@
    "Agent planning: you add nodes for online payment and commit them.",
    "Implementation: you plan the payment nodes and start building.",
    "Owner planning: you wait until the owner has edited the nodes."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P08",
-  "topic": "phases",
   "rule": "Removals, splits and changes of existing nodes are mentioned as soon as they are considered",
   "stated": "yes",
   "stem": "In a tandem planning round you realise that the owner's new idea makes two existing nodes obsolete and that a third should be split. When do you tell the owner?",
@@ -387,11 +529,11 @@
    "Not at all; changes to nodes are yours to make in agent planning.",
    "After you have deleted and split the nodes, in your summary.",
    "Only if the owner asks which nodes are affected."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P09",
-  "topic": "phases",
   "rule": "A planning request authorizes two commits: the owner's edits, then the agent's changes",
   "stated": "yes",
   "stem": "The owner asks you to change the spec. `specspec diff` shows that the owner edited two nodes by hand and did not commit them. Which commits do you make, and in which order?",
@@ -400,11 +542,11 @@
    "One commit with the owner's edits and your changes together, as `Agent specspec changes: <description>`.",
    "First your own changes as `Agent specspec changes: <description>`, then the owner's edits as `Owner specspec changes: <description>`.",
    "None; you change the nodes and leave every commit to the owner."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P10",
-  "topic": "phases",
   "rule": "A request to build includes agent planning first",
   "stated": "yes",
   "stem": "The owner writes: \"Build the CSV export.\" The graph says nothing about exports yet. What comes first?",
@@ -413,11 +555,11 @@
    "The code; once the export works, you describe it in an implementation node.",
    "A tandem round; you touch neither graph nor code before the owner has discussed the export with you.",
    "The code and the nodes together, in one commit at the end."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P11",
-  "topic": "phases",
   "rule": "While building, removing a node is the owner's decision",
   "stated": "yes",
   "stem": "While building, you find that an existing requirement node no longer fits the product. Whose decision is it to remove the node?",
@@ -426,11 +568,11 @@
    "Yours; a node that no longer applies is deleted, and Git keeps the earlier text.",
    "Yours, as long as you name the deletion in the commit message.",
    "Nobody's; nodes are never removed, only marked as outdated."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P12",
-  "topic": "phases",
   "rule": "A contradiction is handled by building a contradiction-free part and reporting",
   "stated": "yes",
   "stem": "While building, you notice that two requirement nodes contradict each other. What do you do?",
@@ -439,11 +581,11 @@
    "Stop and wait until the owner has resolved the contradiction.",
    "Rewrite the less important of the two nodes so that they agree, and go on.",
    "Follow the node that is closer to the manifesto and delete the other."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P13",
-  "topic": "commands",
   "rule": "Deletion removes exactly the selected files",
   "stated": "yes",
   "stem": "You run `specspec delete Qm3xT7A=` on a node that has two children. What happens to the children?",
@@ -452,11 +594,11 @@
    "They are deleted along with the node.",
    "They are attached to the deleted node's parent automatically.",
    "The command refuses to run until the children are deleted."
-  ]
+  ],
+  "topic": "commands"
  },
  {
   "id": "P14",
-  "topic": "commands",
   "rule": "IDs are written in full",
   "stated": "yes",
   "stem": "A node has the ID `TZ971GA=`. How do you write it in a command?",
@@ -465,24 +607,24 @@
    "Without the padding: `specspec query TZ971GA`.",
    "By its title in quotes, in place of the ID.",
    "With its file name: `specspec query TZ971GA=.md`."
-  ]
+  ],
+  "topic": "commands"
  },
  {
-  "id": "P15",
-  "topic": "commands",
+  "id": "P15b",
   "rule": "Several editing steps form one invocation",
   "stated": "yes",
-  "stem": "The owner replaces a choice. You delete the choice node and its implementation node and add the new choice under the same intention. Which command does all of it in one step and refuses an invalid result?",
+  "stem": "The owner replaces a conclusion. You delete its node and its implementation node and add the new conclusion under the same intention. Which command does all of it in one step and refuses an invalid result?",
   "options": [
-   "`specspec delete CHOICE_ID IMPL_ID add --parent INTENTION_ID -m '# New choice' --require-valid`",
-   "`specspec update CHOICE_ID --replace IMPL_ID INTENTION_ID --require-valid`",
-   "`specspec delete CHOICE_ID --with-descendants && specspec add -m '# New choice'`",
-   "`specspec replace CHOICE_ID -m '# New choice' --keep-parents`"
-  ]
+   "`specspec delete CONCLUSION_ID IMPL_ID add --parent INTENTION_ID -m '# New conclusion' --require-valid`",
+   "`specspec update CONCLUSION_ID --replace IMPL_ID INTENTION_ID --require-valid`",
+   "`specspec delete CONCLUSION_ID --with-descendants && specspec add -m '# New conclusion'`",
+   "`specspec replace CONCLUSION_ID -m '# New conclusion' --keep-parents`"
+  ],
+  "topic": "commands"
  },
  {
   "id": "P16",
-  "topic": "commands",
   "rule": "A changed source link is reanchored after explanation and code agree",
   "stated": "yes",
   "stem": "`specspec check --sources` reports that code linked from an implementation node has changed. You have brought the explanation and the code in line and staged the code. Which command updates the link?",
@@ -491,11 +633,11 @@
    "`specspec sources capture IMPL_ID PATH --range 10:40 --mode strict`",
    "`specspec update IMPL_ID --replace OLD NEW`",
    "`specspec recover`"
-  ]
+  ],
+  "topic": "commands"
  },
  {
   "id": "P17",
-  "topic": "commands",
   "rule": "An interrupted write is recovered",
   "stated": "yes",
   "stem": "A `specspec` write was interrupted, and the next command reports an unfinished transaction. What do you do?",
@@ -504,11 +646,11 @@
    "Delete `.specspec/local/` and run the command again.",
    "Run `git checkout .specspec` to restore the node files.",
    "Edit the node files by hand until `specspec check` passes."
-  ]
+  ],
+  "topic": "commands"
  },
  {
   "id": "P18",
-  "topic": "writing",
   "rule": "An implementation node says what exists, including its limits",
   "stated": "yes",
   "stem": "You write the implementation node for a CSV export that handles at most 10,000 rows and skips attachments. What does the node say?",
@@ -517,25 +659,25 @@
    "What the export should become: every row and all attachments.",
    "Only the file name and the line range of the code.",
    "How the export differs from last month's version."
-  ]
+  ],
+  "topic": "writing"
  },
  {
-  "id": "P19",
-  "topic": "writing",
+  "id": "P19b",
   "rule": "Every node is in force; the graph has no approval or confidence marks",
   "stated": "yes",
-  "stem": "You are unsure about one of the choices you recorded. How does the graph show that?",
+  "stem": "You are unsure about one of the conclusions you recorded. How does the graph show that?",
   "options": [
    "It carries no mark; every node is in force, and you name the uncertainty in your report.",
    "With a line `Status: proposed` at the top of the node.",
    "With a confidence value in the node's frontmatter.",
-   "By placing the node deeper in the graph than the choices you are sure of."
-  ]
+   "By placing the node deeper in the graph than the conclusions you are sure of."
+  ],
+  "topic": "writing"
  },
  {
   "id": "P20",
-  "topic": "writing",
-  "rule": "A choice that is deliberately left open is named as open in its node",
+  "rule": "A conclusion that is deliberately left open is named as open in its node",
   "stated": "yes",
   "stem": "The owner says: \"I do not care how the invoices are numbered.\" The work at hand does not need it settled. How does the graph treat the numbering?",
   "options": [
@@ -543,11 +685,11 @@
    "A node `Open question: invoice numbering` goes under the manifesto.",
    "Two nodes, `Option A` and `Option B`, describe the candidates.",
    "The graph says nothing; open points live in the code as TODO comments."
-  ]
+  ],
+  "topic": "writing"
  },
  {
   "id": "P21",
-  "topic": "phases",
   "rule": "Edits by the owner get a structure review: suggestions, and the graph stays as it is",
   "stated": "no",
   "stem": "`specspec diff` shows at the start of a session that the owner added three nodes by hand. One of them blends two decisions, and one hangs under the wrong parent. The owner writes: \"Carry on.\" What do you do about the two nodes?",
@@ -556,11 +698,11 @@
    "Split and move them at once, since the rules of the graph are clear, and mention it in your summary.",
    "Nothing; the owner's nodes are not yours to comment on.",
    "Revert the owner's three nodes and ask them to add the nodes through you."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P22",
-  "topic": "phases",
   "rule": "What the owner does not accept stays in the owner's words",
   "stated": "no",
   "stem": "In a structure review you suggested splitting a node the owner wrote. The owner answered: \"No, leave that one.\" Later the owner asks you to change the spec in the same area. What happens to that node?",
@@ -569,11 +711,11 @@
    "You split it now, because agent planning makes the graph implementation-mature.",
    "You split it and note in the commit message that the owner disagreed.",
    "You delete it, since a node that breaks the rules cannot stay in force."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P23",
-  "topic": "writing",
   "rule": "The time before the product stays out of node text",
   "stated": "partly",
   "stem": "The owner says: \"Today we take orders by phone and half of them get lost. I want customers to order on their phone.\" Which sentence belongs in the node?",
@@ -582,11 +724,11 @@
    "Customers order on their phone, so that no order gets lost on the phone any more.",
    "Ordering by phone call is replaced by ordering in the app.",
    "Customers no longer need to call the shop to order."
-  ]
+  ],
+  "topic": "writing"
  },
  {
   "id": "P24",
-  "topic": "writing",
   "rule": "What the product is not stays out of node text",
   "stated": "partly",
   "stem": "The owner wants reservations for whole days only. Which sentence states that in a node?",
@@ -595,11 +737,11 @@
    "Reservations are not possible by the hour.",
    "Reservations are now per day instead of per hour.",
    "Reservations remain per day."
-  ]
+  ],
+  "topic": "writing"
  },
  {
   "id": "P25",
-  "topic": "commands",
   "rule": "`--parent` replaces the whole parent list",
   "stated": "yes",
   "stem": "A node has the parents `AAAAAAA=` and `BBBBBBA=`. You want to add `CCCCCCA=` as a third parent. Which command does that?",
@@ -608,24 +750,24 @@
    "`specspec update NODE_ID --parent CCCCCCA=`",
    "`specspec add --parent CCCCCCA= NODE_ID`",
    "`specspec update NODE_ID --add-parent CCCCCCA=`"
-  ]
+  ],
+  "topic": "commands"
  },
  {
-  "id": "P26",
-  "topic": "commands",
+  "id": "P26b",
   "rule": "A node added in the same invocation is named with `--as`",
   "stated": "yes",
-  "stem": "In one invocation you add an outcome and a choice beneath it. How does the choice name the outcome, which has no ID yet?",
+  "stem": "In one invocation you add a requirement and a second one beneath it. How does the second name the first, which has no ID yet?",
   "options": [
-   "The outcome gets `--as name`, and the choice says `--parent '$name'`.",
-   "The choice says `--parent NEW`, which stands for the node added before it.",
-   "It cannot; you add the outcome first, read its ID and run a second command.",
-   "The choice says `--parent` with the outcome's title in quotes."
-  ]
+   "The first gets `--as name`, and the second says `--parent '$name'`.",
+   "The second says `--parent NEW`, which stands for the node added before it.",
+   "It cannot; you add the first, read its ID and run a second command.",
+   "The second says `--parent` with the first one's title in quotes."
+  ],
+  "topic": "commands"
  },
  {
   "id": "P27",
-  "topic": "phases",
   "rule": "The owner's request decides the phase and what it authorizes",
   "stated": "yes",
   "stem": "The owner writes: \"Draw the graph for the reporting feature we talked about.\" Which phase does that start, and what does it authorize?",
@@ -634,11 +776,11 @@
    "Implementation; it authorizes you to build the feature and commit the code.",
    "Tandem planning; it authorizes nothing, and you answer with questions.",
    "Agent planning; it authorizes one commit that also holds a first version of the code."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P28",
-  "topic": "commands",
   "rule": "A whole-file source link is the one hand edit",
   "stated": "yes",
   "stem": "An implementation node should link the whole file `export.py`. How do you record that?",
@@ -647,11 +789,11 @@
    "With `specspec sources capture IMPL_ID export.py --range 1:9999 --mode expanding`.",
    "By writing the file name into the node's title.",
    "With `specspec update IMPL_ID --source export.py`."
-  ]
+  ],
+  "topic": "commands"
  },
  {
   "id": "P29",
-  "topic": "phases",
   "rule": "An idea for improving the product is reported",
   "stated": "yes",
   "stem": "While building what the owner asked for, you see a way to make the product clearly better that nobody asked for. What do you do with the idea?",
@@ -660,24 +802,24 @@
    "Build it along with the requested work and describe it in the summary.",
    "Add requirement nodes for it under the manifesto and build it in the next session.",
    "Drop it; ideas about the product are the owner's alone."
-  ]
+  ],
+  "topic": "phases"
  },
  {
-  "id": "P30",
-  "topic": "routine",
-  "rule": "The closing report names changes, own choices and what is uncertain",
+  "id": "P30b",
+  "rule": "The closing report names changes, own conclusions and what is uncertain",
   "stated": "yes",
   "stem": "You have finished a planning request. What does your closing message to the owner contain?",
   "options": [
-   "What you changed, the choices you made on the owner's behalf, what remains uncertain, and the nodes concerned.",
+   "What you changed, the conclusions you drew on the owner's behalf, what remains uncertain, and the nodes concerned.",
    "The full text of every node you touched.",
    "A list of the commands you ran, in order.",
    "A confirmation that the graph is complete and correct."
-  ]
+  ],
+  "topic": "routine"
  },
  {
   "id": "P31",
-  "topic": "phases",
   "rule": "A sealed node is left alone when the request does not need it changed",
   "stated": "no",
   "stem": "The newest commit of a project is `Agent specspec changes: reminders`, and `git status` is clean. While reading the graph you notice that an old requirement blends two decisions. The owner asks you to plan a feature that has nothing to do with that node. What do you do about it?",
@@ -686,24 +828,24 @@
    "Split it while you are planning, since the rules of the graph are clear, and mention it in your summary.",
    "List the split as a suggestion in your summary, and again in every later session until the owner decides.",
    "Stop and ask the owner about the node before you plan the feature."
-  ]
+  ],
+  "topic": "phases"
  },
  {
-  "id": "P32",
-  "topic": "phases",
+  "id": "P32b",
   "rule": "A request that needs it changes a sealed node, and the summary says so",
   "stated": "no",
   "stem": "A sealed requirement reads 'Print a QR tag for every bike so nobody mixes up two bikes'. The owner writes: \"We are replacing the QR tags by NFC stickers. Change the spec.\" What do you do with the sealed node?",
   "options": [
-   "Make 'No two bikes get mixed up' a node of its own, put the NFC choice beneath it in place of the QR choice, and name the sealed node in your summary.",
+   "Make 'No two bikes get mixed up' a node of its own, put the NFC sticker beneath it in place of the QR tag, and name the sealed node in your summary.",
    "Add a new node 'Put an NFC sticker on every bike' next to it and leave the sealed node exactly as it is.",
    "Ask the owner for permission to touch a sealed node and plan nothing until they answer.",
    "Leave the graph as it is and remember the change for when you build."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P33",
-  "topic": "phases",
   "rule": "What the owner committed by hand after the newest agent planning commit is open",
   "stated": "no",
   "stem": "`git status` is clean. The newest commit, `more spec`, was made by the owner by hand and adds three nodes; the commit before it is `Agent specspec changes: job list`. One of the three nodes hangs under a parent it does not follow from. The owner asks you to plan a new feature. What about that node?",
@@ -712,11 +854,11 @@
    "It is committed and therefore sealed; you say nothing about it.",
    "Move it now, since nobody has reviewed it yet, and mention the move in your summary.",
    "Revert the owner's commit and ask them to add nodes through you."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P34",
-  "topic": "phases",
   "rule": "The owner's uncommitted edits are committed as they wrote them before they are questioned",
   "stated": "no",
   "stem": "At the start of a session `specspec diff` shows two nodes that the owner edited by hand and has not committed. One of them blends two decisions. The owner writes: \"Have a look.\" What is your first step?",
@@ -725,11 +867,11 @@
    "Tell the owner what you would split, and commit nothing before they have answered.",
    "Split the node and commit everything together as `Agent specspec changes: ...`.",
    "Commit the edits as `Agent specspec changes: ...`, so that they are sealed."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P35",
-  "topic": "phases",
   "rule": "An owner commit keeps the owner's words and seals nothing",
   "stated": "no",
   "stem": "A minute ago you committed the owner's hand edits as `Owner specspec changes: limits and a warranty slip`. Are those nodes sealed now?",
@@ -738,24 +880,24 @@
    "Yes. Every commit that you make seals the graph beneath it.",
    "Yes. A node is settled as soon as it is committed, whoever wrote it.",
    "Only the nodes that pass `specspec check` are sealed."
-  ]
+  ],
+  "topic": "phases"
  },
  {
-  "id": "P36",
-  "topic": "phases",
+  "id": "P36b",
   "rule": "Planning is committed apart from implementation",
   "stated": "no",
-  "stem": "While building a notes app you decide to keep the notes in the browser's localStorage, and you write `storage.js`. You add a requirement for that choice and an implementation node that explains the file. How do you commit?",
+  "stem": "While building a notes app you decide to keep the notes in the browser's localStorage, and you write `storage.js`. You add a requirement for that and an implementation node that explains the file. How do you commit?",
   "options": [
    "The requirement on its own as `Agent specspec changes: ...`, and the code with its implementation node in an ordinary commit of the project.",
    "Everything in one commit titled `Agent specspec changes: ...`.",
    "Everything in one ordinary commit, because the planning commit was made before you started to build.",
    "The code now; the requirement and the implementation node wait for the next planning request."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P37",
-  "topic": "phases",
   "rule": "A point about a sealed node is raised once and not at every opportunity",
   "stated": "no",
   "stem": "A sealed node has an obvious flaw: a sentence about signing in sits in a node about reminder texts. You mentioned it in your summary last week, and the owner did not react. Today you add a child beneath that node for a new feature. What do you do about the flaw?",
@@ -764,11 +906,11 @@
    "Move the sentence into a node of its own now, since you are working there anyway.",
    "Open your reply with the flaw and wait for the owner's decision before you add the child.",
    "Remind the owner of it in every summary until they decide."
-  ]
+  ],
+  "topic": "phases"
  },
  {
   "id": "P38",
-  "topic": "phases",
   "rule": "In tandem planning, what the owner wants is told apart from the way they suggested",
   "stated": "partly",
   "stem": "In a tandem planning round the owner says: \"Customers get an e-mail when their order is ready, so nobody waits in the shop for nothing.\" What does your reply do with this sentence?",
@@ -777,6 +919,7 @@
    "It lists the nodes you will add for the e-mail and their parents.",
    "It asks which e-mail provider the owner prefers and moves on.",
    "It confirms the e-mail as a requirement and turns to the next point."
-  ]
+  ],
+  "topic": "phases"
  }
 ]

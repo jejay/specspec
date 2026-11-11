@@ -123,7 +123,7 @@ answer on a temporary copy of the task's graph.
 ```sh
 python -m tools.guide_quiz guides                    # guide versions and their sizes
 python -m tools.guide_quiz dilemmas --guides shipped,2026-11-10-before-structure-rules
-python -m tools.guide_quiz tasks --tasks clinic,bakery,revise,review
+python -m tools.guide_quiz tasks --tasks clinic,bakery,toolshed,discuss-game
 python -m tools.guide_quiz grade                     # the grader's verdicts and the command runs
 python -m tools.guide_quiz scorecard --guides 2026-11-10-before-structure-rules,shipped
 python -m tools.guide_quiz report --guides shipped,2026-11-10-before-structure-rules
@@ -139,17 +139,20 @@ written for; `--models` takes others. A wording to try out is a file under
 `guides/experiments/`: a trimmed guide is quizzed like any other version, and the cuts
 that leave the results where they were are candidates for the shipped guide.
 
-`scorecard` is the place to start reading results: about twenty behaviours, such as "your
-edits left as you wrote them" or "summaries without a remark about sealed nodes", each with
-a sentence on what the model was asked and what is counted, one column per guide in the
-order given. `report` prints every criterion behind those rows.
+`scorecard` is the place to start reading results: about thirty behaviours, each with a
+sentence on what the model was asked and what is counted, one column per guide in the
+order given. Its first group holds what counts most, whether the agent tells intention
+from conclusion: "an intention you left unsaid is worded above your way", "a statement
+that works against the manifesto is raised". The other groups follow, such as "your edits
+left as you wrote them". `report` prints every criterion behind those rows.
 
 Calls go through the `claude` command of Claude Code under your own login and cost money,
 so no test and no CI job makes them; `costs` adds up what the recorded calls cost. Grading
 by Claude Opus 5.5 is most of that: `grade --guides` limits it to the guide versions you
 compare, and `agreement` shows, criterion by criterion, where a cheaper grader comes to
 the same verdicts. Runs are resumable: answers already given are kept under the name of
-their task or dilemma, so a brief or a dilemma whose wording changes gets a new name.
+their task or dilemma. An answer carries a mark of the brief it was given and stops
+counting when the brief's wording changes; a dilemma whose wording changes gets a new ID.
 After a change to a rubric, `grade --again TASK` judges that task's answers anew. Raw
 answers stay in the ignored `tools/guide_quiz/results/`; put the numbers that justify a
 wording into the commit message.

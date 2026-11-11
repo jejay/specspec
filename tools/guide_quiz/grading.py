@@ -57,25 +57,54 @@ def found(nodes: dict, key) -> str | None:
     return str(key) if key is not None and str(key) in nodes else None
 
 
+def pick(verdict: dict, *names: str):
+    """The first of several fields that a verdict holds; earlier rubrics used earlier names."""
+    return next((verdict[name] for name in names if name in verdict), None)
+
+
+def separated(probe: dict | None) -> bool:
+    """Whether an intention and the way to it are two nodes, the intention's text free of it."""
+    probe = probe or {}
+    return (
+        yes(probe.get("separate_nodes"))
+        and bool(pick(probe, "intention_node", "outcome_node"))
+        and yes(pick(probe, "intention_text_free_of_way", "outcome_text_free_of_means"))
+    )
+
+
+def near_root(nodes: dict, key: str | None) -> bool:
+    """Directly under the manifesto, or under nodes that are: the owner's reason may sit between."""
+    return bool(key) and all(
+        parent == graphs.ROOT or nodes.get(parent, {}).get("parents") == [graphs.ROOT]
+        for parent in nodes[key]["parents"]
+    )
+
+
+def whole(verdict: dict, name: str) -> int:
+    """A count from a verdict; anything that is no number counts as zero."""
+    value = verdict.get(name)
+    return int(value) if isinstance(value, int | float) else 0
+
+
 @dataclass(frozen=True)
 class Probes:
     """Where a drawing rubric keeps its findings, so that briefs share their criteria."""
 
     constraints: tuple[str, ...]  # the owner's constraints
-    shaping: str  # the constraint that shaped a choice
+    shaping: str  # the constraint that shaped a conclusion
     shaped: tuple[tuple[str, ...], ...]  # paths to the shaped node's key, best first
     suggested: str  # a technology the owner merely suggested
-    splits: dict[str, bool]  # a "way, so that purpose" each; True: manifesto omits the purpose
+    splits: dict[str, bool]  # a "way, so that intention" each; True: manifesto omits it
     rule: str  # a rule that deserves a node of its own
     separate: str  # two needs that deserve a node each
-    wording: str  # a choice the owner left to the agent
+    wording: str  # a wording the owner left to the agent
 
 
 PROBES = {
     "clinic": Probes(
         constraints=("pg", "eu"),
         shaping="eu",
-        shaped=(("sms_provider", "node"), ("reminder", "means_node")),
+        shaped=(("sms_provider", "node"), ("reminder", "way_node"), ("reminder", "means_node")),
         suggested="sms_provider",
         splits={"reminder": False, "week": False},
         rule="double_booking_own_node",
@@ -85,7 +114,7 @@ PROBES = {
     "bakery": Probes(
         constraints=("pc", "lang"),
         shaping="lang",
-        shaped=(("email_wording_node",), ("ready", "means_node")),
+        shaped=(("email_wording_node",), ("ready", "way_node"), ("ready", "means_node")),
         suggested="mail_sender",
         splits={"ready": True, "board": True},
         rule="handout_once_own_node",
@@ -109,22 +138,19 @@ def score_drawing(task: tasks.Task, data: dict, verdict: dict) -> dict:
     constraint_nodes = {
         name: found(nodes, (verdict.get(name) or {}).get("node")) for name in probes.constraints
     }
+    own = {name: yes((verdict.get(name) or {}).get("own_node")) for name in constraint_nodes}
     at_root = [
-        bool(key) and yes(verdict[name].get("own_node")) and nodes[key]["parents"] == [graphs.ROOT]
+        own[name] and bool(key) and nodes[key]["parents"] == [graphs.ROOT]
         for name, key in constraint_nodes.items()
     ]
+    near = [own[name] and near_root(nodes, key) for name, key in constraint_nodes.items()]
     shaping = constraint_nodes[probes.shaping]
     shaped = next(
         (key for path in probes.shaped if (key := found(nodes, lookup(verdict, path)))), None
     )
     suggested = verdict.get(probes.suggested) or {}
     suggested_node = found(nodes, suggested.get("node"))
-    split = {
-        name: yes((verdict.get(name) or {}).get("separate_nodes"))
-        and bool((verdict.get(name) or {}).get("outcome_node"))
-        and yes((verdict.get(name) or {}).get("outcome_text_free_of_means"))
-        for name in probes.splits
-    }
+    split = {name: separated(verdict.get(name)) for name in probes.splits}
     limits = verdict.get("limits") or {}
     order = verdict.get("work_order") or {}
     report = verdict.get("report") or {}
@@ -133,8 +159,9 @@ def score_drawing(task: tasks.Task, data: dict, verdict: dict) -> dict:
         "graph passes the structure check": not graphs.problems(nodes),
         "no implementation node for unbuilt work": measured["implementation nodes"] == 0,
         "no build order in node text": not graphs.build_order(nodes),
-        "constraints are nodes directly under the manifesto": all(at_root),
-        "a choice descends from the constraint that shaped it": bool(shaping and shaped)
+        "what the owner holds as fixed is a node of its own near the root": all(near),
+        "the same, directly under the manifesto": all(at_root),
+        "a conclusion descends from the constraint that shaped it": bool(shaping and shaped)
         and shaping in graphs.ancestors(nodes, shaped),
         "a suggested technology is a requirement of its own": yes(
             suggested.get("left_open_explicitly")
@@ -155,36 +182,109 @@ def score_drawing(task: tasks.Task, data: dict, verdict: dict) -> dict:
         ),
         "no node is only a topic": not verdict.get("category_nodes"),
         "no contrast with the past": not verdict.get("historic_contrast"),
-        "the manifesto's children are outcomes or constraints": not verdict.get(
-            "root_children_means"
+        "no way that could be another hangs directly under the manifesto": not pick(
+            verdict, "root_children_ways", "root_children_means"
         ),
         "an open wording is decided or named as open": verdict.get(probes.wording)
         in ("decided", "left_open_stated"),
         "titles are statements": not verdict.get("label_titles"),
-        "no node blends decisions": not blended,
-        "the report names the agent's own choices": yes(report.get("names_own_choices")),
+        "no node blends statements that could be replaced separately": not blended,
+        "the report names the agent's own conclusions": yes(
+            pick(report, "names_own_conclusions", "names_own_choices")
+        ),
         "the report names open points": yes(report.get("names_open_points")),
     }
+    if "names_read_intentions" in report:  # asked since the rubric looks for it
+        passed["the report names the intentions the agent read into the owner's words"] = yes(
+            report["names_read_intentions"]
+        )
     clean = [split[name] for name, is_clean in probes.splits.items() if is_clean]
     stated = [split[name] for name, is_clean in probes.splits.items() if not is_clean]
     counts = {
-        "an owner's way and its purpose are two nodes": [sum(clean), len(clean)],
-        "the same, with the purpose also in the manifesto": [sum(stated), len(stated)],
+        "an intention and the owner's way to it are two nodes": [sum(clean), len(clean)],
+        "the same, with the intention also in the manifesto": [sum(stated), len(stated)],
     }
     numbers = {
         **measured,
         "nodes that state the limits": len(limits.get("nodes") or []),
-        "nodes that blend decisions": len(blended),
+        "nodes that blend statements": len(blended),
     }
-    if "own_choice_nodes" in verdict:  # asked since the rubric counts them
-        own = {found(nodes, key) for key in verdict["own_choice_nodes"] or []} - {None}
-        numbers["nodes that record a choice of the agent's own"] = len(own)
+    if {"own_conclusion_nodes", "own_choice_nodes"} & set(verdict):  # asked since counted
+        own = pick(verdict, "own_conclusion_nodes", "own_choice_nodes") or []
+        kept = {found(nodes, key) for key in own} - {None}
+        numbers["nodes that record a conclusion of the agent's own"] = len(kept)
+    return {"pass": passed, "counts": counts, "numbers": numbers}
+
+
+# Ways in the tool-library brief; True where the owner says nothing of what the way is for.
+UNSAID = {"scan": True, "sheet": True, "due": False, "broken": False}
+
+
+def score_toolshed(task: tasks.Task, data: dict, verdict: dict) -> dict:
+    """A brief whose owner names ways and leaves most intentions unsaid.
+
+    Two ways come without a word about what they are for, one has its intention in the
+    manifesto and one states it. The manifesto's wording holds a conclusion, a calendar
+    view, and one sentence leaves open how firmly it holds.
+    """
+    nodes = graphs.drawn(data, set(task.root_names))
+    measured = graphs.metrics(nodes)
+    split = {name: separated(verdict.get(name)) for name in UNSAID}
+    server = verdict.get("server") or {}
+    server_node = found(nodes, server.get("node"))
+    vue = verdict.get("vue") or {}
+    limits = verdict.get("limits") or {}
+    order = verdict.get("work_order") or {}
+    report = verdict.get("report") or {}
+    passed = {
+        "graph passes the structure check": not graphs.problems(nodes),
+        "no implementation node for unbuilt work": measured["implementation nodes"] == 0,
+        "what the owner holds as fixed is a node of its own near the root": yes(
+            server.get("own_node")
+        )
+        and near_root(nodes, server_node),
+        "the report says how it read a statement of unclear firmness": vue.get("reading")
+        == "asked_or_flagged",
+        "the report names the intentions the agent read into the owner's words": yes(
+            report.get("names_read_intentions")
+        ),
+        "the report points out a conclusion in the manifesto's wording": yes(
+            report.get("points_out_manifesto_conclusion")
+        ),
+        "a rule of its own has a node of its own": yes(verdict.get("safety_own_node")),
+        "a list of limits is in at most two nodes": yes(limits.get("all_three_stated"))
+        and len(limits.get("nodes") or []) <= 2,
+        "no work order, by the grader": not (
+            order.get("order_nodes") or order.get("order_in_text")
+        ),
+        "no contrast with the past": not verdict.get("historic_contrast"),
+        "the report names the agent's own conclusions": yes(report.get("names_own_conclusions")),
+        "the report names open points": yes(report.get("names_open_points")),
+    }
+    unsaid = [split[name] for name, silent in UNSAID.items() if silent]
+    said = [split[name] for name, silent in UNSAID.items() if not silent]
+    counts = {
+        "an intention the owner left unsaid is a node above the owner's way": [
+            sum(unsaid),
+            len(unsaid),
+        ],
+        "the same, with the intention in the manifesto or in the owner's sentence": [
+            sum(said),
+            len(said),
+        ],
+    }
+    own = {found(nodes, key) for key in verdict.get("own_conclusion_nodes") or []} - {None}
+    numbers = {
+        **measured,
+        "nodes that state the limits": len(limits.get("nodes") or []),
+        "nodes that record a conclusion of the agent's own": len(own),
+    }
     return {"pass": passed, "counts": counts, "numbers": numbers}
 
 
 def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
     nodes, summary = graphs.revised(data, task.base)
-    outcome, grid, slots, colour = "Wk7fTq0=", "Gr1dCc4=", "Sl0tRw8=", "C0lrTy2="
+    seen, grid, slots, colour = "Wk7fTq0=", "Gr1dCc4=", "Sl0tRw8=", "C0lrTy2="
     text_message, reminder, europe = "SmsDay6=", "Rm1ndR3=", "EuData9="
     day = verdict.get("day_list") or {}
     day_node = found(nodes, day.get("node"))
@@ -198,26 +298,28 @@ def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
     views = [key for key in (day_node, grid) if key and key in nodes]
     passed = {
         "resulting graph passes the structure check": not graphs.problems(nodes),
-        "the outcome is kept and names no way": outcome in nodes
-        and not yes(verdict.get("outcome_Wk7fTq0_text_names_means")),
-        "the day list is a new node directly under the outcome": day.get("how") == "new_node"
+        "the intention is kept and names no way": seen in nodes
+        and not yes(
+            pick(verdict, "intention_Wk7fTq0_text_names_way", "outcome_Wk7fTq0_text_names_means")
+        ),
+        "the day list is a new node directly under that intention": day.get("how") == "new_node"
         and bool(day_node)
-        and outcome in nodes[day_node]["parents"],
+        and seen in nodes[day_node]["parents"],
         "the colour node is kept and applies to the day list": bool(colour_parents)
         and all(parent in nodes for parent in colour_parents)
-        and (day_node in colour_parents or outcome in colour_parents),
+        and (day_node in colour_parents or seen in colour_parents),
         "no view hangs beneath the colour node": not any(
             colour in graphs.ancestors(nodes, key) for key in views
         ),
         "the reply is recorded in a new node": bool(confirm.get("nodes"))
         and not yes(confirm.get("only_appended_to_existing")),
-        "the reply's purpose is an outcome of its own": yes(
-            confirm.get("outcome_and_mechanism_separate")
+        "the reply's intention is a node of its own": yes(
+            pick(confirm, "intention_and_mechanism_separate", "outcome_and_mechanism_separate")
         ),
         "the reply descends from the text-message node": bool(mechanism)
         and text_message in graphs.ancestors(nodes, mechanism) | {mechanism},
         "e-mail is a new node": yes(email.get("is_added_node")),
-        "e-mail is under the reminder outcome and beside the text message": bool(email_node)
+        "e-mail is under the reminder intention and beside the text message": bool(email_node)
         and reminder in email_above
         and text_message not in email_above,
         "e-mail descends from the EU constraint": europe in email_above,
@@ -229,7 +331,7 @@ def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
         "the report names open points": yes(report.get("names_open_points")),
     }
     if task.name == "revise":  # only this request drops the grid on every screen
-        passed["the replaced choice is deleted"] = grid not in nodes
+        passed["the replaced conclusion is deleted"] = grid not in nodes
         passed["the report names the removed nodes"] = yes(report.get("names_removed_nodes"))
     numbers = {
         "nodes added": len(summary["added"]),
@@ -258,29 +360,84 @@ def score_review(task: tasks.Task, data: str, verdict: dict) -> dict:
 def score_discussion(task: tasks.Task, data: str, verdict: dict) -> dict:
     """A round of tandem planning: the answer discusses the product and changes nothing."""
 
-    def count(name: str) -> int:
-        value = verdict.get(name)
-        return int(value) if isinstance(value, int | float) else 0
-
     passed = {
         "the answer leaves the graph as it is": yes(verdict.get("leaves_graph")),
         "it talks about the product rather than about nodes": yes(verdict.get("about_product")),
         "it gives an overview of its understanding": yes(verdict.get("overview")),
-        "it tells a want apart from the way the owner named": yes(
-            verdict.get("separates_want_from_way")
+        "it tells an intention apart from the way the owner named": yes(
+            pick(verdict, "separates_intention_from_conclusion", "separates_want_from_way")
         ),
-        "it challenges a choice the owner suggested": yes(verdict.get("challenges_a_choice")),
+        "it challenges a conclusion the owner suggested": yes(
+            pick(verdict, "challenges_a_conclusion", "challenges_a_choice")
+        ),
         "it proposes conclusions of its own": yes(verdict.get("own_conclusions")),
-        "it asks questions and answers most of them itself": count("questions") > 0
-        and 2 * count("questions_with_own_answer") >= count("questions"),
+        "it asks questions and answers most of them itself": answers_own_questions(verdict),
     }
-    numbers = {
+    if "says_how_it_reads" in verdict:  # asked since the rubric looks for it
+        passed["it says which statements it reads as fixed and which as open"] = yes(
+            verdict["says_how_it_reads"]
+        )
+    return {"pass": passed, "counts": {}, "numbers": discussion_numbers(data, verdict)}
+
+
+def answers_own_questions(verdict: dict) -> bool:
+    asked = whole(verdict, "questions")
+    return asked > 0 and 2 * whole(verdict, "questions_with_own_answer") >= asked
+
+
+def discussion_numbers(data: str, verdict: dict) -> dict:
+    return {
         "words": len(data.split()),
-        "questions": count("questions"),
-        "questions with a tentative answer": count("questions_with_own_answer"),
+        "questions": whole(verdict, "questions"),
+        "questions with a tentative answer": whole(verdict, "questions_with_own_answer"),
         "wrong claims": len(verdict.get("wrong_claims") or []),
     }
-    return {"pass": passed, "counts": {}, "numbers": numbers}
+
+
+# Ways in the party-game brief whose intention the owner states or implies.
+GAME_WAYS = ("room_code", "timer", "host_phone")
+
+
+def score_game(task: tasks.Task, data: str, verdict: dict) -> dict:
+    """Tandem planning with three planted statements.
+
+    A timeline of who did what works against the manifesto's secret roles, "written in
+    Kotlin" leaves open how firmly it holds, and working without internet is fixed by the
+    place while the host's phone as the server is one way to it. The manifesto's wording
+    holds a way too, the players' own phones.
+    """
+    timeline = verdict.get("timeline") or {}
+    named = verdict.get("intentions_named") or {}
+    passed = {
+        "the answer leaves the graph as it is": yes(verdict.get("leaves_graph")),
+        "it gives an overview of its understanding": yes(verdict.get("overview")),
+        "it raises the statement that works against the manifesto": yes(
+            timeline.get("raises_conflict")
+        ),
+        "it proposes another conclusion for that intention": yes(
+            timeline.get("proposes_alternative")
+        ),
+        "it asks whether an unclear statement is fixed": verdict.get("kotlin") == "asks",
+        "it asks that, or says how it reads the statement": verdict.get("kotlin")
+        in ("asks", "states_reading"),
+        "it keeps what the circumstances fix": verdict.get("offline") == "kept",
+        "it leaves the manifesto's intention alone": not yes(verdict.get("challenges_manifesto")),
+        "it points out a conclusion in the manifesto's wording": yes(
+            verdict.get("manifesto_wording")
+        ),
+        "it says which statements it reads as fixed and which as open": yes(
+            verdict.get("says_how_it_reads")
+        ),
+        "it proposes conclusions of its own": yes(verdict.get("own_conclusions")),
+        "it asks questions and answers most of them itself": answers_own_questions(verdict),
+    }
+    counts = {
+        "the intention behind a stated way is named": [
+            sum(yes(named.get(way)) for way in GAME_WAYS),
+            len(GAME_WAYS),
+        ]
+    }
+    return {"pass": passed, "counts": counts, "numbers": discussion_numbers(data, verdict)}
 
 
 def score_owner_review(task: tasks.Task, data: str | dict, verdict: dict) -> dict:
@@ -490,9 +647,9 @@ def score_owner_plan(task: tasks.Task, data: dict, verdict: dict) -> dict:
 def score_sealed_feature(task: tasks.Task, data: dict, verdict: dict) -> dict:
     """A request that needs a sealed node restructured: NFC stickers replace the QR tags.
 
-    The sealed node blends the QR tag with its purpose. The best graph gives the purpose
-    a node of its own with the NFC choice beneath it, and every other sealed node stays
-    as it is. Decided from the operations alone.
+    The sealed node blends the QR tag with its intention. The best graph gives the
+    intention a node of its own with the NFC sticker beneath it, and every other sealed
+    node stays as it is. Decided from the operations alone.
     """
     nodes, summary = graphs.revised(data, task.base)
     original, _ = graphs.base(task.base)
@@ -521,7 +678,7 @@ def score_sealed_feature(task: tasks.Task, data: dict, verdict: dict) -> dict:
     passed = {
         "resulting graph passes the structure check": not graphs.problems(nodes),
         "the NFC sticker is recorded": bool(stickers),
-        "its purpose is a node of its own above the NFC choice": beneath_purpose,
+        "its intention is a node of its own above the NFC sticker": beneath_purpose,
         "the QR tag is gone from the graph": not any("qr" in words for words in text.values()),
         "every other sealed node stays as written": all(others.values()),
         "the report names the sealed node it changed": "qr" in str(data.get("report")).lower(),
@@ -542,6 +699,8 @@ SCORERS["owner-edits-plan"] = SCORERS["manual-plan"] = score_owner_plan
 SCORERS["sealed-plan"] = score_owner_plan
 SCORERS["sealed-feature"] = score_sealed_feature
 SCORERS["discuss"] = score_discussion
+SCORERS["discuss-game"] = score_game
+SCORERS["toolshed"] = score_toolshed
 SCORERS.update({"revise": score_revision, "revise-phones": score_revision})
 SCORERS.update({"owner-edits": score_owner_review, "owner-edits-apply": score_owner_apply})
 SCORERS["owner-edits-review"] = score_owner_review

@@ -86,10 +86,11 @@ def ask_tasks(arguments) -> None:
         raise SystemExit(f"Unknown task: {', '.join(unknown)}. Known: {', '.join(tasks.TASKS)}")
     done = {
         (r["task"], r["model"], r["guide"], r["repetition"])
-        for r in results.load("tasks")
+        for r in tasks.current(results.load("tasks"))
         if r.get("text")
     }
     frames = frames_of(arguments.guides)
+    marks = {name: tasks.mark(name) for name in names}
     log = results.Log("tasks")
 
     def work(job) -> None:
@@ -98,6 +99,7 @@ def ask_tasks(arguments) -> None:
         log.append(
             {
                 "task": name,
+                "brief": marks[name],
                 "model": model,
                 "guide": guide,
                 "repetition": repetition,
@@ -132,9 +134,11 @@ def grade(arguments) -> None:
     }
     pending = {}
     wanted = set(listed(arguments.tasks))
-    for answer in chosen(results.load("tasks"), arguments):
+    for answer in chosen(tasks.current(results.load("tasks")), arguments):
         task = tasks.TASKS.get(answer["task"])
         if wanted and answer["task"] not in wanted:
+            continue
+        if arguments.first is not None and answer["repetition"] >= arguments.first:
             continue
         if task and grading.judged(task) and answer.get("text"):
             identity = grading.answer_id(task.name, answer["text"])
@@ -188,7 +192,7 @@ def show(arguments) -> None:
     answers = chosen(results.load("dilemmas"), arguments)
     print(report.dilemma_report(answers, reasons=arguments.reasons))
     print()
-    answers = chosen(results.load("tasks"), arguments)
+    answers = chosen(tasks.current(results.load("tasks")), arguments)
     print(report.task_report(answers, results.load("grades"), arguments.grader))
 
 
@@ -198,7 +202,8 @@ def show_scorecard(arguments) -> None:
         kept = [guides.resolve(name) for name in listed(arguments.guides)]
     except ValueError as problem:
         raise SystemExit(str(problem)) from problem
-    scores = report.scored(results.load("tasks"), results.load("grades"), arguments.grader)
+    answers = tasks.current(results.load("tasks"))
+    scores = report.scored(answers, results.load("grades"), arguments.grader)
     print(scorecard.table(scores, results.load("dilemmas"), arguments.model, kept))
 
 
@@ -208,7 +213,7 @@ def show_spending(arguments) -> None:
 
 def compare_graders(arguments) -> None:
     first, second = listed(arguments.graders)
-    answers, grades = results.load("tasks"), results.load("grades")
+    answers, grades = tasks.current(results.load("tasks")), results.load("grades")
     print(report.agreement(answers, grades, first, second))
 
 
@@ -252,6 +257,7 @@ def parser() -> argparse.ArgumentParser:
     sub.add_argument("--models", default="", help="only answers of these models")
     sub.add_argument("--guides", default="", help="only answers given with these guides")
     sub.add_argument("--tasks", default="", help="only answers to these tasks")
+    sub.add_argument("--first", type=int, help="only the first N repetitions of each task")
     sub = command("report", show, "Print the result tables.")
     sub.add_argument("--grader", default=grading.GRADER)
     sub.add_argument("--reasons", action="store_true", help="list answers that miss the key")

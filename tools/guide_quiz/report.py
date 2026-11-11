@@ -51,7 +51,7 @@ def dilemma_report(records: list[dict], reasons: bool = False) -> str:
     totals = defaultdict(lambda: [0, 0])
     for item in dilemmas.items():
         values = []
-        part = "structure" if item["topic"] == "structure" else "procedure"
+        part = item["topic"] if item["topic"] in ("structure", "relation") else "procedure"
         for cell in cells:
             group = by_cell.get((*cell, item["id"]), [])
             right = sum(record["correct"] for record in group)
@@ -63,6 +63,7 @@ def dilemma_report(records: list[dict], reasons: bool = False) -> str:
     lines.append(row("all items", [f"{a}/{b}" for a, b in (totals[cell] for cell in cells)]))
     for label, keys in (
         ("percent", cells),
+        ("percent, intention and conclusion", [(cell, "relation") for cell in cells]),
         ("percent, structure of a graph", [(cell, "structure") for cell in cells]),
         ("percent, routine, phases, commands and wording", [(c, "procedure") for c in cells]),
     ):

@@ -441,11 +441,11 @@ def rounded_polygon(points: list[tuple[float, float]], radius: float) -> str:
 
 # the example planning graph ----------------------------------------------------
 
-# Five levels: manifesto, what the team wants, choices, deeper choices or code, code.
+# Five levels: manifesto, what the team wants, conclusions from it, deeper ones or code, code.
 COLUMNS = dict(
     manifesto=(104, 72),
-    intention=(208, 152),
-    choice=(394, 160),
+    wanted=(208, 152),
+    concluded=(394, 160),
     detail=(588, 160),
     code=(782, 152),
 )
@@ -454,8 +454,8 @@ ROWS = (64, 176, 280, 382)
 
 def planner(c: Canvas):
     mx, mr = COLUMNS["manifesto"]
-    ix, iw = COLUMNS["intention"]
-    cx, cw = COLUMNS["choice"]
+    ix, iw = COLUMNS["wanted"]
+    cx, cw = COLUMNS["concluded"]
     dx, dw = COLUMNS["detail"]
     xx, xw = COLUMNS["code"]
     r1, r2, r3, r4 = ROWS
@@ -522,10 +522,10 @@ def spectrum(theme: dict, fonts: dict) -> str:
         desc="A specspec graph for a small planning app, drawn from left to right in five "
         "levels. A circular manifesto states the goal: help a small team agree on a plan. Two "
         "requirements state what the team wants: make timing easy to read, and let anyone "
-        "propose changes. Three requirements to their right are choices that serve them; the "
-        "middle one, highlight what moved since the last version, serves both. Two of the "
-        "choices lead straight to square implementation nodes that link to source lines. The "
-        "third, keep the plan as a JSON file in the repository, is refined by two more "
+        "propose changes. Three requirements to their right are conclusions drawn from them; "
+        "the middle one, highlight what moved since the last version, serves both. Two of "
+        "the three lead straight to square implementation nodes that link to source lines. "
+        "The third, keep the plan as a JSON file in the repository, is refined by two more "
         "requirements before its implementation nodes. A color band underneath runs from "
         "intention on the left to conclusion on the right.",
     )
@@ -549,34 +549,34 @@ def direct(theme: dict, fonts: dict) -> str:
         desc="The same planning graph with two shaded areas. The darker area is where the "
         "owner started: the manifesto and the two things the team wants. The lighter area is "
         "where the owner went deeper since: the weekday timeline down to its code, and the "
-        "choice to highlight what moved. Everything else is left to the agent: the code that "
+        "node that highlights what moved. Everything else is left to the agent: the code that "
         "marks moved dates, and the whole branch below let anyone propose changes, with its "
         "JSON file, pull requests, schema check and code.",
     )
     root, nodes, links = planner(c)
-    ix, iw = COLUMNS["intention"]
-    cx, cw = COLUMNS["choice"]
+    ix, iw = COLUMNS["wanted"]
+    cx, cw = COLUMNS["concluded"]
     dx, dw = COLUMNS["detail"]
     xx, _ = COLUMNS["code"]
-    after_intention = (ix + iw + cx) / 2
-    after_choice = (cx + cw + dx) / 2
+    after_wanted = (ix + iw + cx) / 2
+    after_concluded = (cx + cw + dx) / 2
     after_detail = (dx + dw + xx) / 2
     timing, share = nodes["timing"], nodes["share"]
     top, bottom = timing.top - 24, share.top + share.h + 24
     roof = nodes["timeline"].top - 14
     below_timeline = (nodes["timeline"].top + nodes["timeline"].h + nodes["moved"].top) / 2
     below_moved = (nodes["moved"].top + nodes["moved"].h + nodes["json"].top) / 2
-    start = [(16, top), (after_intention, top), (after_intention, bottom), (16, bottom)]
+    start = [(16, top), (after_wanted, top), (after_wanted, bottom), (16, bottom)]
     later = [
         (16, top),
-        (after_intention, top),
-        (after_intention, roof),
+        (after_wanted, top),
+        (after_wanted, roof),
         (after_detail, roof),
         (after_detail, below_timeline),
-        (after_choice, below_timeline),
-        (after_choice, below_moved),
-        (after_intention, below_moved),
-        (after_intention, bottom),
+        (after_concluded, below_timeline),
+        (after_concluded, below_moved),
+        (after_wanted, below_moved),
+        (after_wanted, bottom),
         (16, bottom),
     ]
     c.add(

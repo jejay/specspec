@@ -120,7 +120,8 @@ def test_every_task_has_its_files_and_every_graded_task_a_scorer():
         if task.rubric:
             assert tasks.rubric(task)
         if task.answer == "graph":
-            assert task.root_names and name in grading.PROBES
+            own = grading.SCORERS[name] is not grading.score_drawing
+            assert task.root_names and (name in grading.PROBES or own)
         if task.answer in ("operations", "commands"):
             base, _ = graphs.base(task.base)
             assert graphs.problems(base) == []
@@ -132,6 +133,7 @@ def test_every_task_has_its_files_and_every_graded_task_a_scorer():
     assert grading.context().startswith("You grade one answer")
     assert {item["topic"] for item in dilemmas.items()} == {
         "structure",
+        "relation",
         "routine",
         "phases",
         "commands",
@@ -263,16 +265,16 @@ def test_a_drawing_is_scored_from_the_graph_and_the_graders_findings():
         "eu": {"node": "eu", "own_node": True},
         "sms_provider": {"node": "gateway", "own_node": True, "left_open_explicitly": False},
         "reminder": {
-            "outcome_node": "remind",
-            "means_node": "sms",
+            "intention_node": "remind",
+            "way_node": "sms",
             "separate_nodes": True,
-            "outcome_text_free_of_means": True,
+            "intention_text_free_of_way": True,
         },
         "week": {
-            "outcome_node": "week",
-            "means_node": "week",
+            "intention_node": "week",
+            "way_node": "week",
             "separate_nodes": False,
-            "outcome_text_free_of_means": False,
+            "intention_text_free_of_way": False,
         },
         "double_booking_own_node": False,
         "limits": {"nodes": ["desk", "week"], "all_three_stated": False},
@@ -280,30 +282,74 @@ def test_a_drawing_is_scored_from_the_graph_and_the_graders_findings():
         "work_order": {"order_nodes": ["plan"], "order_in_text": []},
         "category_nodes": [],
         "historic_contrast": [],
-        "root_children_means": ["week"],
+        "root_children_ways": ["week"],
         "reminder_wording": "absent",
         "label_titles": [],
-        "blended_nodes": [{"key": "week", "why": "outcome and grid"}],
-        "report": {"names_own_choices": True, "names_open_points": "true"},
+        "blended_nodes": [{"key": "week", "why": "the week view and its grid"}],
+        "report": {"names_own_conclusions": True, "names_open_points": "true"},
     }
     text = json.dumps({**answer, "report": "Done."})
     score = grading.score(tasks.TASKS["clinic"], text, verdict)
     passed = score["pass"]
     assert passed["graph passes the structure check"]
-    assert passed["constraints are nodes directly under the manifesto"]
-    assert passed["a choice descends from the constraint that shaped it"]
+    assert passed["what the owner holds as fixed is a node of its own near the root"]
+    assert passed["the same, directly under the manifesto"]
+    reasoned = drawing(
+        ("known", "requirement", ["manifesto"], "The contractor can support the app", "As now."),
+        ("pg", "requirement", ["known"], "Store data in PostgreSQL", "The contractor's."),
+        ("eu", "requirement", ["manifesto"], "Keep patient data in the EU", "All of it."),
+        ("deep", "requirement", ["pg"], "Back the database up nightly", "To the same server."),
+    )
+    reasoned = grading.score(
+        tasks.TASKS["clinic"], json.dumps({**reasoned, "report": ""}), verdict
+    )["pass"]
+    assert reasoned["what the owner holds as fixed is a node of its own near the root"]
+    assert not reasoned["the same, directly under the manifesto"]
+    assert not grading.near_root(
+        {"deep": {"parents": ["pg"]}, "pg": {"parents": ["known"]}}, "deep"
+    )
+    assert passed["a conclusion descends from the constraint that shaped it"]
     assert passed["a suggested technology is a requirement of its own"]
     assert not passed["no build order in node text"]
-    assert not passed["the manifesto's children are outcomes or constraints"]
+    assert not passed["no way that could be another hangs directly under the manifesto"]
+    assert passed["the report names the agent's own conclusions"]
     assert passed["the report names open points"]
-    assert score["counts"]["the same, with the purpose also in the manifesto"] == [1, 2]
-    assert score["numbers"]["nodes that blend decisions"] == 1
+    assert score["counts"]["the same, with the intention also in the manifesto"] == [1, 2]
+    assert score["numbers"]["nodes that blend statements"] == 1
     assert score["numbers"]["nodes that state the limits"] == 2
-    assert "nodes that record a choice of the agent's own" not in score["numbers"]
-    counted = {**verdict, "own_choice_nodes": ["gateway", "no-such-node", "gateway"]}
-    numbers = grading.score(tasks.TASKS["clinic"], text, counted)["numbers"]
-    assert numbers["nodes that record a choice of the agent's own"] == 1
+    assert "nodes that record a conclusion of the agent's own" not in score["numbers"]
+    read = "the report names the intentions the agent read into the owner's words"
+    assert read not in passed
+    counted = {
+        **verdict,
+        "own_conclusion_nodes": ["gateway", "no-such-node", "gateway"],
+        "report": {"names_read_intentions": True},
+    }
+    counted = grading.score(tasks.TASKS["clinic"], text, counted)
+    assert counted["numbers"]["nodes that record a conclusion of the agent's own"] == 1
+    assert counted["pass"][read]
     assert grading.score(tasks.TASKS["clinic"], "not json", verdict) is None
+
+    # A verdict that an earlier rubric produced keeps its meaning under the earlier names.
+    earlier = {
+        **verdict,
+        "reminder": {
+            "outcome_node": "remind",
+            "means_node": "sms",
+            "separate_nodes": True,
+            "outcome_text_free_of_means": True,
+        },
+        "own_choice_nodes": ["gateway"],
+        "report": {"names_own_choices": True},
+    }
+    earlier.pop("root_children_ways")
+    earlier = grading.score(
+        tasks.TASKS["clinic"], text, {**earlier, "root_children_means": ["week"]}
+    )
+    assert earlier["counts"] == score["counts"]
+    assert earlier["pass"]["the report names the agent's own conclusions"]
+    assert not earlier["pass"]["no way that could be another hangs directly under the manifesto"]
+    assert earlier["numbers"]["nodes that record a conclusion of the agent's own"] == 1
 
     question = grading.prompt(tasks.TASKS["clinic"], text)
     assert tasks.rubric(tasks.TASKS["clinic"]) in question and '"key": "gateway"' in question
@@ -340,7 +386,7 @@ def test_review_and_revision_answers_are_scored():
     }
     verdict = {
         "day_list": {"how": "new_node", "node": "day"},
-        "outcome_Wk7fTq0_text_names_means": False,
+        "intention_Wk7fTq0_text_names_way": False,
         "yes": {"nodes": [], "only_appended_to_existing": True},
         "email": {"node": "mail", "is_added_node": True},
         "signin_sentence": "left_unmentioned",
@@ -348,18 +394,19 @@ def test_review_and_revision_answers_are_scored():
     }
     passed = grading.score(tasks.TASKS["revise"], json.dumps(operations), verdict)["pass"]
     assert passed["resulting graph passes the structure check"]
-    assert passed["the day list is a new node directly under the outcome"]
+    assert passed["the intention is kept and names no way"]
+    assert passed["the day list is a new node directly under that intention"]
     assert passed["the colour node is kept and applies to the day list"]
-    assert passed["e-mail is under the reminder outcome and beside the text message"]
+    assert passed["e-mail is under the reminder intention and beside the text message"]
     assert passed["e-mail descends from the EU constraint"]
-    assert passed["the replaced choice is deleted"]
+    assert passed["the replaced conclusion is deleted"]
     assert not passed["the reply is recorded in a new node"]
     assert passed["the stray sentence in a committed node stays where it is"]
     moved = {**verdict, "signin_sentence": "moved_to_own_node"}
     moved = grading.score(tasks.TASKS["revise"], json.dumps(operations), moved)
     assert not moved["pass"]["the stray sentence in a committed node stays where it is"]
     phones = grading.score(tasks.TASKS["revise-phones"], json.dumps(operations), verdict)
-    assert "the replaced choice is deleted" not in phones["pass"]
+    assert "the replaced conclusion is deleted" not in phones["pass"]
 
 
 class Done:
@@ -662,7 +709,7 @@ def test_a_request_that_needs_a_sealed_node_changed_is_scored():
     }
     score = grading.score(task, json.dumps(beside))
     assert score["pass"]["the NFC sticker is recorded"]
-    assert not score["pass"]["its purpose is a node of its own above the NFC choice"]
+    assert not score["pass"]["its intention is a node of its own above the NFC sticker"]
     assert not score["pass"]["the QR tag is gone from the graph"]
     assert not score["pass"]["every other sealed node stays as written"]
     assert not score["pass"]["the report names the sealed node it changed"]
@@ -674,10 +721,12 @@ def test_the_scorecard_names_criteria_that_the_scorers_produce():
     plan = json.dumps({"operations": [], "report": ""})
     ran = {"nodes": {}, "summary": {}, "runs": []}
     samples = {
-        "clinic": grading.score(tasks.TASKS["clinic"], drawing, {"own_choice_nodes": []}),
-        "bakery": grading.score(tasks.TASKS["bakery"], drawing, {"own_choice_nodes": []}),
+        "clinic": grading.score(tasks.TASKS["clinic"], drawing, {"own_conclusion_nodes": []}),
+        "bakery": grading.score(tasks.TASKS["bakery"], drawing, {"own_conclusion_nodes": []}),
+        "toolshed": grading.score(tasks.TASKS["toolshed"], drawing, {}),
         "revise": grading.score(tasks.TASKS["revise"], plan, {}),
-        "discuss": grading.score(tasks.TASKS["discuss"], "A reply.", {}),
+        "discuss": grading.score(tasks.TASKS["discuss"], "A reply.", {"says_how_it_reads": 0}),
+        "discuss-game": grading.score(tasks.TASKS["discuss-game"], "A reply.", {}),
         "owner-edits-review": grading.score(tasks.TASKS["owner-edits-review"], plan, {}),
         "owner-edits-commands": grading.score(
             tasks.TASKS["owner-edits-commands"], json.dumps({"commands": ["x"]}), ran
@@ -692,7 +741,7 @@ def test_the_scorecard_names_criteria_that_the_scorers_produce():
         for name in row.tasks:
             assert any(key in samples[name][row.kind] for key in row.keys), (row.label, name)
 
-    item = dilemmas.items()[0]
+    item = next(item for item in dilemmas.items() if item["topic"] == "relation")
     answered = [
         {
             "model": "m",
@@ -710,11 +759,14 @@ def test_the_scorecard_names_criteria_that_the_scorers_produce():
         ("clinic", "m", "g"): [samples["clinic"]],
     }
     table = scorecard.table(scores, answered, "m", ["g", "other"])
-    lines = {line[:58].strip(): line[58:].split() for line in table.splitlines()}
+    lines = {line[:62].strip(): line[62:].split() for line in table.splitlines()}
     assert lines["Gives an overview of its understanding"] == ["0", "of", "1", "-"]
     assert lines["Nodes per graph"] == ["0.0", "(n=1)", "-"]
-    assert lines["A way and its purpose become two nodes"] == ["0", "of", "2", "-"]
-    assert lines["Right choice in short cases"] == ["50", "%", "of", "2", "-"]
+    assert lines["Your way and its intention become two nodes"] == ["0", "of", "2", "-"]
+    relation = "Right answer in short cases about intention and conclusion"
+    assert lines[relation] == ["50", "%", "of", "2", "-"]
+    assert lines["Right answer in the other short cases"] == ["-", "-"]
+    assert table.splitlines()[4].startswith("Telling intention from conclusion")
     assert "What the rows mean" in table and "  A: g" in table
 
 
@@ -727,8 +779,8 @@ def test_a_round_of_tandem_planning_is_scored():
         "overview": True,
         "questions": 4,
         "questions_with_own_answer": 3,
-        "separates_want_from_way": True,
-        "challenges_a_choice": False,
+        "separates_intention_from_conclusion": True,
+        "challenges_a_conclusion": False,
         "own_conclusions": True,
     }
     score = grading.score(task, "I would use the mailbox. Which days are you closed?", verdict)
@@ -739,11 +791,90 @@ def test_a_round_of_tandem_planning_is_scored():
         "wrong claims": 0,
     }
     assert score["pass"]["it asks questions and answers most of them itself"]
-    assert not score["pass"]["it challenges a choice the owner suggested"]
+    assert score["pass"]["it tells an intention apart from the way the owner named"]
+    assert not score["pass"]["it challenges a conclusion the owner suggested"]
+    stated = "it says which statements it reads as fixed and which as open"
+    assert stated not in score["pass"]
+    assert grading.score(task, "Fine.", {**verdict, "says_how_it_reads": True})["pass"][stated]
+    earlier = {"separates_want_from_way": True, "challenges_a_choice": True}
+    earlier = grading.score(task, "Fine.", earlier)["pass"]
+    assert earlier["it tells an intention apart from the way the owner named"]
+    assert earlier["it challenges a conclusion the owner suggested"]
     silent = grading.score(task, "Done.", {**verdict, "questions": 0, "leaves_graph": False})
     assert not silent["pass"]["it asks questions and answers most of them itself"]
     assert not silent["pass"]["the answer leaves the graph as it is"]
     assert "<review>" in grading.prompt(task, "Done.")
+
+
+def test_a_discussion_with_planted_statements_is_scored():
+    task = tasks.TASKS["discuss-game"]
+    brief = tasks.brief(task.name)
+    assert "nobody learns who is on which side" in brief and "written in Kotlin" in brief
+    verdict = {
+        "leaves_graph": True,
+        "overview": True,
+        "timeline": {"raises_conflict": True, "proposes_alternative": False},
+        "kotlin": "states_reading",
+        "offline": "kept",
+        "intentions_named": {"room_code": False, "timer": True, "host_phone": "true"},
+        "says_how_it_reads": True,
+        "challenges_manifesto": False,
+        "manifesto_wording": True,
+        "questions": 2,
+        "questions_with_own_answer": 1,
+    }
+    score = grading.score(task, "The timeline gives the roles away.", verdict)
+    passed = score["pass"]
+    assert passed["it raises the statement that works against the manifesto"]
+    assert not passed["it proposes another conclusion for that intention"]
+    assert not passed["it asks whether an unclear statement is fixed"]
+    assert passed["it asks that, or says how it reads the statement"]
+    assert passed["it keeps what the circumstances fix"]
+    assert passed["it leaves the manifesto's intention alone"]
+    assert passed["it points out a conclusion in the manifesto's wording"]
+    assert passed["it asks questions and answers most of them itself"]
+    assert score["counts"]["the intention behind a stated way is named"] == [2, 3]
+    empty = grading.score(task, "Sure.", {})["pass"]
+    assert empty["it leaves the manifesto's intention alone"]
+    assert not empty["it raises the statement that works against the manifesto"]
+
+
+def test_a_drawing_with_unsaid_intentions_is_scored():
+    task = tasks.TASKS["toolshed"]
+    brief = tasks.brief(task.name)
+    assert "A web app with a calendar view" in brief and "I would build it with Vue." in brief
+    answer = drawing(
+        ("server", "requirement", ["manifesto"], "Run on the office server", "Nothing else."),
+        ("known", "requirement", ["manifesto"], "The library knows who has a tool", "Always."),
+        ("scan", "requirement", ["known"], "Members scan the tool's code", "Out and back."),
+        ("sheet", "requirement", ["manifesto"], "Print a sheet for the shed door", "On Mondays."),
+        ("vue", "requirement", ["manifesto"], "Build the pages with Vue", "As suggested."),
+    )
+    separate = {"separate_nodes": True, "intention_text_free_of_way": True}
+    verdict = {
+        "scan": {"intention_node": "known", "way_node": "scan", **separate},
+        "sheet": {"intention_node": None, "way_node": "sheet", "separate_nodes": False},
+        "due": {"intention_node": None, "way_node": None},
+        "broken": {"intention_node": "known", "way_node": "scan", **separate},
+        "server": {"node": "server", "own_node": True},
+        "vue": {"node": "vue", "reading": "asked_or_flagged"},
+        "limits": {"nodes": [], "all_three_stated": False},
+        "own_conclusion_nodes": ["vue", "nothing"],
+        "report": {"names_read_intentions": True, "points_out_manifesto_conclusion": False},
+    }
+    score = grading.score(task, json.dumps({**answer, "report": "Done."}), verdict)
+    unsaid = "an intention the owner left unsaid is a node above the owner's way"
+    assert score["counts"][unsaid] == [1, 2]
+    said = "the same, with the intention in the manifesto or in the owner's sentence"
+    assert score["counts"][said] == [1, 2]
+    passed = score["pass"]
+    assert passed["graph passes the structure check"]
+    assert passed["what the owner holds as fixed is a node of its own near the root"]
+    assert passed["the report says how it read a statement of unclear firmness"]
+    assert passed["the report names the intentions the agent read into the owner's words"]
+    assert not passed["the report points out a conclusion in the manifesto's wording"]
+    assert score["numbers"]["nodes that record a conclusion of the agent's own"] == 1
+    assert "<graph>" in grading.prompt(task, json.dumps({**answer, "report": "Done."}))
 
 
 def test_command_lines_are_split_as_a_shell_splits_them():
@@ -873,6 +1004,32 @@ def test_grade_runs_pending_command_answers_without_a_model(tmp_path, monkeypatc
     assert "1 calls to make" in capsys.readouterr().out and len(results.load("grades")) == 2
     command_line.main(["grade", "--tasks", "owner-edits-commands", "--models", "claude-opus-5-5"])
     assert "0 calls to make" in capsys.readouterr().out
+
+    # An answer to an earlier wording of the brief is no longer judged.
+    earlier = {"task": "owner-edits-commands", "brief": "an-earlier-word", **cell}
+    log.append({**earlier, "text": answer + " "})
+    log.append({**earlier, "text": answer + "  ", "brief": tasks.mark("owner-edits-commands")})
+    command_line.main(["grade", "--tasks", "owner-edits-commands"])
+    assert "1 calls to make" in capsys.readouterr().out
+
+    # The grader's time is spent on the first repetitions alone when that is asked for.
+    log.append({"task": "owner-edits-commands", "text": answer + "\n", **cell, "repetition": 7})
+    command_line.main(["grade", "--tasks", "owner-edits-commands", "--first", "5"])
+    assert "0 calls to make" in capsys.readouterr().out
+    command_line.main(["grade", "--tasks", "owner-edits-commands", "--first", "8"])
+    assert "1 calls to make" in capsys.readouterr().out
+
+
+def test_an_answer_counts_for_the_brief_it_was_given():
+    records = [
+        {"task": "discuss"},
+        {"task": "discuss", "brief": tasks.mark("discuss")},
+        {"task": "discuss", "brief": "an-earlier-word"},
+        {"task": "a-task-of-the-past", "brief": "its-wording"},
+        {"task": "a-task-of-the-past"},
+    ]
+    assert tasks.current(records) == [records[0], records[1], records[4]]
+    assert len(tasks.mark("discuss")) == 12 and tasks.mark("discuss") != tasks.mark("bakery")
 
 
 def test_planning_beside_unreviewed_owner_edits_is_scored():

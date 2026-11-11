@@ -3,7 +3,8 @@
 A row names one behaviour, says what the model was asked and what is counted, and takes
 its figure from the criteria that ``report`` prints in full. A cell reads "17 of 20"
 (answers or graphs that show the behaviour) or gives a mean with the number of answers
-behind it.
+behind it. The first group holds what counts most: whether the agent tells intention
+from conclusion.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from dataclasses import dataclass
 from . import dilemmas, report
 
 DRAWING = ("clinic", "bakery")
+OTHER_TOPICS = ("structure", "phases", "commands", "routine", "writing")
 
 
 @dataclass(frozen=True)
@@ -21,32 +23,132 @@ class Row:
     meaning: str
     tasks: tuple[str, ...]  # empty for the dilemmas
     kind: str  # "pass", "counts", "numbers" or "dilemmas"
-    keys: tuple[str, ...] = ()
+    keys: tuple[str, ...] = ()  # criteria; for the dilemmas, their topics
 
 
 GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
     (
-        "Drawing a graph from an owner's brief (two briefs)",
+        "Telling intention from conclusion (what counts most)",
         (
             Row(
-                "A way and its purpose become two nodes",
-                "The brief has sentences such as 'an e-mail when the order is ready, so nobody "
-                "waits for nothing'. Counted: how often the purpose became a node of its own with "
-                "the way beneath it. Each graph has two such sentences.",
+                "Your way and its intention become two nodes",
+                "Two briefs have sentences such as 'an e-mail when the order is ready, so "
+                "nobody waits for nothing'. Counted: how often the intention became a node of "
+                "its own, in words that name no way, with your way beneath it. Each graph has "
+                "two such sentences.",
                 DRAWING,
                 "counts",
                 (
-                    "an owner's way and its purpose are two nodes",
-                    "the same, with the purpose also in the manifesto",
+                    "an intention and the owner's way to it are two nodes",
+                    "the same, with the intention also in the manifesto",
                 ),
             ),
             Row(
-                "Own choices recorded per graph",
-                "Nodes for decisions the brief left to the agent, such as how an order is found at "
+                "An intention you left unsaid is worded above your way",
+                "A third brief names ways without a reason, such as a sheet on the shed door. "
+                "Counted: how often the agent worded what the way is for as a node of its own "
+                "above it. Each graph has two such sentences.",
+                ("toolshed",),
+                "counts",
+                ("an intention the owner left unsaid is a node above the owner's way",),
+            ),
+            Row(
+                "The summary names the intentions it read into your words",
+                "Same brief. Counted: summaries that tell you which intentions the agent "
+                "worded itself, so that you can correct them.",
+                ("toolshed",),
+                "pass",
+                ("the report names the intentions the agent read into the owner's words",),
+            ),
+            Row(
+                "A conclusion in the manifesto's wording is pointed out",
+                "The manifesto of that brief says 'a web app with a calendar view'. Counted: "
+                "summaries that tell you the calendar view is one way among others and suggest "
+                "a node beneath the manifesto for it, or ask whether it is fixed.",
+                ("toolshed",),
+                "pass",
+                ("the report points out a conclusion in the manifesto's wording",),
+            ),
+            Row(
+                "The same in a discussion",
+                "The game's manifesto says the friends play 'on their own phones'. Counted: "
+                "answers that tell you this is a way that could move beneath the manifesto, or "
+                "ask whether it is fixed.",
+                ("discuss-game",),
+                "pass",
+                ("it points out a conclusion in the manifesto's wording",),
+            ),
+            Row(
+                "A statement that works against the manifesto is raised",
+                "You describe a party game with secret roles and want a timeline of who did "
+                "what on the TV. Counted: answers that tell you the timeline gives the roles "
+                "away.",
+                ("discuss-game",),
+                "pass",
+                ("it raises the statement that works against the manifesto",),
+            ),
+            Row(
+                "It asks whether an unclear statement is fixed",
+                "Same discussion; you say 'it should be written in Kotlin' without a reason. "
+                "Counted: answers that ask whether Kotlin is fixed or open.",
+                ("discuss-game",),
+                "pass",
+                ("it asks whether an unclear statement is fixed",),
+            ),
+            Row(
+                "It says which statements it reads as fixed and which as open",
+                "Both discussions. Counted: answers that say this for several of your statements.",
+                ("discuss-game", "discuss"),
+                "pass",
+                ("it says which statements it reads as fixed and which as open",),
+            ),
+            Row(
+                "The intention behind a way you stated is named",
+                "The game discussion names three ways: a room code, a 90-second timer and the "
+                "host's phone as the server. Counted: how often the answer says what the way "
+                "is for and treats the way as one of several.",
+                ("discuss-game",),
+                "counts",
+                ("the intention behind a stated way is named",),
+            ),
+            Row(
+                "An intention is told apart from the way you named",
+                "The bakery discussion. Counted: answers that separate at least one intention "
+                "from the way you suggested for it, such as bakers knowing what to bake and "
+                "the board on a screen.",
+                ("discuss",),
+                "pass",
+                ("it tells an intention apart from the way the owner named",),
+            ),
+            Row(
+                "The manifesto's intention is left alone",
+                "The game discussion. Counted: answers that do not argue against secret "
+                "roles or against playing together in one room.",
+                ("discuss-game",),
+                "pass",
+                ("it leaves the manifesto's intention alone",),
+            ),
+            Row(
+                "Right answer in short cases about intention and conclusion",
+                "Eleven multiple-choice questions, such as what a node in the middle is and "
+                "what happens beneath a node that is replaced. Share of answers that pick the "
+                "keyed option.",
+                (),
+                "dilemmas",
+                ("relation",),
+            ),
+        ),
+    ),
+    (
+        "Drawing a graph from an owner's brief",
+        (
+            Row(
+                "Own conclusions recorded per graph",
+                "Nodes for what the brief left to the agent, such as how an order is found at "
                 "the counter. More of them means the graph says more of what building needs.",
                 DRAWING,
                 "numbers",
-                ("nodes that record a choice of the agent's own",),
+                ("nodes that record a conclusion of the agent's own",),
             ),
             Row("Nodes per graph", "The size of the drawn graph.", DRAWING, "numbers", ("nodes",)),
             Row(
@@ -68,7 +170,7 @@ GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
             Row(
                 "Valid graphs",
                 "Graphs in which specspec's own check finds no error and no warning.",
-                DRAWING,
+                (*DRAWING, "toolshed"),
                 "pass",
                 ("graph passes the structure check",),
             ),
@@ -148,12 +250,12 @@ GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
             ),
             Row(
                 "A sealed node is restructured when the request needs it",
-                "You replace QR tags by NFC stickers; the sealed QR node blends the tag with its "
-                "purpose. Counted: answers that give the purpose a node of its own with the NFC "
-                "choice beneath it.",
+                "You replace QR tags by NFC stickers; the sealed QR node blends the tag with "
+                "what it is for. Counted: answers that give that intention a node of its own "
+                "with the NFC sticker beneath it.",
                 ("sealed-feature",),
                 "pass",
-                ("its purpose is a node of its own above the NFC choice",),
+                ("its intention is a node of its own above the NFC sticker",),
             ),
             Row(
                 "A stray sentence in an old node stays where it is",
@@ -170,17 +272,9 @@ GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
         "Discussion before any planning (you describe what you want)",
         (
             Row(
-                "Tells what you want apart from the way you named",
-                "Counted: answers that separate at least one want from the way you suggested for "
-                "it, such as bakers knowing what to bake and the board on a screen.",
-                ("discuss",),
-                "pass",
-                ("it tells a want apart from the way the owner named",),
-            ),
-            Row(
                 "Gives an overview of its understanding",
                 "Counted: answers that say in a few lines how the agent understood you.",
-                ("discuss",),
+                ("discuss", "discuss-game"),
                 "pass",
                 ("it gives an overview of its understanding",),
             ),
@@ -188,7 +282,7 @@ GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
                 "Answers most of its own questions",
                 "Counted: answers in which at least half of the questions come with the agent's "
                 "tentative answer, so that you can simply agree.",
-                ("discuss",),
+                ("discuss", "discuss-game"),
                 "pass",
                 ("it asks questions and answers most of them itself",),
             ),
@@ -206,11 +300,12 @@ GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
                 ("every editing command runs",),
             ),
             Row(
-                "Right choice in short cases",
+                "Right answer in the other short cases",
                 "Multiple-choice questions about structure, phases, commands and wording. Share "
                 "of answers that pick the keyed option.",
                 (),
                 "dilemmas",
+                OTHER_TOPICS,
             ),
         ),
     ),
@@ -219,7 +314,12 @@ GROUPS: tuple[tuple[str, tuple[Row, ...]], ...] = (
 
 def cell(row: Row, scores: dict, answered: list[dict], model: str, guide: str) -> str:
     if row.kind == "dilemmas":
-        mine = [r for r in answered if r["model"] == model and r["guide"] == guide]
+        topics = {item["id"]: item["topic"] for item in dilemmas.items()}
+        mine = [
+            r
+            for r in answered
+            if r["model"] == model and r["guide"] == guide and topics[r["item"]] in row.keys
+        ]
         right = sum(r["correct"] for r in mine)
         return f"{round(100 * right / len(mine))} % of {len(mine)}" if mine else "-"
     group = [s for task in row.tasks for s in scores.get((task, model, guide), []) if s]
@@ -244,7 +344,7 @@ def table(scores: dict, answered: list[dict], model: str, guides: list[str]) -> 
             lambda r: (r["model"], r["guide"], r["item"], r["repetition"]),
         ).values()
     )
-    width = 58
+    width = 62
     letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     lines = [f"Scorecard for {report.short(model)}"]
     lines += [f"  {letter}: {guide}" for letter, guide in zip(letters, guides, strict=False)]

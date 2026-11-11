@@ -17,7 +17,7 @@ The name is short for *specification spectrum*.
 - The idea: [the problem](#the-problem-your-intent-and-the-agents-suggestions-merge-into-one-plan),
   [the graph](#the-specification-is-a-graph-from-intention-to-conclusion),
   [your depth](#you-choose-how-deep-you-go-in-each-part-of-the-graph),
-  [replacing a choice](#replacing-a-choice-keeps-the-intention-it-served)
+  [replacing a conclusion](#replacing-a-conclusion-keeps-the-intention-it-was-drawn-from)
 - In practice: [the editors](#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app),
   [working with your agent](#how-you-and-your-agent-work-on-the-graph),
   [building the editors](#build-the-graph-editors),
@@ -39,16 +39,16 @@ specspec init -m "# Help a small team agree on a plan" -m "Everyone sees the sam
 
 Then start your coding agent in the project and tell it what you want, as you would
 anyway. Any agent that can run shell commands works. `init` wrote an `AGENTS.md` that
-teaches it the rest: it plans in the graph before it builds, records the choices it
-makes for you, keeps graph and code in sync and reports what it decided and what is
+teaches it the rest: it plans in the graph before it builds, records the conclusions it
+draws for you, keeps graph and code in sync and reports what it decided and what is
 uncertain. `init` also sets up Git if the folder has none and appends to an `AGENTS.md`
 you already have. If your agent reads a different instructions file, point it to
 `AGENTS.md`.
 
 You can leave it at that. When you want more control, open the graph in
 [a graph editor](#build-the-graph-editors): look at it from as far above as you like,
-open the nodes the agent pointed you to, change a node or replace a choice, and tell
-the agent to carry on. The rest of this page explains what you are looking at.
+open the nodes the agent pointed you to, change a node or replace a conclusion, and
+tell the agent to carry on. The rest of this page explains what you are looking at.
 
 ## The problem: your intent and the agent's suggestions merge into one plan
 
@@ -74,21 +74,32 @@ what you want to how it gets done.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-dark.svg">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-light.svg" alt="A specspec graph for a planning app in five levels. The manifesto, Help a small team agree on a plan, leads to two intentions and three choices that serve them. Two choices lead straight to implementation nodes that point to source lines; the third is refined by two more requirements first. A color band underneath runs from intention to conclusion.">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/spectrum-light.svg" alt="A specspec graph for a planning app in five levels. The manifesto, Help a small team agree on a plan, leads to two requirements, and three more requirements are conclusions drawn from those. Two of the three lead straight to implementation nodes that point to source lines; the third is refined by two more requirements first. A color band underneath runs from intention to conclusion.">
 </picture>
 
 Every node is a short Markdown file in `.specspec/`. The root is the *manifesto*: what
-the project is for. Every other node names the parents it serves, either refining them
-or choosing a way to achieve them. *Implementation* nodes at the outer edge explain how
-the code realizes a requirement and link to the files and line ranges involved.
+the project is for. Every other node names its parents and is a *conclusion* drawn from
+them: it refines them or settles a way to achieve them. The parents are the node's
+*intentions*. *Implementation* nodes at the outer edge explain how the code realizes a
+requirement and link to the files and line ranges involved.
 
-Near the manifesto, nodes are mostly intention: what you want and why. Further out,
-they are mostly conclusion: how it gets done. A node's place on that spectrum follows
-from its position in the graph. A requirement is a conclusion for its parents and an
-intention for its children. Branches go as deep as they need to.
+Intention and conclusion are the two ends of a link, not two kinds of node. "Make timing
+easy to read" is a conclusion from the manifesto, and it is the intention behind "Show
+tasks on a weekday timeline". Every node between the manifesto and the code is both.
+Near the manifesto a node is mostly intention: what you want and why, with much hanging
+on it. Further out it is mostly conclusion: how it gets done. That range is the
+spectrum, and a node's place on it follows from its position in the graph. Branches go
+as deep as they need to.
 
-One choice can serve several intentions, which makes the graph a directed acyclic graph
-rather than a tree. In the file, that is simply a second parent:
+A conclusion is one valid conclusion. It rests on reasoning, some of it written in the
+node and some of it not, and a different one could be drawn from the same intentions.
+That holds at every depth, also for what you want: when your goals move, you change a
+node near the root. How firmly a node holds is yours to know, and the graph has no mark
+for it. For a Python library the language belongs in the manifesto. For an app where you
+have no preference, it is a conclusion far down that your agent draws.
+
+One conclusion can serve several intentions, which makes the graph a directed acyclic
+graph rather than a tree. In the file, that is simply a second parent:
 
 ```markdown
 ---
@@ -107,14 +118,14 @@ Compare the plan with the previous commit and mark changed dates.
 
 The graph runs from intention to conclusion, so every depth is a place where you can
 stop. You can write only the manifesto and let the agent draw everything below it. You
-can pin one branch down choice by choice, as far as the code. Reading works the same
-way: skim the top two levels of what the agent drew, or follow one branch node by node
-until you understand every decision in it. Past the point where you stop, the agent
+can pin one branch down conclusion by conclusion, as far as the code. Reading works the
+same way: skim the top two levels of what the agent drew, or follow one branch node by
+node until you understand every step in it. Past the point where you stop, the agent
 concludes on its own and records its conclusions as nodes like any other.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-dark.svg">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-light.svg" alt="The same planning graph with two shaded areas. The darker one marks where you started: the manifesto and the two intentions. The lighter one marks where you went deeper since: the timeline down to its code, and the choice to highlight moved dates. The rest, including the whole branch about proposing changes, is left to the agent.">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/direct-light.svg" alt="The same planning graph with two shaded areas. The darker one marks where you started: the manifesto and the two requirements beneath it. The lighter one marks where you went deeper since: the timeline down to its code, and the node that highlights moved dates. The rest, including the whole branch about proposing changes, is left to the agent.">
 </picture>
 
 In this example you started with the goal and the two things the team wants, and the
@@ -135,17 +146,23 @@ distance from the manifesto if you like. Zoom into one branch and select a node,
 you read its text with its parents and children around it. The shaded areas in the
 figure are yours alone; the graph holds the nodes on both sides of them.
 
-## Replacing a choice keeps the intention it served
+## Replacing a conclusion keeps the intention it was drawn from
 
-Each intention and each choice has its own node, and that keeps solutions revisable.
-"Show tasks on a weekday timeline" is one way to make timing easy to read. If a list of
-milestones works better, you replace that branch. The intention above it stays, the new
-choice is written to serve it, and the choice next to it is untouched.
+Every conclusion has a node of its own beneath its intention, and that keeps solutions
+revisable. "Show tasks on a weekday timeline" is one way to make timing easy to read. If
+a list of milestones works better, you replace that branch. The intention above it
+stays, the new conclusion is written to serve it, and the conclusion next to it is
+untouched.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-dark.svg">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-light.svg" alt="Replacing a conclusion. The intention Make timing easy to read is unchanged. The weekday timeline and its implementation are marked D for deleted and kept in Git history; a milestone list and its implementation are marked A for added. A second choice under the same intention, highlighting what moved, stays as it is.">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/revise-light.svg" alt="Replacing a conclusion. The intention Make timing easy to read is unchanged. The weekday timeline and its implementation are marked D for deleted and kept in Git history; a milestone list and its implementation are marked A for added. A second conclusion from the same intention, highlighting what moved, stays as it is.">
 </picture>
+
+The same works one level up. If timing turns out not to be the point, you replace "Make
+timing easy to read". The manifesto stays, and your agent goes through everything that
+hung beneath the old node. Replacing a node always leaves what is above it in force and
+puts what is beneath it up for review.
 
 ## What you work with: the graph in VS Code and in a desktop app
 
@@ -168,15 +185,18 @@ Selecting a node opens its text, parents and sources for editing.
 
 The guide in `AGENTS.md` sets out how the agent works with you:
 
-1. You describe what you want. The agent works out the depth and points out obvious
-   gaps: it separates your intentions from the solutions you proposed, questions
-   choices that look weak and suggests its own. The graph stays as it is while you
-   talk. Skip this step when the request is clear.
+1. You describe what you want. The agent first tells your intentions from the
+   conclusions you have already drawn and says how it read you. It asks when it cannot
+   tell whether something is fixed for you. It holds each conclusion against its
+   intention, objects where one does not fit, also right beneath the manifesto, and
+   suggests its own. The graph stays as it is while you talk. Skip this step when the
+   request is clear.
 2. When you ask for it, the agent writes the graph through the command line, building
    on any edits you made yourself. It completes the depth that building needs, fills
-   gaps you evidently left to it and reports its choices and open questions. Whenever it
-   talks about particular nodes, it leaves a *spotlight* on them, so the editor shows
-   you which ones it means. Your edits and its changes go into two separate commits.
+   gaps you evidently left to it and reports the intentions it read into your words, the
+   conclusions it drew itself and its open questions. Whenever it talks about particular
+   nodes, it leaves a *spotlight* on them, so the editor shows you which ones it means.
+   Your edits and its changes go into two separate commits.
 3. You review as much of it as you want in a graph editor. It marks nodes added,
    changed or deleted since the last commit and shows each change inside the node's
    text. Edit any node there, or select a few nodes and leave the agent a spotlight of
@@ -184,12 +204,12 @@ The guide in `AGENTS.md` sets out how the agent works with you:
    move or reword, and whatever you do not accept stays as you wrote it.
 4. The agent implements, after planning whatever the graph does not cover yet. Before
    it changes code, it reads the node and every ancestor that justifies it. It keeps
-   graph and code in sync: further choices become conclusions, and implementation nodes
-   link to the code. When it finds a contradiction, it builds a consistent part and
-   reports the rest.
-5. When you change your mind, you change the intention or replace the choice. The
-   graph describes the current plan; Git keeps the earlier ones and the reasons they
-   changed.
+   graph and code in sync: what it settles on the way becomes further conclusions, and
+   implementation nodes link to the code. When it finds a contradiction, it builds a
+   consistent part and reports the rest.
+5. When you change your mind, you replace the node, at whatever depth, and the agent
+   looks again at what hangs beneath it. The graph describes the current plan; Git keeps
+   the earlier ones and the reasons they changed.
 
 The goal is a graph precise enough that implementing it comes close to compiling it,
 with little left for the agent to guess. Look hard where uncertainty and impact are

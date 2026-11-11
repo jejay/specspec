@@ -7,6 +7,7 @@ the revision tasks, or plain text.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from dataclasses import dataclass
@@ -43,10 +44,18 @@ TASKS = {
             "Draw the graph for a bakery's pre-orders; no purpose is given in the manifesto.",
         ),
         Task(
+            "toolshed",
+            "graph",
+            "toolshed",
+            frozenset({"Tl8bRw4="}),
+            "Draw the graph for a tool library; ways without a stated intention, and a "
+            "manifesto with a conclusion in its wording.",
+        ),
+        Task(
             "revise",
             "operations",
             "revise",
-            about="Replace a choice, add two decisions; an unrelated sentence sits in one node.",
+            about="Replace a conclusion, add two more; an unrelated sentence sits in one node.",
             base="revise",
         ),
         Task(
@@ -122,6 +131,13 @@ TASKS = {
             about="The bakery brief as a round of tandem planning: discuss, change nothing.",
         ),
         Task(
+            "discuss-game",
+            "text",
+            "discuss-game",
+            about="A party game in tandem planning: one statement works against the manifesto, "
+            "one leaves open how firmly it holds.",
+        ),
+        Task(
             "explain-cases", "text", about="One node, siblings or parent and child, in own words."
         ),
         Task("explain-rules", "text", about="The structure rules the model will follow."),
@@ -131,6 +147,17 @@ TASKS = {
 
 def brief(name: str) -> str:
     return (FOLDER / f"{name}.md").read_text(encoding="utf-8").replace("\r\n", "\n")
+
+
+def mark(name: str) -> str:
+    """Identifies the wording of a brief; every answer keeps the mark of the brief it got."""
+    return hashlib.sha256(brief(name).encode("utf-8")).hexdigest()[:12]
+
+
+def current(records: list[dict]) -> list[dict]:
+    """The answers given to each brief as it reads now; an answer without a mark is kept."""
+    marks = {name: mark(name) for name in TASKS}
+    return [r for r in records if r.get("brief") in (None, marks.get(r.get("task")))]
 
 
 def rubric(task: Task) -> str:

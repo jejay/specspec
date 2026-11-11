@@ -8,9 +8,10 @@ Fill in this JSON object:
  "overview": "true if the answer gives a short overview of how it understands what the owner wants",
  "questions": "the number of questions the answer puts to the owner, as an integer",
  "questions_with_own_answer": "the number of those questions that come with the agent's own tentative answer or recommendation, as an integer",
- "separates_want_from_way": "true if the answer tells at least one thing the owner wants apart from the way the owner named for it, such as bakers knowing what to bake and the board, or customers knowing that the order is ready and the e-mail",
- "challenges_a_choice": "true if the answer questions at least one choice the owner suggested or offers an alternative to it, such as the web host's mailbox, e-mail as the channel, the board or the mini PC",
- "own_conclusions": "true if the answer proposes at least one choice of its own that the owner did not mention",
+ "separates_intention_from_conclusion": "true if the answer tells at least one thing the owner intends apart from the way the owner named for it, such as bakers knowing what to bake and the board, or customers knowing that the order is ready and the e-mail",
+ "challenges_a_conclusion": "true if the answer questions at least one way the owner suggested or offers an alternative to it, such as the web host's mailbox, e-mail as the channel, the board or the mini PC",
+ "own_conclusions": "true if the answer proposes at least one conclusion of its own that the owner did not mention",
+ "says_how_it_reads": "true if the answer says for at least two of the owner's statements whether it takes them as fixed for the owner or as open to another way, in whatever words",
  "wrong_claims": ["each statement in the answer that is false about what the owner wrote, in a few words"]
 }
 
