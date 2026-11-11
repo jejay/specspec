@@ -40,7 +40,7 @@ sources:
 model.py selects the current node format while API_VERSION is 7. format.py
 requires exact filename equality with <id>.md inside the sole .specspec directory.
 workspace.py generates that path
-inside the existing lock/collision/transaction boundary independently of body text.
+inside the lock/collision/transaction boundary independently of body text.
 CLI init/add and the library take binding fields directly. Human dependent labels
 reuse Markdown headings. query.py prints full IDs in its complete parent headers.
 Git node comparisons classify additions, semantic modifications and removals;
@@ -56,8 +56,8 @@ The maintained independent Gantt bundle reconstructs every retained revision and
 all earlier/deleted nodes with current CLI executions, complete ancestor reads,
 exact-index checks and refreshed verifier source anchors. Receipts and ledger match
 the bundle; runtime application bytes and historical node IDs stay consistent.
-Current documentation, planning recipes and offline diagrams use the current path
-contract. The original owner intention document remains an archival input. Local experiments and unrelated Git history stay intact.
+Documentation, planning recipes and offline diagrams use the current path
+contract. The original owner intention document is an archival input. Local experiments and unrelated Git history stay intact.
 
 Backend regressions cover fixed encodings/all final octets, headless/Unicode bodies,
 creation and heading-edit path stability, rejected filename suffixes/case/version,

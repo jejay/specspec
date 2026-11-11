@@ -43,7 +43,7 @@ stay unmarked. Query keeps summaries and reconstructed original graphs; diff own
 logical canonical patch review; raw query owns exact physical documents.
 
 query_sources.py retains exact declaration multisets and cached shared readers.
-Known committed source blobs and anchors populate the existing per-invocation cache
+Known committed source blobs and anchors populate the per-invocation cache
 in batches; identical selected commits share a code reader. Workspace contents stay
 fresh and independent of the index. Shared batch admission charges accepted bytes,
 keeping oversized-object failures separate from eligible blobs. Process-count and
@@ -66,7 +66,7 @@ strict conflicts, expanding changes, moves/renames/gaps/boundaries, restored and
 pre-existing broken links, unavailable anchors, binary/large whole-file hints,
 caching, original-graph ancestor ripple, declaration independence and historical
 selection. Plain text/metadata, source facts, exact diff application, saved-buffer
-semantics, read-only Git/files and legacy pipe safety retain regression coverage.
+semantics, read-only Git/files and legacy pipe safety have regression coverage.
 
 body_line shares logical newline normalization and replaces single LF runs with a space and longer runs
 with " ¶ ", without truncating text or changing original bodies. The readable

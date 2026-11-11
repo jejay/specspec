@@ -48,7 +48,7 @@ sources:
 `GraphEditors` contributes `**/.specspec/???????=.md`; `GraphProject` coordinates
 backend/document planning and watchers; `GraphView` owns independent focus/cameras/
 comparisons. Node tabs stay bound to their resource, neighbors open their files,
-project/revision panels remain independent and raw text is directly accessible.
+project/revision panels are independent and raw text is directly accessible.
 
 Python's non-writing `editor_request` validates overlay paths/text/size, plans one
 existing-file edit and returns graph diagnostics. `ProjectDocuments` serializes

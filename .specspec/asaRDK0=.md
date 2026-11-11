@@ -52,15 +52,14 @@ curve/head colors across actual-size, intermediate and minimum magnification.
 
 The real-host CDP harness keeps optional window sizing separate from foregrounding
 and rejects closed/error transports promptly, clearing pending request timers.
-Protocol/JavaScript errors and individual request timeouts remain failures; unit
+Protocol/JavaScript errors and individual request timeouts are failures; unit
 tests exercise these boundaries independently of a real browser.
 
 The separate camera owns a one-shot rectangle tool with Ctrl/Command hover arming,
 latched primary-pointer dragging, a viewport-space band, inverse start-pose bounds,
 click consumption and cancellation/disposal cleanup. A floating rounded icon HUD
-exposes graph, contextual node and rectangle framing. Existing native controls and
-Shift highlight gestures retain their event ownership. Rectangle framing permits
-250% magnification; graph/node framing retains its 100% cap.
+exposes graph, contextual node and rectangle framing. Native controls and Shift highlight gestures have their event ownership. Rectangle framing permits
+250% magnification; graph/node framing has its 100% cap.
 
 One inherited fill-progress property drives two-stage sRGB mixing toward the painted
 border from each exact actual-size tint. Background fill transitions from 40%-to-16%

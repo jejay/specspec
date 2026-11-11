@@ -23,6 +23,5 @@ manifest records source paths and exact import bytes. Host builds copy these
 assets to their own offline outputs. The shared header applies the optical
 symbol as a host-foreground mask; the launcher retains its supplied spectrum tile.
 
-The loose supplied dachshund PNG/SVG and byte-identical SVG archival import remain
-preserved with non-text attributes. Artifact tests check archival preservation,
+The loose supplied dachshund PNG/SVG and byte-identical SVG archival import are preserved with non-text attributes. Artifact tests check archival preservation,
 current import digests, optical geometry, launcher dimensions and built host copies.

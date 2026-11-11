@@ -21,8 +21,7 @@ natural-log normalization and the continuous three-anchor sRGB ramp. The shared 
 exposes all four influence modes; the renderer uses target/base context, concise
 continuous legends and persistent per-view mode selection. Scaling formulas live
 in the tutorial. Compact and
-expanded cards share normalization. Neutral drafts, manifesto treatment and existing
-Git/highlight/form/camera roles stay independent.
+expanded cards share normalization. Neutral drafts, manifesto treatment and Git/highlight/form/camera roles are independent.
 
 Pure tests cover shared descendants, self-inclusive influence and linear normalization, cohorts by
 longest path, positive cohort minima, log before normalization, ties, invalid

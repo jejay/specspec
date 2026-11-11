@@ -45,4 +45,4 @@ prefixes, unsafe targets, append/create receipts, concurrent changes, publicatio
 interruptions and all-before-any rollback. Package and installed-host checks exercise
 the actual template and initialization flow without owner installation.
 
-The existing exclusion helper protects runtime data during initialization.
+The exclusion helper protects runtime data during initialization.

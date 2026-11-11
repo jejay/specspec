@@ -34,7 +34,7 @@ sources:
 The shared session gives source previews an independently coalesced read-only lane,
 freezes displayed comparison commits and suppresses obsolete replies. Automatic graph
 reads and independent Spotlight notifications have separate refresh work; explicit
-Refresh, initial loading and polling keep list recovery and baseline semantics.
+Refresh, initial loading and polling have list recovery and baseline semantics.
 
 Git watch discovery uses asynchronous shell-free bounded execution and coalesces
 notifications while reconciling current private/common directories. Disposal prevents

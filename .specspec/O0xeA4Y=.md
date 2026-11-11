@@ -16,7 +16,7 @@ sources:
 - path: pyproject.toml
 - path: tests/test_ids.py
 ---
-# Implement source-mapped body replacements through the existing writer
+# Implement source-mapped body replacements through the writer
 
 cli.py parses the same repeatable OLD/NEW arguments, rejects mixed body sources
 and exposes replacements through the shared explicit-edit planner. edit_cli.py
@@ -35,15 +35,11 @@ physical range overlaps and joins unchanged slices with content-literal NEW. The
 writer adapts newline encoding to the existing target style. Bounds use actual
 target-style bytes after a conservative bounded-construction check.
 
-batch.py retains combined input accounting and fresh under-lock transformation.
-The existing serializer, final graph validation, deletion consent, original-byte
-checks, journal and recovery retain their owners. Ordinary word/full-body matches
+batch.py retains combined input accounting and fresh under-lock transformation. The serializer, final graph validation, deletion consent, original-byte checks, journal and recovery have their own owners. Ordinary word/full-body matches
 and normal CLI/private API startup avoid the Markdown dependency until needed.
-UI transports and API/current node format remain unchanged.
 
 Tests cover line-ending and prose-layout permutations, protected Markdown, Unicode
 source boundaries, all-layout ambiguity, duplicate-span handling, literal output,
-actual consumed bytes, source conflicts, bounds and parser laziness. Existing CLI
-and transaction tests retain previews, invalid states, alias/deletion repair,
+actual consumed bytes, source conflicts, bounds and parser laziness. CLI and transaction tests cover previews, invalid states, alias/deletion repair,
 concurrency and interruption recovery. Windows subprocesses preserve Unicode argv
 under legacy output encodings.

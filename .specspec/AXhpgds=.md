@@ -16,10 +16,10 @@ sources:
 # Paint shared tints and fit readable editor and Git information
 
 Shared CSS uses ordinary theme text, 15% resting/24% hovered accent tints and shared
-contrast-theme rules. Neutral distance/type roots keep `#d3d3d3`, with a `#767676` resting outline on
+contrast-theme rules. Neutral distance/type roots use `#d3d3d3`, with a `#767676` resting outline on
 VS Code light themes for 4.3:1 contrast against the tint; colored hover
 borders use the hue emphasis contract. Expanded ordinary cards are 860 wide and
-the inline binding editor keeps an 822px content budget with host monospace
+the inline binding editor has an 822px content budget with host monospace
 font/size and room for its line-number/change gutters. Typical 80-column ASCII fitting is checked at 13/14/16px.
 
 Git letters are 20px/800 weight with bottom-right anchoring and badge clearance.

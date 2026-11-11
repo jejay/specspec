@@ -25,19 +25,16 @@ preflights body-source conflicts and prepares explicit add/update/delete records
 Aggregate authoring bytes are charged as inputs load, stopping before further reads
 once the budget is exceeded.
 Invocation-wide flags select one preview/write, final validity boundary, consent
-and output mode. Ordinary singleton calls keep their current writer, envelope and
-reviewed-deletion behavior; named adds, add/update previews and exact body
+and output mode. Ordinary singleton calls use their writer, envelope and reviewed-deletion behavior; named adds, add/update previews and exact body
 replacements use the batch planner.
 
 The internal batch planner allocates safe IDs under lock, resolves forward/backward
-parent aliases, rejects conflicting targets and constructs one candidate for the
-existing journaled writer. Local aliases remain outside canonical data. Output
-reports actual alias mappings in readable and JSON receipts. Host products retain
-their single-edit stdin and application protocol channels and native/managed persistence owners.
+parent aliases, rejects conflicting targets and constructs one candidate for the journaled writer. Local aliases remain outside canonical data. Output
+reports actual alias mappings in readable and JSON receipts. Host products use their single-edit stdin and application protocol channels and native/managed persistence owners.
 
 Tests cover composed deletion/replacement/coparents, exact body/source association,
 syntax/input preflight, literal command/option words, aliases, invocation-wide flags,
 selected consent/cancellation, singleton compatibility, bounds, source inputs and
 mixed-operation interruption/recovery. Real subprocess tests preserve Unicode/CRLF
 arguments under legacy output encodings. Independent maintained Gantt revisions,
-actual receipts, sources, bundle and ledgers retain current-interface consistency.
+actual receipts, sources, bundle and ledgers have interface consistency.

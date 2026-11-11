@@ -19,10 +19,10 @@ records and edges, deriving old/new potential impact. Source impact
 uses both snapshots' file references and requirement ancestry.
 
 Owner-managed hooks/CI invoke check --staged against exact index bytes.
-Hook files, existing commands and environment selection remain owner-controlled.
+Hook files, commands and environment selection are owner-controlled.
 Disposable current-schema and maintained Gantt tests cover partial staging,
 corruption masked by repaired worktrees, canonical path rejection, edges, sources,
 baselines and hooks.
 
 Canonical object reads use bounded metadata/content batches with verified blob bytes.
-Derived baseline hints retain fresh ref/tree/object checks and exact index semantics.
+Derived baseline hints use fresh ref/tree/object checks and exact index semantics.

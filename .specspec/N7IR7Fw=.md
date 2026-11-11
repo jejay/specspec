@@ -47,7 +47,7 @@ Project reads tag superseded generations/document stamps distinctly from closed
 projects and validation failures. The session keeps current presentation during
 bounded attempts and coalesces a fresh event-driven automatic refresh after repeated
 supersession. Explicit working reads retain an actionable retry error and a follow-up.
-Actual invalid graphs retain the established marked repair state and fresh managed
+Actual invalid graphs retain the marked repair state and fresh managed
 mutation preflights. Tests cover repeated generation/text races, repair, explicit
 reads and cancellation/disposal without introducing polling or longer deadlines.
 

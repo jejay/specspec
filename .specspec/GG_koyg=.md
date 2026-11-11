@@ -34,8 +34,7 @@ one shared read for refreshes rather than an export/diff chain.
 The bounded bridge rejects incompatible protocol versions and expands compact data
 once into complete revision-local renderer records. Deleted HEAD bodies/relationships
 remain copyable D records through staging; fresh committed baselines remove them.
-Source preview/capture uses typed non-writing application requests. Managed writes
-still preflight saved files and retain native dirty guards, reviewed deletion plans,
+Source preview/capture uses typed non-writing application requests. Managed writes preflight saved files and have native dirty guards, reviewed deletion plans,
 locking/original-byte/recovery rules and unknown-outcome reporting without replay.
 
 Shared tests cover compact reconstruction, stale/coalesced reads, saved-only Electron
@@ -43,8 +42,7 @@ reads and hints, late bootstrap results, provisional/historical delivery and com
 membership acknowledgements. Both real-host suites exercise graph/source/watch/form/
 geometry and exact-deletion/missing-reference lifecycles; Git-paint probes wait for the completed
 comparison rather than misclassifying provisional cards. Native Save/undo and managed
-writer lifecycles remain separate. Presentation and polling/deadline contracts retain
-their established owners.
+writer lifecycles are separate. Presentation and polling/deadline contracts have their own owners.
 
 Polling lifecycle tests use virtual timers and controlled real Git discovery. The
 fixture exposes actual sessions/watchers so tests await their queues and disposal.

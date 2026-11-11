@@ -23,7 +23,7 @@ after complete grammar/field preflight; replacements do not read stdin, empty me
 updates retain their body, and a nonempty stream cannot target multiple steps.
 
 The common UI session omits body options and sends complete managed body text on
-stdin. Native document planning/save ownership remains separate. Tests cover direct
+stdin. Native document planning/save ownership is separate. Tests cover direct
 and redirected bodies, messages without reads, empty/invalid/oversized input,
 metadata preservation, replacement isolation, chain ambiguity and actual subprocess
 transport. Serialization retains document style, meaningful whitespace and EOF rules.

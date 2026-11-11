@@ -28,7 +28,7 @@ The common session/renderer displays explicit CLI-check, install/retry, project
 selection, initialization and ready states. Trusted adapters supply a bounded CLI
 probe and real project inspection, preserve workspace trust, and route explicit init
 through the managed writer before fresh read adoption. Electron removes its menu
-bar while retaining project selection controls and an explicit keyboard shortcut.
+bar while providing project selection controls and an explicit keyboard shortcut.
 Package metadata and runtime labels identify the independently installed products.
 Unit and installed-host probes cover missing CLI, no graph, initialization and retry
 alongside normal graph and native-document persistence.

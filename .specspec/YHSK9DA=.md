@@ -29,4 +29,3 @@ Conservative boxes supply corridors. The playground root sample is a 150px circl
 Pure/DOM/actual-host tests check type radii, formula/content/Git-marker fit, measured
 grow/shrink, reverse routes, painted clearance and native fields. Independent
 collision checks explicitly handle zero-radius square interiors and actual circles.
-Palette, label state and logical relationships retain their own contracts.

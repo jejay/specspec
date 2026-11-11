@@ -27,15 +27,13 @@ sources:
 
 The shared shell devotes the canvas to graph content, a floating navigation HUD
 and concise color swatches/gradient endpoints. Tool-authored labels and tooltips
-state current roles, actions and repair steps. Source controls retain compact
-tracking labels; documentation explains their full contracts. Spotlight entries show how many nodes they name and, in the active spotlight, how many of them are absent; the list says when it is out of date.
+state current roles, actions and repair steps. Source controls have compact tracking labels; documentation explains their full contracts. Spotlight entries show how many nodes they name and, in the active spotlight, how many of them are absent; the list says when it is out of date.
 Host/CLI bridge errors retain failure and recovery semantics with direct action text.
 The palette playground describes its controls and exports positively.
 
 DOM tests check concise legends and icon names alongside literal project Markdown
-and diagnostic evidence. Existing native/session/bridge/playground tests preserve
-their safety assertions while checking the current action/status labels. All four
-linear/log influence choices and independent Git/highlight cues remain available.
+and diagnostic evidence. Native/session/bridge/playground tests preserve their safety assertions while checking the action/status labels. All four
+linear/log influence choices and independent Git/highlight cues are available.
 
 Installed invalid-file probes check fresh structural findings and retained input.
 Unreadable managed targets stay unsavable; native repair-form fields preserve

@@ -59,9 +59,8 @@ Fresh isolated uv-tool installs from both wheel and source distribution exercise
 Unicode, physical EOL replacement, raw versus logical readings, generated instructions
 and preserved owner bytes outside the checkout. Artifact-host probes install the
 VSIX in a disposable extensions directory with a separate test controller, and run
-the unpacked desktop executable against the isolated global-style CLI. Existing
-complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
-spotlight and reload suites retain their assertions and production safeguards.
+the unpacked desktop executable against the isolated global-style CLI. Complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
+spotlight and reload suites have their assertions and production safeguards.
  Build
 artifact workflows upload builds without publication, tags, owner installs or Git
 writes. Public CLI publication has its own explicitly authorized release workflow.

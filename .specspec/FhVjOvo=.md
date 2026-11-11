@@ -24,17 +24,16 @@ errors to each canonical path. Verified immutable byte hints reduce repeated
 content reads after fresh ref/tree/object checks. The shared application read protocol holds
 these hints outside display data; HEAD movement and mismatched hints cause current
 reads. Round-trip header memoization uses exact header text, isolated mutable copies,
-and bounded entries/bytes. Node/graph/source/runtime validation and managed writer
-locking/original-byte/recovery checks keep their existing owners.
+and bounded entries/bytes. Node/graph/source/runtime validation and managed writer locking/original-byte/recovery checks have their own owners.
 
 Focused and maintained-history tests exercise cached/uncached equivalence, object
 loss and malformed framing, current HEAD/index, native planning, node grammar,
 comments/EOL/Unicode, source retention and mutation/recovery. Git read data is
-derived; canonical current node format / application protocol and the one-shot CLI remain authoritative.
+derived; canonical current node format / application protocol and the one-shot CLI are authoritative.
 
 Resolve ordinary HEAD directly. Only a failed resolution checks for a genuinely
 unborn symbolic branch; missing objects, detached corruption and invalid named
-revisions retain their errors. Fresh HEAD movement and staged-byte checks remain authoritative while successful
+revisions retain their errors. Fresh HEAD movement and staged-byte checks are authoritative while successful
 reads avoid the two extra unborn-branch processes.
 
 The `git cat-file` batches of git_objects.py start Git with `git_command` and `git_environment` from git_process. Every other Git subprocess runs through git_process.run_git_process, which turns off

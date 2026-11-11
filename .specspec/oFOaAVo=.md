@@ -33,9 +33,9 @@ local experiments. Tests and CI use fresh disposable standalone repositories.
 
 Python history/Git fixtures and both real hosts share this complete-history checkout
 path. They preserve refs/ancestry/index and add only disposable worktree cues.
-Focused native/nested tests retain their small graphs. The history verifier checks
+Focused native/nested tests use their small graphs. The history verifier checks
 all revisions and final runtime/graph agreement; browser reload checks wait for a
-fresh fully loaded document. Current recipe/commands are in the example guides.
+fresh fully loaded document. Recipe/commands are in the example guides.
 
 The final tracked runtime comparison honors the owning Git checkout's clean
 semantics without changing its bytes, configuration or index. Explicit SHA-1/SHA-256

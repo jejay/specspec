@@ -20,8 +20,7 @@ The Python backend publishes bounded immutable local-format-2 message/ID/compari
 records under the shared workspace lock. Explicit refs pin commits, the default
 workspace/HEAD context stays live, and sparse workspace summaries checksum only
 uncommitted added/modified nodes with null deletion markers. No node copies or
-retained-text preview are part of capture. Git exclusion, tracked-state refusal,
-protected malformed metadata, limits and reviewed flush retain their boundaries.
+retained-text preview are part of capture. Git exclusion, tracked-state refusal, protected malformed metadata, limits and reviewed flush hold here too.
 
 CLI add/show/flush uses color-free ID/message arguments and --base/--target.
 Show derives statuses and titles from each record's comparison and reports drift

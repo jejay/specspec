@@ -56,10 +56,8 @@ Shared renderer/session and host-adapter tests cover one-ink toggle/clear/compos
 comparison switching before framing, best-effort drift/missing highlights, fresh
 HEAD warnings, arrivals/baselines, historical views, authorization, errors and
 reviewed flush. Installed-host probes use the color-free CLI and metadata-only
-backchannel. Their platform and filesystem evidence remains bounded; physical
-macOS modifier qualification retains its separate evidence boundary.
+backchannel. Their platform and filesystem evidence is bounded; physical macOS modifier qualification has its separate evidence boundary.
 
 Complete Windows host probes verify live advisory drift with persistent rings,
 real added/deleted historical comparison selection, retained managed drafts,
-metadata-only agent readback and reload baselines. Paint probes use the current
-40%-to-16% fill schedule and camera-scaled ring dimensions.
+metadata-only agent readback and reload baselines. Paint probes use the 40%-to-16% fill schedule and camera-scaled ring dimensions.

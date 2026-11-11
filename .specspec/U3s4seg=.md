@@ -31,18 +31,18 @@ The snapshot/graph layer retains file inventory, parsed records, declared refere
 resolved traversals and structured diagnostics. Shared inspection computes broken
 reference scope, finite cause witnesses and contextual historical/current readings.
 CLI query/diff/check and API reads consume that evidence without a global valid-
-starting-graph gate. The writer/batch planner retains byte-safe journaled transactions
+starting-graph gate. The writer/batch planner has byte-safe journaled transactions
 and optional complete candidate validation; recovery can restore invalid originals.
 
 Shared host reads/session/model/forms adopt application protocol, preserve actual broken endpoints
-and diagnose invalid working graphs while retaining safe targeted editing. Tests
+and diagnose invalid working graphs with safe targeted editing. Tests
 exercise exclusive/shared/deep deletions, cyclic/disconnected/unreadable inputs,
 completeness and metrics, explicit repair choices, batching, consent, races/recovery,
 protocol boundaries and installed host editing. The independent Gantt history is
-reconstructed with actual current receipts and all retained refs remain checked.
+reconstructed with actual current receipts and all retained refs are checked.
 
 
-Native repair-form fields remain separate from canonical nodes. The current-format
+Native repair-form fields are separate from canonical nodes. The current-format
 manifesto header retains version identity through an invalid body, and native
 empty-body/source-JSON editing uses actual overlay fields rather than old bindings.
 Contextual diff shares its canonical comparison snapshot; rooted metric checks

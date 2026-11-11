@@ -30,9 +30,8 @@ sources:
 
 Python/runtime metadata, all maintained npm packages and their local lock entries
 agree on 0.0.1. The release inspector checks that alignment without changing
-third-party versions or internal node/protocol contracts. Current user/agent/remote
-guides and both startup surfaces recommend the public isolated PyPI installation;
-source/wheel alternatives and explicit replacement of older local builds remain.
+third-party versions or internal node/protocol contracts. User/agent/remote guides and both startup surfaces recommend the public isolated PyPI installation;
+source/wheel alternatives and explicit replacement of older local builds are available.
 
 The manually dispatched pipy_publish.yaml matches repository jejay/specspec and
 environment pypi. Its read-only build job verifies expected version, graph/source

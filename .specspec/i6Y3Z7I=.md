@@ -20,7 +20,7 @@ witnesses rather than changing canonical edges.
 Each invocation derives its graph from actual supplied files. Managed operations
 reject invalid complete candidates before writes; reads and native plans diagnose
 repairable text. Exact-index checks use staged blobs independently of working files.
-Base checks retain their linear traversal and O(V log V) ordering cost; shortcut
+Base checks have their linear traversal and O(V log V) ordering cost; shortcut
 checks additionally traverse relevant ancestor subgraphs and produce witness paths.
 Verification covers valid unequal-depth multiparent DAGs, long chains, deep shortcuts,
 cycles/missing references, remote redundancy introduced by an edit, unchanged bytes
