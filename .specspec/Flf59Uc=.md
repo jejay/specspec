@@ -21,7 +21,7 @@ sources:
 
 `graph-model.js` exports the exact selected `RAINBOW_COLORS`, neutral/type/revision
 maps, labels and modes. Requirement is index 4 and Added 3; Implementation 0,
-M/R 1, D 6 and source-only 5. Distance uses `(d-1)%7`; unknown/neutral is gray.
+M 1, D 6 and source-only 5. Distance uses `(d-1)%7`; unknown/neutral is gray.
 The renderer derives revision kinds from the selected comparison before source
 impact and applies them equally to compact/expanded/root cards.
 

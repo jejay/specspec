@@ -28,8 +28,7 @@ sources:
 `main.cjs` owns authorized project selection, trusted CLI launch settings, watcher/
 session lifecycle and local asset protocol. `security.cjs` validates senders/messages
 and constrains requests/navigation. Sandboxed isolated preload exposes a fixed
-port; renderer scripts use shared graph/session assets. Native menus/dialogs supply
-normal editing, revision selection and destructive/overwrite confirmation.
+port; renderer scripts use shared graph/session assets. The window has no menu bar. Native dialogs supply project selection, trust and destructive/overwrite confirmation, and a renderer dialog supplies revision selection.
 
 `launch.cjs` captures path-bearing executable settings relative to the launch
 folder, and the CLI runs from a neutral working directory. `store.cjs` retains bounded project-scoped presentation/drafts and protects

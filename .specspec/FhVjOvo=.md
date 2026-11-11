@@ -37,7 +37,7 @@ unborn symbolic branch; missing objects, detached corruption and invalid named
 revisions retain their errors. Fresh HEAD movement and staged-byte checks remain authoritative while successful
 reads avoid the two extra unborn-branch processes.
 
-Every Git subprocess runs through git_process.run_git_process, which turns off
+The `git cat-file` batches of git_objects.py start Git with `git_command` and `git_environment` from git_process. Every other Git subprocess runs through git_process.run_git_process, which turns off
 fsmonitor and signature display, disables lazy fetch, optional locks, remote
 protocols and terminal prompts, closes stdin and applies per-site timeouts and
 output caps. Source-impact reads pass referenced paths in chunks of at most 8 KiB

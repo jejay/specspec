@@ -46,5 +46,4 @@ source boundaries, all-layout ambiguity, duplicate-span handling, literal output
 actual consumed bytes, source conflicts, bounds and parser laziness. Existing CLI
 and transaction tests retain previews, invalid states, alias/deletion repair,
 concurrency and interruption recovery. Windows subprocesses preserve Unicode argv
-under legacy output encodings. The linked investigation records completed evidence
-and the bounded qualification scope.
+under legacy output encodings.

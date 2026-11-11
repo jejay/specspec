@@ -41,4 +41,3 @@ selected consent/cancellation, singleton compatibility, bounds, source inputs an
 mixed-operation interruption/recovery. Real subprocess tests preserve Unicode/CRLF
 arguments under legacy output encodings. Independent maintained Gantt revisions,
 actual receipts, sources, bundle and ledgers retain current-interface consistency.
-Verification and platform boundaries are recorded with the source-linked guide.
