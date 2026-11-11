@@ -9,23 +9,10 @@ sources:
 - path: tests/test_core.py
 - path: tests/test_shortcut_freedom.py
 ---
-# Index and validate the shortcut-free rooted DAG iteratively
+# Build and validate the graph in one shared function with iterative walks
 
-The shared build_graph authority validates parent references/types, root reachability,
-terminal implementation grammar and shortcut freedom. Deterministic heap-based Kahn
-ordering and iterative traversals support deep/shared graphs. Shortcut checks run
-only after the basic graph is sound and provide deterministic alternative-path
-witnesses rather than changing canonical edges.
+`build_graph` in `src/specspec/graph.py` is the one validator that every tool uses. It checks that the graph has exactly one manifesto, that every parent reference resolves and has a permitted type, that an implementation is a leaf under requirements, that the graph has no cycle and that every node is reachable from the manifesto, and it checks shortcut freedom. It orders the nodes with Kahn's algorithm on a heap, which gives the same order on every run, and all its walks are iterative, so that deep graphs and graphs with many shared nodes are handled. The shortcut check runs only when the graph has passed the other checks. For every redundant parent it reports an alternative path, the same on every run, and it leaves the links exactly as they are written.
 
-Each invocation derives its graph from actual supplied files. Managed operations
-reject invalid complete candidates before writes; reads and native plans diagnose
-repairable text. Exact-index checks use staged blobs independently of working files.
-Base checks retain their linear traversal and O(V log V) ordering cost; shortcut
-checks additionally traverse relevant ancestor subgraphs and produce witness paths.
-Verification covers valid unequal-depth multiparent DAGs, long chains, deep shortcuts,
-cycles/missing references, remote redundancy introduced by an edit, unchanged bytes
-on failed writes, native repair and exact-index/history distinctions.
+Every invocation builds its graph from the files that it is given. With `--require-valid` the writer rejects an invalid candidate as a whole before anything is written, and reads and edit plans for editor documents diagnose text that can be repaired. A check of the exact index uses the staged blobs, whatever the working files hold. The basic checks walk the graph in linear time and order it in O(V log V). The shortcut check walks, in addition, the ancestors of every node with several parents and builds the witness paths.
 
-An independent closure oracle checks generated arbitrary DAGs and reduced
-reachability equivalence. Maintained Gantt verification checks every retained
-revision, actual CLI receipt state, source anchor and runnable model stage.
+`tests/test_core.py` and `tests/test_shortcut_freedom.py` cover valid graphs whose nodes have several parents at unequal depths, long chains, deep shortcuts, cycles and missing references, a redundancy that an edit introduces at another node, files that keep their bytes when a write is rejected, repair in an editor document and the difference between the exact index and a committed revision. An independent oracle that uses the transitive closure checks generated graphs: the reported shortcuts are exactly the expected ones, and removing them leaves every node with the same ancestors. The verification of the maintained Gantt history checks every revision, the state after each recorded command, every source anchor and every runnable stage of the model.

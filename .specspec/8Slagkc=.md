@@ -12,26 +12,10 @@ sources:
 - path: graph-ui-common/test/graph.test.cjs
 - path: graph-ui-common/test-host/ui.cjs
 ---
-# Render continuous absolute and cohort-relative influence
+# Compute and paint the four influence modes on a continuous ramp
 
-The shared graph model reuses iterative, deduplicated descendant traversal and
-per-revision maximum distances. Snapshot-local influence includes self; structural
-descendantCount subtracts one. Lazy raw ranges feed influence-minus-one linear or
-natural-log normalization and the continuous three-anchor sRGB ramp. The shared template
-exposes all four influence modes; the renderer uses target/base context, concise
-continuous legends and persistent per-view mode selection. Scaling formulas live
-in the tutorial. Compact and
-expanded cards share normalization. Neutral drafts, manifesto treatment and existing
-Git/highlight/form/camera roles stay independent.
+`metrics` in `graph-ui-common/media/graph-model.js` counts the descendants of a node iteratively, each of them once, and takes the maximum distances of the same revision. `influence` includes the node itself, and `descendantCount`, the structural count that the cards show, is one less. `influenceRatio` builds the ranges of the raw counts on first use and normalizes either the influence minus one or its natural logarithm, and `influenceColor` maps the result onto the continuous ramp of three sRGB anchors. The template in `graph-ui-common/view.cjs` offers all four influence modes. The renderer in `graph-ui-common/media/graph.js` takes the values of a node from the target or from the base of a comparison, draws a short continuous legend, which `graph-ui-common/media/graph.css` sizes, and stores the selected mode for each view. Compact and expanded cards share the normalization. A draft is neutral, the manifesto is gray, and the Git marks, the highlights, the form and the camera work independently of the influence modes.
 
-Pure tests cover shared descendants, self-inclusive influence and linear normalization, cohorts by
-longest path, positive cohort minima, log before normalization, ties, invalid
-inputs, order invariance and interpolation. DOM tests cover focus, independent
-base/target versions, refreshed ranges, all four preferences and preservation of
-drafts, caret, geometry and camera. The common real-host probe checks all four
-influence modes against independent full-revision graph traversals and transformed
-count/cohort calculations, alongside actual gradient paint and persisted selection.
+The unit tests in `graph-ui-common/test/influence.test.cjs` cover descendants that several paths share, influence that includes the node itself, the linear normalization, the groups by longest path, a group with a positive minimum, the logarithm before the normalization, ties, invalid input, independence of the order of the input and the interpolation of the ramp. The DOM tests in `graph-ui-common/test/graph.test.cjs` cover the view of a selected node, separate values for the base and the target, ranges that are refreshed, all four stored preferences and that drafts, the text cursor, the geometry and the camera stay as they are. The probe in `graph-ui-common/test-host/ui.cjs`, which both installed editors run, checks all four modes against a traversal of the complete revision and a calculation of the transformed counts and groups that are written independently of the model, together with the painted gradient and the stored selection.
 
-Complete installed-host suites combine every mode with source previews, native
-editing, Spotlight backchannels, recovery and reload/revision checks. The
-graph-structure guide links their verification procedure.
+The complete suites in the installed editors combine every mode with source previews, editing in the form, spotlights, recovery and the checks of reloads and revisions.
