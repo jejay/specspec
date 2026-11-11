@@ -18,5 +18,5 @@ Preserve strict/expanding source contracts, immutable blob anchors, exact-index
 checks, explicit unavailable/ambiguous findings, literal previews and deliberate
 capture/reanchor. Project trust, native dirty guards and absent-buffer non-resurrection
 remain independent of graph validity. Revision metrics describe their own known
-relationships; historical context is distinct from current justification. UI forms,
+relationships; historical context is distinct from the current node text. UI forms,
 drafts/cameras, deadlines and default-off polling retain their existing owners.

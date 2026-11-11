@@ -8,7 +8,7 @@ parents:
 
 A link says that the child is in the graph because of its parent. The parent binds
 whoever works on the child, and replacing the parent puts the child up for review. A
-node is one decision: what is reviewed and replaced as a whole.
+node is one conclusion: what is reviewed and replaced as a whole.
 
 Two statements relate in one of four ways. One goes below the other when it loses its
 reason without the other, while the other stands as written when the first is
