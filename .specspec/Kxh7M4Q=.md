@@ -5,6 +5,8 @@ parents:
 - B6y6hgo=
 - z9YKFeE=
 - -fXS-dI=
+- YkxeXd0=
+- B71bAFk=
 sources:
 - path: src/specspec/query.py
 - path: src/specspec/cli.py

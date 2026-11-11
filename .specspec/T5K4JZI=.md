@@ -7,7 +7,7 @@ sources:
 - path: graph-ui-common/media/graph.css
 - path: graph-ui-common/test/graph.test.cjs
 - path: graph-ui-common/test-host/ui.cjs
-- path: README.md
+- path: vscode/README.md
 ---
 # Derive stronger same-hue card and incident-edge hover paint
 

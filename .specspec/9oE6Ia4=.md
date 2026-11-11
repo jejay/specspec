@@ -9,6 +9,7 @@ sources:
 - path: tests/test_git.py
 - path: tests/test_ids.py
 - path: tests/test_markdown.py
+- path: tests/test_gantt_git.py
 ---
 # Read exact Git snapshots and derive semantic/source impact
 
