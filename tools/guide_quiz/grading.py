@@ -39,7 +39,7 @@ def prompt(task: tasks.Task, text: str) -> str | None:
     if task.answer == "graph":
         nodes = graphs.drawn(data, set(task.root_names))
         return f"{head}<graph>\n{graphs.dump(nodes)}\n</graph>\n\n{report}"
-    nodes, summary = graphs.revised(data)
+    nodes, summary = graphs.revised(data, task.base)
     deleted = json.dumps(summary["deleted"])
     return (
         f"{head}<deleted_nodes>\n{deleted}\n</deleted_nodes>\n\n"
@@ -175,7 +175,7 @@ def score_drawing(task: tasks.Task, data: dict, verdict: dict) -> dict:
 
 
 def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
-    nodes, summary = graphs.revised(data)
+    nodes, summary = graphs.revised(data, task.base)
     outcome, grid, slots, colour = "Wk7fTq0=", "Gr1dCc4=", "Sl0tRw8=", "C0lrTy2="
     text_message, reminder, europe = "SmsDay6=", "Rm1ndR3=", "EuData9="
     day = verdict.get("day_list") or {}
@@ -244,13 +244,88 @@ def score_review(task: tasks.Task, data: None, verdict: dict) -> dict:
     return {"pass": identified, "counts": {}, "numbers": numbers}
 
 
+def score_owner_review(task: tasks.Task, data: None, verdict: dict) -> dict:
+    """The structure review of the owner's edits: found problems and how they are put."""
+    identified = {
+        name: yes(value) for name, value in sorted((verdict.get("identified") or {}).items())
+    }
+    passed = {
+        **identified,
+        "the edit without a problem is left alone": yes(verdict.get("clean_edit_left_alone")),
+        "the answer suggests and leaves the graph as it is": yes(verdict.get("suggests_only")),
+        "it says that what is not accepted stays": yes(verdict.get("says_declined_stays")),
+    }
+    numbers = {
+        "planted problems found": sum(identified.values()),
+        "further suggestions": len(verdict.get("other_suggestions") or []),
+        "wrong claims": len(verdict.get("wrong_claims") or []),
+    }
+    return {"pass": passed, "counts": {}, "numbers": numbers}
+
+
+def score_owner_apply(task: tasks.Task, data: dict, verdict: dict) -> dict:
+    """Planning after a structure review, decided from the returned operations alone.
+
+    The owner accepted three suggestions (split the QR tag node, drop the work order,
+    merge the three limits) and declined three (the invoice sentence, the wording of the
+    text-message node, the parent of the warranty slip).
+    """
+    nodes, summary = graphs.revised(data, task.base)
+    original, _ = graphs.base(task.base)
+    commits = [str(title) for title in data.get("commits") or []]
+    text = {key: f"{record['title']} {record['body']}" for key, record in nodes.items()}
+    limits = ("Lm1Nte0=", "Lm2Prt4=", "Lm3Pht8=")
+    tag_nodes = [key for key, words in text.items() if "qr" in words.lower()]
+    tag_split = any(
+        parent != graphs.ROOT and (parent == "Qr5Tag0=" or nodes[parent].get("origin") == "added")
+        for key in tag_nodes
+        for parent in nodes[key]["parents"]
+        if parent in nodes
+    )
+    declined = {
+        "declined: the invoice sentence stays where the owner put it": "Jb1Brd8=" in nodes
+        and "Invoices are numbered per year." in nodes["Jb1Brd8="]["body"],
+        "declined: the text-message node keeps the owner's words": "Sm5Txt4=" in nodes
+        and nodes["Sm5Txt4="]["body"] == original["Sm5Txt4="]["body"]
+        and nodes["Sm5Txt4="]["title"] == original["Sm5Txt4="]["title"],
+        "declined: the warranty slip stays under the card view": "Wr8Nty0=" in nodes
+        and nodes["Wr8Nty0="]["parents"] == ["Jb1Brd8="],
+    }
+    accepted = {
+        "accepted: the QR tag hangs beneath its purpose": tag_split,
+        "accepted: the work order is gone from the graph": "St3Pln8=" not in nodes,
+        "accepted: the three limits are one node": sum(key in nodes for key in limits) <= 1
+        and any(all(part in words for part in ("500", "20", "10 MB")) for words in text.values()),
+    }
+    passed = {
+        "resulting graph passes the structure check": not graphs.problems(nodes),
+        "the owner's edits are committed first, under the owner's title": bool(commits)
+        and commits[0].startswith("Owner specspec changes:"),
+        "the agent's changes follow under the agent's title": len(commits) > 1
+        and commits[1].startswith("Agent specspec changes:"),
+        **declined,
+        **accepted,
+        "the edit without a problem is untouched": nodes.get("Du2Srt4=") == original["Du2Srt4="],
+    }
+    numbers = {
+        "declined suggestions left as written": sum(declined.values()),
+        "accepted suggestions carried out": sum(accepted.values()),
+        "nodes added": len(summary["added"]),
+        "nodes deleted": len(summary["deleted"]),
+    }
+    return {"pass": passed, "counts": {}, "numbers": numbers}
+
+
 SCORERS = {"clinic": score_drawing, "bakery": score_drawing, "review": score_review}
 SCORERS.update({"revise": score_revision, "revise-phones": score_revision})
+SCORERS.update({"owner-edits": score_owner_review, "owner-edits-apply": score_owner_apply})
+# Scored from the answer alone, without a grader.
+AUTOMATIC = frozenset({"owner-edits-apply"})
 
 
-def score(task: tasks.Task, text: str, verdict: dict) -> dict | None:
-    """Criteria for one graded answer; None when the answer cannot be read."""
+def score(task: tasks.Task, text: str, verdict: dict | None = None) -> dict | None:
+    """Criteria for one answer; None when the answer cannot be read."""
     data = None if task.answer == "text" else tasks.parse(text)
     if task.answer != "text" and not data:
         return None
-    return SCORERS[task.name](task, data, verdict)
+    return SCORERS[task.name](task, data, verdict or {})

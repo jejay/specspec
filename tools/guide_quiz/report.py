@@ -94,7 +94,7 @@ def scored(answers: list[dict], grades: list[dict], grader: str) -> dict:
     for (name, model, guide, _), answer in cells.items():
         task = tasks.TASKS.get(name)
         verdict = verdicts.get(grading.answer_id(name, answer["text"]))
-        if task and task.rubric and verdict:
+        if task and (verdict if task.rubric else name in grading.AUTOMATIC):
             result[(name, model, guide)].append(grading.score(task, answer["text"], verdict))
     return result
 
@@ -138,7 +138,8 @@ def pass_cell(group: list[dict], key: str) -> str:
 
 def count_cell(group: list[dict], key: str) -> str:
     pairs = [score["counts"][key] for score in group if key in score["counts"]]
-    return f"{sum(a for a, _ in pairs)}/{sum(b for _, b in pairs)}" if pairs else "-"
+    total = sum(b for _, b in pairs)
+    return f"{sum(a for a, _ in pairs)}/{total}" if total else "-"
 
 
 def number_cell(group: list[dict], key: str) -> str:

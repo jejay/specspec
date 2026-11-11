@@ -1,0 +1,108 @@
+[
+ {
+  "id": "Bx7Rp2A=",
+  "type": "manifesto",
+  "parents": [],
+  "title": "Track repair jobs in a bike shop",
+  "body": "Mechanics and the counter see every repair job from drop-off to pickup."
+ },
+ {
+  "id": "Jb1Lst4=",
+  "type": "requirement",
+  "parents": [
+   "Bx7Rp2A="
+  ],
+  "title": "Mechanics see their jobs for the day",
+  "body": "Each mechanic sees the jobs assigned to them for today, in the order they are due."
+ },
+ {
+  "id": "Du2Srt4=",
+  "type": "requirement",
+  "parents": [
+   "Jb1Lst4="
+  ],
+  "title": "Overdue jobs come first",
+  "body": "A job past its due time is listed above the others and marked."
+ },
+ {
+  "id": "Jb1Brd8=",
+  "type": "requirement",
+  "parents": [
+   "Jb1Lst4="
+  ],
+  "title": "Show the day's jobs as one card per bike",
+  "body": "A card shows the bike, the customer's name, the work to do and when it is due. Invoices are numbered per year."
+ },
+ {
+  "id": "Wr8Nty0=",
+  "type": "requirement",
+  "parents": [
+   "Jb1Brd8="
+  ],
+  "title": "Customers get a 12-month warranty slip with the invoice",
+  "body": "The slip is printed together with the invoice at pickup."
+ },
+ {
+  "id": "Lm1Nte0=",
+  "type": "requirement",
+  "parents": [
+   "Jb1Lst4="
+  ],
+  "title": "A job note has at most 500 characters",
+  "body": "Longer notes are refused when the job is saved."
+ },
+ {
+  "id": "Lm2Prt4=",
+  "type": "requirement",
+  "parents": [
+   "Jb1Lst4="
+  ],
+  "title": "A job has at most 20 parts",
+  "body": "More parts are refused when the job is saved."
+ },
+ {
+  "id": "Lm3Pht8=",
+  "type": "requirement",
+  "parents": [
+   "Jb1Lst4="
+  ],
+  "title": "A photo has at most 10 MB",
+  "body": "Larger photos are refused when the job is saved."
+ },
+ {
+  "id": "Pk4Rdy0=",
+  "type": "requirement",
+  "parents": [
+   "Bx7Rp2A="
+  ],
+  "title": "Customers know when their bike is ready",
+  "body": "A customer learns that the repair is finished without calling the shop."
+ },
+ {
+  "id": "Sm5Txt4=",
+  "type": "requirement",
+  "parents": [
+   "Pk4Rdy0="
+  ],
+  "title": "Text the customer when the bike is ready",
+  "body": "No more calling customers one by one like we do now. The text goes out when the mechanic marks the job as done."
+ },
+ {
+  "id": "Qr5Tag0=",
+  "type": "requirement",
+  "parents": [
+   "Bx7Rp2A="
+  ],
+  "title": "Print a QR tag for every bike so nobody mixes up two bikes",
+  "body": "Each bike gets a printed tag with a QR code at drop-off."
+ },
+ {
+  "id": "St3Pln8=",
+  "type": "requirement",
+  "parents": [
+   "Bx7Rp2A="
+  ],
+  "title": "Build the job list first, the texting later",
+  "body": "The texting can wait until the job list works."
+ }
+]

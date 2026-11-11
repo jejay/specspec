@@ -106,7 +106,22 @@ def test_every_task_has_its_files_and_every_graded_task_a_scorer():
             assert tasks.rubric(task) and name in grading.SCORERS
         if task.answer == "graph":
             assert task.root_names and name in grading.PROBES
+        if task.answer == "operations":
+            base, _ = graphs.base(task.base)
+            assert graphs.problems(base) == []
+            for key, record in base.items():
+                assert key == graphs.ROOT or key in tasks.brief(name), (name, key)
+                assert record["title"] in tasks.brief(name), (name, key)
+    assert grading.AUTOMATIC <= set(grading.SCORERS)
+    assert all(not tasks.TASKS[name].rubric for name in grading.AUTOMATIC)
     assert grading.context().startswith("You grade one answer")
+    assert {item["topic"] for item in dilemmas.items()} == {
+        "structure",
+        "routine",
+        "phases",
+        "commands",
+        "writing",
+    }
 
 
 def test_answers_are_parsed_with_or_without_a_fence_and_salvaged_when_broken():
@@ -162,7 +177,9 @@ def test_operations_are_applied_to_the_base_graph_of_the_revision_tasks():
     assert graphs.problems(base) == [] and root_names == {"Kq3x9bA="}
     for name in ("revise", "revise-phones"):
         brief = tasks.brief(name)
-        for record in json.loads(graphs.BASE_FILE.read_text(encoding="utf-8")):
+        for record in json.loads(
+            (graphs.QUIZZES / "revise.graph.json").read_text(encoding="utf-8")
+        ):
             assert record["id"] in brief and record["title"] in brief, (name, record["id"])
     answer = {
         "operations": [
@@ -401,3 +418,91 @@ def test_results_are_kept_per_process_and_reported_per_model_and_guide(tmp_path)
     table = report.task_report(answers, grades)
     assert "== review" in table and "F01_category" in table and "1/1" in table and "2.0" in table
     assert report.task_report(answers, grades, grader="another") == "No graded answers yet."
+
+    second = {**grades[0], "grader": "another", "verdict": {"identified": {"F01_category": False}}}
+    compared = report.agreement(answers, [*grades, second], grading.GRADER, "another")
+    assert "Agreement of another with opus-5-5" in compared and "0%" in compared
+    assert "No answer has grades from both" in report.agreement(answers, grades, "a", "b")
+
+
+def test_negative_wording_is_counted_without_bounds():
+    nodes = graphs.drawn(
+        drawing(
+            ("a", "requirement", ["manifesto"], "Keep data", "The app never deletes a row."),
+            ("b", "requirement", ["manifesto"], "Limit hours", "It ends no later than 20:00."),
+            ("c", "requirement", ["manifesto"], "Stay simple", "Customers don't need an account."),
+        ),
+        set(),
+    )
+    assert [len(graphs.NEGATION.findall(n["body"])) for n in list(nodes.values())[1:]] == [1, 0, 1]
+    assert graphs.metrics(nodes)["negations per 100 words"] > 0
+
+
+def test_a_structure_review_and_the_planning_after_it_are_scored():
+    review = grading.score(
+        tasks.TASKS["owner-edits"],
+        "I would suggest six changes.",
+        {
+            "identified": {"E1_way_and_purpose": True, "E4_work_order": True, "E6_parent": False},
+            "clean_edit_left_alone": True,
+            "suggests_only": True,
+            "says_declined_stays": False,
+        },
+    )
+    assert review["numbers"]["planted problems found"] == 2
+    assert review["pass"]["the answer suggests and leaves the graph as it is"]
+    assert not review["pass"]["it says that what is not accepted stays"]
+
+    task = tasks.TASKS["owner-edits-apply"]
+    obedient = {
+        "commits": [
+            "Owner specspec changes: QR tags, limits, texting and a warranty slip",
+            "Agent specspec changes: split the QR tag, merge the limits",
+        ],
+        "operations": [
+            {
+                "op": "add",
+                "key": "no-mix-ups",
+                "parents": ["Bx7Rp2A="],
+                "title": "No two bikes get mixed up",
+            },
+            {
+                "op": "update",
+                "id": "Qr5Tag0=",
+                "parents": ["no-mix-ups"],
+                "title": "Print a QR tag for every bike",
+            },
+            {"op": "delete", "id": "St3Pln8="},
+            {"op": "delete", "id": "Lm2Prt4="},
+            {"op": "delete", "id": "Lm3Pht8="},
+            {
+                "op": "update",
+                "id": "Lm1Nte0=",
+                "title": "Jobs stay within their limits",
+                "body": "Notes have at most 500 characters, jobs 20 parts, photos 10 MB.",
+            },
+        ],
+        "report": "Done.",
+    }
+    score = grading.score(task, json.dumps(obedient))
+    assert all(score["pass"].values()), score["pass"]
+    assert score["numbers"]["declined suggestions left as written"] == 3
+    assert score["numbers"]["accepted suggestions carried out"] == 3
+
+    eager = json.loads(json.dumps(obedient))
+    eager["commits"] = ["Agent specspec changes: tidy the owner's edits"]
+    eager["operations"] += [
+        {"op": "update", "id": "Wr8Nty0=", "parents": ["Bx7Rp2A="]},
+        {"op": "update", "id": "Sm5Txt4=", "body": "The text goes out when the job is done."},
+        {"op": "update", "id": "Jb1Brd8=", "body": "A card shows the bike and the work to do."},
+    ]
+    score = grading.score(task, json.dumps(eager))
+    assert score["numbers"]["declined suggestions left as written"] == 0
+    assert not score["pass"]["the owner's edits are committed first, under the owner's title"]
+    assert score["pass"]["accepted: the work order is gone from the graph"]
+
+    answers = [
+        {"task": task.name, "model": "claude-haiku-5-5", "guide": "shipped", "repetition": 0}
+        | {"text": json.dumps(obedient)}
+    ]
+    assert "accepted: the three limits are one node" in report.task_report(answers, [])

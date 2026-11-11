@@ -14,7 +14,7 @@ from specspec.graph import build_graph
 from specspec.model import SpecNode
 
 ROOT = "ROOT"
-BASE_FILE = Path(__file__).resolve().parent / "quizzes" / "revise.graph.json"
+QUIZZES = Path(__file__).resolve().parent / "quizzes"
 
 # Phrases that state when something gets built. Checked by text, because a grader reads
 # "what to bake first" or "the day before" as an order of work too easily.
@@ -26,6 +26,12 @@ BUILD_ORDER = re.compile(
     r"|\bin place before the\b|\bproject first\b|\bestablished first\b|\bcomes? (?:later|last)\b"
     r"|\bdelivered (?:first|later|last|in)\b"
     r"|\b(?:first|second|third|last) (?:stage|phase|step|increment|milestone)\b",
+    re.I,
+)
+# Words that say what the product is not. Bounds such as "no later than" are no negation.
+NEGATION = re.compile(
+    r"\b(?:not|never|cannot|without|nobody|nothing|none|neither|nor)\b"
+    r"|\bno\b(?! (?:later|earlier|more|fewer|less) than\b)|n't\b",
     re.I,
 )
 
@@ -59,9 +65,9 @@ def drawn(data: dict, root_names: set[str]) -> dict[str, dict]:
     return nodes
 
 
-def base() -> tuple[dict[str, dict], set[str]]:
-    """The graph that the revision tasks start from, and the names of its manifesto."""
-    records = json.loads(BASE_FILE.read_text(encoding="utf-8"))
+def base(name: str = "revise") -> tuple[dict[str, dict], set[str]]:
+    """The graph that a task with operations starts from, and the names of its manifesto."""
+    records = json.loads((QUIZZES / f"{name}.graph.json").read_text(encoding="utf-8"))
     root_names = {record["id"] for record in records if record["type"] == "manifesto"}
     nodes = {}
     for record in records:
@@ -71,9 +77,9 @@ def base() -> tuple[dict[str, dict], set[str]]:
     return nodes, root_names
 
 
-def revised(data: dict) -> tuple[dict[str, dict], dict[str, list[str]]]:
-    """Apply an answer's ``operations`` to the base graph."""
-    nodes, root_names = base()
+def revised(data: dict, name: str = "revise") -> tuple[dict[str, dict], dict[str, list[str]]]:
+    """Apply an answer's ``operations`` to a base graph."""
+    nodes, root_names = base(name)
     known = frozenset(nodes)
     summary: dict[str, list[str]] = {"added": [], "updated": [], "deleted": [], "unknown": []}
     for operation in data.get("operations") or []:
@@ -175,10 +181,9 @@ def build_order(nodes: dict[str, dict]) -> list[str]:
 def metrics(nodes: dict[str, dict]) -> dict[str, float]:
     below = children(nodes)
     requirements = [key for key, record in nodes.items() if record["type"] == "requirement"]
-    words = [
-        len(re.findall(r"\S+", nodes[key]["title"] + " " + nodes[key]["body"]))
-        for key in requirements
-    ]
+    texts = [nodes[key]["title"] + " " + nodes[key]["body"] for key in requirements]
+    words = [len(re.findall(r"\S+", text)) for text in texts]
+    negations = sum(len(NEGATION.findall(text)) for text in texts)
     return {
         "nodes": len(nodes) - 1,
         "implementation nodes": sum(r["type"] == "implementation" for r in nodes.values()),
@@ -186,6 +191,7 @@ def metrics(nodes: dict[str, dict]) -> dict[str, float]:
         "depth": depth(nodes),
         "nodes with two or more parents": sum(len(r["parents"]) > 1 for r in nodes.values()),
         "words per requirement": round(sum(words) / len(words), 1) if words else 0,
+        "negations per 100 words": round(100 * negations / sum(words), 2) if sum(words) else 0,
     }
 
 

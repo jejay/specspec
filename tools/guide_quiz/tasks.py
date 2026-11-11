@@ -22,6 +22,7 @@ class Task:
     rubric: str | None = None  # stem of the rubric file; None for answers read by a person
     root_names: frozenset[str] = frozenset()
     about: str = ""
+    base: str | None = None  # stem of the graph that operations apply to
 
 
 TASKS = {
@@ -46,14 +47,28 @@ TASKS = {
             "operations",
             "revise",
             about="Replace a choice, add two decisions; an unrelated sentence sits in one node.",
+            base="revise",
         ),
         Task(
             "revise-phones",
             "operations",
             "revise",
             about="As revise, with a request that most models read as keeping both views.",
+            base="revise",
         ),
         Task("review", "text", "review", about="Review a graph with thirteen planted problems."),
+        Task(
+            "owner-edits",
+            "text",
+            "owner-edits",
+            about="The owner edited nodes by hand; six edits have a planted problem.",
+        ),
+        Task(
+            "owner-edits-apply",
+            "operations",
+            about="The owner accepts three suggestions and declines three; then plan.",
+            base="owner-edits",
+        ),
         Task("discuss", "text", about="The bakery brief as a discussion round; read by a person."),
         Task(
             "explain-cases", "text", about="One node, siblings or parent and child, in own words."
