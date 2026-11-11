@@ -3,11 +3,11 @@ id: nxNOTwc=
 type: implementation
 parents:
 - J8H7P74=
-- toGiGP8=
 - ge_uqBs=
-- o079tIM=
 - 0ixPI18=
 - gdf33gI=
+- -r2nyRA=
+- ngr7AdE=
 sources:
 - path: src/specspec/templates/AGENTS.md
 - path: src/specspec/workspace.py
@@ -21,8 +21,8 @@ sources:
 # Package and safely concatenate initialization instructions
 
 The distribution contains one static generic guide, loaded through package resources.
-It says what the graph is for in two opening paragraphs, continues with a numbered routine and stays under 10 KB, counted with LF line endings; tests check its essentials,
-its size and that every option it teaches appears in visible help. Its concept sections use the outcome/choice and intention/conclusion vocabulary with one example graph, each phase names what starts it, the implementation phase begins with agent planning, and the report step asks for a spotlight on the nodes discussed.
+It says what the graph is for in two opening paragraphs, continues with a numbered routine and stays under 11 KB, counted with LF line endings; tests check its essentials,
+its size and that every option it teaches appears in visible help. Its concept sections use the outcome/choice and intention/conclusion vocabulary with one example graph. Three owner sentences are worked into an outcome and a choice each, and the passage on what belongs in a node names a list of limits as one decision and says what stays out of the graph. Each phase names what starts it, the implementation phase begins with agent planning, and the report step asks for a spotlight on the nodes discussed.
 Initialization validates a single manifesto and safe root instruction target, checks
 Git availability and ensures a Git working tree before publishing node/guide bytes,
 reusing a containing repository instead of creating nested Git metadata. Git metadata is not claimed by graph rollback. No staging, commit, identity

@@ -26,7 +26,21 @@ manifesto: Help a small team agree on a plan
 
 Each indented line is a conclusion from the line above it, and that line is its intention; the two middle lines are both at once. No field stores this; it follows from the `parents` links. If a milestone list turns out to read better, the timeline node and its implementation are deleted and a new choice is added under "Make timing easy to read", which stays as it is.
 
-To decide what belongs in a node, ask what should survive a change of approach. That outcome gets a node, and each choice with a real alternative gets its own node beneath it, so a choice can be replaced without erasing its outcome. Neither authorship nor specificity decides where a statement goes: a technology the owner must use is a constraint near the root, and one the owner merely suggested is a choice under the outcome it serves. Split a node when its parts could be replaced or reviewed separately; keep one coherent decision together.
+To decide what belongs in a node, ask what should survive a change of approach. That outcome gets a node, and each choice with a real alternative gets its own node beneath it, so a choice can be replaced without erasing its outcome. Neither authorship nor specificity decides where a statement goes: a technology the owner must use is a constraint near the root, and one the owner merely suggested is a choice under the outcome it serves. Split a node when its parts could be replaced or reviewed separately; keep one coherent decision together, such as a list of limits. An order of work, an option you did not choose, a topic that only groups other nodes and a rewording of the parent are not nodes.
+
+An owner's sentence often names a way and leaves the outcome to you. Each becomes two nodes:
+
+```text
+owner: "a timeline, so everyone sees when things happen"
+  requirement: Everyone sees when things happen
+    requirement: Show tasks on a timeline
+owner: "an SMS when the parcel ships"
+  requirement: Customers know when their parcel ships
+    requirement: Send an SMS when the parcel ships
+owner: "the open tickets on the office TV"
+  requirement: The team sees its open tickets at a glance
+    requirement: Show the open tickets on the office TV
+```
 
 A node may name several parents: every intention it serves or must respect. Keep the graph shortcut-free: a node serving both P and a descendant of P names only the descendant.
 
