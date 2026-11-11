@@ -16,12 +16,35 @@ sources:
 - path: pyproject.toml
 - path: tests/test_ids.py
 ---
-# Match replacements against the Markdown source and apply them through the writer
+# Implement source-mapped body replacements through the existing writer
 
-`src/specspec/cli.py` parses the repeatable `--replace` with its OLD and NEW arguments, rejects a step that mixes sources for its body and sends an update with replacements through the batch planner, the one that chains of explicit edits use. `src/specspec/edit_cli.py` consumes both values of the option before a command callback runs. Its `CanonicalIdCommand` keeps a full node ID that begins with a hyphen from being read as a cluster of short options, so that an ID containing `m` stays an ID next to the message option. Every option value is literal, and the tolerance of the comparison is a rule of matching, the same for every way text comes in.
+cli.py parses the same repeatable OLD/NEW arguments, rejects mixed body sources
+and exposes replacements through the shared explicit-edit planner. edit_cli.py
+consumes the complete two-value option arity before callbacks. CanonicalIdCommand
+keeps full hyphen-leading IDs out of Click short-option clusters, preserving IDs
+containing m alongside the message option. All option values remain literal;
+comparison tolerance is a domain rule rather than another input mode.
 
-`src/specspec/replacement_matching.py` maps positions in text with LF, CRLF and CR line ends back to character boundaries of the original. It loads the CommonMark parser with tables on first need and records only the spaces and soft breaks of prose whose place in the source is proved, which protects structural and inline syntax. The matches of both views of the comparison go into one assessment of unique spans of the original, in which an exact layout has no preference. The analysis is limited to 32,768 lines in the body and in each OLD value and to nesting below level 20. For one body with all its OLD values together it is limited to 131,072 Markdown tokens, 8,192 candidate positions and 67,108,864 steps of parsing, scanning and comparing. Beyond a limit it stops with an explicit error. `src/specspec/body_replacements.py` resolves all pairs against the same original body, rejects ranges that overlap physically and joins the unchanged slices with the literal NEW values. The writer adapts the newline encoding to the style of the target document. The size limits are checked on the actual bytes in that style, after a conservative check that bounds the construction of the result.
+replacement_matching.py maps LF/CRLF/CR positions to original character boundaries.
+A lazy CommonMark/table parser records only source-proven prose spaces and soft
+breaks, protecting structural and inline syntax. Both comparison views contribute
+to one unique original-span assessment without exact-layout preference. Parser line,
+token, nesting and candidate/work guards reject incomplete analysis explicitly.
+body_replacements.py resolves all pairs against the same original body, rejects
+physical range overlaps and joins unchanged slices with content-literal NEW. The
+writer adapts newline encoding to the existing target style. Bounds use actual
+target-style bytes after a conservative bounded-construction check.
 
-`src/specspec/batch.py` accounts for the input of all steps together and applies the replacements under the lock, to the freshly read node. Serialization, the validation of the final graph, the consent to deletions, the checks of original bytes, the journal and recovery are the ones that every edit uses. A match of a single word or of a whole body, and the ordinary start of the command line and of the private API, run without the Markdown dependency, which `pyproject.toml` declares.
+batch.py retains combined input accounting and fresh under-lock transformation.
+The existing serializer, final graph validation, deletion consent, original-byte
+checks, journal and recovery retain their owners. Ordinary word/full-body matches
+and normal CLI/private API startup avoid the Markdown dependency until needed.
+UI transports and API/current node format remain unchanged.
 
-`tests/test_replacement_matching.py` and `tests/test_cli_replacements.py` cover the permutations of line ends and prose layouts, protected Markdown, Unicode at source boundaries, ambiguity across all layouts, a span that is found twice, literal output, the bytes actually consumed, conflicting sources, the limits and the lazy loading of the parser. `tests/test_cli_chains.py` and `tests/test_transactions.py` cover previews, invalid states, repair with local names and deletions, concurrent writers and recovery after an interruption, and `tests/test_ids.py` covers IDs that begin with a hyphen. Subprocess tests on Windows pass Unicode arguments under legacy output encodings.
+Tests cover line-ending and prose-layout permutations, protected Markdown, Unicode
+source boundaries, all-layout ambiguity, duplicate-span handling, literal output,
+actual consumed bytes, source conflicts, bounds and parser laziness. Existing CLI
+and transaction tests retain previews, invalid states, alias/deletion repair,
+concurrency and interruption recovery. Windows subprocesses preserve Unicode argv
+under legacy output encodings. The linked investigation records completed evidence
+and the bounded qualification scope.

@@ -32,10 +32,22 @@ sources:
 - path: vscode/test-host/run.cjs
 - path: vscode/test-host/smoke.cjs
 ---
-# Refresh both graph editors on file and Git notifications and keep unsaved forms
+# Reconcile watcher updates with native forms and original records
 
-`GraphSession` in `graph-ui-common/host/session.cjs` takes a notification as a hint to refresh. It runs its operations one after another, merges hints that arrive close together into one refresh, retries a transient failure of a read twice and compares the loaded records with the ones it shows, so that an unchanged graph is left as drawn. It controls the polling, which is explicit and off by default. The desktop app watches the node files with `GraphWatcher` in `graph-ui-common/host/watch.cjs`, which follows the project directory and `.specspec` and attaches again after `.specspec` was replaced or created anew. VS Code watches them with its own file-system watcher in `vscode/src/extension.ts`. Both editors share a watcher for Git, which follows HEAD and the refs and attaches again after a directory of refs was replaced. `vscode/src/extension.ts`, with the polling setting in `vscode/package.json`, and `electron/main.cjs` configure the watchers and the polling and dispose of them.
+`GraphSession` serializes/coalesces refresh hints, retries transient reads twice,
+compares records and controls explicit default-off polling. Shared file/Git watchers
+track relevant directories/refs and reattach after ordinary replacement/recreation.
+Host configuration and disposal manage their lifecycle.
 
-A draft in the renderer, `graph-ui-common/media/graph.js`, keeps the record it was loaded from, and a refresh leaves its form elements, its text cursor and its camera in place. Saving a draft whose node changed outside requires a confirmation to overwrite, and a change to other nodes leaves the draft ready to save. A read of a graph that breaks a rule publishes the relationships as they are, with their diagnostics. A load that is unavailable keeps the last usable graph on screen, marked as such. The data of a form whose document does not parse as a node is kept apart from the nodes of the graph, so that an empty body and half-typed source JSON can still be repaired. The form of a node that is missing can be copied from and cannot be saved. The session takes a rendering as complete when the renderer acknowledges its sequence number and the full set of visible nodes. `graph-ui-common/test/session.test.cjs`, `graph-ui-common/test/watch.test.cjs`, `graph-ui-common/test/graph.test.cjs`, `vscode/test/extension.test.cjs` and the host fixtures under `graph-ui-common/test-host` and `vscode/test-host` exercise saves from outside, incomplete and invalid files, watcher errors, disposal, editor text laid over the files and input that the user has typed.
+Renderer drafts retain original records with native DOM/caret/camera. Same-node
+changes require overwrite confirmation; unrelated changes preserve save eligibility.
+Graph-invalid reads publish fresh diagnosable relationships. Unavailable loads
+retain marked last-usable context. Native intermediate form data stays separate
+from canonical membership so empty bindings and partial source JSON remain repairable. Missing-node forms
+remain copyable/unsavable. Sequence/full-membership acknowledgements check visible
+render completion. Unit and host fixtures exercise external saves, incomplete/invalid
+files, watcher errors, disposal, overlays and retained user input.
 
-In both editors the first graph of a view comes from the working files alone and is shown as provisional while the comparison loads. Identical reads that are under way are shared, and hints derived from an earlier read are used once they are verified. Two guards hold alongside: a read whose documents or project generation changed while it ran is discarded, and every change is preceded by a fresh read of the saved files. A complete comparison is acknowledged by sequence number and visible nodes like every other rendering.
+Initial VS Code working context is visibly provisional while comparison loads.
+Shared in-flight reads and verified derived hints preserve current-read and
+mutation guards; complete comparisons retain sequence/membership acknowledgements.

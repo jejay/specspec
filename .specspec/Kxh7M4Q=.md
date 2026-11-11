@@ -23,26 +23,97 @@ sources:
 - path: tests/test_query_ancestors.py
   symbol: ancestor completion, neighbor oracles and exact budgets
 ---
-# Render a query as a tree of complete nodes with hints for changed nodes and changed linked code
+# Render complete selected-record query reads with contract-aware source hints
 
-`read_query` in `src/specspec/query.py` takes its two revisions through the snapshot selection that spotlights also use, compares them by node record and reports the diagnostics of both. `comparison_graph` builds the display graph of the comparison and writes nothing: a current node has its target record, a deleted node its base record, and each has the parents of that record. The display graph keeps exactly these links. It is neither reduced to shortcut-free form nor checked for node types and roots, and for two valid revisions it is acyclic by construction, also where the union of all links of both revisions has a cycle. In an invalid graph every cycle that no root reaches gets a root of its own, so that the walk stays finite, and a parent that is missing or unreadable appears as an explicit placeholder.
+query.py reuses spotlight snapshot selection and semantic comparison, diagnosing
+both selected revisions. A non-writing display projection chooses target records
+for current nodes and base records for deleted nodes, each with that record's own
+parents. Iterative reverse/forward walks render one overlay with full sorted parent
+headers, compact rails, last-occurrence ownership and complete default one-line body readings. The
+projection preserves chosen edges without canonical reduction or type/root checks;
+for valid revisions its construction
+is acyclic even when a full edge union would be cyclic. Invalid projections use
+finite cycle-safe component roots and explicit missing endpoints.
 
-Two iterative walks render one tree: a reverse walk finds the last occurrence of every node, and a forward walk prints the lines with two-column rails. A header names all direct parents in sorted order, the full record of a node stands at its last occurrence, and by default every body is complete on one line. The lowercase words `added`, `modified` and `deleted` mark a change of a node. `file-only` marks a node file whose literal text changed while the node record is the same. `source-changed` marks the nodes with a known change in the validity of a link and their ancestors in both original graphs, independently of the cautious fact that a linked file changed somewhere. A node without a change and a code edit that the mode of its link permits carry no hint. `query` gives the summary of the changes and, in JSON, both original graphs, `diff` gives the patches of the logical text of the node files, and `query --raw` gives a document exactly as it is stored.
+Lowercase added/modified/deleted identify node changes. File-only marks
+literal-only changes. Source-changed identifies known contract changes and
+ancestors in both original graphs, independently of
+shared conservative file-impact facts. Normal records and permitted code edits
+stay unmarked. Query keeps summaries and reconstructed original graphs; diff owns
+logical canonical patch review; raw query owns exact physical documents.
 
-`body_line` applies the shared normalization of newlines and replaces a single newline by a space and a run of several by ` ¶ `. It truncates nothing and leaves the stored body as it is. The readable renderer writes types and hints as full words, prints the compared revisions and the notes before the tree, needs no legend and starts the content of the root at column zero. One line for each body is the ordinary reading, and `--human` keeps the logical lines of a body. JSON holds the complete logical bodies with CRLF normalized to LF, a raw `query` keeps the literal layout of a node file and `diff` its logical layout.
+query_sources.py retains exact declaration multisets and cached shared readers.
+Known committed source blobs and anchors populate the existing per-invocation cache
+in batches; identical selected commits share a code reader. Workspace contents stay
+fresh and independent of the index. Shared batch admission charges accepted bytes,
+keeping oversized-object failures separate from eligible blobs. Process-count and
+fixed-input equivalence tests protect this optimization; tools/benchmark_query.py
+records fresh-process timings, cProfile stages and Git process counts.
+Bytes, trusted logical text and coordinates remain separate raw JSON facts. A
+contract comparison uses strict/expanding/path-only semantics: reliable permitted
+relocation/outside edits, expanding internal edits and whole-file content edits
+stay quiet. Missing/strict-conflicting links and their restoration are known
+contract transitions; ambiguous/unavailable evidence stays uncertain. Binary or
+budget-limited whole-file contents do not invalidate an existing path-only link.
+One-line readable rows show the selected location, reference +/- and relevant
+broken/uncertain/restored hints. Complete metadata and diagnostics remain in JSON.
 
-`query_lines` and `render_query` take a `human` option that changes the presentation alone. The command line passes `--human` on for text, and `--json` gives the identical complete comparison with and without it. Every parent header separates the IDs with a comma and a space. `source_item` gives the location and the hints of one link. The compact presentation joins all items of a node on one line behind the prefix `sources: `, and the human presentation prints one `source_line` for each occurrence. A node without sources has no such line, and duplicate occurrences are visible in both presentations. Rendering has no effect on the selection of snapshots, on the reads of sources, on the classification of links or on the lifetime of the caches.
+Tests combine independent literal unfolding and selected-parent overlay oracles,
+reparenting/full-union cycles, ghosts with shared parents, changed node types,
+introduced shortcuts, distinct roots, deep/exponentially shared graphs and all
+retained Gantt revisions. Contract matrices cover permitted versus breaking edits,
+strict conflicts, expanding changes, moves/renames/gaps/boundaries, restored and
+pre-existing broken links, unavailable anchors, binary/large whole-file hints,
+caching, original-graph ancestor ripple, declaration independence and historical
+selection. Plain text/metadata, source facts, exact diff application, saved-buffer
+semantics, read-only Git/files and legacy pipe safety retain regression coverage.
 
-`src/specspec/query_sources.py` keeps the source links of each node as exact multisets and reads the linked code through cached readers, which resolve links with `src/specspec/sources.py`. The blobs of the anchors and, for a committed revision, the blobs of the linked paths go into the cache of the invocation in batches, and two selected revisions that are the same commit share one reader. The working files are read afresh from disk, independently of the index. A batch counts only the bytes of the objects that it accepts, so that an object over the size limit fails by itself and the others are still read. Tests that count Git processes and tests that compare the results on fixed inputs guard this batching, and `tools/benchmark_query.py` records the timings of fresh processes, the stages of a cProfile run and the number of Git processes.
+body_line shares logical newline normalization and replaces single LF runs with a space and longer runs
+with " ¶ ", without truncating text or changing original bodies. The readable
+renderer spells out types and change hints, carries revisions/notes without a legend,
+and aligns root content at column zero. Golden and newline-run matrices cover
+paragraphs, headless text, Markdown markers, other whitespace, controls and deleted
+bodies. Complete logical bodies remain reconstructible in JSON with CRLF normalized to LF;
+raw query documents retain literal canonical layout and diff retains logical layout. The
+one-line projection is the ordinary reading behavior; --human retains logical body lines.
 
-The bytes of a file, the trusted logical text of a selection and its coordinates are separate raw facts in JSON. The comparison of a link follows its mode, which is strict, expanding or path alone. A move that is followed reliably, an edit outside the region, an edit inside an expanding region and any edit of a file that is linked as a whole leave the link unmarked. A link that goes missing, a strict link that conflicts and the restoration of either are known changes, and an ambiguous or unavailable resolution is reported as uncertain. A link to a whole file stays valid when the file is binary or beyond a read limit. A readable source item shows the selected location, `ref+` or `ref-` for a link that was added or removed, and the hints for a broken, an uncertain or a restored link. The complete metadata and the diagnostics are in JSON.
+query_lines/render_query accept a presentation-only human option; the CLI forwards
+--human for text while --json retains its identical complete comparison. Every
+parent header uses comma-space separators. source_item retains one reference's
+location and hints; compact metadata joins all items under one sources prefix,
+while human metadata uses source_line once per occurrence. Empty lists add no row,
+and duplicate occurrences stay visible in either format. Rendering does not change
+snapshot selection, source reads, contract classification or cache lifetimes.
 
-`src/specspec/query_select.py` finds the population that a root reaches once and computes the requested measures in one batch. A limit given as a number includes the nodes that equal it, and a percentage selects a quota that is the exact rational share of the population, rounded up, in the order of the measure and then of the ID. Influence is counted once for each node with integer bitsets of descendants, and the bitset of a child is released when its last parent has used it. Minimum and maximum distance share one forward pass. `read_query` builds the display graph once, before any source is read, and both renderers use the same induced view of it. The records of a comparison that is limited to a selection keep the IDs of the parents outside the selection and all the source facts that are needed. Source links are read for the nodes that own one among the selected nodes and their descendants in either revision. A known change is passed to the ancestors in each of the two revisions by one walk that starts from all changed nodes, so that a selected node keeps its hint also where the link that broke belongs to a node outside the selection.
+Regressions cover compact/human golden reads, source aggregation and duplicates,
+comma-bearing paths and disjoint ranges, uncertain/removed/deleted source items,
+parent sorting in both modes, original multiline whitespace and control safety,
+identical JSON, read-only Git state and maintained temporal graph traversals.
 
-With `--with-ancestors` the selection keeps the matched IDs with the measures that selected them, walks all parent paths of the display graph once and adds the ancestors, each a single time. The same induced view feeds the compact and the human output, the reconstruction from JSON and the scope of the sources. The surrounding IDs are the children and siblings of the original matches that the reading leaves out, and a parent that several matches share contributes its children once. An empty selection stays empty, and an unfiltered query is complete and needs no further step. The line before the tree tells the quota of matches apart from the additional ancestors, which can lie outside the population of the root. The `query` command passes `--with-ancestors` and the advanced exact budget in UTF-8 bytes to an emitter that formats the result a single time, and `query` is the one command that reads ancestors.
 
-`tests/test_query.py` holds the tree against two independent oracles, a literal unfolding of every path and an overlay of the selected parents. It covers reparenting and cycles in the union of all links, deleted nodes that share parents, changed node types, shortcuts that the overlay introduces, distinct roots, deep graphs, graphs with exponentially many shared paths and every revision of the maintained Gantt history. Golden reads of both presentations and a matrix of newline runs cover paragraphs, text without a heading, Markdown markers, other whitespace, control characters and the bodies of deleted nodes. Further tests cover the plain text with its metadata, the sorting of parents in both presentations, multiline whitespace as it was written, identical JSON, a diff that applies exactly, reads that take the saved files, a Git state and files that a read leaves untouched, and output through the legacy encodings of a Windows pipe.
+query_select.py computes one rooted population and shared metric batch, selecting
+inclusive absolute sets or exact rational ceil-percentage quotas in metric/ID order.
+Integer descendant bitsets count influence once per node with last-consumer release;
+minimum/maximum distances share a forward pass. Independent frontier/path/closure
+oracles cover the ranking equivalence and selection union. read_query builds the
+projection once before source reads and reuses its induced view for either renderer.
+Scoped comparison records retain external parent IDs and all necessary source facts.
+query_sources filters declaration owners to the old/new descendant evidence scope
+and propagates known changes with multi-source ancestor walks, preserving selected
+badges when the breaking declaration itself lies outside the selected binding set.
+Tests cover scoped reconstruction, selection provenance, deleted roots and shifted
+relationships, outside evidence, empty/unrelated source avoidance and read counts.
 
-`tests/test_query_sources.py` and `tests/test_sources.py` run matrices over the modes of a link: permitted and breaking edits, strict conflicts, expanding changes, moves, renames, gaps and boundaries, restored links and links that were broken before, unavailable anchors, the hints for binary and large whole files, caching, the passing of a change to the ancestors of both original graphs, the independence of a link's declaration from its code and the selection of a historical revision. They also cover the facts of a source, the joining of source items with their duplicates, paths that contain a comma, disjoint ranges and source items that are uncertain, removed or deleted.
 
-`tests/test_query_select.py` checks with independent oracles for the frontier, for paths and for the closure that ranking in a batch equals the walk and that several measures give the union. It covers the reconstruction of a comparison that is limited to a selection, the origin of every selected node, deleted roots and shifted relationships, source links outside the selection, source work that an empty or unrelated selection avoids, and the number of reads. `tests/test_query_ancestors.py` checks ancestors and neighbors against independent oracles, completion over several parents, the origin of every ancestor, deleted nodes of an earlier revision and changed parents, the limits of each representation and of the budget, complete source facts and the number of passes and reads within one invocation. `tests/test_cli_compact.py`, `tests/test_repository_spec.py` and `example/gantt/history/verify.py` run the same reading on small fixtures, on this repository's own graph and on the recorded commands of the Gantt history.
+Ancestor completion retains matched IDs and their metric provenance, then walks
+all selected-record parent paths once and adds the deduplicated ancestor bindings.
+The same induced view feeds compact/human output, reconstruction and source scope.
+Surrounding IDs come only from omitted children/siblings of the original matches;
+shared matched parents contribute their child sets once. Empty selections remain
+empty, and complete unfiltered comparisons need no extra projection. The query
+preamble distinguishes match quotas from extra ancestors, which may lie outside
+the rooted population. CLI query carries --with-ancestors and an advanced exact
+UTF-8 byte budget through a single-format emitter; there is one ancestor-reading
+command. Tests cover independent closure/neighbor oracles, multi-parent completion,
+ancestor provenance, historical ghosts and changed parents, representation/budget
+boundaries, complete source evidence and invocation-local pass/read counts.
