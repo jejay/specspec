@@ -45,7 +45,7 @@ def test_example_receipts_and_all_three_real_git_stage_pairs_are_verified(gantt_
     assert result["ok"]
     assert result["verified_git_stages"] == ["01", "02", "03"]
     assert result["deleted_in_history"] == 22
-    assert result["node_count"] == 22
+    assert result["node_count"] == 23
 
 
 def test_nested_graph_staged_validation_is_independent_and_reads_the_exact_index(tmp_path):
@@ -95,3 +95,24 @@ def test_deleted_example_reasoning_lives_in_previous_commits_not_current_context
         git(gantt_history, "show", f"stage/01-code:{removed.path}") == previous.files[removed.path]
     )
     assert load_snapshot(gantt_history).files == before.files
+
+
+def test_the_rebuild_script_plans_to_repeat_the_tracked_history():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("gantt_rebuild", GANTT / "history/rebuild.py")
+    rebuild = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rebuild)
+    plan = rebuild.tracked_plan()
+    lines = (GANTT / "history/cli.jsonl").read_text(encoding="utf-8").splitlines()
+    receipts = [json.loads(line) for line in lines]
+    assert [entry["argv"] for entry in plan["receipts"]] == [r["argv"] for r in receipts]
+    created = [entry["id"] for entry in plan["receipts"] if "id" in entry]
+    assert len(created) == len(set(created)) == 45
+    stages = plan["stages"]
+    assert [stage["runtime_commit"] for stage in stages] == [f"stage/0{n}-code" for n in (1, 2, 3)]
+    assert all(s["spec_receipt"] < s["implementation_receipt"] for s in stages)
+    # The example's guide is the section about the example followed by the shipped guide.
+    guide = (ROOT / "src/specspec/templates/AGENTS.md").read_bytes().replace(b"\r\n", b"\n")
+    agents = (GANTT / "AGENTS.md").read_bytes().replace(b"\r\n", b"\n")
+    assert agents.endswith(guide) and agents.startswith(b"# Working on the Gantt example")

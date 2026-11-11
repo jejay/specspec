@@ -30,9 +30,9 @@ Monday-Friday durations and prerequisites, team owners, progress summaries, and
 portfolio finish dates. Eventually it should avoid double-booking people and let
 team members share plans through accounts.
 
-**AI (simulated):** Those are distinct outcomes. I'll record them separately from
-my choices: a topological weekday forecast, simple portfolio rollups, and possible
-hosted SQL storage/resource leveling. A shared service is not inevitable just
+**AI (simulated):** Those are distinct intentions. I'll record them separately from
+the conclusions I draw: a topological weekday forecast, simple portfolio rollups, and
+possible hosted SQL storage/resource leveling. A shared service is not inevitable just
 because you want shared planning. To test the view cheaply, may I first build a
 local read-only calendar prototype? Authentication and capacity scheduling would
 remain explicitly unimplemented.
@@ -44,7 +44,7 @@ don't spend the first pass on operating a service.
 manifesto is about understandable, revisable planning, not a fixed market or stack.
 I read each new node's ancestor context. Inputs must be validated and task names
 rendered as text. Implementation records will distinguish delivered behavior from
-future candidates; passing tests will not turn choices into permanent decisions.
+future candidates; passing tests will not make a conclusion permanent.
 
 **AI (simulated, prototype report):** The first runnable local view has two projects,
 weekday prerequisite forecasts, named-owner display, and simple completion/finish
@@ -61,12 +61,12 @@ prerequisites or rescheduling. Give me priorities, local autosave, and a JSON fi
 I can keep. I don't want accounts or a scheduling service.
 
 **AI (simulated):** That reverses the product scope and date model. I checked impact
-before changing the graph: the obsolete branch is **13 of the 17 nodes**,
+before changing the graph: the obsolete branch is **13 of the 18 nodes**,
 including its two implementation explanations. I'll delete those files in an
 explicit batch and explain the scope/date-model reversal in the Git commit.
 Earlier explanations remain in Git, not a retired status or a rewrite of the
-original intention claiming you always wanted a personal app. The broad manifesto, readable timeline, safe input, and
-revisable-choice intentions survive. New intentions describe manual dates, weekends,
+original intention claiming you always wanted a personal app. The broad manifesto, readable timing with its
+calendar axis, safe input and the recorded history survive. New intentions describe manual dates, weekends,
 priorities, and local ownership. Separate conclusions choose inclusive date ranges,
 browser storage, and a version-one JSON schema.
 
@@ -96,10 +96,10 @@ We work Monday–Friday. I need to freeze a baseline, change a duration, and see
 finish dates move. Keep local files and autosave. Still no portfolio, owner leveling,
 accounts, or cloud. Don't silently reinterpret my old personal-plan JSON.
 
-**AI (simulated):** This replaces **9 of the 16 nodes**: personal scope, manual
-ranges/weekends, priorities, independent tasks, the v1 schema choice, and both
-implementation explanations. Portability, local autosave, and the browser-storage
-choice survive with the common intentions. I'll delete the obsolete branch in
+**AI (simulated):** This replaces **9 of the 17 nodes**: personal scope, manual
+ranges/weekends, priorities, independent tasks, the v1 schema, and both
+implementation explanations. Portability, local autosave, and the conclusion to use
+browser storage survive with the common intentions. I'll delete the obsolete branch in
 one guarded batch and explain why in the Git commit. Weekday dependencies resemble
 the initial experiment, but this workshop forecast is a separately justified
 conclusion, not resurrection or approval of the old portfolio branch.
@@ -118,7 +118,7 @@ Native forms and a local DOM chart keep the prototype inspectable without a runt
 API/CDN. The graph has practical chart/task/date bounds, not production guarantees.
 
 **AI (simulated, spec-only checkpoint):** I read contexts/impacts, recorded new
-intentions separately from those choices, and committed this second replacement
+intentions separately from those conclusions, and committed this second replacement
 before rewriting code. This checkpoint still runs the stage-02 app. The next
 implementation must add real unit and browser evidence, with remaining risks stated.
 
@@ -143,7 +143,7 @@ Chromium's inline data-URL date icons, which do not contact an external service.
 
 This is prototype evidence, not exhaustive manual/accessibility/platform/security/
 performance certification. No holidays, resource optimizer, accounts, or cloud were
-smuggled back into the app. The graph contains 22 nodes; 22 removed explanations
+smuggled back into the app. The graph contains 23 nodes; 22 removed explanations
 remain in earlier Git revisions, not retired files in the working graph. Review remains proportionate to this small,
 revisable experiment; there is no invented per-node approval ceremony.
 

@@ -33,13 +33,14 @@ sources:
 ---
 # Edit and persist a native local workshop calendar
 
-`app.js`, local markup and styles implement current/baseline bars, date table,
-weekend shading, editable prerequisites and explicit baseline capture/replace/clear.
-Valid edits autosave. Corrupt/v1 saved bytes remain downloadable and protected
-until Apply/reset. Import preview and cancelled/stale reads retain saved work.
-Dirty failed drafts and native caret persist through invalid edits and resize.
-
-Project strings use textContent. Real-browser checks cover forecasts, baselines,
-cyclic drafts, safe task deletion, literal markup, downloads/uploads, conversion
-preview/cancel/Apply, reload, protected/denied storage and direct-file launch. Model
-and browser seams provide reproducible bounded checks for this local planner.
+`app.js`, the local markup and the styles implement current and baseline bars, the date
+table, weekend shading, editable prerequisites and the explicit capture, replacement and
+clearing of the baseline. Valid edits are saved automatically. Corrupt or version-one
+bytes in storage can be downloaded and stay protected until Apply or reset. An import
+preview and a cancelled or overtaken file read leave the saved work as it is. A failed
+draft and the caret stay in place through invalid edits and resizing. Project strings
+are set through textContent. Tests in a real browser cover forecasts, baselines, cyclic
+drafts, safe removal of tasks, literal markup, downloads and uploads, conversion preview
+with Cancel and Apply, reload, protected and denied storage, and a start directly from
+the file. The model tests and the browser tests are repeatable checks of this local
+planner.

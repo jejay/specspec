@@ -6,7 +6,6 @@ parents:
 ---
 # Use an explicit Monday–Friday workshop calendar
 
-Count whole Monday–Friday workdays and show weekend shading on the complete calendar
-axis. The declared forecast model is weekday work duration and prerequisites.
-Holiday calendars, partial days and resource availability are separately scoped
-planning extensions.
+Durations count whole working days from Monday to Friday. The calendar axis shows every
+day and shades the weekends. The forecast follows from working-day durations and
+prerequisites alone.

@@ -9,13 +9,13 @@ parents:
 ---
 # Use local classic scripts, native forms and a DOM calendar
 
-Use dependency-free local classic scripts, textContent and native controls. Launch
-from local files or a stable local static origin. The latter supplies predictable
-browser-local storage conditions; file-origin failures show session-only guidance.
-
-Render a horizontally scrolling calendar with weekend shading, distinct current/
-baseline bars and a text date table. Keep scrolling inside chart/table areas and
-retain form/caret during resize. Preview file/pasted JSON separately from saved data,
-cancel stale asynchronous file reads, and confirm discard of dirty task/settings
-input before replacement/navigation. Browser task prerequisites express scheduling;
-specspec graph links express specification justification.
+The app consists of local classic scripts without dependencies, sets project strings
+through textContent and uses native controls. It starts from local files or from a
+stable local static origin; the static origin gives predictable browser storage, and a
+start from files that cannot store shows the session-only guidance. The calendar scrolls
+sideways, shades weekends, draws current and baseline bars differently and comes with a
+text table of dates. Scrolling stays inside the chart and the table, and the form and
+the caret stay in place when the window is resized. Pasted or loaded JSON is previewed
+apart from the saved data, a file read that has been overtaken is cancelled, and the app
+asks before unsaved task or settings input is discarded. Prerequisites in the app
+describe the schedule; links in this graph say why a node is there.

@@ -6,6 +6,6 @@ parents:
 ---
 # Respect finish-to-start prerequisites
 
-Allow tasks to reference distinct existing prerequisites in an acyclic graph.
-A successor's start follows every prerequisite's finish. Surface invalid links or
-cycles before applying a candidate and retain the saved valid plan.
+A task names other existing tasks as prerequisites, without cycles, and starts after all
+of them have finished. A link to a missing task or a cycle is reported before the change
+is applied, and the saved valid plan stays.

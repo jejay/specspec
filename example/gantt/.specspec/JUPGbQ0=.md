@@ -6,7 +6,7 @@ parents:
 ---
 # Edit a validated complete workshop task set
 
-Use accessible native forms to add, select, edit and remove tasks. Save a candidate
-only after validating durations, bounds and prerequisites. A referenced prerequisite
-can be removed after the user explicitly edits its dependents' links. Invalid edits
-and cancelled navigation retain the draft and saved valid plan.
+Tasks are added, selected, edited and removed through accessible native forms. A change
+is saved after its durations, bounds and prerequisites have been validated. A task that
+others depend on can be removed once the person has changed those tasks' links. An
+invalid edit or a cancelled navigation keeps the draft and the saved valid plan.

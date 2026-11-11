@@ -4,10 +4,9 @@ type: requirement
 parents:
 - SvnK0jM=
 ---
-# Keep intentions, conclusions and implementation separately revisable
+# Record every stage as specification before code
 
-Record coherent owner outcomes separately from reasoned realization choices and
-implementation mappings. Agent planning reads saved context/impact and produces
-positive current-state specification before code. Owner-authorized redirects are
-planned explicitly; commit reasons and predecessor Git trees retain removed branches.
-Implementation deepens existing intentions and reports scope gaps for owner planning.
+Each stage of the app is planned in this graph and committed before its code is written.
+Planning commits are titled `Agent specspec changes:`. When the app changes direction,
+the nodes that no longer apply are deleted, the commit message says why, and they stay
+readable in the earlier commits.

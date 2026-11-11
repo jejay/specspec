@@ -6,6 +6,7 @@ parents:
 ---
 # Validate input and render project text literally
 
-Treat names/imported data as text. Validate a candidate before replacing the saved
-plan and show actionable input errors while retaining valid work and editable drafts.
-The browser uses textContent and ordinary native controls for project strings.
+Names and imported data are treated as text: the browser shows them through textContent
+and ordinary native controls. A changed plan is validated as a whole before it replaces
+the saved plan. When input is invalid, the app says what to correct and keeps the valid
+saved work and the draft being edited.

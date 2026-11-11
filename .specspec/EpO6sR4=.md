@@ -3,12 +3,15 @@ id: EpO6sR4=
 type: implementation
 parents:
 - 3fWBW_g=
+- lgczl-k=
+- ioVRw2U=
 sources:
 - path: electron/test-host/run.cjs
 - path: example/gantt/AGENTS.md
 - path: example/gantt/README.md
 - path: example/gantt/history/WALKTHROUGH.md
 - path: example/gantt/history/checkout.py
+- path: example/gantt/history/rebuild.py
 - path: example/gantt/history/cli.jsonl
 - path: example/gantt/history/gantt.bundle
 - path: example/gantt/history/revisions.json
@@ -29,8 +32,7 @@ sources:
 # Maintain actual Gantt planning, code and verification stages
 
 The complete standalone bundle has an empty predecessor, three specification/code
-pairs and an audit. The local browser planner's independent graph maps intentions
-through manual-date/weekday/baseline/JSON choices to actual model/browser code.
+pairs and an audit. The local browser planner's independent graph maps intentions through conclusions about manual dates, weekdays, baselines and JSON files to the actual model and browser code. Its manifesto holds intentions only, and the node on readable timing has the shared calendar axis beneath it. The example's AGENTS.md is a short section followed by the guide that init appended during the rebuild. `history/rebuild.py` rebuilds the whole history from its receipts, or from a plan with other node texts and links, and installs the result in the snapshot.
 Each stage's positive binding text precedes its runnable code. Redirect commits
 explain removed branches and predecessor trees retain their reasoning.
 

@@ -50,8 +50,8 @@ against this clone's worktree. Do not reuse hashes from the old development hist
 `revisions.json` records actual predecessor/spec/code commit IDs and receipt ordinals.
 The tags are readable stage names, not node approval states.
 
-The first redirect explicitly selects 13/17 nodes for deletion; the second selects
-9/16. Exact deletion retains any unselected dependent files and declarations for
+The first redirect explicitly selects 13/18 nodes for deletion; the second selects
+9/17. Exact deletion retains any unselected dependent files and declarations for
 inspection/repair; these maintained redirects explicitly name their complete removal
 sets and finish with valid graphs. Their files are
 physically absent after each redirect and their original IDs, bodies, parents and
@@ -64,8 +64,8 @@ altered older receipts or a claim that original commits used today's encoding.
 ## Specification-planning phases in the maintained fixture
 
 Each retained graph states that stage's current desired product and realized code
-positively. Owner outcomes, reasoned conclusions and implementation leaves remain
-separate. Git commit messages and predecessor trees record redirects, removal
+positively. The owner's intentions, the conclusions drawn from them and the
+implementation leaves remain separate nodes. Git commit messages and predecessor trees record redirects, removal
 reasons and execution evidence; active bindings contain implementation mappings
 rather than correction/run diaries.
 
@@ -130,7 +130,7 @@ the maintained history. Command/protocol cutovers refresh actual receipts, teach
 text, ledgers, refs, source retention, bundle and snapshot together; runnable
 application code and historical node identities remain stable. Old manual clones
 remain preserved. Agent readings use `query ID --max-distance 0 --with-ancestors`.
-All 65 actual query receipts replace separate specification-read commands: 43 retain
+All 66 actual query receipts replace separate specification-read commands: 44 retain
 match/ancestor/neighbor provenance and 22 inspect descendant scope. Every command's
 --help supplies purpose, arguments, defaults and examples. The verifier checks
 it against the reconstructed working and prior committed graphs. All maintained
@@ -141,6 +141,24 @@ Actual reconstructed CLI commands name the minimal parent sets at creation,
 including earlier/deleted nodes. The shared validator checks every recorded state
 and every saved/staged revision. Changing a chain can change downstream bindings;
 review both old and new impact rather than treating direct links as extra promises.
+
+## Rebuild the history with the repository script
+
+`history/rebuild.py` carries out the rewrite described below. From the specspec
+checkout it runs every command recorded in `cli.jsonl` again in a fresh repository,
+with the current CLI and the recorded node IDs, takes the app and its tests for each
+stage from the present bundle, makes the eight commits and their tags anew and puts
+the new bundle, receipts, ledger, graph and `AGENTS.md` into `example/gantt`:
+
+```sh
+python example/gantt/history/rebuild.py
+python example/gantt/history/verify.py --history
+```
+
+`AGENTS.md` is a short section about the example followed by the guide that
+`specspec init` appends during the rebuild, so it holds the guide as shipped at that
+time. A change to node texts or links goes into a plan file for `--plan`: the same
+commands with other texts or parents. Stage documents come from this folder.
 
 ## Every schema change requires a full example-history rewrite
 

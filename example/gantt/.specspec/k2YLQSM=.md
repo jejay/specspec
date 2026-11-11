@@ -7,8 +7,9 @@ parents:
 ---
 # Autosave through localStorage with protected original bytes
 
-Use browser localStorage for validated plan autosave under a stable local origin.
-Storage failures leave the app usable in memory with visible session-only/export
-guidance. Unreadable saved bytes stay protected until explicit reset or a supported
-preview/Apply replacement. Browser-local persistence has browser/origin/storage
-lifecycle conditions; exported files provide owner-controlled portability.
+The validated plan is saved in the browser's localStorage under a stable local origin.
+When storage fails, the app keeps working in memory and shows that the plan is
+session-only and how to export it. Saved bytes that cannot be read stay as they are
+until the person resets them or replaces them through a previewed import. Browser
+storage depends on the browser, the origin and its storage settings; the exported file
+is the copy the person controls.

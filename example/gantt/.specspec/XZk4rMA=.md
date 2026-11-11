@@ -10,14 +10,15 @@ parents:
 ---
 # Calculate bounded UTC weekday DAG forecasts iteratively
 
-Use whole UTC dates and iterative topological processing of all prerequisites.
-Start is the maximum of normalized project start, normalized optional earliest and
-next weekday after each predecessor end. End is duration-1 workdays after start.
-Return rows in saved task order and preserve inputs.
-
-Validate up to 100 tasks, durations 1–60 whole workdays, real ISO dates 2000–2100,
-unique 1–40 character letter/number/_/- task IDs, trimmed title/names of 1–120
-characters and distinct existing non-self prerequisites. Reject cyclic or invalid
-candidates. Earliest may be null/empty. Current and baseline together fit an
-inclusive axis of at most 730 calendar days; include normalized starts and all
-forecast rows in its bounds. The model is a small deterministic dependency forecast.
+Dates are whole days in UTC, and tasks are processed iteratively in prerequisite order.
+A task starts on the latest of the normalized project start, its own normalized earliest
+date and the next weekday after each prerequisite's end; it ends duration minus one
+workdays after its start. The result lists the tasks in saved order and leaves the input
+unchanged. A plan is valid with up to 100 tasks, durations of 1 to 60 whole workdays,
+real ISO dates from 2000 to 2100, unique task IDs of 1 to 40 letters, digits, `_` or
+`-`, trimmed titles and names of 1 to 120 characters, and prerequisites that are
+distinct existing tasks other than the task itself. A cyclic or invalid plan is
+rejected. The earliest date may be null or empty. The current plan and the baseline
+together fit an axis of at most 730 calendar days, counted inclusively over the
+normalized starts and all forecast rows. The model is a small deterministic dependency
+forecast.

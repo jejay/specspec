@@ -3,9 +3,9 @@
 A runnable Gantt example with an independent `.specspec` graph and agent-planned
 spec-before-code development through two substantial redirects. Every retained
 graph describes that stage's current product positively, with separately reasoned
-conclusions and actual implementation mappings. Git records changed decisions. The existing
+conclusions and actual implementation mappings. Git records what changed and why. The existing
 [fictional story](STORY.md) is optional illustration, not required evidence or
-actual authorization. The final graph has **22 nodes**; 22 earlier nodes were
+actual authorization. The final graph has **23 nodes**; 22 earlier nodes were
 physically deleted during redirects and remain in the earlier Git commits.
 Every retained revision uses the current shortcut-free graph and tool interface.
 Authoring receipts supply literal `-m` body arguments; the UI's private transports
@@ -50,8 +50,8 @@ See the [history/maintenance walkthrough](history/WALKTHROUGH.md).
 | Stage | Spec / code tags | Change |
 | --- | --- | --- |
 | 01 | `stage/01-spec` / `stage/01-code` | Portfolio, weekday forecasts, owners/rollups; cloud/leveling remain candidates |
-| 02 | `stage/02-spec` / `stage/02-code` | Personal manual dates/weekends/priorities; **13/17 nodes deleted** |
-| 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/16 nodes deleted** |
+| 02 | `stage/02-spec` / `stage/02-code` | Personal manual dates/weekends/priorities; **13/18 nodes deleted** |
+| 03 | `stage/03-spec` / `stage/03-code` | Workshop durations/prerequisites/earliest bounds/baseline; **9/17 nodes deleted** |
 
 Every spec checkpoint is an `Agent specspec changes:` commit and precedes its code.
 The [agent guide](AGENTS.md) describes owner/tandem/agent/implementation phases.

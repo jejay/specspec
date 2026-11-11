@@ -6,6 +6,7 @@ parents:
 ---
 # Compare a what-if with a deliberately captured baseline
 
-Capture a full validated saved-plan baseline on explicit request. Edit the current
-plan and compare current/baseline dates visually and textually. Keep that baseline
-immutable across ordinary edits. Replacing or clearing it is an explicit action.
+On request the app captures the complete saved plan as a baseline. The person then edits
+the plan and sees the current dates beside the baseline's, in the chart and as text.
+Ordinary edits leave the baseline as captured; replacing or clearing it is an explicit
+action.

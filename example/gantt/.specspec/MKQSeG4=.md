@@ -6,6 +6,7 @@ parents:
 ---
 # Keep a portable validated JSON plan
 
-Import/export a documented versioned JSON format. Validate imports before applying
-them. Explain format conversion and information losses in a preview, with explicit
-replacement of current work. Export saved valid plan data for owner-controlled files.
+The plan is exported to and imported from a documented, versioned JSON file that the
+person keeps. An import is validated and shown as a preview that names what a conversion
+changes or loses; it replaces the current plan when the person confirms. Export writes
+the saved valid plan.

@@ -6,6 +6,6 @@ parents:
 ---
 # Respect project and task earliest-start bounds
 
-Use the project start and optional per-task earliest date as lower bounds for the
-forecast. Weekend lower bounds advance to Monday. Explain calculated dates as
-forecasts satisfying these bounds and prerequisite timing.
+The project start and an optional earliest date per task are lower bounds for the
+forecast. A bound on a weekend moves to the following Monday. The app presents the
+calculated dates as forecasts that respect these bounds and the prerequisites.

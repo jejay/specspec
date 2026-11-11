@@ -6,6 +6,7 @@ parents:
 ---
 # Forecast dates from whole workday durations
 
-Enter positive Monday–Friday workday durations. Calculate each task's forecast
-start/end and recalculate related timing after valid edits. Explain forecasts as
-planning estimates under the declared calendar and prerequisite rules.
+Each task has a duration in whole working days, Monday to Friday. The app calculates
+every task's forecast start and end and recalculates the affected dates after each valid
+edit. It presents the dates as estimates that follow from the calendar and the
+prerequisites.

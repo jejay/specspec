@@ -20,11 +20,12 @@ sources:
 ---
 # Calculate workshop forecasts, baseline snapshots and JSON previews
 
-`model.js` implements iterative UTC weekday DAG scheduling, bounded normalization,
-immutable copied baselines, current/baseline rows and calendar-day deltas. Task save
-validates the whole candidate; removal validates reference safety. Import returns a
-validated version-two preview or explicit version-one conversion warnings.
-
-Model tests cover seeded DAGs against an independent reference, deep bounded graphs,
-weekend/DST/leap dates, invalid/cyclic inputs, input/baseline immutability and the
-archived personal JSON fixture. The pure model has deterministic local-data semantics.
+`model.js` implements the iterative UTC weekday forecast over prerequisites, bounded
+normalization, copied baselines that later edits leave unchanged, rows for the current
+plan and the baseline, and their differences in calendar days. Saving a task validates
+the whole changed plan; removing a task validates that no other task still refers to it.
+Import returns a validated version-two preview or the warnings of a version-one
+conversion. The model tests cover seeded dependency graphs against an independent
+reference, deep bounded graphs, weekend, daylight-saving and leap-year dates, invalid
+and cyclic input, unchanged input and baseline, and the archived personal JSON file. The
+model is pure and deterministic over local data.

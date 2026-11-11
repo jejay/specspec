@@ -6,8 +6,9 @@ format_version: 7
 ---
 # Help people understand and revise a plan
 
-Make a planning application's timing, trade-offs and revisions understandable.
-Provide a readable timeline and a textual equivalent. Develop separately reasoned
-solution choices under the owner's outcomes and use feedback to guide the next
-planning decision. Each current graph describes its desired product and actual
-realization; Git records its evolution.
+People who plan work see when each task happens and how the tasks depend on each other.
+They change the plan when their situation changes, see what the change does to the rest
+of it, and keep the plan in their own hands.
+
+This repository is also a worked example of specspec: a reader can follow how the app's
+specification and code came about, stage by stage.

@@ -3,14 +3,16 @@ id: rrN-aHA=
 type: requirement
 parents:
 - fcXPQQQ=
-- aELuxSw=
+- 39Myh1I=
 - XZk4rMA=
 ---
 # Store an explicit deep baseline and compare on a common axis
 
-Capture a copied normalized full saved plan on request. Current edits retain it.
-Forecast current and baseline independently, then render both on the same bounded
-calendar axis. Use current task order followed by baseline-only tasks. Show textual
-start/end and finish delta in calendar days. Baseline-only rows remain visible as
-removed; new current-only tasks show Added; absent baseline dates show an empty
-comparison. Replace/clear actions are explicit and validation preserves snapshots.
+On request the app stores a normalized copy of the complete saved plan, and later edits
+leave that copy as it is. The current plan and the baseline are forecast independently
+and drawn on the same bounded calendar axis: the current tasks in their order, followed
+by tasks that exist only in the baseline. The text view gives start, end and the
+difference of the finish dates in calendar days. A task found only in the baseline stays
+visible as removed, a task found only in the current plan is marked Added, and a missing
+baseline date leaves the comparison empty. Replacing and clearing the baseline are
+explicit actions, and validation leaves both snapshots as they are.

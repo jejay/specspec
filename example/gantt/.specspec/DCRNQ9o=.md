@@ -6,5 +6,5 @@ parents:
 ---
 # Plan one makerspace workshop
 
-Help a makerspace organize one workshop using work durations, prerequisites,
-earliest bounds and an explicit what-if baseline. Keep the plan local and portable.
+A makerspace organizes one workshop: tasks with durations, prerequisites and earliest
+dates, and a baseline to compare a what-if against. The plan stays local and portable.

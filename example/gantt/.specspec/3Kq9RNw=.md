@@ -3,7 +3,6 @@ id: 3Kq9RNw=
 type: implementation
 parents:
 - xQszOxI=
-- J3ggsWw=
 sources:
 - path: STORY.md
 - path: README.md
@@ -17,16 +16,15 @@ sources:
   - - 1
     - 381
 ---
-# Map the specification workflow to actual Git and CLI artifacts
+# Receipts, a stage ledger and a verifier for the recorded history
 
-`history/cli.jsonl` records actual current-CLI graph writes/ancestor-query/dependent/validation
-results. `revisions.json` records real stage commits and receipt ordinals. Agent
-specification commits precede runnable code and implementation mappings. Redirect
-commit messages explain deletion scope; predecessor trees retain earlier reasoning.
-
-The complete independent bundle supplies staged/history experiments. The verifier
-checks every retained ref, positive current-stage records, exact indexes, receipt
-contents, ordering, semantic/edge/source deltas and runnable models. Staged full-blob
-source anchors use strict/expanding regions retained by corresponding code trees.
-The tracked snapshot is a portable fixture; external clones own Git workspaces.
-Optional narrative illustrates product briefs; actual artifacts supply evidence.
+`history/cli.jsonl` holds the specspec commands that built this graph, with their actual
+results. `history/revisions.json` names the planning commit and the code commit of every
+stage and the receipts that end them. Planning commits come before the code they plan,
+and the commit of each redirect says what was deleted and why; the deleted nodes stay
+readable in the commits before it. `history/verify.py` checks every commit and tag of
+this history: valid graphs in the current format, the exact staged state, the receipts
+against the graphs, the order of planning and code, what each redirect removed, the
+source links and the model tests of every stage. `STORY.md` tells the product briefs as
+a fictional dialogue, and `README.md` and `history/WALKTHROUGH.md` explain how to open
+and compare the stages.
