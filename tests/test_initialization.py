@@ -267,13 +267,15 @@ def test_packaged_guide_matches_current_behavior():
     raw = guide_bytes()
     text = raw.decode("utf8")
     # The limit counts LF line endings; a Windows checkout may hold the template with CRLF.
-    assert len(raw.replace(b"\r\n", b"\n")) <= 11264
+    assert len(raw.replace(b"\r\n", b"\n")) <= 12288
     for phrase in [
         "specification spectrum",
         ".specspec/<id>.md",
         "## Routine",
         "spotlight show",
         "spotlight add",
+        "Structure review",
+        "stays in the owner's words",
         "Tandem planning",
         "Agent planning",
         "Implementation",
@@ -287,6 +289,8 @@ def test_packaged_guide_matches_current_behavior():
         "such as a list of limits",
         "are not nodes",
         "Each becomes two nodes",
+        "leans on the old way",
+        "something the product is not",
         "uv tool install specspec",
     ]:
         assert phrase in text, phrase

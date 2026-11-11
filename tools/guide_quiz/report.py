@@ -144,3 +144,53 @@ def count_cell(group: list[dict], key: str) -> str:
 def number_cell(group: list[dict], key: str) -> str:
     values = [score["numbers"][key] for score in group if key in score["numbers"]]
     return f"{sum(values) / len(values):.1f}" if values else "-"
+
+
+def agreement(answers: list[dict], grades: list[dict], first: str, second: str) -> str:
+    """Per criterion, how often two graders come to the same result on the same answer."""
+    verdicts = {
+        grader: {
+            g["answer"]: g["verdict"] for g in grades if g.get("verdict") and g["grader"] == grader
+        }
+        for grader in (first, second)
+    }
+    texts = {
+        (answer["task"], grading.answer_id(answer["task"], answer["text"])): answer["text"]
+        for answer in answers
+        if answer.get("text") and answer["task"] in tasks.TASKS
+    }
+    tally: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0, 0])
+    for (name, identity), text in texts.items():
+        task = tasks.TASKS[name]
+        if not task.rubric or not all(identity in verdicts[grader] for grader in (first, second)):
+            continue
+        one = grading.score(task, text, verdicts[first][identity])
+        two = grading.score(task, text, verdicts[second][identity])
+        if not one or not two:
+            continue
+        for key, value in one["pass"].items():
+            if key in two["pass"]:
+                cell = tally[(name, key)]
+                cell[0] += 1
+                cell[1] += value == two["pass"][key]
+                cell[2] += value
+                cell[3] += two["pass"][key]
+    if not tally:
+        return f"No answer has grades from both {short(first)} and {short(second)}."
+    lines = [
+        f"Agreement of {short(second)} with {short(first)}, per criterion",
+        row("criterion", ["answers", "same", f"{short(first)[:8]}", f"{short(second)[:8]}"]),
+    ]
+    for name in tasks.TASKS:
+        keys = [key for task, key in tally if task == name]
+        if keys:
+            lines += ["", f"== {name}"]
+        for key in keys:
+            total, same, passed_one, passed_two = tally[(name, key)]
+            lines.append(
+                row(
+                    key,
+                    [str(total), f"{round(100 * same / total)}%", str(passed_one), str(passed_two)],
+                )
+            )
+    return "\n".join(lines)

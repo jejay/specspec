@@ -43,17 +43,26 @@ def test_raw_answers_are_ignored_by_git():
     assert result.stdout.strip() == "tools/guide_quiz/results/tasks-1.jsonl"
 
 
-def test_guide_versions_resolve_by_name():
+def test_guide_versions_resolve_by_name(tmp_path, monkeypatch):
     names = guides.names()
-    assert names[0] == guides.SHIPPED and len(names) == len(set(names))
-    template = (ROOT / "src/specspec/templates/AGENTS.md").read_bytes().replace(b"\r\n", b"\n")
-    assert guides.text(guides.SHIPPED).encode("utf-8") == template
+    assert len(names) == len(set(names)) >= 10 and guides.SHIPPED not in names
     for name in names:
         text = guides.text(name)
-        assert text.strip() and "\r" not in text, name
+        assert text.strip() and "\r" not in text and guides.resolve(name) == name, name
     assert guides.size("five-lines") < 1000 < guides.size("2026-11-10-before-structure-rules")
     with pytest.raises(ValueError, match="Unknown guide"):
         guides.text("no-such-guide")
+
+    # A result names a text that stays: the shipped guide counts through its kept copy.
+    kept = guides.FOLDER / "2026-11-10-before-structure-rules.md"
+    template = tmp_path / "AGENTS.md"
+    template.write_bytes(kept.read_bytes().replace(b"\n", b"\r\n"))
+    monkeypatch.setattr(guides, "TEMPLATE", template)
+    assert guides.resolve(guides.SHIPPED) == kept.stem
+    assert guides.text(guides.SHIPPED) == guides.text(kept.stem)
+    template.write_text("A guide that nobody kept.\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="no kept copy"):
+        guides.resolve(guides.SHIPPED)
 
 
 def test_dilemmas_have_one_key_and_a_stable_order():

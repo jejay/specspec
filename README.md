@@ -180,7 +180,8 @@ The guide in `AGENTS.md` sets out how the agent works with you:
 3. You review as much of it as you want in a graph editor. It marks nodes added,
    changed or deleted since the last commit and shows each change inside the node's
    text. Edit any node there, or select a few nodes and leave the agent a spotlight of
-   your own.
+   your own. When you have edited nodes, the agent first tells you what it would split,
+   move or reword, and whatever you do not accept stays as you wrote it.
 4. The agent implements, after planning whatever the graph does not cover yet. Before
    it changes code, it reads the node and every ancestor that justifies it. It keeps
    graph and code in sync: further choices become conclusions, and implementation nodes

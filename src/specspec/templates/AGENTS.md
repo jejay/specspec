@@ -50,6 +50,8 @@ Node text describes the product as it is and as it ought to be now: requirements
 
 Git keeps the history: earlier versions stay in earlier commits, the reason for a change goes into the commit message, and a node that no longer applies is deleted. Avoid historic contrasting, about what changed and about what stayed the same: "the button is purple" is complete, while "the button is now purple instead of blue" and "the button remains purple" lean on an earlier version. Each sentence should make sense to a reader who knows only the current text.
 
+The time before the product and what the product is not stay out as well. How things are done today is the owner's reason for an outcome, and the node says what the product does: "everyone sees the same plan" is complete, while "no more spreadsheets by e-mail" leans on the old way. "The timeline shows Monday to Friday" is complete, while "the timeline does not show weekends" leans on something the product is not.
+
 Aim for an implementation-mature graph, precise enough that implementing it is close to compiling it: state observable behavior and every meaningful choice, and say in the node where a choice is deliberately left open. Every node in the graph is in force; there are no approval or confidence marks. The owner reviews where uncertainty and impact are highest, with passing checks and tests as evidence.
 
 ## Phases
@@ -60,13 +62,17 @@ The owner's request decides which phase applies.
 
 The owner may edit nodes directly. Routine step 1 finds those edits; work out what they mean for outcomes and choices before you do anything else.
 
+### Structure review
+
+This phase starts when routine step 1 finds nodes the owner edited. Read each one with its ancestors and hold it against the rules in The graph and Writing nodes: one decision per node, an outcome above the way that serves it, the parents it names, nothing that is not a node, and plain statements about the product. Tell the owner, node by node, what you would split, move or reword and why, and leave the graph as it is. Only what the owner accepts gets done: you apply it in agent planning, after their edits are committed as they wrote them. Everything else stays in the owner's words.
+
 ### Tandem planning
 
 The owner talks about what they want without yet asking for the graph or the product; you discuss it and leave the graph as it is. The owner's focus is breadth, the outcomes the product should have; yours is depth, the choices that achieve them, and breadth too where a gap is obvious. Separate what the owner wants from the choices they suggested, confirm or challenge those choices, and propose alternatives and your own conclusions. The owner leads: give a concise overview of your understanding, ready for correction, with guiding questions and your tentative answers, and concentrate on the choices that matter. Talk about the product rather than about nodes, with one exception: mention removals, splits and changes of existing nodes as soon as you consider them. The phase can take several rounds or be skipped.
 
 ### Agent planning
 
-This phase starts when the owner asks you to create or change the graph ("draw the graph", "change the spec"). The request authorizes two commits. First commit the owner's uncommitted specification edits, if any, as `Owner specspec changes: <your understanding of them>`. Then work from the existing graph, its Git history, the owner's edits and the tandem rounds to make the graph implementation-mature: complete the depth that building needs, and fill breadth where the owner evidently left a gap for you. Commit it as `Agent specspec changes: <description>`. Run the staged check before each commit, and finish with a summary of changed outcomes, your choices, open questions and affected nodes.
+This phase starts when the owner asks you to create or change the graph ("draw the graph", "change the spec"). The request authorizes two commits. First commit the owner's uncommitted specification edits, if any, as `Owner specspec changes: <your understanding of them>`. Then work from the existing graph, its Git history, the owner's edits, the suggestions they accepted and the tandem rounds to make the graph implementation-mature: complete the depth that building needs, and fill breadth where the owner evidently left a gap for you. Commit it as `Agent specspec changes: <description>`. Run the staged check before each commit, and finish with a summary of changed outcomes, your choices, open questions and affected nodes.
 
 ### Implementation
 

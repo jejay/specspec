@@ -1,8 +1,9 @@
 """Guide versions by name.
 
-``shipped`` is the package template, the text that ``specspec init`` writes. Every other
-name is a file under ``guides/``: dated states of the shipped guide that earlier results
-refer to, and experimental variants under ``guides/experiments/``.
+Every name is a file under ``guides/``: dated states of the shipped guide and experimental
+variants under ``guides/experiments/``. ``shipped`` stands for the package template, the
+text that ``specspec init`` writes. A result must name a text that stays available, so
+``shipped`` resolves to the kept file with the template's exact content.
 """
 
 from __future__ import annotations
@@ -25,15 +26,33 @@ def files() -> dict[str, Path]:
 
 
 def names() -> list[str]:
-    return [SHIPPED, *files()]
+    return list(files())
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8").replace("\r\n", "\n")
+
+
+def resolve(name: str) -> str:
+    """The kept name behind ``shipped``; any other known name stays as it is."""
+    kept = files()
+    if name != SHIPPED:
+        if name not in kept:
+            raise ValueError(f"Unknown guide {name!r}. Known: {', '.join(kept)}")
+        return name
+    template = read(TEMPLATE)
+    for stem, path in kept.items():
+        if path.parent == FOLDER and read(path) == template:
+            return stem
+    raise ValueError(
+        "The shipped guide has no kept copy. Copy src/specspec/templates/AGENTS.md to "
+        "tools/guide_quiz/guides/ under a dated name, so that results name a text that stays."
+    )
 
 
 def text(name: str) -> str:
     """The guide text with LF line endings."""
-    path = TEMPLATE if name == SHIPPED else files().get(name)
-    if path is None:
-        raise ValueError(f"Unknown guide {name!r}. Known: {', '.join(names())}")
-    return path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    return read(files()[resolve(name)])
 
 
 def size(name: str) -> int:

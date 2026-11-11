@@ -126,10 +126,11 @@ python -m tools.guide_quiz grade
 python -m tools.guide_quiz report
 ```
 
-`shipped` is the package template, and every other guide name is a file in
-`tools/guide_quiz/guides/`. Before you change the shipped guide, copy it there under a
-dated name, so that later results compare with the same text. The default model is Claude
-Haiku 5.5, the weakest model the guide is written for; `--models` takes others.
+Every guide name is a file in `tools/guide_quiz/guides/`. `shipped` stands for the package
+template and resolves to the dated file with the same content, so that every result names
+a text that stays; after changing the shipped guide, copy it there under a new dated name
+before you quiz it. The default model is Claude Haiku 5.5, the weakest model the guide is
+written for; `--models` takes others.
 
 Calls go through the `claude` command of Claude Code under your own login and cost money,
 so no test and no CI job makes them. Runs are resumable: answers already given are kept.

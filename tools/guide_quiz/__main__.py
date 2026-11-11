@@ -16,6 +16,15 @@ def listed(value: str) -> list[str]:
     return [part for part in value.split(",") if part]
 
 
+def frames_of(names: str) -> dict[str, str]:
+    """The system prompt per kept guide name; ``shipped`` becomes the name of its kept copy."""
+    try:
+        kept = [guides.resolve(name) for name in listed(names)]
+    except ValueError as problem:
+        raise SystemExit(str(problem)) from problem
+    return {name: models.frame(guides.text(name)) for name in kept}
+
+
 def run(jobs: list, work, workers: int) -> None:
     """Run the jobs in a shuffled order, a few at a time."""
     random.Random(0).shuffle(jobs)
@@ -32,7 +41,7 @@ def ask_dilemmas(arguments) -> None:
         if r.get("picked") is not None
     }
     wanted = set(listed(arguments.items)) if arguments.items else None
-    frames = {name: models.frame(guides.text(name)) for name in listed(arguments.guides)}
+    frames = frames_of(arguments.guides)
     log = results.Log("dilemmas")
 
     def work(job) -> None:
@@ -80,7 +89,7 @@ def ask_tasks(arguments) -> None:
         for r in results.load("tasks")
         if r.get("text")
     }
-    frames = {name: models.frame(guides.text(name)) for name in listed(arguments.guides)}
+    frames = frames_of(arguments.guides)
     log = results.Log("tasks")
 
     def work(job) -> None:
@@ -160,9 +169,21 @@ def show(arguments) -> None:
     print(report.task_report(results.load("tasks"), results.load("grades"), arguments.grader))
 
 
+def compare_graders(arguments) -> None:
+    first, second = listed(arguments.graders)
+    answers, grades = results.load("tasks"), results.load("grades")
+    print(report.agreement(answers, grades, first, second))
+
+
 def list_guides(arguments) -> None:
+    try:
+        shipped = guides.resolve(guides.SHIPPED)
+    except ValueError as problem:
+        shipped = None
+        print(problem)
     for name in guides.names():
-        print(f"{guides.size(name):6} bytes  {name}")
+        mark = "  (shipped)" if name == shipped else ""
+        print(f"{guides.size(name):6} bytes  {name}{mark}")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -193,6 +214,8 @@ def parser() -> argparse.ArgumentParser:
     sub = command("report", show, "Print the result tables.")
     sub.add_argument("--grader", default=grading.GRADER)
     sub.add_argument("--reasons", action="store_true", help="list answers that miss the key")
+    sub = command("agreement", compare_graders, "Compare two graders on the answers both graded.")
+    sub.add_argument("--graders", required=True, help="two model IDs, comma-separated")
     return main
 
 

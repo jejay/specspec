@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-**Agent guide.** `specspec init` ships a shorter AGENTS.md (about 11 KB). It starts with
+**Agent guide.** `specspec init` ships a shorter AGENTS.md (about 12 KB). It starts with
 what the graph is for and a working routine, shows a small example graph, reads
 spotlights as owner input and states which commits a planning request authorizes: the
 owner's pending specification edits, then the agent's result. A request to build includes
@@ -10,7 +10,9 @@ that planning, and every other commit follows the project's own rules. The agent
 spotlight on the nodes it discusses, so the owner can open them in a graph editor. Three
 worked examples show how a sentence from the owner becomes an outcome and a choice beneath
 it. The guide keeps a list of limits in one node and names what stays out of the graph,
-such as an order of work.
+such as an order of work. When the owner has edited nodes by hand, the agent first tells
+them what it would split, move or reword; what the owner does not accept stays as they
+wrote it. Node text leaves out the time before the product and what the product is not.
 
 **CLI fixes**
 - A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT
