@@ -4,19 +4,10 @@ type: requirement
 parents:
 - qTT_OhY=
 ---
-# Distinguish logical node records from physical document evidence
+# Carry logical text in node records and exact bytes in raw reads, plans and safeguards
 
-Application protocol records carry complete logical bodies with newline encodings normalized
-to LF, sorted parent/source fields and unchanged identities. Readable projections
-and logical diffs use the same content. Spaces, indentation, blank lines and final
-newline presence stay meaningful. Physical newline encoding alone is equivalent.
+A node record of the application protocol carries the complete body in logical form with LF line ends, the parents and the sources in sorted order and the ID as it is. Readable output and logical diffs show the same content. Spaces, indentation, blank lines and the presence of a final newline carry meaning. Two texts that differ in newline encoding alone are equal.
 
-Raw query documents, native before/after plans, canonical files, immutable Git
-blobs, transaction guards and recovery retain exact bytes. New nodes use LF;
-existing-document writes adapt body input and replacement NEW to that document's
-newline style and append a missing file terminator. Existing trailing blank lines
-remain unchanged. Git configuration, attributes and linked source files remain under
-their existing owners. Verify logical behavior and physical safety separately.
+Exact bytes are kept in raw `query` documents, in the before and after text of an edit plan for an editor's own document, in the node files, in Git blobs, in the guards of a write transaction and in recovery. A new node uses LF. A write to an existing document turns body input and the NEW part of a replacement into the newline style of that document and appends a missing final newline. Trailing blank lines that exist stay as they are. The Git configuration, the attributes and the linked source files are under their owners' control. Tests check the logical behavior and the safety of the bytes separately.
 
-Application envelopes and canonical node fields retain their contracts. Representation policy
-changes do not add a node-format constraint rejecting existing newline encodings.
+The node format accepts a document in each newline encoding: LF, CRLF and CR.

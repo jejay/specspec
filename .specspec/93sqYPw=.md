@@ -5,12 +5,6 @@ parents:
 - r1wddEQ=
 - 3wsnEjk=
 ---
-# Discuss breadth, reasoning and significant changes in tandem planning
+# Discuss what the owner wants before the graph changes
 
-Use tandem rounds to understand the owner's intention and proposed solutions.
-The owner focuses on breadth; the agent focuses on depth and raises breadth where a gap is obvious. It deepens reasoning, challenges conclusions
-and offers alternatives and concise overviews ready for correction. Offer guidance
-questions with tentative answers when useful. Discuss potential removals, splits
-and modifications promptly. Keep the conversation on consequential conclusions, and
-leave graph manipulation to the requested agent-planning phase. Rounds may be
-skipped when the owner's request and saved context are sufficient.
+In tandem planning the owner talks about what they want, and the agent discusses it and leaves the graph as it is. The agent works out the owner's intentions and the conclusions they have already drawn, questions those conclusions and offers its own. The owner's focus is breadth, what the product should cover; the agent's is depth, and it points out breadth where a gap is obvious. It gives short overviews that the owner can correct, puts guiding questions with a tentative answer to each, and brings up removals, splits and changes of existing nodes as soon as it considers them. The discussion stays with what matters for the product. A round can be skipped when the request and the existing graph already say enough.

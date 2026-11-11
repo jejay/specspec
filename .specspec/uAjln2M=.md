@@ -4,16 +4,8 @@ type: requirement
 parents:
 - DiIJxaQ=
 ---
-# Keep immediate justifications shortcut-free and review inherited effects
+# Keep direct links free of shortcuts and review what a changed chain passes on
 
-The canonical graph records the minimal immediate intention-conclusion relationships.
-Every direct parent contributes additional ancestry: a direct parent is distinct
-from every indirect parent. Direct parents may occupy different positions while
-remaining unrelated by ancestry. All ancestor bindings supply justification.
+The graph records the smallest set of direct links between intentions and conclusions. Every direct parent of a node adds ancestors that its other parents do not supply, so a direct parent is never at the same time an indirect one. The direct parents of a node may lie at different depths as long as none is an ancestor of another. All ancestors of a node are among its reasons.
 
-An implementation contributes its stated bounded realization toward ancestor
-intentions; their complete realization may be distributed across implementations.
-Changing a justification chain calls for reconsidering its indirect consequences.
-Review potential effects using both the previous and resulting graph, including
-lost ancestry. Re-establish independently needed relationships deliberately in the
-revised graph. Structural consistency supplies evidence, not semantic fulfillment.
+An implementation realizes the part of its ancestors' intentions that its text states, and several implementations together may realize an intention completely. A change to a chain of links calls for reconsidering what follows from it further down. The possible effects are reviewed on both the previous and the resulting graph, including ancestors that a node has lost. A relationship that a node needs in its own right is put back deliberately in the new graph. A structurally consistent graph is evidence for the review, and whether the statements are fulfilled is judged apart from it.

@@ -6,13 +6,6 @@ parents:
 ---
 # Keep node meaning independent of checkout newline conventions
 
-Owners and agents work with specification text independently of the newline
-encoding supplied by their operating system, editor or Git checkout. Ordinary
-reads, comparisons and mutation feedback describe meaningful node content.
-Spaces, indentation, wording and intentional blank lines keep their meaning.
+Owners and agents work with the text of the specification independently of the newline encoding that their operating system, editor or Git checkout supplies. Ordinary reads, comparisons and the reports of an edit describe the meaningful content of a node. Spaces, indentation, wording and deliberate blank lines carry meaning.
 
-specspec works with each repository's existing Git settings and attributes while
-leaving those files and settings under owner control. Existing documents and
-native editors retain their local newline convention. Raw inspection and physical
-transaction safeguards retain exact bytes. Linked implementation files retain
-their own formatting and source-tracking contracts.
+specspec works with the Git settings and attributes that a repository has and leaves those files and settings under the owner's control. An existing document keeps its newline convention, and so does a host's own text editor. A raw read and the byte checks that guard a write use exact bytes. Linked implementation files keep their own formatting, and source tracking follows its own rules.

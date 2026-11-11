@@ -4,30 +4,12 @@ type: requirement
 parents:
 - jsIUeP0=
 ---
-# Define strict/expanding source tracking and explicit uncertainty
+# Track a source region strictly or let it expand, and report every uncertain mapping
 
-Implementation sources are either `{path, symbol?}` or `{path, symbol?, blob, mode,
-ranges}` with all anchor fields present. Accept full lowercase 40/64-hex Git blob
-IDs, mode strict/expanding, sorted non-overlapping positive inclusive [start,end]
-pairs and canonical project-relative POSIX paths. Reject traversal, malformed
-intervals, unsafe entry/path types and unsupported values with diagnostics.
+A source of an implementation is either `{path, symbol?}` or `{path, symbol?, blob, mode, ranges}`, in which `blob`, `mode` and `ranges` appear together. Accepted are a full Git blob ID of 40 or 64 lowercase hexadecimal digits, the mode `strict` or `expanding`, ranges as sorted `[start, end]` pairs that are positive, inclusive and free of overlap, and a path in canonical POSIX form relative to the project. A path that leaves the project, a malformed range, an entry or a path of an unsafe type and an unsupported value are rejected with a diagnostic.
 
-Strict relocates surviving original lines and reports internal insertions or any
-replacement/deletion touching the region as conflict. Expanding includes internal
-insertions and wholly contained replacements, reporting modification as context.
-Both exclude outer-boundary insertions and gaps between separate regions. Deletion,
-ambiguous copies/moves, cross-boundary changes and missing objects remain explicit.
+A strict link moves with the original lines that survive and reports a conflict for an insertion inside its region and for any replacement or deletion that touches it. An expanding link takes in insertions inside its region and replacements that lie wholly within it, and reports the modification as information. Both leave out insertions at the outer edge of a region and the gaps between separate regions. A deletion, an ambiguous copy or move, a change across the edge of a region and a missing object are each reported as what they are.
 
-Resolve worktree text, exact index bytes or immutable commit files with node metadata
-from the selected revision. Literal read-only previews identify target kind, mapped
-ranges, mode and outcome; unreliable mapping shows original anchored contents.
-Wrong object types, symlink/submodule entries, binary/LFS data, invalid UTF-8 and
-exceeded budgets have visible uncertainty. Use bounded batched/cached Git reads,
-diffs and mappings with external diff/textconv/lazy fetching disabled.
+A link is resolved against the text of the working tree, the exact bytes of the index or the files of a commit, with the metadata of the node taken from the selected revision. A preview is literal and read-only and names the kind of target, the mapped ranges, the mode and the outcome, and it shows the originally anchored content when the mapping is unreliable. An object of the wrong type, a symlink or submodule entry, binary or LFS data, invalid UTF-8 and an exceeded limit each show as an uncertain result. Git reads, diffs and mappings are batched, cached and limited in size, and external diff tools, textconv filters and lazy fetching are switched off.
 
-Capture defaults to HEAD, accepts explicit --staged and repeated --range START:END,
-mode and symbol; preview is read-only. Capture/reanchor updates use the current
-writer. Reanchor uses reliable mapped ranges or explicitly supplied conflict
-replacement ranges. `check --staged --sources` evaluates exact staged graph/code and
-retention; default staged checks evaluate graph structure. Region navigation supplies context
-while source-change impact remains conservative per file.
+A capture reads HEAD by default and accepts `--staged`, a repeated `--range START:END`, a mode and a symbol, and its preview writes nothing. Capture and reanchor write the node through the ordinary writer. Reanchor uses the mapped ranges when they are reliable, or the replacement ranges that are given explicitly for a conflict. `check --staged --sources` evaluates the exact staged graph and code and the retention of the anchored blobs, and a staged check without `--sources` evaluates the structure of the graph. Navigation to a region gives context, and a change anywhere in a linked file counts as possible impact.
