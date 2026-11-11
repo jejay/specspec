@@ -10,8 +10,7 @@ One root npm lock records registry addresses/integrity and private workspaces.
 Pinned root script approvals cover Electron, esbuild and the VSIX signature helper.
 Actual esbuild input paths determine every bundled dependency/version license notice,
 including hoisted/scoped/nested packages. Packaging retains project and upstream
-licenses and allowlists application runtime files; the portable runtime remains
-unpacked and directly inspectable.
+licenses and allowlists application runtime files; the portable runtime is unpacked and directly inspectable.
 
 The root manifest pins the Electron runtime and overrides selected transitive
 versions: undici, and the VSIX tool's MSAL dependency for local VSIX creation.

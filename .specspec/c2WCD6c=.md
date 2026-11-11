@@ -22,12 +22,11 @@ Warn separately about HEAD movement, changed workspace nodes and unavailable
 context. Treat these as advisory: highlight any selected IDs in the displayed
 target or deleted base, report missing IDs and derive A/M/D/unchanged from that
 comparison. Native overlays participate in UI capture and warning calculation;
-managed form drafts retain their separate save owner. Checksums are local drift
+managed form drafts have their separate save owner. Checksums are local drift
 hints, independent of canonical node schema and mutation protection.
 
 Local spotlight format 2 has one metadata file per shot, bounded count and metadata
 size, protected malformed records, atomic publication and reviewed explicit flush.
 Records in an unsupported storage format stay in place with an actionable flush
 diagnostic. Explicit
-flush also clears obsolete retained blob files. The current canonical schema and
-maintained example history remain unchanged.
+flush also clears obsolete retained blob files.

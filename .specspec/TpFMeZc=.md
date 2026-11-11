@@ -11,9 +11,9 @@ Resolve a clicked read-only source through an independent per-view request lane.
 Capture its published render token, displayed node and immutable comparison commit
 before asynchronous work. Validate the render token against the published view;
 pending comparison choices and mutation preflights retain the displayed context.
-Keep working-file previews current and retain ordinary trust, input/output and
+Keep working-file previews current and have ordinary trust, input/output and
 operation budgets. Background graph or Spotlight reads can proceed while a source
-preview resolves; canonical mutations and native plans retain their serial owners.
+preview resolves; canonical mutations and native plans have their serial owners.
 
 Match replies to the latest source request and displayed context. Navigation,
 revision adoption, a newer request or disposal invalidates obsolete replies.

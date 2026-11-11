@@ -17,6 +17,5 @@ An isolated hovered card leaves only itself undarkened. Include drawn history,
 reverse and draft links; the neutral manifesto follows the same membership rule.
 
 Reapply classes after redraw, including unchanged hovered identity; hit-test after
-camera motion and restore on exit/blur/cancel/touch. Preserve shared tints, theme
-text, semantic hues, forms/caret, edge geometry and pair ordering. Hover state is
+camera motion and restore on exit/blur/cancel/touch. Shared tints, theme text, semantic hues, forms/caret, edge geometry and pair ordering hold here too. Hover state is
 transient renderer presentation.

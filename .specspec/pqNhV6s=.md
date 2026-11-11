@@ -12,5 +12,4 @@ compact/expanded shared-host views. The neutral manifesto in distance/type modes
 uses its white border. Revision-colored manifesto borders use their revision hue.
 
 Incident colored curves and heads gain both brightness and saturation in their
-existing hue. Preserve immediate-neighborhood darkening, relationship patterns,
-paired heads, direction, restoration and native form/geometry identity.
+existing hue. Immediate-neighborhood darkening, relationship patterns, paired heads, direction, restoration and native form/geometry identity hold here too.

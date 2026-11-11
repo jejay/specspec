@@ -19,6 +19,5 @@ clones. The tracked snapshot contains fixture files; external clones own indepen
 Git metadata, staging and history.
 
 Serious Git/host/application integration and CI clone this entire bundle with its
-stage tags/ancestry/index and add disposable worktree cues. Narrow synthetic graphs
-remain useful for focused native/nested tests. CI needs portable tracked artifacts.
+stage tags/ancestry/index and add disposable worktree cues. Narrow synthetic graphs are useful for focused native/nested tests. CI needs portable tracked artifacts.
 Validate every retained ref and snapshot/runtime consistency when refreshing them.

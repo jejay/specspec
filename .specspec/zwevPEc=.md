@@ -9,12 +9,11 @@ parents:
 # Capture rectangle framing in viewport pixels and invert the starting camera
 
 Use Ctrl on Windows/Linux and Command on macOS, preserving macOS Control-click.
-Use the bare primary modifier, with Shift/Alt and other platform modifiers retaining
-their existing gestures. An armed icon starts the same one-shot interaction. The
+Use the bare primary modifier, with Shift/Alt and other platform modifiers retaining their gestures. An armed icon starts the same one-shot interaction. The
 rubber band is a viewport overlay separate from the transformed world. Capture the
 primary pointer and initial camera; invert both rectangle corners through that
 camera and normalize their bounds. Frame with 40 CSS pixels of margin per side,
-allowing up to the existing 250% camera maximum. Graph/node framing keeps its 100%
+allowing up to the 250% camera maximum. Graph/node framing keeps its 100%
 cap. Require at least four CSS pixels on both axes; smaller gestures complete with
 the camera retained. A completed modifier gesture rearms after release and a fresh
 modifier press. The icon can be toggled off or rearmed explicitly.

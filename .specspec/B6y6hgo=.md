@@ -13,7 +13,7 @@ source items into one line beginning with "sources: ", separated by a comma and 
 space. Keep the normalized comparison order and all duplicate occurrences. Each item
 retains its selected path/ranges and its own declaration, broken-link, restoration
 or uncertainty hints. Quote unusual paths, including commas, as in individual source
-readings; range components retain their existing spelling.
+readings; range components retain their spelling.
 
 The --human flag preserves each binding's logical lines, blank lines, indentation,
 tabs and trailing spaces, normalizing node newline encodings for readable output and applying shared
@@ -27,4 +27,4 @@ and space after @, including the display parent, in both presentations. Consiste
 list punctuation improves scanning while complete items preserve review context.
 Human is a text presentation choice: --json remains the authoritative complete application protocol
 comparison, including when combined with --human. Both presentations share the same
-fresh read and source facts, with existing contracts, budgets and read-only boundaries.
+fresh read and source facts, with contracts, budgets and read-only boundaries.

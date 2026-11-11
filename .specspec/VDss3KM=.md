@@ -14,5 +14,4 @@ focus and camera when later data arrives; reject stale document/view/base result
 A comparison failure leaves usable current context with an explicit unavailable
 note, while graph-invalid context remains current and unavailable-file failure retains
 marked last-usable context and physical mutation protections. Native/bootstrap sharing avoids a redundant initial worktree
-request. Preserve sequence/full-membership rendering acknowledgements and existing
-production operation deadlines. Use normal current reads for mutations.
+request. Sequence/full-membership rendering acknowledgements and production operation deadlines hold here too. Use normal current reads for mutations.

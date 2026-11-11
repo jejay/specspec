@@ -13,7 +13,7 @@ purpose, defaults, complete useful examples and critical safety distinctions. Op
 descriptions can carry local detail. Help does not read stdin, payloads or projects.
 
 Normal usage runs from the intended directory, like Git. Root-selection and structured
-output switches remain hidden integration controls and never appear in help text,
+output switches are hidden integration controls and never appear in help text,
 examples or option listings, including private transport help. Internal format/API
 versions stay out of normal agent/human help and readable query headers; incompatible
 versions still produce actionable diagnostics. Pipes do not change output mode.

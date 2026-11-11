@@ -15,4 +15,4 @@ clicking. Owners can add or remove members while the original remains immutable.
 Create spotlight from highlights asks for one message and captures the current
 comparison. The agent reads messages, IDs, comparison, node statuses and advisory
 workspace warnings through spotlight show. Native editing, drafts, ordinary
-navigation and saving retain their independent behavior.
+navigation and saving have their independent behavior.

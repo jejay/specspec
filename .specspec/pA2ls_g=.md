@@ -6,9 +6,7 @@ parents:
 ---
 # Validate shortcut freedom centrally under the current node format
 
-The current node format requires a rooted, transitively reduced intention-conclusion DAG.
-Five-byte padded Base64url identities, node fields and source grammar retain their
-contracts. The application protocol separates operation success from graph validity. Current-only readers diagnose
+The current node format requires a rooted, transitively reduced intention-conclusion DAG. The application protocol separates operation success from graph validity. Current-only readers diagnose
 other node versions explicitly. Maintained Gantt revisions and actual receipts use
 this same current contract throughout; existing manual clones retain experiments.
 
@@ -18,12 +16,12 @@ with the affected node, direct edge and a deterministic alternative path. Manage
 requires the whole candidate to pass before writing. Graph-invalid intermediate
 edits retain explicit diagnostics and physical transaction safeguards. Working, exact-index, revision and native-overlay reads use the
 same rule. Owner-configured hooks and CI call check --staged against actual index
-bytes. Native invalid text remains diagnosable and repairable.
+bytes. Native invalid text is diagnosable and repairable.
 
 Relationship edits can affect other nodes. Diagnostics expose every affected edge;
 related changes are deliberate, and managed edits leave files intact on rejection.
 Owners can prepare coherent Markdown changes or combine ordinary add/update/delete
 steps in one recoverable explicit invocation. Each update step names one node;
 optional validity checks assess the complete final candidate.
-Inspection, candidate planning and recovery remain usable with invalid graphs. Validation never silently removes or normalizes relationships
+Inspection, candidate planning and recovery are usable with invalid graphs. Validation never silently removes or normalizes relationships
 and introduces no approval workflow or permanent compatibility/migration command.

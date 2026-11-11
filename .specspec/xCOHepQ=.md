@@ -15,8 +15,7 @@ hovered border; light themes use a darker neutral accent with at least 3:1
 contrast against the card. Other colored borders and revision-colored
 manifestos use the hue-emphasis conclusion.
 
-Ordinary expanded cards are 860 world units wide. Their 822px-wide native content
-budget is retained inside the expanded manifesto circle. The inline binding editor
+Ordinary expanded cards are 860 world units wide. Their 822px-wide native content budget applies inside the expanded manifesto circle. The inline binding editor
 and source textareas share host editor monospace font/size with monospace/13px fallback. Keep
 soft wrapping for longer text and verify typical 80 ASCII columns at 13/14/16px.
 

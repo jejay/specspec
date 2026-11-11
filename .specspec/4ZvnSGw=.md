@@ -5,14 +5,14 @@ parents:
 - 0dvOn3A=
 - TAvql3w=
 ---
-# Keep integration examples and tooling coherent with the current interface
+# Keep integration examples and tooling coherent with the interface
 
-Maintain one current command/protocol implementation with coordinated Python,
+Maintain one command/protocol implementation with coordinated Python,
 shared-host, VS Code and Electron changes and explicit incompatible-version errors.
 Guides, architecture examples, agent operational recipes, hooks/CI examples and tests
-name current commands and payloads. Owner source documents remain preserved.
+name commands and payloads. Owner source documents remain preserved.
 
-Refresh the maintained independent Gantt history's actual current-CLI receipts,
+Refresh the maintained independent Gantt history's actual CLI receipts,
 positive command descriptions, ledgers, refs, source retention, bundle and tracked
 snapshot together when protocol/command changes affect that evidence. Preserve all
 historical node identities, substantive redirects, spec-before-code ordering and

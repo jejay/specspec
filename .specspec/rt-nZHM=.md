@@ -16,7 +16,7 @@ at zero and the first two levels. A percentage stops at that fraction of graph
 size in metric-priority order: --max-distance 50% selects 62 of 124 nodes. Shared
 nodes count once. When two or all three metrics are supplied, return the union of
 the independently selected subgraphs. Present complete selected bindings and
-relationships, preserving the query's revision, source and read-only contracts.
+relationships; the query's revision, source and read-only contracts hold here too.
 
 Keep queries quick by batching graph metrics and reusing selection, revision and
 source work within each invocation. Resolve saved data freshly on each call.

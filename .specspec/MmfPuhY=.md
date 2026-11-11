@@ -15,8 +15,7 @@ Raw query documents, native before/after plans, canonical files, immutable Git
 blobs, transaction guards and recovery retain exact bytes. New nodes use LF;
 existing-document writes adapt body input and replacement NEW to that document's
 newline style and append a missing file terminator. Existing trailing blank lines
-remain unchanged. Git configuration, attributes and linked source files remain under
-their existing owners. Verify logical behavior and physical safety separately.
+remain unchanged. Git configuration, attributes and linked source files have their own owners. Verify logical behavior and physical safety separately.
 
-Application envelopes and canonical node fields retain their contracts. Representation policy
+Representation policy
 changes do not add a node-format constraint rejecting existing newline encodings.

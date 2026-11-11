@@ -4,7 +4,7 @@ type: requirement
 parents:
 - GQdmCrA=
 ---
-# Save focused node forms through the existing host save path
+# Save focused node forms through the host save path
 
 Ctrl+S on Windows/Linux and Command+S on macOS submit the focused node editor using
 the same enabled state and payload as its Save button. The shortcut works from
@@ -14,5 +14,4 @@ save, while project panels and Electron use managed mutations.
 
 Capture the shortcut before editor/webview forwarding. Honor provisional,
 read-only, invalid, pending and deleted-node restrictions, suppress repeated saves,
-and leave modal dialogs and overview drafts independent. Existing overwrite
-confirmation, error recovery, draft retention and native undo ownership remain.
+and leave modal dialogs and overview drafts independent. Overwrite confirmation, error recovery, draft retention and native undo ownership hold here too.

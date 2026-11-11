@@ -12,7 +12,6 @@ historical and unsavable; unresolved current references remain visible after def
 D membership disappears at commit. Historical comparisons remain read-only.
 
 Safe identifiable current forms remain editable with fresh backend preflights and
-normal persistence owners. Preserve native dirty protections, missing-file rejection,
-overwrite confirmation, drafts/caret/cameras, source isolation and trust boundaries.
+normal persistence owners. Native dirty protections, missing-file rejection, overwrite confirmation, drafts/caret/cameras, source isolation and trust boundaries hold here too.
 Unreadable documents expose raw repair paths; unavailable transport/schema results
 retain clearly marked last-usable context rather than pretending a fresh load.

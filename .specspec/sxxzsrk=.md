@@ -11,11 +11,11 @@ Hosts reuse two shell-free Python application processes per active project and
 trusted executable configuration: an ordinary API channel and an independent
 read-only source-preview channel. Warm both at the first authorized request.
 The hidden api --stream transport reads bounded newline-delimited application protocol requests
-and emits one ordinary application protocol envelope per request. The one-shot CLI remains usable.
+and emits one ordinary application protocol envelope per request. The one-shot CLI is usable too.
 
 Serialize frames per channel, bound queued requests and input/output/time budgets,
 and isolate configuration/project changes. Each request performs current backend
-validation and fresh file/ref/index reads under the existing caching rules. Share
+validation and fresh file/ref/index reads under the caching rules. Share
 only interpreter lifetime; retain native-plan and canonical mutation ownership.
 
 Dispose channels on final project close/switch. A failed channel rejects pending

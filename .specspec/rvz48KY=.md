@@ -25,4 +25,4 @@ Polite live text announces arrivals. Counts and New cues live in renderer memory
 Workspace drift appears visibly outside the closed menu while highlighting the
 best available nodes. Local record errors preserve the last list independently of
 graph validity. Both hosts watch store events in working and historical views;
-Refresh and optional polling remain fallbacks. Flush rechecks the reviewed list.
+Refresh and optional polling are fallbacks. Flush rechecks the reviewed list.

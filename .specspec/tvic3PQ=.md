@@ -11,8 +11,7 @@ Treat watcher events as reload hints. Coalesce events, serialize reads/writes, r
 transient reads a bounded number of times and compare loaded records directly to
 skip unchanged redraws. VS Code uses filesystem watchers; Electron observes the
 project parent and canonical directory and reattaches after directory recreation.
-Report watcher errors. Explicit Refresh and optional configurable polling remain
-available; polling defaults to 0/off and is disposed on switch/close.
+Report watcher errors. Explicit Refresh and optional configurable polling are available; polling defaults to 0/off and is disposed on switch/close.
 
 Refresh clean forms. Dirty forms retain original records, text, caret and camera;
 unrelated changes refresh context while preserving save eligibility. Same-node

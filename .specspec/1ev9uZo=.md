@@ -14,8 +14,7 @@ Keep locally imported final Spectrum flow light/dark primary logos and tagline
 lockups for introductions, the optical symbol in application chrome and the supplied
 launcher for packages. Preserve selected artwork and record import digests/provenance.
 The README opens with the light/dark tagline lockup at the brand guide's 640 px
-minimum, followed by the brand's literal product description. Small versions of the two editor screenshots, a table of contents and a quick start come next: install, initialize, then tell the agent what you want. The tagline Engineering
-is on the spectrum now refers to the owner's continuous freedom between hands-on
+minimum, followed by the brand's literal product description. Small versions of the two editor screenshots, a table of contents and a quick start come next: install, initialize, then tell the agent what you want. The tagline Engineering is on the spectrum refers to the owner's continuous freedom between hands-on
 engineering and delegated work; a README section explains that meaning.
 
 The README then explains the core idea: intent merging with agent suggestions and the lack of a place to stop reading in a mixed plan, the specification spectrum as one relation, in which every node is a conclusion from its parents and an intention for its children, on a small planning example with an actual node file, the owner's chosen depth of writing and understanding in each region and its change over time, a replaced conclusion beneath its unchanged intention and what a replaced intention puts up for review, screenshots of both graph editors, and the owner/agent working phases. Section headings say what their sections contain. The README presents the graph editors as the owner's way to read and change the graph and the command line as the agent's tool. Editor build commands, the agent's commands, the Gantt example, a candid status section
@@ -23,5 +22,5 @@ and links to the agent guide, the editor guide, contributor notes and release no
 follow. The repository map belongs to the contribution guide.
 
 Release copy describes local-first Markdown/Git ownership, independent source
-explanations, early maturity and current host/runtime boundaries without implying
+explanations, early maturity and host/runtime boundaries without implying
 hosted agents or semantic proof from graph validity, position or passing tests.

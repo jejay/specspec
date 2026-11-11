@@ -22,9 +22,8 @@ at the overview limit. High-contrast cards use the theme background as the base,
 as the border fallback when a contrast-border token is absent.
 
 At 16% scale and below every fill equals its visible border, including the white
-hovered neutral manifesto and contrast-theme borders. Actual-size and larger views
-retain their exact editing-oriented tints and text. Hover darkening and spotlight
-rings retain their independent paint roles. Camera updates an inherited fill-progress
+hovered neutral manifesto and contrast-theme borders. Actual-size and larger views have their exact editing-oriented tints and text. Hover darkening and spotlight
+rings have their independent paint roles. Camera updates an inherited fill-progress
 CSS property on existing cards independently alongside edge paint; native inputs
 and intrinsic world positions stay intact. Two-stage color mixing preserves both
 actual-size hover tints and the strengthened border endpoint.

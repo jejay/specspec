@@ -18,21 +18,17 @@ passage, and retains literal content with newline encoding adapted to the docume
 Preserve untouched logical body characters and trailing blank lines, applying the
 tool-written document terminator at EOF. Words, case,
 Unicode, indentation and blank lines remain exact. OLD comparison tolerates standard
-line endings and Markdown prose soft breaks; storage adapts newline encoding only. Match and transform under the existing
-writer lock against the fresh identified node. Parents, sources and other metadata
-retain their existing separate edit owners. Missing, multiple or overlapping matches
+line endings and Markdown prose soft breaks; storage adapts newline encoding only. Match and transform under the writer lock against the fresh identified node. Parents, sources and other metadata
+have their separate edit owners. Missing, multiple or overlapping matches
 reject the complete invocation before canonical writes, with a target diagnostic.
 
 Replacement, message and integration body sources are mutually exclusive within
 an update. Validate syntax, body-source conflicts and replacement input limits
 across all steps before opening body files or stdin. Both values of each pair stay
-literal even when they equal command names or flags. The existing chain candidate,
-preview, optional final validity, deletion consent, byte guards and journal recovery
-remain authoritative. Full-body replacement and existing UI transports remain usable.
+literal even when they equal command names or flags. The chain candidate,
+preview, optional final validity, deletion consent, byte guards and journal recovery are authoritative. Full-body replacement and UI transports are usable.
 
 An invocation contains at most 1024 replacement pairs across its editing steps.
 Count OLD and NEW UTF-8 bytes together with other body input against the 16 MiB
-authoring budget; each replacement value and resulting canonical node retains the
-1 MiB bound. Operating-system argument limits remain independent. OLD/NEW remain
-explicit argument text. The same replacement option provides its complete default
+authoring budget; each replacement value and resulting canonical node has the 1 MiB bound. Operating-system argument limits are independent. OLD/NEW are explicit argument text. The same replacement option provides its complete default
 matching behavior.

@@ -12,4 +12,4 @@ Use these exact swatches in this order: `#bc82c9`, `#7e97e6`, `#1facce`,
 The playground defaults are count 7, lightness 0.69, chroma 0.12, startHue 320
 and endHue 20. They reproduce the seven supplied hex values with an empty
 `gamutReducedIndices` list. Role assignments follow B87C_kI= and the shared-table
-conclusion. Preserve the exact swatch bytes across production and exports.
+conclusion. The exact swatch bytes hold across production and exports.

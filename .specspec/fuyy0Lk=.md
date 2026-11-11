@@ -18,7 +18,7 @@ Owners and agents can inspect and edit invalid working graphs. Expose structural
 faults, potential downstream reasoning effects and previous/current binding context
 as distinct facts. Git differences and optional owner messages aid intent inference;
 unchanged or deleted files alone do not establish the owner's motive. A completed
-valid graph retains the rooted shortcut-free DAG contract. No approval or pending-
+valid graph satisfies the rooted shortcut-free DAG contract. No approval or pending-
 review states are stored in canonical nodes.
 
 Warn before deleting uncommitted selected files, including staged changes. Git

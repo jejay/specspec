@@ -16,19 +16,17 @@ Unreadable binary material retains explicit literal/unavailable evidence.
 Managed updates and native edit plans use the opening frontmatter delimiter's
 newline style for the target document. New nodes use LF. Body messages, bulk input
 and replacement NEW keep their literal content with newline encoding adapted to
-that storage style. Preserve unmatched content and metadata; source-mapped OLD
-matching and bounds retain their existing owners. Size checks assess actual
+that storage style. Preserve unmatched content and metadata; source-mapped OLD matching and bounds have their own owners. Size checks assess actual
 serialized target-style bytes, separately from original argument/input budgets.
 
 Ordinary diff includes all meaningful canonical text and metadata changes with
 LF patch lines. Encoding-only differences contribute no node or file-only change
 and no newline-counter dump. EOF termination changes use ordinary patch markers.
-Structured file-patch records retain existing physical-layout metadata where a
+Structured file-patch records retain physical-layout metadata where a
 meaningful change exists. Raw query remains exact physical evidence.
 
 Reads and comparisons leave files unchanged. Git configuration, attributes, index,
-hooks and filters remain owner-controlled; application normalization needs no
-repository setup or filter execution. Native Save/undo remains VS Code-owned.
+hooks and filters are owner-controlled; application normalization needs no
+repository setup or filter execution. Native Save/undo is VS Code-owned.
 Original-byte checks, journals, recovery, immutable Git blobs and cache verification
-remain byte-exact. Current node fields, accepted encodings and application protocol field grammar
-retain their existing schema; maintained LF examples keep their actual receipts.
+remain byte-exact.

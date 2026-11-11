@@ -29,7 +29,7 @@ for added ancestors' badges. Resolve declarations owned by selected nodes or the
 descendants in either original revision, since excluded descendants can change a
 selected ancestor's source badge. Merge graph reachability and ancestor propagation
 per revision rather than repeating closure per node. Resolve each exact declaration
-once per code version with the existing reader-local batches and budgets. Unrelated
+once per code version with the reader-local batches and budgets. Unrelated
 branches and empty selections need no source resolution. JSON keeps all required
 source evidence, including its owner IDs outside the visible binding set, while
 selected affected sets remain scoped. Revision reads, code-version readers and

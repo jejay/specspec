@@ -28,5 +28,5 @@ unborn HEAD has an empty baseline; unavailable/invalid baselines have clear note
 Native Delete drains pending edits, binds the action, requires clean specspec
 documents, confirms the backend plan and uses the managed project writer. Overlay
 reads validate absent-buffer inputs then omit missing files; edits to absent files
-fail. Native Save/undo remains the document lifecycle. Retain drafts/caret/cameras,
+fail. Native Save/undo is the document lifecycle. Retain drafts/caret/cameras,
 per-view comparisons, shape, palette and source previews during these transitions.

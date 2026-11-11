@@ -10,5 +10,4 @@ parents:
 As the camera zooms out, progressively strengthen node backgrounds until they
 match their visible borders at the high-altitude limit. Coordinate this treatment
 with quieting ordinary arrows. At that altitude optical structure and semantic
-color take priority over headlines and other card text. Preserve shape, Git and
-spotlight cues, native forms, geometry and world layout in both hosts.
+color take priority over headlines and other card text. Shape, Git and spotlight cues, native forms, geometry and world layout hold here too in both hosts.

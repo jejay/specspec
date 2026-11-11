@@ -22,14 +22,11 @@ Body, parent and source edits share this classification, including replacements
 and composed commands. Git comparisons independently describe selected revisions.
 
 Non-writing previews use Would add, Would modify and Would delete for those
-changes, and Unchanged for equal logical text. Provisional generated IDs remain
-unreserved. Completed output follows successful transaction verification; rejected
+changes, and Unchanged for equal logical text. Provisional generated IDs are unreserved. Completed output follows successful transaction verification; rejected
 operations retain explicit diagnostics. Saved/proposed graph validity, analysis
-completeness, potential scope, initialization instructions and deletion consent
-remain independently visible.
+completeness, potential scope, initialization instructions and deletion consent are independently visible.
 
-Requested alias associations remain available on one unpadded comma-separated
+Requested alias associations are available on one unpadded comma-separated
 Aliases line. They add local-name mappings rather than another action summary.
-Structural references and diagnostics retain the IDs needed for their own meaning.
-Structured application protocol receipts keep their existing fields, IDs and paths. Outcome
-classification is transient Python result metadata; canonical nodes retain their current fields.
+Structural references and diagnostics retain the IDs needed for their own meaning. Outcome
+classification is transient Python result metadata.

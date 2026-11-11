@@ -12,7 +12,7 @@ explicit comparison of workspace and commits or branches. The message can discus
 added, deleted, changed and unchanged nodes together. Selecting that spotlight in
 either host switches the graph to its comparison and highlights the available
 members, including deleted base nodes. The ordinary default is workspace versus
-fresh HEAD. Git remains the source of committed node contents.
+fresh HEAD. Git is the source of committed node contents.
 
 Workspace changes after capture produce a visible warning in CLI and UI. Keep the
 best available highlighting by node identity even when versions drift or members

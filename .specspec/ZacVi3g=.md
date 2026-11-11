@@ -23,9 +23,9 @@ base body, read-only. Historical target comparisons show inline changes read-onl
 Refreshing the baseline preserves draft text, selection, focus and managed undo.
 Changing resources gives each form a fresh editor history. VS Code native file
 forms route undo and redo to the TextDocument; managed project and Electron forms
-use the editor's local history until their existing save operation. Saved bodies,
+use the editor's local history until their save operation. Saved bodies,
 native edit messages and draft recovery contain target text only. Original text
-blocks are derived presentation. Parent/source controls retain their own forms.
+blocks are derived presentation. Parent/source controls have their own forms.
 
 The unified control is chosen for a locally bundled, host-neutral editing surface;
-it mimics inline editor behavior while each host retains its document lifecycle.
+it mimics inline editor behavior while each host has its document lifecycle.

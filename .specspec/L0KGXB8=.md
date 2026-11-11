@@ -7,8 +7,7 @@ parents:
 ---
 # Reuse bounded derived Git bytes and parsed frontmatter
 
-Use transient project/request/library caches around existing Snapshot and Graph
-structures. Resolve refs freshly and verify tree/index entries and object metadata.
+Use transient project/request/library caches around Snapshot and Graph structures. Resolve refs freshly and verify tree/index entries and object metadata.
 A host may return bounded immutable baseline bytes as a warm read hint; verify each
 hint against the current Git blob address before reuse, fetch mismatches normally,
 and observe missing objects. Keep hints scoped to repository/subtree/resolved commit;
@@ -19,5 +18,5 @@ bytes/counts and isolated mutable copies. Body edits retain native bytes and com
 Validate node fields, graph, source paths and runtime lock/journal state against each
 current read. Cache eviction preserves correctness. Derived caching introduces
 neither canonical metadata nor node edit gates; managed writers and exact-index
-checks retain their authoritative current-file/object checks. Keep the CLI usable
+checks have their authoritative current-file/object checks. Keep the CLI usable
 as a bounded one-shot process.

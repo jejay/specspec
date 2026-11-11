@@ -6,8 +6,7 @@ parents:
 ---
 # Use compact reconstructible application protocol data
 
-The shared application protocol stays internal; canonical Markdown keeps its node
-format, IDs, fields and source grammar. Negotiate/reject protocol
+The shared application protocol is internal; the canonical Markdown node format, IDs, fields and source grammar are independent of it. Negotiate/reject protocol
 versions explicitly and update host adapters together. Emit one compact UTF-8 JSON envelope with api_version, ok, result and diagnostics.
 Exit code 0 reports a delivered operation or read, 1 a failed check or rejected
 request, and 2 an invocation or I/O failure; an edit that leaves the graph invalid
@@ -30,5 +29,5 @@ shared host adapter; avoid duplicating targets inside an outer loaded snapshot.
 
 HEAD is resolved freshly. Staged deletion leaves HEAD membership and D ghosts intact;
 commit removes that membership on reread. Missing comparisons stay explicitly
-unavailable. Verified hints remain derived and bounded; no transport payload becomes
+unavailable. Verified hints are derived and bounded; no transport payload becomes
 canonical tombstones, node fingerprints or write consent. One JSON dialect serves every caller.

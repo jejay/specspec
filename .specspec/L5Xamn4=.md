@@ -7,8 +7,7 @@ parents:
 # Preserve declared references and provide bounded repair context
 
 Inventory files separately from parsed records and distinguish unresolved references
-from absent, unreadable or ambiguous endpoints. Known raw parent declarations remain
-available independently of resolved traversal edges. Diagnose current-format inputs;
+from absent, unreadable or ambiguous endpoints. Known raw parent declarations are available independently of resolved traversal edges. Diagnose current-format inputs;
 unsupported schemas remain unsupported and raw reads never normalize them.
 
 query --raw reads actual canonical documents independently of global errors, using

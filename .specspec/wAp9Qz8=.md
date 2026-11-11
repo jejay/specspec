@@ -12,6 +12,6 @@ object addresses for bounded batch-check/content requests. Preserve per-path ent
 mode, stage/conflict, nesting, size, object availability and schema diagnostics.
 Inspect types/sizes before reading bodies; check ordered object identities, exact
 binary framing, truncation, exits and finite request/output/time budgets. Handle
-SHA-1/SHA-256, absent graphs and genuine unborn HEAD through the existing semantics.
+SHA-1/SHA-256, absent graphs and genuine unborn HEAD through the semantics.
 Chunk large graphs rather than silently truncating them. Git reads retain checkout,
 index, object and ref ownership with the user and use local object availability.

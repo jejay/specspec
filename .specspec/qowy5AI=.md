@@ -14,8 +14,7 @@ inside the writer lock and retry exact or ASCII-casefold collisions against ever
 current node, inventoried filename and parsed parent declaration. Dangling identities
 remain occupied references, so random creation does not silently supply unrelated
 reasoning under a missing parent identity. Validate casefold aliases for portable
-filename safety. Random IDs are project references; branch-merge collision checking
-remains part of graph validation.
+filename safety. Random IDs are project references; branch-merge collision checking is part of graph validation.
 
 Node fields are: required `id`, `type`, unique `parents`; manifesto
 internal integer `format_version`; optional implementation `sources`; optional namespaced

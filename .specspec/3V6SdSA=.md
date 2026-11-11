@@ -12,11 +12,11 @@ document text/version/dirty/EOL stamp. Give each view its own presentation paylo
 Recheck stamps after loading and before adopting bootstrap context; changes cause
 fresh reads. Dispose project state on final close. Native bootstrap supplies the
 first working snapshot when usable, with asynchronous custom-editor wiring and a
-fresh comparison phase. Invalid documents retain their established repair behavior.
+fresh comparison phase. Invalid documents have their own repair behavior.
 Notifications remain hints; ongoing refreshes reread files and resolve current refs.
-Explicit Refresh performs a current read. Managed actions retain fresh validation,
+Explicit Refresh performs a current read. Managed actions have fresh validation,
 project-wide dirty guards, writer locking and reviewed deletion rechecking.
 
 The shared read/comparison coordinator also serves Electron with an empty native
-document set. Both hosts retain fresh reads and verified baseline hints; VS Code
+document set. Both hosts use fresh reads and verified baseline hints; VS Code
 alone supplies native document overlays, bootstrap and edit/Save ownership.

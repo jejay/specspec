@@ -20,5 +20,5 @@ SHA-1/SHA-256 object IDs, batched reads and per-request caches with explicit lim
 
 Expose source inspection/capture/reanchor, integrated checks and literal previews
 in both hosts. UI capture updates the existing form and respects its native/managed save
-owner. Whole-file/non-Git use and conservative file-level impact remain available.
+owner. Whole-file/non-Git use and conservative file-level impact are available.
 Blob identity addresses immutable contents; review assesses lineage and meaning.

@@ -7,5 +7,4 @@ parents:
 # Give Implementation cards zero-radius corners
 
 Use completely square 0px corners for Implementation cards in compact and expanded
-views. Requirement corners are 24px and the manifesto is circular. Preserve the
-palette, role assignments, native editor and other graph behavior.
+views. Requirement corners are 24px and the manifesto is circular. The palette, role assignments, native editor and other graph behavior hold here too.

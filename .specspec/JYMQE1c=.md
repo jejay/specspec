@@ -18,7 +18,7 @@ the verified artifact without checking out or executing project source, and uses
 pinned PyPA publishing action with attestations and strict duplicate rejection.
 PyPI matches issuer, audience, expiry and repository/workflow/environment claims.
 No long-lived PyPI token is stored. Ordinary pushes, PRs, CLI/UI actions and local
-packaging do not publish. Preserve existing GitHub environment protections; constrain
+packaging do not publish. GitHub environment protections hold here too; constrain
 publication to main. Report success only after checking the public index and an
 isolated installation from it. Record failed/partial uploads without claiming an
 all-or-nothing registry transaction or overwriting an immutable release.

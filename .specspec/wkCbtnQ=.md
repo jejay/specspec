@@ -18,10 +18,8 @@ disposal completion rather than assuming all producers settle within a fixed wal
 clock quiet window. Count graph versus metadata requests separately where relevant.
 Cover delayed discovery after polling is disabled, active reads and coalesced
 follow-ups, interval replacement, historical targets and closing with discovery
-still pending. Preserve independent real Git/filesystem watcher integration tests.
+still pending. Independent real Git/filesystem watcher integration tests hold here too.
 
-The timer/discovery seam belongs to the test fixture. Product debounce/retry/startup
-and operation deadlines, default-off polling, watcher notifications, native save
-ownership and production scheduling retain their existing semantics. Causal failure
+The timer/discovery seam belongs to the test fixture. Product debounce/retry/startup and operation deadlines, default-off polling, watcher notifications, native save ownership and production scheduling hold here too. Causal failure
 reproduction and concurrent/repeated suite runs supply regression evidence rather
 than suppressing valid watcher refreshes or extending arbitrary sleeps.

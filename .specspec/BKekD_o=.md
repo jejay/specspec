@@ -14,13 +14,11 @@ complete-document terminator. A filename or dash passed to -m is literal text.
 When messages are absent, init and add read bounded UTF-8 standard input. Updates
 without messages or replacements accept a whole-body stdin replacement. Empty stdin
 with explicit metadata edits retains the body; a metadata-only interactive update
-need not wait for text. Explicit empty -m remains a schema-checked edit. --replace
+need not wait for text. Explicit empty -m is a schema-checked edit. --replace
 uses selected original passages and does not consume stdin. There is no body-file
 option: shell redirection supplies files. Multiple eligible steps cannot share a
 nonempty stdin payload ambiguously; parse and preflight every step before reads or
-writes. Metadata-only chains with no input remain possible.
+writes. Metadata-only chains with no input are possible.
 
-Both managed UIs pass complete body text on stdin without a body option. Native VS
-Code forms retain non-writing plans and native persistence. Reviewed deletion plans
-and private application channels retain their independent inputs. Argument, body,
+Both managed UIs pass complete body text on stdin without a body option. Native VS Code forms use non-writing plans and native persistence. Reviewed deletion plans and private application channels have their independent inputs. Argument, body,
 aggregate and operating-system limits remain separate and explicit.

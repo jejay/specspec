@@ -18,10 +18,10 @@ Ongoing full refreshes use one comparison request rather than export plus diff.
 Keep the first working phase explicitly provisional; preserve later input, camera,
 focus, drafts and render membership acknowledgements. Graph-invalid files display fresh diagnosable context; unavailable current-file
 reads retain marked last-usable context; comparison failures leave usable current context with a
-clear unavailable note. Watch events remain hints and explicit refresh is current.
+clear unavailable note. Watch events are hints and explicit refresh is current.
 Project switches dispose caches and reject stale generations/text versions.
 
 Read/compare is separate from native document edit planning and managed persistence.
-Native plans remain non-writing and VS Code owns document application/Save/undo.
-Electron/project actions retain the managed writer. Shared reads do not install a
+Native plans are non-writing and VS Code owns document application/Save/undo.
+Electron/project actions use the managed writer. Shared reads do not install a
 server or weaken fresh mutation and exact-index checks.

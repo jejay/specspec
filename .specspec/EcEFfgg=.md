@@ -36,5 +36,4 @@ with bounded construction and original-span overlap/uniqueness checks.
 Bound Markdown line/token analysis, inline nesting and candidate-comparison work.
 Exhausted analysis rejects the invocation explicitly instead of selecting from an
 incomplete match set. Source mappings must be proved before allowing soft-break
-folding; unmapped structure retains line-ending-only matching. Existing locks, input
-budgets, schema checks, graph validity, consent and recoverability remain unchanged.
+folding; unmapped structure retains line-ending-only matching. Locks, input budgets, schema checks, graph validity, consent and recoverability hold here too.

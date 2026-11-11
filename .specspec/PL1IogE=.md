@@ -10,4 +10,4 @@ parents:
 Provide graph visualization and editing in VS Code and a standalone Linux/Windows
 window. Share graph behavior, native forms/drafts/caret, revision comparisons,
 viewport-independent layout, camera navigation, hover and literal project-text
-rendering. The Python tool remains the domain authority across hosts.
+rendering. The Python tool is the domain authority across hosts.

@@ -13,8 +13,7 @@ other comparisons. Read the whole graph by default, or an explicitly selected ro
 Optionally include every ancestor needed to understand the selected bindings.
 Present each complete selected current binding once, including headless
 bodies, and retain complete base bindings for deleted nodes. Sparse hints identify
-changes while readers focus on the current specification. Detailed historical text
-changes remain available through the dedicated diff command and comparison records.
+changes while readers focus on the current specification. Detailed historical text changes are available through the dedicated diff command and comparison records.
 
 Identify every direct parent locally in full node headers. Explain source-reference
 changes separately from linked-code changes and derived source locations in each

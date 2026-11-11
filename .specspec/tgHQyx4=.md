@@ -16,6 +16,6 @@ side ports. Keep lanes flat across card-width columns and smooth them through cl
 gaps. Allocate non-backbone corridors separately and retain reverse historical links.
 
 Dagre and D3 separate placement/navigation from domain mutations and keep native
-text/controls in the existing shared renderer. Bundle pinned versions and transitive
+text/controls in the shared renderer. Bundle pinned versions and transitive
 license notices locally. Root-anchored ranks, compact placement, shape-aware ports
 and camera-compensated paint are separately reasoned refinements.

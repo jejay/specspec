@@ -5,7 +5,7 @@ parents:
 - 5d5oDCM=
 - 6SyZ-BU=
 ---
-# Preview exact deletion and retain destructive-action safeguards
+# Preview exact deletion with destructive-action safeguards
 
 Select exactly a nonempty distinct set of current identifiable node IDs. Protect
 the manifesto and reject unknown or ambiguous targets. Preserve all unselected
@@ -25,6 +25,5 @@ remain visible before unlinking. Clean committed selections proceed directly.
 Both hosts confirm exact scope and explain retained dangling references. Recompute
 the reviewed scope, paths, structural consequences and assessments under the writer
 lock and reject changed plans before writes. Journal selected null replacements,
-byte-check originals and retain interruption recovery. Native dirty-document guards,
-source files, Git staging/commits and physical race limitations retain their roles.
+byte-check originals and retain interruption recovery.
 --require-valid rejects an invalid complete candidate before canonical writes.

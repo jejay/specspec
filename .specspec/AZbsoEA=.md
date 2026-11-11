@@ -20,5 +20,4 @@ its larger world area. A measurement fallback is confined to layout-less tests.
 Pass transient shape/radius data to routing. Circular ports span middle 40% of
 height and use chord boundaries. Rounded ports use their actual outline. Keep
 3-unit endpoint clearance and straight bounding-box-clearing departure/settling
-segments before turns; conservative boxes determine obstacles/corridors. Preserve
-palette/tints, labels/hover, native DOM/caret, camera and source/reference behavior.
+segments before turns; conservative boxes determine obstacles/corridors. Palette/tints, labels/hover, native DOM/caret, camera and source/reference behavior hold here too.

@@ -14,5 +14,4 @@ latency and cold/warm/project/native/multi-tab measurements. Exercise delayed re
 external edits, changing HEAD/index, invalid/vanished files, partial staging, source
 availability, bounded cache eviction, disposal and uncertain remote mutation outcomes.
 Use maintained current-schema history for serious Git/host tests. Report each actual
-client/host/transport run and its limitations. Individual deadlines, assertions,
-production geometry/camera and default-off polling keep their existing contracts.
+client/host/transport run and its limitations. Individual deadlines, assertions, production geometry/camera and default-off polling hold here too.
