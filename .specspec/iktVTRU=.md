@@ -7,6 +7,10 @@ parents:
 ---
 # Give gray cards, Markdown and Git cues readable space
 
-All cards, the gray manifesto among them, have the same modest tint and the normal text color of the theme. On hover the neutral manifesto shows a white border, and a colored node shows a stronger border in the hue of its meaning. Cards outside the hovered neighborhood are darkened.
+Use consistent modestly tinted cards and normal theme text, including the gray
+manifesto. The neutral manifesto uses a white hover border; colored nodes retain
+stronger borders in their semantic hue. Preserve outside-neighborhood darkening.
 
-The text field of the expanded card, with its revision text, has room for a typical line of 80 monospace columns. Compact cards stay compact. The Git letters at the bottom right are large and heavy and have room beside the other information of the card. Input, text cursor and camera work the same with these styles.
+Give the expanded editor and revision text a typical 80-column monospace budget.
+Compact cards stay compact. Make bottom-right Git letters larger and heavy with
+room beside other card information. Preserve native input, caret and camera.

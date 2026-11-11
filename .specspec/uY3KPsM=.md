@@ -5,10 +5,23 @@ parents:
 - CmZafVM=
 - GQdmCrA=
 ---
-# Run the extension and the command line on the workspace host and rely on the connection of VS Code
+# Execute through VS Code's workspace host and authenticated transport
 
-The extension runs in Node and is declared a workspace extension, and its manifest states accurately that it needs a real file system. Execution and the saving of node files happen beside the workspace, while the graph is drawn and gestures are handled in the client. The VSIX and a matching specspec command line on Python 3.11 or newer are installed on the workspace host that executes, and the executable is configured in the settings of the remote machine. VS Code owns the authentication of SSH and tunnels, the routing of resources and the lifecycle of the connection. The bundled assets of the webview are addressed through `asWebviewUri`, and dynamic content travels as messages.
+Declare the Node extension a workspace extension and describe real-filesystem
+capability accurately. Install its VSIX and a matching Python 3.11+ specspec CLI on the executing
+workspace host; use remote machine settings for its executable.
+VS Code owns SSH/tunnel authentication, resource routing and connection lifecycle.
+Bundled webview assets use asWebviewUri and dynamic content uses message passing.
 
-A file URI on the executing host names a resource of the file system of that host. VS Code normally maps remote URIs to file URIs inside that host. A virtual resource, and a resource of the client machine that is presented to a remote host, is rejected with a message that says what to do. Whether a document belongs to a project, and where the project is, is verified on that host. A failure of the place of execution, of a dependency or of trust is reported with a usable diagnostic. When a delivery fails, the recovery data and the original input are kept, and after a reconnect the current state is read before any further change. A destructive request is executed once and deliberately: an unknown outcome is reported for inspection and is never repeated automatically.
+Treat file URIs on the executing host as its filesystem resources. VS Code normally
+maps remote URIs to file URIs inside that host; preserve actionable rejection for
+virtual resources and client-local resources presented to a remote host. Verify
+native document membership and project discovery there. Report execution placement,
+dependency and trust failures with usable diagnostics. Retain recovery and original
+input on failed delivery; reconnect reads current state before further mutations.
+Destructive requests receive one deliberate execution, with unknown outcomes
+reported for inspection rather than automatically replayed.
 
-The setup for remote use is documented, and an opt-in path qualifies the installed extension on a remote host. The actual coverage of SSH, of a desktop client over a tunnel and of a browser client over a tunnel is reported for each separately, with the limitations of the environment. Browsing a virtual repository needs an execution of its own, which is left open here.
+Provide remote setup and an opt-in installed-host qualification path. Report actual
+SSH, desktop tunnel and browser tunnel coverage individually, including environment
+limitations. Virtual repository browsing has its own execution requirement.

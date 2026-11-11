@@ -4,8 +4,13 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Let the owner review where uncertainty and impact are highest
+# Allocate review until an implementation attempt is worth its risk
 
-The owner decides how much of the graph to review, and where. Their attention goes to the nodes with the most uncertainty and the most depending on them: often the intentions near the manifesto, and a risky detail wherever it sits. The owner also judges when the graph is clear enough to be worth an implementation attempt, weighing what is still uncertain against what another attempt costs.
+Allocate review according to uncertainty, impact, the owner's available attention
+and the cost of another implementation attempt. Earlier intentions often merit
+more attention; risky details merit attention wherever they occur. The owner
+judges when the remaining uncertainty and token cost make an attempt worthwhile.
 
-Every node stays open to replacement as building and feedback teach more. A node's place in the graph says what it was concluded from; how firmly it holds is the owner's judgment. Passing tests are evidence about the code, and what Git shows as added or changed tells the owner where to look.
+Conclusions remain revisable as implementation and feedback improve understanding.
+Git additions and differences provide review context. Review is a continuous human
+judgment; graph position expresses justification and tests supply bounded evidence.

@@ -7,4 +7,10 @@ parents:
 ---
 # Keep ordinary relationship arrows quiet as the graph is zoomed out
 
-Ordinary links and their arrowheads have a darker ink at rest, and the ink darkens further as the graph is zoomed out. In the overview the mesh of relationships thus stays behind the nodes that a spotlight highlights. The accent colors of links that a comparison marks or that belong to a draft, and the emphasis of the links at a hovered card, are set apart from this dimming. The direction of the arrows is readable at every zoom level, and the minimum sizes of lines and arrowheads on screen, the routes, the positions in the world, the forms and the state of editing are independent of the dimming, in both graph editors. The dimming is presentation that the camera drives, with or without an active spotlight.
+Use darker resting ink for ordinary connections and their arrowheads, and darken
+it further as magnification decreases. This keeps the overview relationship mesh
+from competing with spotlight label batches. Keep diff/draft accents and transient
+incident-hover emphasis distinct. Preserve readable direction, existing stroke/head
+geometry floors, routes, world positions, native forms and editing state in both
+hosts. Arrow quieting is presentation driven by the camera, including when no
+spotlight is active.

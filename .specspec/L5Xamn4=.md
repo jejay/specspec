@@ -4,12 +4,26 @@ type: requirement
 parents:
 - -RQn7Ug=
 ---
-# Keep declared links readable in an invalid graph and give context for a repair
+# Preserve declared references and provide bounded repair context
 
-The inventory of the files is kept apart from the parsed node records. A reference that does not resolve is told apart by its cause: the endpoint is absent, unreadable or ambiguous. The parents that a node declares are available as written, independently of the links that could be resolved for traversal. Diagnostics describe input in the current node format. A graph in another format version is reported as unsupported, and a raw read returns its documents exactly as they are.
+Inventory files separately from parsed records and distinguish unresolved references
+from absent, unreadable or ambiguous endpoints. Known raw parent declarations remain
+available independently of resolved traversal edges. Diagnose current-format inputs;
+unsupported schemas remain unsupported and raw reads never normalize them.
 
-`query --raw` reads a node document as it is, whatever errors the graph has, from the saved files, from the index or from a commit. `query --issues` works on the parsed nodes: it selects the nodes with faults of structure and the nodes beneath them that may be affected, and it adds their complete ancestors on request. Walks through the graph are safe against cycles and include the components that the manifesto does not reach. A metric is computed from the relationships that are known. Where the scope is unavailable, or a longest path would run through a cycle, the query fails with an explicit error and selects nothing.
+query --raw reads actual canonical documents independently of global errors, using
+saved, staged or immutable bytes. Parsed query --issues selects structural findings and potential
+descendants with optional complete ancestor context. Cycle-safe walks include
+unreachable components. Defined metrics use known relationships; unavailable scope
+or cyclic longest paths receive explicit errors rather than fabricated selections.
 
-A full `diff` compares the declarations and the bytes of the node files. It tells three cases apart: a file that was removed, a reference that was edited and a reference that stopped resolving. `--with-context`, with `--node` once or several times to choose nodes, adds the earlier and the current text and links, the ancestors that survive, the changes that were observed, one cause path for each cause and node, which is the same on every run, and a statement of what is unavailable. Context that several nodes share appears once. A limit on the bytes of the output fails the command before any part of the output is written.
-
-An invalid graph alone leaves a complete comparison of the structure complete and says nothing about what the owner intends. Outside a Git repository a read with context returns what the current files show and patches against an empty inventory, labeled as such, as an incomplete comparison whose changes are reported as unavailable. A spotlight can name a node by the ID of its file while the graph is invalid, and the drift of the literal bytes is tracked whether or not the node parses.
+Full diff compares declarations and canonical bytes, distinguishing removed files,
+actually edited references and references becoming unresolved. --with-context and
+optional repeated --node provide previous/current bindings, surviving ancestor
+context, observed changes, deterministic cause witnesses and explicit availability.
+Shared context is deduplicated. Byte limits fail before partial output. Graph validity
+alone does not make a complete structural comparison incomplete or infer owner intent.
+Non-Git contextual reads retain current evidence and explicitly labeled empty-inventory
+patches as an incomplete comparison, with unavailable rather than fabricated changes.
+Spotlights can name known file identities through invalidity; literal raw-byte drift
+is independent of successful node parsing.

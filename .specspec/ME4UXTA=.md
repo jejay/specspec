@@ -4,6 +4,12 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Keep the specification as Markdown in the project that tools and people both edit safely
+# Support graph-aware tools and ordinary Markdown editing
 
-The specification is Markdown text inside the project. The command line and the graph editors know the graph and are the recommended way to change it. Both take the rules of the graph and the planning of every Markdown edit from one backend, which is the authority for them. An owner can also edit the Markdown files directly. The checks judge the format of the files and the consistency of the graph as they actually are, and a valid edit made by hand works in ordinary use like one made through a tool.
+Recommend the CLI and visual editor for graph-aware specification changes. Both
+use the authoritative backend's graph rules and Markdown edit planning. Owners
+may also edit canonical Markdown directly. Validate actual schema and graph
+consistency and make valid manual edits usable in ordinary workflows.
+
+Persistence follows the host contract: managed project actions use the Python
+writer; VS Code document forms use backend plans and native text-document saves.

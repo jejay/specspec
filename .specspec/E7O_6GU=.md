@@ -3,9 +3,20 @@ id: E7O_6GU=
 type: requirement
 parents:
 - DG-JpDc=
+- bLBNk80=
 ---
-# Paint every highlighted card with one ring of an adjustable ink inside its outline
+# Paint one adjustable highlight ink inside unchanged card outlines
 
-The one editable set of highlights paints a solid ring, inset by the same amount on all sides, on every selected node that the displayed target or the deleted part of the base holds. The CSS variable `--spotlight-color` supplies the one ink, which is easy to change: white on dark themes and a dark ink on light themes, each with a contrast of at least 3:1 against the cards. The ink is independent of the fill colors and of the marks of Git changes. At camera scale `k` the ring is `max(5, 3 / k)` world units wide and is offset inward by the same amount, so that it shows at least 3 CSS pixels on the screen. The ring follows the shape of the card type and is darkened together with a card that the hover darkens. The cue for keyboard focus is separate from the ring, and the ring leaves the geometry of the card as it is.
+One editable highlight set paints a solid equal-inset outline on selected node
+IDs available in the displayed target or deleted comparison base. The shared CSS variable --spotlight-color supplies one easily editable ink: white
+on dark themes and a dark ink on light themes, each with at least 3:1 contrast
+against cards.
+Keep it independent of semantic fills and Git accents. Use width max(5, 3 / k)
+world units at camera scale k and its negative as outline offset, preserving at
+least 3 CSS screen pixels. Follow type shape and unrelated-card darkening, with an
+independent keyboard-focus cue and unchanged geometry.
 
-Applying a spotlight closes the dropdown, switches the comparison and frames the members that are available. A toggle by hand and a clear repaint the rings and do nothing else. The arrival of a spotlight and the closing of the dropdown leave the camera, the drafts, the inputs of the form and the text cursor as they are. A visible warning about drift, which advises, and short notes on missing members and on the context accompany rings that are painted as well as the available nodes allow.
+Applying a spotlight closes its dropdown, switches comparison and frames available
+members. Manual toggles and clear only repaint. Arrivals and dropdown dismissal
+preserve camera, drafts, native inputs and caret. Visible advisory drift warnings
+and compact missing/context information accompany best-effort rings.

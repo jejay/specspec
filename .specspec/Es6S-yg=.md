@@ -6,6 +6,9 @@ parents:
 ---
 # Install the command-line tool from PyPI by default
 
-The `specspec` distribution on PyPI is the normal source of the command-line tool, so that people and coding agents install it directly with one command. The recommended command is `uv tool install specspec`, and `pipx install specspec` is the isolated alternative to it. The user guides, the agent guide and the screens that a graph editor shows when the command line is missing recommend this installation. The guides explain how the command gets onto the `PATH`, how to upgrade, and that in a remote workspace the command line is installed on the workspace host.
-
-An installation from a local checkout, from a Git URL or from a built wheel is an explicit alternative, meant for development and for qualifying one particular artifact. The graph editors are installed independently of the command line.
+Publish the specspec Python command-line distribution to PyPI so people and coding
+agents can install it directly, without cloning this repository or locating a wheel.
+Recommend uv tool install specspec, with pipx install specspec as an isolated
+alternative, throughout current user/agent guides and missing-CLI screens. Explain
+PATH, upgrade and remote workspace-host ownership. Keep source/wheel installation
+as explicit alternatives and the visual products independently installable.

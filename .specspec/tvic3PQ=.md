@@ -5,8 +5,21 @@ parents:
 - Bnr6yZY=
 - YOPhqYc=
 ---
-# Reload on file and Git notifications and keep drafts through every reload
+# Reconcile file and Git notifications while retaining drafts
 
-A watcher event is a hint to reload. The session coalesces events, runs reads and writes one after another, retries a transient failure of a read a limited number of times and compares the loaded records directly, so that an unchanged graph is left as it is drawn. VS Code uses its filesystem watchers. The desktop app watches the project directory and the `.specspec` directory in it and attaches again after the directory is recreated. Errors of a watcher are reported. Refresh reloads on request, and polling at a configurable interval is an optional addition: its default is 0, which means off, and it is disposed when the project is switched and when the view closes.
+Treat watcher events as reload hints. Coalesce events, serialize reads/writes, retry
+transient reads a bounded number of times and compare loaded records directly to
+skip unchanged redraws. VS Code uses filesystem watchers; Electron observes the
+project parent and canonical directory and reattaches after directory recreation.
+Report watcher errors. Explicit Refresh and optional configurable polling remain
+available; polling defaults to 0/off and is disposed on switch/close.
 
-A form without unsaved changes is refreshed. A form with unsaved changes keeps its original record, its text, its text cursor and its camera; changes to other nodes refresh the context around it, and the draft stays savable. A change to the same node requires a confirmation before the draft overwrites it. The draft of a deleted node stays copyable and cannot be saved. A reload that finds a graph breaking a rule shows the actual current relationships and diagnostics and permits the local edits that are safe. A file that cannot be read stays reachable as raw Markdown for repair. A load that is unavailable keeps the last graph that loaded, clearly marked, and enables no write that rests on that old state. A comparison between commits keeps its selected revisions. The renderer acknowledges each rendering with its sequence token and the full list of visible nodes. Watchers depend on the file system and give hints alone; the writer's check of file bytes is a separate safeguard for saving.
+Refresh clean forms. Dirty forms retain original records, text, caret and camera;
+unrelated changes refresh context while preserving save eligibility. Same-node
+changes require overwrite confirmation. Deleted drafts stay copyable and unsavable.
+Graph-invalid reloads display actual current relationships and diagnostics while
+permitting safe local edits. Unreadable targets retain raw repair access; unavailable
+loads retain clearly marked last-usable context without enabling stale writes. Historical views retain their selected
+revision. Rendering acknowledgements use sequence tokens and full visible membership.
+Watchers are filesystem-dependent notification hints; byte-checked transactions
+supply a separate persistence boundary.

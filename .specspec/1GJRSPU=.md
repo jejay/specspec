@@ -5,18 +5,34 @@ parents:
 - kiRE62k=
 - 4626uI8=
 ---
-# Replace passages that each match exactly one place of the original body
+# Select unique original-body passages for bounded update replacements
 
-`update` accepts `--replace OLD NEW` any number of times, in place of a whole body from messages or from standard input. OLD is nonempty and matches exactly one place of the original body under the default comparison rules for line ends and for the wrapping of prose. Occurrences that overlap and every layout that the rules permit count when uniqueness is checked. All pairs of an update refer to that same original body, match ranges that are disjoint and produce one candidate, so that no pair matches text that another pair inserted. An empty NEW removes the passage. NEW is taken literally, with its newlines turned into the encoding of the document.
+update accepts repeatable --replace OLD NEW pairs as an alternative to whole-body
+message or integration input. OLD is nonempty and has exactly one original-body
+match under the default line-ending and prose-wrapping comparison rules. Include
+overlapping occurrences and all permitted layouts when checking uniqueness. All
+pairs refer to that same original body, have disjoint matched ranges and produce
+one candidate without cascading into inserted text. NEW may be empty to remove a
+passage, and retains literal content with newline encoding adapted to the document.
 
-Every logical character of the body outside the matches stays as it is, trailing blank lines included, and the document ends with the final newline that the tools write. Words, case, Unicode, indentation and blank lines are compared exactly. The comparison of OLD tolerates the standard line ends and the soft line breaks of Markdown prose, and storing adapts the newline encoding alone. Matching and replacing happen under the writer lock, on the node as it is freshly read and identified there. A replacement changes the body alone, and parents, sources and other metadata are edited through their own options. An OLD that is missing, that matches more than once or that overlaps another match rejects the complete invocation before any node file is written, with a diagnostic that names the node file.
+Preserve untouched logical body characters and trailing blank lines, applying the
+tool-written document terminator at EOF. Words, case,
+Unicode, indentation and blank lines remain exact. OLD comparison tolerates standard
+line endings and Markdown prose soft breaks; storage adapts newline encoding only. Match and transform under the existing
+writer lock against the fresh identified node. Parents, sources and other metadata
+retain their existing separate edit owners. Missing, multiple or overlapping matches
+reject the complete invocation before canonical writes, with a target diagnostic.
 
-An update takes its new body from one source alone: from replacements, from messages or from standard input. The syntax, a conflict between these sources and the limits on replacement input are checked for all steps before standard input is read. Both values of a pair are literal even when they equal a command name or a flag. A step with replacements is part of the same candidate as the other steps of its chain, with the same preview, the same optional check of the final graph, the same consent to deletions, the same checks of original bytes and the same recovery from the journal.
+Replacement, message and integration body sources are mutually exclusive within
+an update. Validate syntax, body-source conflicts and replacement input limits
+across all steps before opening body files or stdin. Both values of each pair stay
+literal even when they equal command names or flags. The existing chain candidate,
+preview, optional final validity, deletion consent, byte guards and journal recovery
+remain authoritative. Full-body replacement and existing UI transports remain usable.
 
-These limits apply:
-
-- at most 1024 replacement pairs in one invocation, counted over all its editing steps
-- 16 MiB for the UTF-8 bytes of all OLD and NEW values together with the other body input of the invocation
-- 1 MiB for each OLD or NEW value and for the resulting node file
-
-The limit of an operating system on arguments applies independently. OLD and NEW are always given as argument text. The one option `--replace` provides this default comparison completely, and no further option is needed for it.
+An invocation contains at most 1024 replacement pairs across its editing steps.
+Count OLD and NEW UTF-8 bytes together with other body input against the 16 MiB
+authoring budget; each replacement value and resulting canonical node retains the
+1 MiB bound. Operating-system argument limits remain independent. OLD/NEW remain
+explicit argument text. The same replacement option provides its complete default
+matching behavior.

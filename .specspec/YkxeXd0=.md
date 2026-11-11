@@ -5,12 +5,37 @@ parents:
 - 8O0LYEM=
 - 2doGbqA=
 ---
-# Compute the measures of a selection in single passes and resolve only the sources it needs
+# Batch metric selection and preserve relevant source evidence
 
-The display graph of the comparison is built once, the population that the root reaches is found once, and its topological order is reused. Both distances are computed in one forward pass. Influence, which counts a node with its descendants, is computed only when it is required, in one reverse pass over the acyclic graph with integer bitsets of descendants. The bits of the children are united, because adding the counts of children would count a shared descendant twice. The stored bitset of a child is released when its last parent has used it, and a leaf needs none. Live memory thus stays bounded on long chains and on wide fans of leaves.
+Build the selected-record projection once, find the reachable population once and
+reuse its topological order. Compute both requested distance bounds in one forward
+pass. Compute self-inclusive influence only when required, in one reverse DAG pass
+using integer descendant bitsets. Union bits rather than adding child counts;
+release each child's stored bitset after its last parent consumes it. Leaf masks
+need no stored bitset. This bounds live memory on chains and wide leaf fans.
 
-Ranking the population by a measure agrees with a walk that always takes the best node on the frontier of children: maximum distance grows along every edge, influence shrinks, and every minimum distance has a predecessor on a shortest path that is one step nearer. Ranking in one batch, with ties broken by full ID, therefore selects the next nodes exactly as that walk does. It unfolds no path and runs the search of the graph, the reads and the resolution of sources once for all measures. A limit given as a number filters before sorting, and a percentage can take its quota with a bounded selection of the best k.
+Metric ranking over this population agrees with a child-frontier priority walk:
+maximum distance increases on each edge, influence decreases, and every minimum
+distance has a shortest-path predecessor one step nearer. Batch ranking with full
+ID tie-breaks therefore preserves next-node semantics without unfolding paths or
+rerunning graph searches, reads or source resolution per criterion. Apply absolute
+predicates before sorting; percentage quotas may use bounded top-k selection.
 
-Selection comes before any work on sources. `--with-ancestors` walks the parents of all matched nodes in one pass before the final view is built, and each quota keeps its original set of matches. The IDs of surrounding nodes are collected through the parents of the matches, each parent once. Source evidence is resolved after the ancestors are added, and it reaches into other branches where the hints of an added ancestor need them. The links that are resolved are those owned by the selected nodes or by their descendants in either original revision, since a descendant outside the selection can change the `source-changed` hint of a selected ancestor. Reachability and the passing of hints to ancestors are computed once for each revision, for all nodes together. Each exact link is resolved once for each version of the code, with the batches and limits of the reader. A branch unrelated to the selection and an empty selection need no source resolution. JSON keeps all the source evidence that is required, with the IDs of its owners also where they lie outside the nodes shown, while the sets of affected nodes are cut to the selection. The reads of the revisions, the readers of the code versions and the source comparisons are shared by all measures and by both text presentations.
+Select before source work. Optional ancestor completion uses one multi-source
+parent walk before constructing the final view; quotas retain their original
+matched sets. Collect surrounding identities through deduplicated matched parents.
+Resolve source evidence after completion, including other branches when necessary
+for added ancestors' badges. Resolve declarations owned by selected nodes or their
+descendants in either original revision, since excluded descendants can change a
+selected ancestor's source badge. Merge graph reachability and ancestor propagation
+per revision rather than repeating closure per node. Resolve each exact declaration
+once per code version with the existing reader-local batches and budgets. Unrelated
+branches and empty selections need no source resolution. JSON keeps all required
+source evidence, including its owner IDs outside the visible binding set, while
+selected affected sets remain scoped. Revision reads, code-version readers and
+source comparisons are shared across every criterion and both text presentations.
 
-Independent oracles verify the selection in tests: one that follows paths, one that uses the transitive closure and one that walks the frontier literally by priority. They check the sets and their order, limits that equal a value, the rounding of quotas, duplicates and shared nodes and every combination of measures. Counting tests verify the passes over the graph and that reading, measures and sources each happen in one batch. Further tests run on the revisions of the Gantt example in the current format and check that every call reads afresh and writes nothing.
+Independent path, transitive-closure and literal priority-frontier oracles verify
+sets and order, equality, quota rounding, duplicates/sharing and all criterion
+combinations. Counting regressions verify graph passes and one read/metric/source
+batch, alongside current-schema Gantt revisions, freshness and read-only checks.

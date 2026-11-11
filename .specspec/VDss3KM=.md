@@ -4,6 +4,15 @@ type: requirement
 parents:
 - tGpRMLM=
 ---
-# Show the working graph first while its comparison with Git loads
+# Display valid working context while its Git comparison loads
 
-A view of the working files may first draw a current snapshot of the working graph that can be diagnosed, with an explicit state that the comparison is loading, and then adopt the fresh comparison with HEAD and with the linked sources. A comparison between commits loads its selected revisions directly. The provisional state looks different from a completed comparison and from an unavailable one. When later data arrives, newer input, the bound document, the focus and the camera stay, and a result for an outdated document, view or base is rejected. When the comparison fails, the current graph stays usable with an explicit note that the comparison is unavailable. A graph that breaks a rule is shown as the current one. When files are unavailable, the view keeps the marked last graph that loaded and its protection against changes to the files. The first read of a node-file editor is shared, so that the working tree is requested once at the start. Render acknowledgements carry the sequence token and the full list of visible nodes, and the operation deadlines of production apply. A change is prepared by a normal read of the current state.
+Initial working views may render a current diagnosable working snapshot with an explicit
+comparison-loading state, then adopt the fresh HEAD/source comparison. Historical
+views load their selected comparison directly. Keep provisional meaning visibly
+distinct from completed/unavailable comparison. Preserve newer input, bound document,
+focus and camera when later data arrives; reject stale document/view/base results.
+A comparison failure leaves usable current context with an explicit unavailable
+note, while graph-invalid context remains current and unavailable-file failure retains
+marked last-usable context and physical mutation protections. Native/bootstrap sharing avoids a redundant initial worktree
+request. Preserve sequence/full-membership rendering acknowledgements and existing
+production operation deadlines. Use normal current reads for mutations.

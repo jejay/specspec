@@ -4,10 +4,26 @@ type: requirement
 parents:
 - uAjln2M=
 ---
-# Check shortcut freedom in one shared validator of the current node format
+# Validate shortcut freedom centrally under the current node format
 
-The current node format requires a rooted acyclic graph of intentions and conclusions whose direct links are free of shortcuts, that is, transitively reduced. The application protocol reports the success of an operation and the validity of the graph separately. A reader handles the current format alone and reports a graph of another format version with an explicit diagnostic. Every revision of the maintained Gantt history and every recorded receipt uses this format, and a rebuild of that history leaves clones made by hand with their experiments as they are.
+The current node format requires a rooted, transitively reduced intention-conclusion DAG.
+Five-byte padded Base64url identities, node fields and source grammar retain their
+contracts. The application protocol separates operation success from graph validity. Current-only readers diagnose
+other node versions explicitly. Maintained Gantt revisions and actual receipts use
+this same current contract throughout; existing manual clones retain experiments.
 
-One graph validator in the backend, shared by all tools, checks the whole graph for shortcuts once the parent references, the parent types and the absence of cycles are sound. Each redundant parent produces a `REDUNDANT_PARENT` diagnostic with the affected node, the direct edge and an alternative path, which is the same on every run. An edit through the writer reports the diagnostics of the saved graph and of the complete candidate graph, and `--require-valid` requires the whole candidate to pass before anything is written. An edit whose result is an invalid graph on the way to a valid one is written with explicit diagnostics and with the same safeguards of the write transaction. The same rule applies to reads of the working files, of the exact index, of a revision and of unsaved editor text laid over the files. Hooks and CI that an owner has set up call `check --staged`, which reads the actual bytes of the index. Invalid text in an editor's own document can be diagnosed and repaired.
+The shared backend graph validator checks the whole graph after references, parent
+types and acyclicity are sound. Each redundant parent produces REDUNDANT_PARENT
+with the affected node, direct edge and a deterministic alternative path. Managed edits diagnose saved and complete candidate graphs; --require-valid
+requires the whole candidate to pass before writing. Graph-invalid intermediate
+edits retain explicit diagnostics and physical transaction safeguards. Working, exact-index, revision and native-overlay reads use the
+same rule. Owner-configured hooks and CI call check --staged against actual index
+bytes. Native invalid text remains diagnosable and repairable.
 
-A change to the parents of one node can make a link of another node redundant. The diagnostics name every affected edge. The related changes are made deliberately, and an edit that the writer rejects leaves the files as they were. An owner can prepare a coherent change in the Markdown files, or combine ordinary `add`, `update` and `delete` steps in one explicit invocation that is recovered as a whole. Each `update` step names one node, and the optional validity check judges the complete final candidate. Inspection, the planning of a candidate and recovery work on an invalid graph as well. Validation reports and leaves every relationship exactly as it is written. Validity follows from the files alone, and the commands work on the current node format alone.
+Relationship edits can affect other nodes. Diagnostics expose every affected edge;
+related changes are deliberate, and managed edits leave files intact on rejection.
+Owners can prepare coherent Markdown changes or combine ordinary add/update/delete
+steps in one recoverable explicit invocation. Each update step names one node;
+optional validity checks assess the complete final candidate.
+Inspection, candidate planning and recovery remain usable with invalid graphs. Validation never silently removes or normalizes relationships
+and introduces no approval workflow or permanent compatibility/migration command.

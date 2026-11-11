@@ -5,8 +5,19 @@ parents:
 - tGpRMLM=
 - Yfy0414=
 ---
-# Reuse Git bytes and parsed frontmatter from caches that are verified at every use
+# Reuse bounded derived Git bytes and parsed frontmatter
 
-Transient caches of limited size hold derived data for a project, for a request or for the loaded library, around the snapshot and graph structures. Every read resolves the refs anew and verifies the entries of the tree or of the index and the metadata of the objects. A graph editor may hand back the immutable bytes of a baseline, within a size limit, as a hint for a warm read. Each hint is verified against the Git blob ID of the current read before it is used, a blob whose hint does not match is fetched in the normal way, and a missing object is reported as missing. A hint belongs to one repository, one subtree and one resolved commit: when HEAD moves the hint stops applying, and staging leaves it applicable because HEAD holds the same nodes.
+Use transient project/request/library caches around existing Snapshot and Graph
+structures. Resolve refs freshly and verify tree/index entries and object metadata.
+A host may return bounded immutable baseline bytes as a warm read hint; verify each
+hint against the current Git blob address before reuse, fetch mismatches normally,
+and observe missing objects. Keep hints scoped to repository/subtree/resolved commit;
+HEAD movement changes applicability while staging preserves HEAD membership.
 
-The parsed frontmatter is memoized by the exact bytes of the header and the version of the parser, within limits on bytes and on entries, and every use receives a copy of its own that it may change. An edit of the body leaves the bytes and the comments of the frontmatter as they are. The fields of the nodes, the graph, the source paths and the state of lock and journal are validated at each read, against what that read found. An eviction from a cache costs time and changes no result. A cache holds derived data alone: the node files and the conditions of an edit are the same with and without it. The writer checks the current files, and a check of the exact index reads the current objects, each as the authority for its own work. A single run of the command line works on its own, within its limits, with every cache starting empty.
+Memoize round-trip frontmatter by exact header bytes and parser version with bounded
+bytes/counts and isolated mutable copies. Body edits retain native bytes and comments.
+Validate node fields, graph, source paths and runtime lock/journal state against each
+current read. Cache eviction preserves correctness. Derived caching introduces
+neither canonical metadata nor node edit gates; managed writers and exact-index
+checks retain their authoritative current-file/object checks. Keep the CLI usable
+as a bounded one-shot process.

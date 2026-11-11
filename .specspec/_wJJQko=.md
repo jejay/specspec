@@ -4,6 +4,11 @@ type: requirement
 parents:
 - ME4UXTA=
 ---
-# Keep the node files and the tools' local working data together in the project
+# Keep canonical nodes and local runtime data together
 
-One directory of the project holds everything that specspec keeps there. The specification is one Markdown file per node, directly in that directory. The working data of a single checkout has a reserved place inside the same directory: locks, journals, spotlights, caches and diagnostic files. The specification consists of the node files alone, in the working files, in the Git index and in every commit.
+The project-root `.specspec` directory directly contains one Markdown file per node.
+Each file has YAML frontmatter and binding Markdown text. The unique manifesto
+carries internal schema metadata. The reserved ignored `.specspec/local/` subtree
+holds checkout-local locks, journals, spotlights, caches and diagnostic work. It is
+not canonical membership, including during revision or exact-index inspection.
+Discovery selects the nearest containing `.specspec`, including an invalid entry.

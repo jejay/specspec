@@ -4,12 +4,36 @@ type: requirement
 parents:
 - rt-nZHM=
 ---
-# Limit a selection by inclusive numbers or by exact shares of the population
+# Bound rooted metric walks with inclusive cutoffs and exact population quotas
 
-`query [NODE_ID]` takes `--min-distance`, `--max-distance` and `--influence`. Without an ID the selection starts at the manifesto of the target revision. An ID is given in full and compared case-sensitively, and it can name a current node or a deleted one. Without any selection argument the query covers the complete comparison: every current and every deleted node, a former root that differs from the current one included.
+Use query [NODE_ID] with --min-distance, --max-distance and --influence. An omitted
+ID starts at the target manifesto; an explicit full case-sensitive ID can select
+a current or deleted record. With no selection arguments the complete comparison
+keeps every current and deleted record, including distinct former roots.
 
-The selection searches the display graph of the comparison, in which a current node has the parents of the target revision and a deleted node has the parents of the base revision. For valid revisions this graph is acyclic. The population is the root together with every node that can be reached from it along all the edges of this graph. A distance counts the directed edges from the query root, which itself has distance zero. Influence counts a node itself and all unique descendants that can be reached from it, whichever nodes the selection takes afterwards. The colors in the graph editors use measures of their own, computed over each complete revision. Where the population contains a cycle, the measures come from finite walks, of shortest paths for the minimum distance and of reachability for influence, and maximum distance is unavailable there. A cycle outside the population leaves the finite measures of the population valid. When a revision could not be parsed completely, the selection is refused with an explicit diagnostic that it is unavailable.
+Search the selected-record projection, acyclic for valid inputs: current records keep target parents
+and deleted records keep base parents. The population is the root and every node
+reachable through its full selected edges. Distances count directed edges from
+that query root, with zero at the root; influence counts self plus all unique
+reachable descendants, independent of which records are subsequently selected.
+UI paint continues to use its complete individual revision metrics. Cyclic scopes
+use finite shortest/reachability walks; maximum distance is unavailable there.
+Cycles outside the rooted population do not invalidate its finite local metrics.
+Incomplete parsed scope receives an explicit unavailable-selection diagnostic.
 
-A limit is a nonnegative integer or a percentage. An integer admits the distances that are less than or equal to it, or the influence that is greater than or equal to it. A decimal percentage from 0 to 100 selects `ceil(population * percent / 100)` nodes: zero selects none, 100 selects the whole population, and the root belongs to the population. Nodes of equal value are taken in ascending order of their full IDs, compared case-sensitively. Each measure selects from the same original population with its own quota, and only the final sets of IDs are combined. A root without a limit reads everything that can be reached from it. After the selection the nodes are printed in the usual tree with records at their last occurrence, and the order of a measure decides only which nodes are selected.
+Each absolute nonnegative integer admits distances <= the cutoff or influence >=
+the cutoff. Decimal percentages in [0,100] select ceil(population * percent / 100)
+nodes; zero selects none and 100 selects the population. Include the root in that
+population. Ties use ascending full case-sensitive IDs. Each criterion runs against
+the same original population and its own quota; combine only their final ID sets.
+A root alone reads its complete reachable subgraph. Graph ordering after selection
+retains the existing last-occurrence reading, not metric-priority print order.
 
-A selected node appears with its complete text and with its links to parents outside the selection. `--with-ancestors` adds the ancestors after each measure has filled its own quota. Headers and node metadata name all direct parent IDs. In JSON the metadata of a selection names the root, the population, the IDs of the union, the edges among the selected nodes, the parents on the boundary and, for each measure, its IDs in order with their values. The records of the base and of the target and the summaries of changes are cut to the selection and keep the full parent references, so that the selected part of each revision can be reconstructed. The validity that is reported describes the two original revisions, each validated on its own, and a partial view is a reading with no validity of its own. A query without a selection gives the complete comparison of the application protocol. The human presentation changes how the result looks and nothing else.
+Metric selection produces complete matched bindings and external parent links.
+Optional ancestor completion adds upstream bindings after the independent quotas. Headers and node metadata preserve all direct parent IDs.
+JSON selection metadata identifies root, population, union IDs, induced edges,
+boundary parents and each criterion's ordered IDs and values. Scoped base/target
+records and change summaries reconstruct the selected part of each revision, with
+full parent references; validity describes the independently validated original
+snapshots, rather than asserting that a partial view is canonical. The unfiltered
+comparison retains its complete application protocol contract. Human changes presentation only.

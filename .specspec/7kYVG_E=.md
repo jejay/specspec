@@ -5,10 +5,24 @@ parents:
 - 0dvOn3A=
 - Yfy0414=
 ---
-# Print a complete review diff grouped by node, with a summary first
+# Present complete node-aware review diffs
 
-`diff` prints a full review diff by default, with a short summary before it. The output is grouped by node and names each node by its full ID, its type, its heading and its old and new path. Every changed passage of node text appears as a hunk with context, and an added or deleted node appears in full. The diff states the exact changes of parents, type, source links and extensions. An overview lists the added and the removed links in readable form, each end labeled with its ID and with the heading it has in the revision that holds the link.
+Default diff output is a full review diff, preceded by a concise summary. Group by
+stable full node ID, type, readable heading and old/new paths. Show all changed binding
+text hunks with context; show added/deleted records completely. Expose exact parent,
+type, source-reference and extension changes and an intelligible added/
+removed relationship overview labelled with IDs and revision-appropriate headings.
 
-Every meaningful change of the text of a node file is shown, including a change of a frontmatter comment, of whitespace or of the final newline alone. The unified patches of node text use lines that end in LF, and two texts that differ only in the encoding of their newlines count as equal. A raw `query` gives the exact bytes of a document, and the full patches hold every other change of content. The patches are records for review, and ordinary Git supplies the patches that apply byte for byte. The summary alone is printed on the explicit request `--summary`, and the full diff is the default. An invalid or unavailable revision is reported with diagnostics that name the next step and with an impact marked incomplete, and a comparison is reported as empty only when both sides were read and are equal.
+Represent every meaningful canonical text change, including frontmatter comments,
+whitespace and final-newline-only edits. Unified canonical-text patches use logical
+LF lines; newline-encoding-only differences are equivalent. Raw query retains exact
+physical documents while full patches retain every other content change. These
+are review records; ordinary Git supplies directly applicable byte patches. A summary
+alone is explicitly requested, not substituted for the full default. Invalid or
+unavailable revisions carry actionable diagnostics and incomplete impact, never a
+fabricated empty comparison.
 
-Changes of linked source files, and the nodes they may affect by the cautious count per file, are listed apart from the changes of the specification itself. The diff gives the paths of the changed files and the implementations that link them. The patches it prints are those of node files, and a node in the affected scope is reported as possibly affected, which is a scope and no verdict that it is invalid. Reading the snapshots leaves the checkout, the index, the refs and the source files as they are.
+Separate linked-source file changes and conservative potential impact from direct
+specification modifications. Report their paths and linked implementations without
+dumping unrelated implementation-code patches or claiming that every affected node
+is invalid. Snapshot reads leave checkout, index, refs and source files unchanged.

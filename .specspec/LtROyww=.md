@@ -5,6 +5,9 @@ parents:
 - eLTZ3sg=
 - W8_8BXA=
 ---
-# Arrange the graph by its relationships, independently of the window
+# Arrange a navigable world from relationships
 
-The arrangement of the nodes follows from their relationships and from the sizes of the cards themselves. The size of the window decides which part of the arrangement is visible, and the arrangement is the same after the window is resized. The owner reaches every part outside the visible area by panning, zooming and explicit framing. The overview and the view of a selected node are arranged by the same rules.
+Derive node arrangement from logical relationships and intrinsic card dimensions.
+Viewport size determines the visible clipping area. Content beyond that area stays
+reachable by pan, zoom and explicit framing. Overview and focused views use the
+same relationship-based world, with stable arrangement during window resize.

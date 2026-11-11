@@ -5,8 +5,12 @@ parents:
 - W8_8BXA=
 - 6EmKDz8=
 ---
-# Lay the graph out compactly, outward from the manifesto
+# Develop a compact graph outward from the manifesto
 
-The manifesto is the origin of the picture, and the graph extends outward from it. A node that follows from the manifesto in few steps, and a short branch, stay near the manifesto, also when a conclusion far out names them among its parents. The layout is compact, the cards stand apart far enough to be read, and the arrangement is the same in every window.
+Use the manifesto as the visual origin. Keep early intentions and short branches
+near it even when they feed distant shared conclusions. Favor compact outward
+development with readable separated cards and viewport-independent arrangement.
 
-Adjacent cards have modest space between them, and the area around the manifesto is dense. The placement follows from the relationships and from the settings of the presentation. The meaning of the graph is in the links of the node files, and the placement shows it.
+Give adjacent nodes modest breathing room while keeping the origin dense. Derive
+placement from relationships and presentation choices; express graph meaning
+through canonical links.

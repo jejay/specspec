@@ -4,8 +4,12 @@ type: requirement
 parents:
 - mAZgRy8=
 ---
-# Let the browser rasterize the text of the cards at the current zoom level
+# Rasterize native text at the current camera scale
 
-The headlines and the forms of the cards are ordinary DOM elements under the two-dimensional transform of the camera, and the browser rasterizes them at the current scale. The logical font sizes, the sizes in world units, the rendering of text through `textContent`, the measured sizes of the cards and the form elements themselves are the same at every scale. The transformed graph has the default `will-change: auto`, so the browser composites it by its normal rules.
-
-A probe in the installed editors zooms a headline to 250% and inspects it once the picture has settled, at one and the same camera position with and without a layer hint. The checks of navigation, routing, the form with its text cursor and the paint at low zoom run alongside. What these checks prove is limited to the browser, the operating system, the fonts and the device they ran on.
+Use ordinary native DOM headlines/forms with the shared two-dimensional camera
+transform and browser rasterization at the current scale. Keep logical fonts, world
+sizes, textContent rendering, intrinsic measurements and native editing identity.
+The world uses normal compositor decisions rather than a permanent transform-layer
+promotion hint. Inspect settled high-zoom text with matched poses and keep low-zoom
+navigation, routing, form/caret and paint checks. Rendering evidence is scoped to
+browser, OS, fonts and device conditions.

@@ -4,6 +4,10 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Make specspec recognizable by the Spectrum flow identity that the owner selected
+# Recognize specspec through the selected Spectrum flow identity
 
-The product carries the identity that the owner selected, Spectrum flow, taken from the authoritative final delivery in the sibling workspace `specspec-branding`. The frame and the icons of each application identify specspec by the brand symbol, with icons that stay legible in every theme and with assets that are packaged locally. The original artwork that the owner supplied is kept as the owner's artifacts.
+Use the owner's selected identity from the authoritative final delivery in the
+sibling specspec-branding workspace. Application chrome identifies specspec with
+the brand symbol, with theme-compatible legible icons and local packaged assets.
+The UI headline contains the symbol alone, followed directly by revision context.
+Preserve supplied original artwork as owner artifacts.

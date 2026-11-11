@@ -5,10 +5,20 @@ parents:
 - WpYvGUo=
 - PL1IogE=
 ---
-# Build the command line, the VS Code extension and the desktop app as separate products from one repository
+# Build separate installable products from one private workspace
 
-One repository holds the sources of all three products. The command-line tool is built with Python packaging, and the shared renderer, the VS Code adapter and the Electron adapter are built in one private npm workspace. A single npm lockfile at the root and the root scripts install the dependencies, run the tests and the builds, package the VSIX locally and create a portable Electron archive for the current platform. The Python wheel and the source distribution include the initialization guide as a package resource. The VSIX and the desktop package contain the compiled shared code, their local assets and the license notices of their dependencies. Python and Git are prerequisites outside every package, which the user installs. The command line runs with Python and Git alone, and Node and Electron are needed only for the editors.
+Use Python packaging for the globally installed CLI and a private npm workspace
+for the shared renderer, VS Code adapter and Electron adapter. A single root npm
+lock and root scripts provide dependency installation, tests, builds, local VSIX
+packaging and current-platform portable Electron archives. Python wheels and source
+distributions include the initialization guide as a package resource. UI packages
+contain their shared compiled code, local assets and dependency license notices;
+Python and Git remain external prerequisites. CLI users need no Node or Electron.
 
-The VS Code extension is distributed as a VSIX that is built locally. It installs with the ordinary local install command or dialog of VS Code, and starting it with F5 is an optional workflow for developers. The desktop app runs from source or from the portable package of the current platform. Both editors run the `specspec` executable on the `PATH` by default, and explicit settings name another trusted executable. The packaging tools collect only the files that the runtime needs, and they check the contents of each artifact and that all versions agree.
-
-Building is separate from publishing, signing, tagging and committing. CI builds artifacts and uploads them without publishing anything, without installing hooks for the owner and without changing the owner's installed extensions. The documentation tells the platforms on which a product was tested from the targets on which it has not been run.
+The VSIX installs with VS Code's normal local install command or UI; F5 remains an
+optional developer workflow. Electron runs from source or a current-platform portable
+package. Both default to the installed specspec executable on PATH, with explicit
+trusted executable settings available. Packaging tools collect only intended runtime
+files and validate artifact contents/version alignment. CI can build and upload
+artifacts without publishing, installing owner hooks or modifying owner extensions.
+Documentation distinguishes tested local platforms from unexecuted targets.

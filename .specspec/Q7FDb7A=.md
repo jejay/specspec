@@ -4,8 +4,16 @@ type: requirement
 parents:
 - DFS2oJM=
 ---
-# Pin the build dependencies and ship only allowlisted runtime files with complete license notices
+# Keep local release dependencies pinned and qualification scoped
 
-One npm lockfile at the root records the registry address and the integrity hash of every dependency, and the private workspaces. The root manifest approves the install scripts of Electron, esbuild and the signature helper of the VSIX tool, each at a pinned version. The license notices name every bundled dependency with its version. They are derived from the input paths that esbuild actually read, so that hoisted, scoped and nested packages are all covered. A package contains the license of the project and the licenses of its dependencies, and its application files come from an allowlist of runtime files. The portable desktop runtime is an unpacked directory whose files can be inspected directly.
+One root npm lock records registry addresses/integrity and private workspaces.
+Pinned root script approvals cover Electron, esbuild and the VSIX signature helper.
+Actual esbuild input paths determine every bundled dependency/version license notice,
+including hoisted/scoped/nested packages. Packaging retains project and upstream
+licenses and allowlists application runtime files; the portable runtime remains
+unpacked and directly inspectable.
 
-The root manifest pins the Electron runtime and overrides the versions of selected transitive dependencies: undici, and the MSAL library of the VSIX tool, which the local creation of the VSIX needs. Build dependencies are part of neither shipped editor. An audit finding is reported together with its scope, and an override is revisited when upstream publishes a compatible release.
+The root manifest pins the Electron runtime and overrides selected transitive
+versions: undici, and the VSIX tool's MSAL dependency for local VSIX creation.
+Build dependencies stay out of both shipped UI runtimes. Audit findings are
+reported with their scope, and overrides follow compatible upstream releases.

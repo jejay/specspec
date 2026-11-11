@@ -5,10 +5,22 @@ parents:
 - xu6W0c4=
 - DiIJxaQ=
 ---
-# Keep the nodes beneath a removed node and put them up for reconsideration
+# Preserve surviving conclusions when a justification is removed
 
-A deletion through the tools removes exactly the nodes that it names. The nodes beneath a removed node keep their files, their text and their parent declarations, including the links to the parent that is missing. A conclusion that has lost an intention is up for reconsideration, and the loss decides nothing about it: whether the conclusion goes and whether its text holds without the lost intention are both open. A node beneath, whether the removed node was its only parent or one of several, is there to be rewritten, split, linked to another parent or deleted on purpose.
+Managed deletion physically removes exactly the explicitly named nodes. Surviving
+conclusions retain their files, binding text and parent declarations, including
+references to missing parents. A lost justification calls for reconsideration;
+it supplies neither an instruction to erase conclusions nor evidence that their
+remaining text is semantically justified. Shared and exclusive descendants remain
+available for deliberate rewriting, splitting, reparenting or explicit deletion.
 
-Owners and agents can inspect and edit a graph that is invalid in the working files. The tools report three things as separate facts: the faults of the structure, the nodes further down whose reasoning may be affected, and the text and links of a node before the change and at present. The differences in Git and messages that the owner leaves help an agent to infer what the owner intends, and the mere fact that a file is unchanged or deleted leaves the owner's motive open. A graph that is completed again is valid by the one set of rules: rooted, acyclic and free of shortcuts. A node file states what its node says, and every node that the files hold is in force.
+Owners and agents can inspect and edit invalid working graphs. Expose structural
+faults, potential downstream reasoning effects and previous/current binding context
+as distinct facts. Git differences and optional owner messages aid intent inference;
+unchanged or deleted files alone do not establish the owner's motive. A completed
+valid graph retains the rooted shortcut-free DAG contract. No approval or pending-
+review states are stored in canonical nodes.
 
-Before a selected file with uncommitted content is deleted, including one whose changes are staged, the tools warn. Git keeps the earlier reasoning, and the ordinary commit message records why a node was removed. A deleted node is visible as D against HEAD, and the earlier revisions are there to be read.
+Warn before deleting uncommitted selected files, including staged changes. Git
+retains earlier reasoning and ordinary commit messages record removal reasons.
+HEAD-relative D views and immutable historical context remain available.

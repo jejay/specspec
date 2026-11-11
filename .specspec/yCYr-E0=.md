@@ -7,6 +7,15 @@ parents:
 ---
 # Scale neutral arrow ink from seventy to thirty-five percent with zoom
 
-The ink of an ordinary link, on its curve and on its arrowhead, is the neutral link color of the theme mixed with black. At camera scales of 70% and above the mix holds 70% of the neutral color. Below that the share falls linearly to 35% at a scale of 16%, and it is 35% at every smaller scale: `strength = 0.35 + 0.35 * clamp((scale - 0.16) / (0.70 - 0.16), 0, 1)`. An invalid scale counts as actual size. Curve and arrowhead carry the same ink at full opacity, and the minimum sizes on screen and the geometry of the routes are independent of the ink.
+For normal curve/head pairs, mix theme neutral ink with black at 70% ink at camera
+scales of 70% and above. Decrease that proportion linearly to 35% at 16% scale
+and below:
+strength = 0.35 + 0.35 * clamp((scale - 0.16) / (0.70 - 0.16), 0, 1).
+Treat invalid scales as actual size. Apply the same ink at full opacity to the
+existing curve and head, retaining minimum screen dimensions and all route geometry.
 
-The camera sets one inherited CSS property, `--normal-edge-strength`, and the ink of ordinary links alone uses it. The hover emphasis of an ordinary link mixes the undimmed neutral color of the theme with the foreground color of the theme, whatever the zoom level. Added, removed and draft links follow their own rules for an emphasis in their hue, and the darkening of the links that do not touch a hovered card is a separate treatment. These constants are settings of the paint and belong to the presentation, apart from the data of the graph and its nodes.
+The camera sets one inherited normal-edge-strength property; only ordinary ink
+uses it. Normal incident-hover paint mixes original theme neutral/foreground ink,
+independently of the zoom dimming. Added/removed/draft colors keep their hue-emphasis
+rules. Non-incident hover darkening retains its separate context treatment. These
+bounded paint constants are revisable visual choices, not graph or node metadata.

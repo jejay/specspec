@@ -5,12 +5,35 @@ parents:
 - h3zqGZU=
 - VnSF9BE=
 ---
-# Compare a node's source links and the linked code independently of each other
+# Compare source declarations and resolved version locations independently
 
-For each node the comparison takes the source records of both revisions as exact multisets, in their normalized order. Equal records are paired occurrence by occurrence, and a record without a partner is reported explicitly as removed or as added. Every link and every duplicate is kept, with its source number in the normalized record of each side. Whether a revision of the node declares a link is one fact, and how the linked code compares is another: each distinct link of either revision is resolved against both versions of the code, also when only one revision of the node declares it. A change of an anchor, of ranges or of a description is a change of the link and is never taken for a change of the linked code.
+For each node, compare the exact multiset of source records in normalized ordering.
+Equal records pair by occurrence; unequal records are explicit removals/additions.
+Keep every reference and duplicate, with source numbers into each side's normalized
+record. A reference's declaration membership is independent of its code comparison:
+resolve each distinct union reference against both code versions even when only one
+node version declares it. Changes of anchors/ranges/descriptions remain declaration
+changes rather than inferred code changes.
 
-Links are resolved by the shared `SourceReader`, with its strict and expanding mapping, its evidence from renames and from context, its safe paths, its batched object reads, its caches and its limits. A structured reading holds for each side the actual path, the inclusive ranges and the outcome. A readable item shows one location with sparse hints of change and of uncertainty, and how the items are grouped is a matter of presentation. A link to a whole text file resolves to all its logical lines, and an empty text file gives an empty selection. A mapping that is missing, ambiguous, conflicting or unavailable is reported with that outcome, and the fragments that are left of a strict region in conflict count as an untrusted selection. For a binary file, an LFS pointer, invalid UTF-8 and a file beyond a limit the lines are reported as uncertain.
+Use shared SourceReader strict/expanding mapping, rename/context evidence, safe
+paths, batched objects, caches and budgets. Structured readings retain each side's
+actual path, inclusive ranges and outcome. Readable items show one location
+with sparse change/uncertainty hints; grouping is a presentation choice. Whole text-file hints resolve to all logical lines;
+empty text files have an empty selection. Missing/ambiguous/conflicting/unavailable
+mappings retain their outcomes; partial strict fragments remain untrusted selections.
+Binary, LFS, invalid UTF-8 and budget-limited files retain explicit line uncertainty.
 
-The cached bytes of a file are compared separately from the selected logical text and from its coordinates, which are the path and the ranges. Equal selected text at equal coordinates is `same`, equal text at changed coordinates is `relocated`, and trusted selected text that differs is `modified`. A selection that is untrusted or unreadable makes the result `unavailable`. These facts compare the two selected revisions with each other, whatever either resolution reports as changed since an older anchor. The bytes of a binary file or of an LFS pointer are compared where they are known, while its lines stay unavailable.
+Compare cached file bytes separately from selected logical text and path/range
+coordinates. Equal selected text at equal coordinates is same; equal text at changed
+coordinates is relocated; unequal trusted selected text is modified. Untrusted or
+unreadable selections are unavailable. These facts compare the selected revisions,
+independently of whether either resolver reports changes from an older anchor.
+Known binary/pointer bytes can still compare while line information is unavailable.
 
-The cautious impact that the tools share is a fact apart from these finer ones: a change anywhere in a declared file counts for the implementations that link the file and is passed on to their ancestors. This raw evidence about changed files stays available for a cautious review, and the hints of `query` are read separately, through the mode of each link: strict, expanding or path alone. A permitted edit adds no hint of a source change. A committed revision is resolved at its pinned commit and the working tree from the saved files, and each path is read once for each side where it is available. Working files are read one after another, each as it is at that moment. A read changes nothing: anchors, Git objects, refs, the index and commits stay as they are, nothing is fetched, and the judgment of an implementation stays with the reviewer.
+Keep the shared conservative declared-file impact and ancestor propagation separate
+from these finer facts. Raw changed-file evidence remains available for conservative
+review; query change hints are separately interpreted through each reference's
+strict/expanding/path-only contract. Permitted edits add no source-change cue. Resolve committed sources at
+pinned commits and workspace sources from saved files, reading each path once per
+side where available. Live file reads are not an atomic cross-file snapshot. Reads
+never reanchor, write objects/refs, fetch, stage, commit or approve implementation.

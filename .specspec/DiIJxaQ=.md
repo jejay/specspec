@@ -4,10 +4,18 @@ type: requirement
 parents:
 - VZvwDBY=
 ---
-# Form one rooted acyclic graph of a manifesto, requirements and implementation leaves
+# Represent justifications with a rooted requirement DAG
 
-A graph that is complete and structurally valid has exactly one manifesto, which is its root. A requirement has one or more parents, each of them the manifesto or another requirement. An implementation is a leaf with one or more requirements as parents. The graph is acyclic, and every node is reachable from the manifesto. The parents of one node may lie at different depths.
+A structurally valid completed graph uses one manifesto root, requirement nodes with one or more manifesto or requirement
+parents, and terminal implementation nodes with requirement parents. Every node is
+reachable from the manifesto in an acyclic graph. Parents may occupy different
+relative positions. Each requirement is a minimal coherent specification element;
+each implementation explains a realization of its parent requirements.
 
-A direct link points from an intention to a conclusion. A requirement is one coherent element of the specification, as small as it can be and still be complete, and an implementation explains how its parent requirements are realized. A statement gets a node of its own when its reasoning can be reviewed or reused separately. Headings and lists structure the text within one node.
+Direct links point from intention to conclusion. Split elements when independently
+reviewable or reusable reasoning warrants a separate identity. Headings and lists
+structure a coherent binding text.
 
-The direct links are free of shortcuts. All ancestors of a node are among its reasons, inherited through its parents.
+Immediate links preserve a shortcut-free graph. Ancestor bindings supply inherited
+justification, with downstream realization and review scoped by the separately
+reasoned shortcut-freedom contract.

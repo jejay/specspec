@@ -5,8 +5,14 @@ parents:
 - 3V6SdSA=
 - rvz48KY=
 ---
-# Reload the spotlight list on its own events, apart from reloads of the graph
+# Refresh Spotlight metadata from its own events
 
-The list of spotlights is loaded when a view opens, on Refresh, on configured polling and on the coalesced notifications of the spotlight store itself. An automatic synchronization that concerns the graph alone reads the node files and leaves unchanged spotlight metadata unread. The first load sets the baseline for arrivals, the store is watched in comparisons between commits as well, a list that failed to load is read again, and an arrival leaves editing, cameras and drafts as they are.
+Load the retained Spotlight list on opening, explicit Refresh and configured polling,
+and from its own coalesced store notifications. Graph-only automatic synchronization
+reads canonical context without rereading unchanged Spotlight metadata. Keep the
+first-load baseline, historical-view watching, retry after list errors and arrival
+preservation of native editing, cameras and drafts.
 
-Reads of the list by concurrent callers share one read in flight and at most one follow-up that an event requested. Polling requests the refresh of the graph and the refresh of the spotlights independently and is off by default. Every explicit change is validated against the current node files.
+Coalesce list reads across concurrent callers into one in-flight read and at most
+one event-driven follow-up. Polling requests graph and Spotlight refresh independently
+and remains off by default. Explicit mutations retain fresh canonical validation.

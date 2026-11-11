@@ -5,10 +5,20 @@ parents:
 - xCOHepQ=
 - ejSVfuc=
 ---
-# Draw implementation cards square, requirement cards rounded and the manifesto as a true circle
+# Fit square and rounded cards plus a true circular manifesto
 
-An implementation card has corners of 0px and a requirement card corners of 24px, compact and expanded. An ordinary compact card is 264×112, and an expanded one is 860 wide with the height of its content. The compact manifesto is 264×264 with a radius of 50%, and its content and its Git marker are centered and inset.
+Use 0px Implementation and 24px Requirement corners in compact and expanded views.
+Ordinary compact cards are 264×112; expanded width is 860 with intrinsic height.
+Compact manifesto is 264×264 with 50% radius and centered inset content/Git marker.
 
-The expanded manifesto is a square with a radius of 50% that holds the same form as every other card, at 822px of content width. Its diameter is `ceil(hypot(822, intrinsicContentHeight) + 48)`. The form is centered, its intrinsic height is measured, and the diameter is computed again when the form or a textarea is resized. This footprint is a true circle with room for a typical line of 80 columns, and framing and panning bring its larger area in the world into view. A fallback for the measured height serves only tests that run without layout.
+Retain the same native form at 822px content width inside an expanded square/50%
+root. Diameter is `ceil(hypot(822, intrinsicContentHeight) + 48)`. Center the form,
+measure intrinsic height and recalculate on form/textarea resize. The footprint
+provides a true circle and typical 80-column content budget; framing/panning exposes
+its larger world area. A measurement fallback is confined to layout-less tests.
 
-The routing of the links receives the shape and the radius of each card as transient data. The ports of a circle span the middle 40% of its height and lie on the chord of the circle at their height. The ports of a rounded card lie on its actual outline. An endpoint keeps 3 units of clearance, and a link leaves and arrives in a straight segment that clears the bounding box before it turns. Obstacles and corridors are computed from the conservative bounding boxes. A change of shape or footprint leaves the palette and the tints, the labels and the hover, the DOM of the form with its text cursor, the camera and the behavior of sources and references as they are.
+Pass transient shape/radius data to routing. Circular ports span middle 40% of
+height and use chord boundaries. Rounded ports use their actual outline. Keep
+3-unit endpoint clearance and straight bounding-box-clearing departure/settling
+segments before turns; conservative boxes determine obstacles/corridors. Preserve
+palette/tints, labels/hover, native DOM/caret, camera and source/reference behavior.

@@ -5,8 +5,15 @@ parents:
 - fuyy0Lk=
 - 0dvOn3A=
 ---
-# Let owners and agents read a graph with broken links and repair it deliberately
+# Explore broken justification and resolve it deliberately
 
-The command line and the graph editors read and edit a specification whose working files form an invalid graph, and every surviving node keeps its reasoning. Four things are reported apart: whether an operation succeeded, whether the structure is valid, whether the analysis is complete, and which nodes a change may affect in meaning. A reader sees the links that the nodes declare at present, the targets that are missing or unreadable, the earlier text and links, the parents that survive and the paths from a cause down to the nodes beneath it. Observed changes of files and messages from the owner support a reading of what the owner intends and settle nothing.
+Read and edit an invalid working specification without discarding surviving reasoning.
+Keep operation success, structural validity, evidence completeness and potential
+semantic consequences distinct. Show current declarations, missing/unreadable targets,
+previous bindings, surviving justifications and downstream cause paths. Observed file
+changes and optional owner messages support intent inference without deciding it.
 
-Inspection covers components that are disconnected from the manifesto and components that form a cycle, and a metric that cannot be computed is reported as unavailable. A repair rewrites, splits, relinks or explicitly deletes conclusions, each as a deliberate step. Whether the completed graph is valid can be checked on its own, also against the exact bytes of the index. The repair works on the node files alone, as they are.
+Inspection includes disconnected and cyclic components and reports unavailable
+metrics honestly. Deliberate resolution may rewrite, split, relink or explicitly
+remove conclusions. Completed validity remains independently checkable, including
+against exact staged bytes. No canonical lifecycle or approval metadata is required.

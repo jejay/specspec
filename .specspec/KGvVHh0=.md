@@ -6,8 +6,21 @@ parents:
 ---
 # Retry superseded reads without diagnosing invalid files
 
-A completed read is superseded when the actual stamp of the open documents or the generation of the project changed while it ran. This is a case of its own, apart from an invalid specification, an unavailable source and a closed project. The result of a superseded read is discarded, and the read is repeated a limited number of times within one refresh. When continuing change uses up the attempts of an automatic refresh, one follow-up is coalesced through the event queue. Until a current result arrives, the displayed graph, the forms, the text cursor, the cameras, the highlights and the enabled actions stay as they are. A read of the working files that the owner requested reports that it was superseded and requests a follow-up; it makes no claim that a file is invalid.
+A completed read whose actual document stamp or project generation changed is
+superseded, distinct from an invalid specification, unavailable source or closed
+project. Discard its result. Retry a bounded number of times within each refresh;
+when ongoing change exhausts an automatic refresh, coalesce a follow-up through the
+existing event queue. Preserve the displayed graph, native forms, caret, cameras,
+highlights and action eligibility while awaiting a current result. Explicit working reads
+report supersession and request a follow-up rather than claiming file invalidity.
 
-A read of a graph that breaks a rule and can be diagnosed publishes the current relationships and findings. The marked last graph that loaded appears only when the current files, the format or the connection to the command line are unavailable. The read before each change, trust, version checks, the guards of the writer, the deadline of each operation and polling that is off by default apply as in every other case. Retry work that is pending is disposed when the session closes. The publication of a spotlight and other bursts of notifications follow the same rules: a new generation is a reason to read again and no diagnosis.
+Diagnosable graph-invalid reads publish fresh relationships and findings. Only
+unavailable current-file/schema/transport results enter marked last-usable context. Preserve existing mutation preflights, trust, version checks, writer guards,
+per-operation deadlines and default-off polling. Dispose pending retry work when
+the session closes. Spotlight publication and other notification bursts retain
+these same rules; notification generation is evidence to reread, not a diagnosis.
 
-The first read of a node-file editor follows the same rule with three attempts before the custom editor is attached. A fresh lease carries the generation and the actual document stamp of the successful read. When that read really fails, the fallback is attached with its error notification and without waiting for the owner to answer it, and the editor for repair stays available.
+Native bootstrap uses the same bounded three-attempt supersession policy before
+custom-editor attachment. A fresh lease carries the successful generation and
+actual document stamp. Real failure fallback attaches independently of owner
+interaction with its error notification; the repairable editor stays available.

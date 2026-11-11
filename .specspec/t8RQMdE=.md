@@ -5,8 +5,13 @@ parents:
 - eLTZ3sg=
 - ME4UXTA=
 ---
-# Edit a selected node among its parents and children
+# Edit a selected node inside its relationship context
 
-The owner selects a node and edits it in place: its Markdown text, its parent links and its source links. The selected node becomes an expanded card that holds this form, and its direct parents and children stand around it as compact cards. The Total graph action returns to the overview and keeps the draft.
+Selecting a node focuses its direct parents and children around an expanded card
+containing its binding text, parent links and source settings. Neighbors remain
+compact. A Total graph action returns to the overview with the draft retained.
 
-From the selected node the owner moves on to any of its neighbors. The editor shows which revision the displayed details belong to, and it keeps unsaved input through a refresh and through an error. The details of a comparison between commits can be selected and are read-only, and the forms of the working files are editable.
+Allow navigation to neighbors. Project panels change focus; bound native file
+editors open the neighbor's own resource. Show revision context and preserve
+unsaved input through refresh and errors. Historical details are selectable and
+read-only, and ordinary working forms stay editable.

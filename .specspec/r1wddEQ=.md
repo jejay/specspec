@@ -4,6 +4,11 @@ type: requirement
 parents:
 - VZvwDBY=
 ---
-# Bring the graph to a maturity that building can follow
+# Plan an implementation-mature current specification spectrum
 
-An agent works on the specification in phases: owner planning, structure review, tandem planning, agent planning and implementation. It reads what the owner changed before it acts, tells the owner's intentions from the conclusions they suggest and draws the further conclusions that building needs. The graph is mature when it states observable behavior and the conclusions about its realization precisely enough that implementing it comes close to compiling it. Node text describes the product as it is and ought to be at this point, and Git holds the earlier states and the reasons for changes.
+Apply owner, structure-review, tandem, agent-planning and implementation phases to specification
+work. Tell the owner's intentions from the conclusions they suggest and independently
+reason the conclusions needed for precise implementation. Inspect owner edits before
+action. Current binding text describes the product at this point in positive language;
+Git records reasoning changes and earlier states. Specify observable behavior and
+meaningful conclusions about its realization deeply enough for a faithful implementation attempt.

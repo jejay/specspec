@@ -4,8 +4,19 @@ type: requirement
 parents:
 - kiOMI7I=
 ---
-# Select a part of the graph from a root by distance or by influence
+# Select rooted query subgraphs by distance or influence
 
-`query` reads the whole graph or selects a subgraph that starts at the manifesto or at a node that is named. The nodes are taken in the order of one of three measures: the minimum distance from the root, the maximum distance from the root, or the influence, which is the absolute number of a node itself plus its unique descendants, with no logarithm applied. For the distances the smaller values come first, and for influence the larger ones.
+Query can read the whole graph or search a subgraph starting at the manifesto or
+a specified node. Order next-node selection by minimum distance, maximum distance
+or absolute non-logarithmic influence, counting self plus unique descendants.
+Distances prioritize smaller values; influence prioritizes larger values.
 
-A limit given as a number includes the nodes that equal it: `--max-distance 2` selects the root, at distance zero, and the first two levels. A limit given as a percentage stops at that share of the size of the graph, in the order of the measure: `--max-distance 50%` selects 62 of 124 nodes. A node that several paths reach counts once. With two or all three measures the result is the union of the subgraphs that each selects on its own. The selected nodes appear with their complete text and their relationships. A selection leaves the rest of a query as it is: the compared revisions, the reading of source links and the read-only nature.
+An absolute stop criterion includes equality: --max-distance 2 includes the root
+at zero and the first two levels. A percentage stops at that fraction of graph
+size in metric-priority order: --max-distance 50% selects 62 of 124 nodes. Shared
+nodes count once. When two or all three metrics are supplied, return the union of
+the independently selected subgraphs. Present complete selected bindings and
+relationships, preserving the query's revision, source and read-only contracts.
+
+Keep queries quick by batching graph metrics and reusing selection, revision and
+source work within each invocation. Resolve saved data freshly on each call.

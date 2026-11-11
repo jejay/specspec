@@ -4,6 +4,10 @@ type: requirement
 parents:
 - rgGL5FY=
 ---
-# Make a coherent change to several nodes with the commands of a single edit
+# Compose coherent changes with one editing vocabulary
 
-A single edit and a coherent change to several nodes use the same `add`, `update` and `delete` commands. People and agents combine these commands directly in one invocation and link the nodes that it creates before their random IDs are known. The invocation has one explicit result and is recovered as one. Reading and every other operation is an invocation of its own.
+Use the same add, update and delete vocabulary for an individual edit and a coherent
+multi-node change. People and agents can combine those editing commands directly in
+one invocation and connect newly created nodes before their random IDs are known.
+The invocation has one explicit outcome and one recovery scope. Inspection and other
+operations retain their standalone meanings.
