@@ -170,7 +170,14 @@ def score_drawing(task: tasks.Task, data: dict, verdict: dict) -> dict:
         "an owner's way and its purpose are two nodes": [sum(clean), len(clean)],
         "the same, with the purpose also in the manifesto": [sum(stated), len(stated)],
     }
-    numbers = {**measured, "nodes that blend decisions": len(blended)}
+    numbers = {
+        **measured,
+        "nodes that state the limits": len(limits.get("nodes") or []),
+        "nodes that blend decisions": len(blended),
+    }
+    if "own_choice_nodes" in verdict:  # asked since the rubric counts them
+        own = {found(nodes, key) for key in verdict["own_choice_nodes"] or []} - {None}
+        numbers["nodes that record a choice of the agent's own"] = len(own)
     return {"pass": passed, "counts": counts, "numbers": numbers}
 
 
@@ -232,7 +239,7 @@ def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
     return {"pass": passed, "counts": {}, "numbers": numbers}
 
 
-def score_review(task: tasks.Task, data: None, verdict: dict) -> dict:
+def score_review(task: tasks.Task, data: str, verdict: dict) -> dict:
     identified = {
         name: yes(value) for name, value in sorted((verdict.get("identified") or {}).items())
     }
@@ -244,7 +251,35 @@ def score_review(task: tasks.Task, data: None, verdict: dict) -> dict:
     return {"pass": identified, "counts": {}, "numbers": numbers}
 
 
-def score_owner_review(task: tasks.Task, data: None, verdict: dict) -> dict:
+def score_discussion(task: tasks.Task, data: str, verdict: dict) -> dict:
+    """A round of tandem planning: the answer discusses the product and changes nothing."""
+
+    def count(name: str) -> int:
+        value = verdict.get(name)
+        return int(value) if isinstance(value, int | float) else 0
+
+    passed = {
+        "the answer leaves the graph as it is": yes(verdict.get("leaves_graph")),
+        "it talks about the product rather than about nodes": yes(verdict.get("about_product")),
+        "it gives an overview of its understanding": yes(verdict.get("overview")),
+        "it tells a want apart from the way the owner named": yes(
+            verdict.get("separates_want_from_way")
+        ),
+        "it challenges a choice the owner suggested": yes(verdict.get("challenges_a_choice")),
+        "it proposes conclusions of its own": yes(verdict.get("own_conclusions")),
+        "it asks questions and answers most of them itself": count("questions") > 0
+        and 2 * count("questions_with_own_answer") >= count("questions"),
+    }
+    numbers = {
+        "words": len(data.split()),
+        "questions": count("questions"),
+        "questions with a tentative answer": count("questions_with_own_answer"),
+        "wrong claims": len(verdict.get("wrong_claims") or []),
+    }
+    return {"pass": passed, "counts": {}, "numbers": numbers}
+
+
+def score_owner_review(task: tasks.Task, data: str, verdict: dict) -> dict:
     """The structure review of the owner's edits: found problems and how they are put."""
     identified = {
         name: yes(value) for name, value in sorted((verdict.get("identified") or {}).items())
@@ -399,6 +434,7 @@ def score_owner_plan(task: tasks.Task, data: dict, verdict: dict) -> dict:
 
 SCORERS = {"clinic": score_drawing, "bakery": score_drawing, "review": score_review}
 SCORERS["owner-edits-plan"] = score_owner_plan
+SCORERS["discuss"] = score_discussion
 SCORERS.update({"revise": score_revision, "revise-phones": score_revision})
 SCORERS.update({"owner-edits": score_owner_review, "owner-edits-apply": score_owner_apply})
 SCORERS["owner-edits-unanswered"] = SCORERS["owner-edits-commands"] = score_owner_apply
@@ -413,7 +449,7 @@ def judged(task: tasks.Task) -> bool:
 
 def score(task: tasks.Task, text: str, verdict: dict | None = None) -> dict | None:
     """Criteria for one answer; None when the answer cannot be read."""
-    data = None if task.answer == "text" else tasks.parse(text)
-    if task.answer != "text" and not data:
+    data = text if task.answer == "text" else tasks.parse(text)
+    if not data:
         return None
     return SCORERS[task.name](task, data, verdict or {})

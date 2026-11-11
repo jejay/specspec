@@ -88,7 +88,12 @@ TASKS = {
             about="The owner edited nodes by hand and asks for one more thing; then plan.",
             base="owner-edits",
         ),
-        Task("discuss", "text", about="The bakery brief as a discussion round; read by a person."),
+        Task(
+            "discuss",
+            "text",
+            "discuss",
+            about="The bakery brief as a round of tandem planning: discuss, change nothing.",
+        ),
         Task(
             "explain-cases", "text", about="One node, siblings or parent and child, in own words."
         ),

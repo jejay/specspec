@@ -10,6 +10,7 @@ sources:
 - path: tools/guide_quiz/guides/2026-11-10-before-structure-rules.md
 - path: tools/guide_quiz/guides/2026-11-11-structure-review.md
 - path: tools/guide_quiz/guides/2026-11-11-structure-rules.md
+- path: tools/guide_quiz/guides/experiments/commands-compact.md
 - path: tools/guide_quiz/guides/experiments/examples-only.md
 - path: tools/guide_quiz/guides/experiments/five-lines.md
 - path: tools/guide_quiz/guides/experiments/long-rules-section.md
@@ -18,10 +19,18 @@ sources:
 - path: tools/guide_quiz/guides/experiments/rule-sentences-check-sentence.md
 - path: tools/guide_quiz/guides/experiments/rule-sentences-phase-sentence.md
 - path: tools/guide_quiz/guides/experiments/rule-sentences.md
+- path: tools/guide_quiz/guides/experiments/tandem-compact-questions.md
+- path: tools/guide_quiz/guides/experiments/tandem-in-shipped.md
+- path: tools/guide_quiz/guides/experiments/tandem-overview-separates.md
+- path: tools/guide_quiz/guides/experiments/tandem-separate-then-questions.md
+- path: tools/guide_quiz/guides/experiments/tandem-three-parts.md
 - path: tools/guide_quiz/guides/experiments/trim-1-asides.md
 - path: tools/guide_quiz/guides/experiments/trim-2-tightened.md
+- path: tools/guide_quiz/guides/experiments/trim-2-depth.md
 - path: tools/guide_quiz/guides/experiments/trim-3-compact.md
+- path: tools/guide_quiz/guides/experiments/trim-3-depth.md
 - path: tools/guide_quiz/guides/experiments/trim-4-skeleton.md
+- path: tools/guide_quiz/guides/experiments/trim-candidate.md
 ---
 # Guide versions kept as files
 
@@ -33,7 +42,10 @@ for a copy. Four files are dated states of the shipped guide: the one released w
 and the one of 2026-11-11 with the structure review and the fuller contrast rule. Seven
 files under `guides/experiments/` are variants of the 2026-11-10 guide: five lines only,
 worked examples only, rule sentences, rule sentences with a phase sentence or with a
-check sentence, rule sentences with worked examples, and a long rules section. Five more
-are variants of the guide with the structure review: four trimmed versions of 11.5, 9.9,
-7.1 and 3.6 KB, each cutting further than the one before, and one whose structure review
-also names merging.
+check sentence, rule sentences with worked examples, and a long rules section. Fourteen
+more are variants of the guide with the structure review: four trimmed versions of 11.5,
+9.9, 7.1 and 3.6 KB, each cutting further than the one before; the second and the third
+of them with the sentences about depth put back; a candidate of 8.2 KB that keeps what
+the quizzes showed a loss without; four copies of the candidate with other wordings of
+tandem planning; the guide with only its Commands section shortened, and with only its
+tandem planning paragraph replaced; and one whose structure review also names merging.

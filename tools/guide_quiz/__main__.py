@@ -131,12 +131,15 @@ def grade(arguments) -> None:
         if grade.get("verdict")
     }
     pending = {}
-    for answer in results.load("tasks"):
+    wanted = set(listed(arguments.tasks))
+    for answer in chosen(results.load("tasks"), arguments):
         task = tasks.TASKS.get(answer["task"])
+        if wanted and answer["task"] not in wanted:
+            continue
         if task and grading.judged(task) and answer.get("text"):
             identity = grading.answer_id(task.name, answer["text"])
             judge = commands.GRADER if task.answer == "commands" else arguments.grader
-            if (identity, judge) not in done:
+            if (identity, judge) not in done or task.name in listed(arguments.again):
                 pending[identity] = (task, answer["text"])
     system = grading.context()
     log = results.Log("grades")
@@ -235,6 +238,10 @@ def parser() -> argparse.ArgumentParser:
     sub = command("grade", grade, "Grade the open answers that have no grade yet.")
     sub.add_argument("--grader", default=grading.GRADER)
     sub.add_argument("--workers", type=int, default=4)
+    sub.add_argument("--again", default="", help="tasks to judge anew, comma-separated")
+    sub.add_argument("--models", default="", help="only answers of these models")
+    sub.add_argument("--guides", default="", help="only answers given with these guides")
+    sub.add_argument("--tasks", default="", help="only answers to these tasks")
     sub = command("report", show, "Print the result tables.")
     sub.add_argument("--grader", default=grading.GRADER)
     sub.add_argument("--reasons", action="store_true", help="list answers that miss the key")

@@ -2,8 +2,8 @@
 
 A task of this kind asks for the editing commands as a model would type them. Every line
 is split into words the way a POSIX shell splits it and handed to specspec's own command
-line inside this process. Only ``add``, ``update`` and ``delete`` run, and the project is
-a temporary folder with the base graph committed in it.
+line in a process of its own. Only ``add``, ``update`` and ``delete`` run, and the project
+is a temporary folder with the base graph committed in it.
 
 Of the shell itself the quiz knows quoting, ``&&`` and ``;`` between commands, and
 ``NAME=$(specspec ...)``, which keeps what the command printed. A line that puts an
@@ -16,12 +16,10 @@ import json
 import re
 import shlex
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
-from click.testing import CliRunner
-
-from specspec import cli
 from specspec.format import serialize
 from specspec.model import FORMAT_VERSION, SpecNode
 from specspec.workspace import SPEC_DIR, load_snapshot
@@ -136,6 +134,24 @@ def result(folder: Path, name: str) -> tuple[dict[str, dict], dict[str, list[str
     return nodes, summary, [f"{d.code} {d.node_id or ''}".strip() for d in errors]
 
 
+def specspec(folder: Path, arguments: list[str]) -> tuple[int, str, str]:
+    """One invocation in the project: its exit code, what it printed, and that with errors."""
+    command = [sys.executable, "-m", "specspec", "--root", str(folder), *arguments]
+    try:
+        done = subprocess.run(
+            command,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        return 124, "", "The command did not end within two minutes."
+    return done.returncode, done.stdout, done.stdout + done.stderr
+
+
 def run(data: dict, name: str) -> dict:
     """What an answer's ``commands`` do to the base graph."""
     runs, ignored, unset = [], [], 0
@@ -155,14 +171,10 @@ def run(data: dict, name: str) -> dict:
             unset += missing
             printed = []
             for arguments in editing:
-                done = CliRunner().invoke(cli.main, ["--root", str(folder), *arguments])
-                printed.append(done.stdout)
+                exit_code, stdout, output = specspec(folder, arguments)
+                printed.append(stdout)
                 runs.append(
-                    {
-                        "line": shlex.join(arguments),
-                        "exit": done.exit_code,
-                        "output": done.output[-600:],
-                    }
+                    {"line": shlex.join(arguments), "exit": exit_code, "output": output[-600:]}
                 )
             if assignment:
                 variables[assignment.group(1)] = "\n".join(printed).strip()

@@ -140,8 +140,10 @@ that leave the results where they were are candidates for the shipped guide.
 
 Calls go through the `claude` command of Claude Code under your own login and cost money,
 so no test and no CI job makes them; `costs` adds up what the recorded calls cost. Grading
-by Claude Opus 5.5 is most of that. `agreement` shows, criterion by criterion, where a
-cheaper grader comes to the same verdicts. Runs are resumable: answers already given are
-kept under the name of their task or dilemma, so a brief or a dilemma whose wording
-changes gets a new name. Raw answers stay in the ignored `tools/guide_quiz/results/`; put
-the numbers that justify a wording into the commit message.
+by Claude Opus 5.5 is most of that: `grade --guides` limits it to the guide versions you
+compare, and `agreement` shows, criterion by criterion, where a cheaper grader comes to
+the same verdicts. Runs are resumable: answers already given are kept under the name of
+their task or dilemma, so a brief or a dilemma whose wording changes gets a new name.
+After a change to a rubric, `grade --again TASK` judges that task's answers anew. Raw
+answers stay in the ignored `tools/guide_quiz/results/`; put the numbers that justify a
+wording into the commit message.

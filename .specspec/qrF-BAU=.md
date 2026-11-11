@@ -21,6 +21,7 @@ sources:
 - path: tools/guide_quiz/quizzes/clinic.rubric.md
 - path: tools/guide_quiz/quizzes/dilemmas.json
 - path: tools/guide_quiz/quizzes/discuss.md
+- path: tools/guide_quiz/quizzes/discuss.rubric.md
 - path: tools/guide_quiz/quizzes/explain-cases.md
 - path: tools/guide_quiz/quizzes/explain-rules.md
 - path: tools/guide_quiz/quizzes/grader.md
@@ -51,8 +52,8 @@ and an empty working folder. `dilemmas.py` reads 52 dilemmas from `quizzes/dilem
 22 about the structure of a graph and 30 about routine, phases, commands and wording, and
 shuffles their options the same way for every model and guide. `tasks.py` and the briefs
 in `quizzes/` define the open tasks: two briefs to draw a graph from, two requests to
-revise a graph, one flawed graph to review and three questions whose answers a person
-reads. Five more tasks start from nodes that the owner edited by hand: a structure review
+revise a graph, one flawed graph to review, one brief to discuss in tandem planning and
+two questions whose answers a person reads. Five more tasks start from nodes that the owner edited by hand: a structure review
 of them, the planning after the owner accepted three suggestions and declined three or
 left three unanswered, that planning written as command lines, and the planning of a
 further request while the edits are unreviewed.
@@ -60,13 +61,15 @@ further request while the edits are unreviewed.
 `graphs.py` builds the graphs that models return, checks them with
 `specspec.graph.build_graph` and scans node text for build order. `commands.py` writes a
 task's base graph into a temporary folder, commits it, splits each command line of an
-answer into words as a POSIX shell does and passes `add`, `update` and `delete` to
-`specspec.cli` in the same process. Of the shell it knows quoting, `&&`, `;` and
+answer into words as a POSIX shell does and runs `add`, `update` and `delete` with
+specspec's command line, each invocation in a process of its own. Of the shell it knows quoting, `&&`, `;` and
 `NAME=$(specspec ...)`; an editing command inside any other construct counts as one that
 fails. `grading.py` gives a grader the rubric, the task and the answer, never the model
 or the guide, and turns its findings into criteria that both drawing briefs share. The
-planning tasks are scored from the resulting graph, and drawn graphs are also measured
-for negative wording. `results.py` keeps raw answers in the ignored `results/` folder,
+planning tasks are scored from the resulting graph. Drawn graphs are also measured for
+negative wording, and their rubrics count the nodes that record a choice of the agent's
+own. `grade` judges the answers that have no verdict yet, for all guides or the named
+ones, and judges a named task anew. `results.py` keeps raw answers in the ignored `results/` folder,
 one file per process. `report.py` prints one column per model and guide, for all of them
 or for the named ones, with the share of right answers for the dilemmas about structure
 and for the others. It compares two graders on the answers both graded and adds up what

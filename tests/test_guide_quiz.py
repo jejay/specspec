@@ -274,7 +274,7 @@ def test_a_drawing_is_scored_from_the_graph_and_the_graders_findings():
             "outcome_text_free_of_means": False,
         },
         "double_booking_own_node": False,
-        "limits": {"nodes": [], "all_three_stated": False},
+        "limits": {"nodes": ["desk", "week"], "all_three_stated": False},
         "paper_phone": {"nodes": [], "separate_nodes": False},
         "work_order": {"order_nodes": ["plan"], "order_in_text": []},
         "category_nodes": [],
@@ -297,6 +297,11 @@ def test_a_drawing_is_scored_from_the_graph_and_the_graders_findings():
     assert passed["the report names open points"]
     assert score["counts"]["the same, with the purpose also in the manifesto"] == [1, 2]
     assert score["numbers"]["nodes that blend decisions"] == 1
+    assert score["numbers"]["nodes that state the limits"] == 2
+    assert "nodes that record a choice of the agent's own" not in score["numbers"]
+    counted = {**verdict, "own_choice_nodes": ["gateway", "no-such-node", "gateway"]}
+    numbers = grading.score(tasks.TASKS["clinic"], text, counted)["numbers"]
+    assert numbers["nodes that record a choice of the agent's own"] == 1
     assert grading.score(tasks.TASKS["clinic"], "not json", verdict) is None
 
     question = grading.prompt(tasks.TASKS["clinic"], text)
@@ -561,6 +566,34 @@ def test_a_structure_review_and_the_planning_after_it_are_scored():
     assert not score["pass"]["unanswered: the warranty slip stays under the card view"]
 
 
+def test_a_round_of_tandem_planning_is_scored():
+    task = tasks.TASKS["discuss"]
+    assert "What do you think?" in tasks.brief(task.name)
+    verdict = {
+        "leaves_graph": True,
+        "about_product": True,
+        "overview": True,
+        "questions": 4,
+        "questions_with_own_answer": 3,
+        "separates_want_from_way": True,
+        "challenges_a_choice": False,
+        "own_conclusions": True,
+    }
+    score = grading.score(task, "I would use the mailbox. Which days are you closed?", verdict)
+    assert score["numbers"] == {
+        "words": 10,
+        "questions": 4,
+        "questions with a tentative answer": 3,
+        "wrong claims": 0,
+    }
+    assert score["pass"]["it asks questions and answers most of them itself"]
+    assert not score["pass"]["it challenges a choice the owner suggested"]
+    silent = grading.score(task, "Done.", {**verdict, "questions": 0, "leaves_graph": False})
+    assert not silent["pass"]["it asks questions and answers most of them itself"]
+    assert not silent["pass"]["the answer leaves the graph as it is"]
+    assert "<review>" in grading.prompt(task, "Done.")
+
+
 def test_command_lines_are_split_as_a_shell_splits_them():
     line = "specspec add --as goal --parent Bx7Rp2A= -m '# No mix-ups' -m \"Two words\""
     assert commands.invocations(line) == (
@@ -608,7 +641,7 @@ def test_the_commands_of_an_answer_run_on_a_copy_of_the_base_graph():
         ],
         "report": "Done.",
     }
-    verdict = commands.run(answer, task.base)
+    verdict = first = commands.run(answer, task.base)
     assert [run["exit"] for run in verdict["runs"]] == [0, 0, 0], verdict["runs"]
     assert verdict["ignored"] == ["specspec query --max-distance 2"] and verdict["expanded"] == 0
     assert verdict["problems"] == [] and len(verdict["summary"]["added"]) == 1
@@ -656,10 +689,38 @@ def test_the_commands_of_an_answer_run_on_a_copy_of_the_base_graph():
         {
             "answer": grading.answer_id(task.name, answers[0]["text"]),
             "grader": commands.GRADER,
-            "verdict": commands.run(answer, task.base),
+            "verdict": first,
         }
     ]
     assert "every editing command runs" in report.task_report(answers, grades)
+
+
+def test_grade_runs_pending_command_answers_without_a_model(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GUIDE_QUIZ_RESULTS", str(tmp_path))
+    answer = json.dumps({"commands": ["specspec delete St3Pln8="], "report": "Done."})
+    cell = {"model": "claude-haiku-5-5", "guide": "five-lines", "repetition": 0}
+    log = results.Log("tasks")
+    log.append({"task": "owner-edits-commands", "text": answer, **cell})
+    log.append({"task": "review", "text": "A review that only a model can grade.", **cell})
+
+    def no_model(*arguments, **options):
+        raise AssertionError("a command answer needs no model")
+
+    monkeypatch.setattr(models, "ask", no_model)
+    command_line.main(["grade", "--tasks", "owner-edits-commands"])
+    assert "1 calls to make" in capsys.readouterr().out
+    (grade,) = results.load("grades")
+    assert grade["grader"] == commands.GRADER and grade["verdict"]["runs"][0]["exit"] == 0
+    assert grade["verdict"]["summary"]["deleted"] == ["St3Pln8="]
+
+    command_line.main(["grade", "--tasks", "owner-edits-commands", "--guides", "five-lines"])
+    assert "0 calls to make" in capsys.readouterr().out
+    command_line.main(
+        ["grade", "--tasks", "owner-edits-commands", "--again", "owner-edits-commands"]
+    )
+    assert "1 calls to make" in capsys.readouterr().out and len(results.load("grades")) == 2
+    command_line.main(["grade", "--tasks", "owner-edits-commands", "--models", "claude-opus-5-5"])
+    assert "0 calls to make" in capsys.readouterr().out
 
 
 def test_planning_beside_unreviewed_owner_edits_is_scored():

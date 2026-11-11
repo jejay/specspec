@@ -51,6 +51,7 @@ Fill in this JSON object. Use null where no such node exists.
  "label_titles": ["keys of requirement nodes whose title is a bare topic label without a verb, such as 'Reminders' or 'Data storage'"],
  "implementation_nodes_that_are_choices": ["keys of nodes of type implementation whose text records a decision about the product or its technology rather than explaining files that exist"],
  "blended_nodes": [{"key": "node key", "why": "names the two or more decisions in this node that serve different purposes and could clearly be replaced independently"}],
+ "own_choice_nodes": ["keys of nodes whose main subject is a decision that the owner's brief neither states nor suggests, so that the agent made it on its own, such as what a cancelled appointment leaves behind or who may move an appointment; leave out nodes that record what the owner said, the purpose behind it or a choice the owner suggested"],
  "report": {
   "names_own_choices": "true if the report tells the owner which choices the agent made on its own",
   "names_open_points": "true if the report names open questions or uncertainty",
