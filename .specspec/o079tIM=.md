@@ -4,7 +4,7 @@ type: requirement
 parents:
 - 1zcoS-g=
 ---
-# Teach the guide's concepts with one vocabulary and one small example
+# Teach the guide's concepts with one vocabulary and one small example graph
 
 The guide names what nodes say with two words, outcome and choice, and the two sides
 of a link with two more, intention and conclusion. Node types appear under their own
