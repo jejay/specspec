@@ -1,5 +1,6 @@
 """The guide quiz's own logic, checked without calling a model."""
 
+import argparse
 import json
 import subprocess
 import tomllib
@@ -7,7 +8,18 @@ from pathlib import Path
 
 import pytest
 
-from tools.guide_quiz import dilemmas, grading, graphs, guides, models, report, results, tasks
+from tools.guide_quiz import __main__ as command_line
+from tools.guide_quiz import (
+    commands,
+    dilemmas,
+    grading,
+    graphs,
+    guides,
+    models,
+    report,
+    results,
+    tasks,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOL = ROOT / "tools/guide_quiz"
@@ -101,12 +113,14 @@ def test_the_letter_is_read_from_the_first_line(reply, letter):
 def test_every_task_has_its_files_and_every_graded_task_a_scorer():
     for name, task in tasks.TASKS.items():
         assert tasks.brief(name).strip(), name
-        assert task.answer in {"graph", "operations", "text"}
+        assert task.answer in {"graph", "operations", "commands", "text"}
+        if grading.judged(task):
+            assert name in grading.SCORERS and bool(task.rubric) != (task.answer == "commands")
         if task.rubric:
-            assert tasks.rubric(task) and name in grading.SCORERS
+            assert tasks.rubric(task)
         if task.answer == "graph":
             assert task.root_names and name in grading.PROBES
-        if task.answer == "operations":
+        if task.answer in ("operations", "commands"):
             base, _ = graphs.base(task.base)
             assert graphs.problems(base) == []
             for key, record in base.items():
@@ -132,6 +146,13 @@ def test_answers_are_parsed_with_or_without_a_fence_and_salvaged_when_broken():
     salvaged = tasks.parse(broken)
     assert salvaged["salvaged"] and [n["key"] for n in salvaged["nodes"]] == ["a", "b"]
     assert salvaged["report"] == "r"
+    stray = '{"commands": ["specspec delete A=", "specspec add -m \'# B\'"], "report": "r"]}'
+    assert tasks.parse(stray) == {
+        "commands": ["specspec delete A=", "specspec add -m '# B'"],
+        "report": "r",
+        "salvaged": True,
+    }
+    assert tasks.parse('{"commands": "none", "report": "r"]}') is None
     assert tasks.parse("no json here") is None and tasks.parse(None) is None
 
 
@@ -400,6 +421,26 @@ def test_results_are_kept_per_process_and_reported_per_model_and_guide(tmp_path)
     table = report.dilemma_report(records, reasons=True)
     assert "1: haiku-5-5 with guide shipped" in table and "2/3" in table and "67%" in table
     assert f"- {item['id']} haiku-5-5 shipped: chose" in table
+    shares = {line[:56].strip(): line[56:].strip() for line in table.splitlines()}
+    assert shares["percent, structure of a graph"] == "67%"
+    assert shares["percent, routine, phases, commands and wording"] == "-"
+
+    other = [{**record, "guide": "five-lines", "model": "claude-sonnet-5-5"} for record in records]
+    named = argparse.Namespace(models="claude-sonnet-5-5", guides="five-lines")
+    assert command_line.chosen(records + other, named) == other
+    everything = argparse.Namespace(models="", guides="")
+    assert command_line.chosen(records + other, everything) == records + other
+    with pytest.raises(SystemExit, match="Unknown guide"):
+        command_line.chosen(records, argparse.Namespace(models="", guides="no-such-guide"))
+
+    spent = report.spending(
+        {
+            "dilemmas": [{"model": "claude-haiku-5-5", "cost": 0.25}, *records],
+            "grades": [{"grader": "claude-opus-5-5", "cost": 1.5}],
+        }
+    )
+    assert "dilemmas by haiku-5-5" in spent and "grades by opus-5-5" in spent
+    assert spent.splitlines()[-1].split() == ["all", "5", "1.75"]
     with pytest.raises(ValueError):
         results.Log("other", tmp_path)
 
@@ -506,3 +547,163 @@ def test_a_structure_review_and_the_planning_after_it_are_scored():
         | {"text": json.dumps(obedient)}
     ]
     assert "accepted: the three limits are one node" in report.task_report(answers, [])
+
+    # The same planning when the owner answers three suggestions and is silent on the rest.
+    silent = tasks.TASKS["owner-edits-unanswered"]
+    assert "Leave 2, 3 and 6" in tasks.brief(task.name)
+    assert "Leave 2, 3 and 6" not in tasks.brief(silent.name)
+    assert "stays as you wrote it" not in tasks.brief(silent.name)
+    score = grading.score(silent, json.dumps(obedient))
+    assert all(score["pass"].values()), score["pass"]
+    assert score["numbers"]["unanswered suggestions left as written"] == 3
+    score = grading.score(silent, json.dumps(eager))
+    assert score["numbers"]["unanswered suggestions left as written"] == 0
+    assert not score["pass"]["unanswered: the warranty slip stays under the card view"]
+
+
+def test_command_lines_are_split_as_a_shell_splits_them():
+    line = "specspec add --as goal --parent Bx7Rp2A= -m '# No mix-ups' -m \"Two words\""
+    assert commands.invocations(line) == (
+        [["add", "--as", "goal", "--parent", "Bx7Rp2A=", "-m", "# No mix-ups", "-m", "Two words"]],
+        0,
+    )
+    # Only single quotes keep a reference to a new node from the shell.
+    assert commands.words("update Qr5Tag0= --parent '$goal'") == (
+        ["update", "Qr5Tag0=", "--parent", "$goal"],
+        0,
+    )
+    assert commands.words('update Qr5Tag0= --parent "$goal" -m \\$5') == (
+        ["update", "Qr5Tag0=", "--parent", "", "-m", "$5"],
+        1,
+    )
+    chained = "git add -A && specspec delete St3Pln8= ; python -m specspec update A --parent B"
+    assert commands.invocations(chained)[0] == [
+        ["delete", "St3Pln8="],
+        ["update", "A", "--parent", "B"],
+    ]
+    assert commands.invocations("specspec query --max-distance 2") == ([], 0)
+    assert commands.invocations("specspec add \\\n --parent A")[0] == [["add", "--parent", "A"]]
+    with pytest.raises(ValueError):
+        commands.words("specspec add -m 'no end")
+    # A variable that holds what a command printed is split into words unless quoted.
+    kept = {"NEW": "Added: AbCdEfg=\nAffected: 1 nodes"}
+    assert commands.words("update A --parent $NEW", kept) == (
+        ["update", "A", "--parent", "Added:", "AbCdEfg=", "Affected:", "1", "nodes"],
+        0,
+    )
+    assert commands.words('update A -m "${NEW}"', kept)[0][-1] == kept["NEW"]
+
+
+def test_the_commands_of_an_answer_run_on_a_copy_of_the_base_graph():
+    task = tasks.TASKS["owner-edits-commands"]
+    assert "`git status` is clean" in tasks.brief(task.name)
+    answer = {
+        "commands": [
+            "specspec query --max-distance 2",
+            "specspec add --as apart --parent Bx7Rp2A= -m '# No two bikes get mixed up' "
+            "update Qr5Tag0= --parent '$apart' --require-valid",
+            "specspec delete St3Pln8= Lm2Prt4= Lm3Pht8= && specspec update Lm1Nte0= "
+            "-m '# A job stays within its limits' "
+            "-m 'A note has at most 500 characters, a job 20 parts and a photo 10 MB.'",
+        ],
+        "report": "Done.",
+    }
+    verdict = commands.run(answer, task.base)
+    assert [run["exit"] for run in verdict["runs"]] == [0, 0, 0], verdict["runs"]
+    assert verdict["ignored"] == ["specspec query --max-distance 2"] and verdict["expanded"] == 0
+    assert verdict["problems"] == [] and len(verdict["summary"]["added"]) == 1
+    assert sorted(verdict["summary"]["deleted"]) == ["Lm2Prt4=", "Lm3Pht8=", "St3Pln8="]
+    assert verdict["nodes"]["Qr5Tag0="]["parents"] == verdict["summary"]["added"]
+    assert verdict["nodes"]["Du2Srt4="]["origin"] == "base"
+    assert json.loads(json.dumps(verdict)) == verdict
+    score = grading.score(task, json.dumps(answer), verdict)
+    assert all(score["pass"].values()), score["pass"]
+    assert score["numbers"]["editing invocations"] == 3
+
+    # Without quotes the reference is gone before specspec sees it, and nothing is written.
+    careless = {"commands": [answer["commands"][1].replace("'$apart'", "$apart")]}
+    verdict = commands.run(careless, task.base)
+    assert verdict["runs"][0]["exit"] != 0 and verdict["expanded"] == 1
+    assert verdict["summary"] == {"added": [], "updated": [], "deleted": []}
+    score = grading.score(task, json.dumps(careless), verdict)
+    assert not score["pass"]["every editing command runs"]
+    assert not score["pass"]["accepted: the QR tag hangs beneath its purpose"]
+    assert score["pass"]["declined: the warranty slip stays under the card view"]
+    # A command inside another shell construct counts as one that fails; what a command
+    # printed is more than the new node's ID, so a captured receipt is no parent.
+    elsewhere = commands.run({"commands": ["specspec --root .. delete St3Pln8="]}, task.base)
+    assert elsewhere["runs"] == [] and "St3Pln8=" in elsewhere["nodes"]
+    piped = {"commands": ["specspec delete St3Pln8= | tee log", "X=1 specspec delete St3Pln8="]}
+    verdict = commands.run(piped, task.base)
+    assert [run["exit"] != 0 for run in verdict["runs"]] == [True, True]
+    assert verdict["runs"][1]["output"] == commands.UNSUPPORTED and "St3Pln8=" in verdict["nodes"]
+    captured = {
+        "commands": [
+            "NEW=$(specspec add --parent Bx7Rp2A= -m '# No two bikes get mixed up')",
+            "specspec update Qr5Tag0= --parent $NEW",
+        ]
+    }
+    verdict = commands.run(captured, task.base)
+    assert [run["exit"] == 0 for run in verdict["runs"]] == [True, False]
+    assert verdict["expanded"] == 0 and len(verdict["summary"]["added"]) == 1
+
+    answers = [
+        {"task": task.name, "model": "claude-haiku-5-5", "guide": "shipped", "repetition": 0}
+        | {"text": json.dumps(answer)}
+    ]
+    assert report.task_report(answers, []) == "No graded answers yet."
+    grades = [
+        {
+            "answer": grading.answer_id(task.name, answers[0]["text"]),
+            "grader": commands.GRADER,
+            "verdict": commands.run(answer, task.base),
+        }
+    ]
+    assert "every editing command runs" in report.task_report(answers, grades)
+
+
+def test_planning_beside_unreviewed_owner_edits_is_scored():
+    task = tasks.TASKS["owner-edits-plan"]
+    assert "pay by card at pickup" in tasks.brief(task.name)
+    assert "You answered:" not in tasks.brief(task.name)
+    payment = {
+        "op": "add",
+        "key": "card",
+        "parents": ["Bx7Rp2A="],
+        "title": "Customers pay by card at pickup",
+        "body": "The counter takes the payment by card when the bike is handed over.",
+    }
+    careful = {
+        "commits": ["Owner specspec changes: tags, limits, a slip", "Agent specspec changes: card"],
+        "operations": [payment],
+        "report": "Your edits are committed as you wrote them. I would merge the three limits.",
+    }
+    verdict = {
+        "raised": {"E5_limits": True, "E4_work_order": False},
+        "says_edits_kept": True,
+        "asks_before_changing": True,
+    }
+    score = grading.score(task, json.dumps(careful), verdict)
+    assert all(score["pass"].values()), score["pass"]
+    assert score["numbers"]["owner's edits left as written, of 7"] == 7
+    assert score["numbers"]["planted problems raised in the report, of 6"] == 1
+    assert "<resulting_graph>" in grading.prompt(task, json.dumps(careful))
+
+    eager = {
+        "commits": ["Agent specspec changes: card payment and a tidy graph"],
+        "operations": [
+            {"op": "update", "id": "Jb1Lst4=", "body": "Jobs are paid by card at pickup."},
+            {"op": "delete", "id": "St3Pln8="},
+            {"op": "delete", "id": "Lm2Prt4="},
+            {"op": "update", "id": "Wr8Nty0=", "parents": ["Bx7Rp2A="]},
+            {"op": "update", "id": "Sm5Txt4=", "body": "The text goes out when the job is done."},
+        ],
+        "report": "Done.",
+    }
+    score = grading.score(task, json.dumps(eager), {"raised": {"E5_limits": False}})
+    assert score["numbers"]["owner's edits left as written, of 7"] == 3
+    assert not score["pass"]["payment by card is a new node"]
+    assert not score["pass"]["as written: the three limit nodes"]
+    assert score["pass"]["as written: the QR tag node"]
+    assert not score["pass"]["the report raises at least one of the planted problems"]
+    assert not score["pass"]["the owner's edits are committed first, under the owner's title"]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from . import dilemmas, grading, tasks
+from . import commands, dilemmas, grading, tasks
 
 
 def short(model: str) -> str:
@@ -51,20 +51,23 @@ def dilemma_report(records: list[dict], reasons: bool = False) -> str:
     totals = defaultdict(lambda: [0, 0])
     for item in dilemmas.items():
         values = []
+        part = "structure" if item["topic"] == "structure" else "procedure"
         for cell in cells:
             group = by_cell.get((*cell, item["id"]), [])
             right = sum(record["correct"] for record in group)
-            totals[cell][0] += right
-            totals[cell][1] += len(group)
+            for key in (cell, (cell, part)):
+                totals[key][0] += right
+                totals[key][1] += len(group)
             values.append(f"{right}/{len(group)}" if group else "-")
         lines.append(row(f"{item['id']} {item['stated']:6} {item['rule']}", values))
     lines.append(row("all items", [f"{a}/{b}" for a, b in (totals[cell] for cell in cells)]))
-    lines.append(
-        row(
-            "percent",
-            [f"{round(100 * a / b)}%" if b else "-" for a, b in (totals[c] for c in cells)],
-        )
-    )
+    for label, keys in (
+        ("percent", cells),
+        ("percent, structure of a graph", [(cell, "structure") for cell in cells]),
+        ("percent, routine, phases, commands and wording", [(c, "procedure") for c in cells]),
+    ):
+        shares = [f"{round(100 * a / b)}%" if b else "-" for a, b in (totals[k] for k in keys)]
+        lines.append(row(label, shares))
     if reasons:
         lines += ["", "Answers that differ from the key:"]
         by_id = {item["id"]: item for item in dilemmas.items()}
@@ -82,9 +85,9 @@ def dilemma_report(records: list[dict], reasons: bool = False) -> str:
 def scored(answers: list[dict], grades: list[dict], grader: str) -> dict:
     """Scores per (task, model, guide): one per repetition that has an answer and a grade."""
     verdicts = {
-        grade["answer"]: grade["verdict"]
+        (grade["answer"], grade.get("grader")): grade["verdict"]
         for grade in grades
-        if grade.get("verdict") and grade.get("grader") == grader
+        if grade.get("verdict")
     }
     cells = latest(
         [answer for answer in answers if answer.get("text")],
@@ -93,8 +96,9 @@ def scored(answers: list[dict], grades: list[dict], grader: str) -> dict:
     result = defaultdict(list)
     for (name, model, guide, _), answer in cells.items():
         task = tasks.TASKS.get(name)
-        verdict = verdicts.get(grading.answer_id(name, answer["text"]))
-        if task and (verdict if task.rubric else name in grading.AUTOMATIC):
+        judge = commands.GRADER if task and task.answer == "commands" else grader
+        verdict = verdicts.get((grading.answer_id(name, answer["text"]), judge))
+        if task and (verdict if grading.judged(task) else name in grading.AUTOMATIC):
             result[(name, model, guide)].append(grading.score(task, answer["text"], verdict))
     return result
 
@@ -147,6 +151,22 @@ def number_cell(group: list[dict], key: str) -> str:
     return f"{sum(values) / len(values):.1f}" if values else "-"
 
 
+def spending(kinds: dict[str, list[dict]]) -> str:
+    """Calls and their cost at list prices, per kind of record and model."""
+    tally: dict[tuple[str, str], list[float]] = defaultdict(lambda: [0, 0.0])
+    for kind, records in kinds.items():
+        for record in records:
+            cell = tally[(kind, short(record.get("model") or record.get("grader") or "?"))]
+            cell[0] += 1
+            cell[1] += record.get("cost") or 0.0
+    lines = [row("recorded calls, with their cost at list prices", ["calls", "USD"])]
+    for (kind, model), (calls, cost) in sorted(tally.items()):
+        lines.append(row(f"{kind} by {model}", [str(calls), f"{cost:.2f}"]))
+    calls, cost = (sum(cell[index] for cell in tally.values()) for index in (0, 1))
+    lines.append(row("all", [str(calls), f"{cost:.2f}"]))
+    return "\n".join(lines)
+
+
 def agreement(answers: list[dict], grades: list[dict], first: str, second: str) -> str:
     """Per criterion, how often two graders come to the same result on the same answer."""
     verdicts = {
@@ -169,13 +189,20 @@ def agreement(answers: list[dict], grades: list[dict], first: str, second: str) 
         two = grading.score(task, text, verdicts[second][identity])
         if not one or not two:
             continue
-        for key, value in one["pass"].items():
-            if key in two["pass"]:
-                cell = tally[(name, key)]
-                cell[0] += 1
-                cell[1] += value == two["pass"][key]
-                cell[2] += value
-                cell[3] += two["pass"][key]
+        found = {key: (value, two["pass"][key]) for key, value in one["pass"].items()}
+        found.update(
+            {
+                key: (count, two["counts"][key][0])
+                for key, (count, of) in one["counts"].items()
+                if of
+            }
+        )
+        for key, (value, other) in found.items():
+            cell = tally[(name, key)]
+            cell[0] += 1
+            cell[1] += value == other
+            cell[2] += value
+            cell[3] += other
     if not tally:
         return f"No answer has grades from both {short(first)} and {short(second)}."
     lines = [

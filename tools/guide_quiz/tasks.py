@@ -18,7 +18,7 @@ FOLDER = Path(__file__).resolve().parent / "quizzes"
 @dataclass(frozen=True)
 class Task:
     name: str
-    answer: str  # "graph", "operations" or "text"
+    answer: str  # "graph", "operations", "commands" or "text"
     rubric: str | None = None  # stem of the rubric file; None for answers read by a person
     root_names: frozenset[str] = frozenset()
     about: str = ""
@@ -69,6 +69,25 @@ TASKS = {
             about="The owner accepts three suggestions and declines three; then plan.",
             base="owner-edits",
         ),
+        Task(
+            "owner-edits-unanswered",
+            "operations",
+            about="The owner accepts three suggestions and leaves three unanswered; then plan.",
+            base="owner-edits",
+        ),
+        Task(
+            "owner-edits-commands",
+            "commands",
+            about="As owner-edits-apply, answered with specspec commands that are then run.",
+            base="owner-edits",
+        ),
+        Task(
+            "owner-edits-plan",
+            "operations",
+            "owner-edits-plan",
+            about="The owner edited nodes by hand and asks for one more thing; then plan.",
+            base="owner-edits",
+        ),
         Task("discuss", "text", about="The bakery brief as a discussion round; read by a person."),
         Task(
             "explain-cases", "text", about="One node, siblings or parent and child, in own words."
@@ -90,7 +109,7 @@ def parse(text: str | None) -> dict | None:
     """The JSON object of a reply, with or without a code fence.
 
     A reply whose brackets do not match is salvaged item by item: every node or
-    operation and the report are decoded on their own.
+    operation, the list of commands and the report are decoded on their own.
     """
     if not text:
         return None
@@ -101,20 +120,26 @@ def parse(text: str | None) -> dict | None:
     except ValueError:
         pass
     decoder = json.JSONDecoder(strict=False)
+
+    def decoded(pattern: str):
+        marker = re.search(pattern, text)
+        try:
+            return decoder.raw_decode(text, marker.end())[0] if marker else None
+        except ValueError:
+            return text[marker.end() :] if pattern == REPORT else None
+
     found = []
     for match in re.finditer(r'\{\s*"(?:key|op)"\s*:', text):
         try:
             found.append(decoder.raw_decode(text, match.start())[0])
         except ValueError:
             continue
+    name = "operations" if any("op" in item for item in found) else "nodes"
+    if not found:
+        name, found = "commands", decoded(r'"commands"\s*:\s*(?=\[)')
     if not found:
         return None
-    report = ""
-    marker = re.search(r'"report"\s*:\s*(?=")', text)
-    if marker:
-        try:
-            report = decoder.raw_decode(text, marker.end())[0]
-        except ValueError:
-            report = text[marker.end() :]
-    name = "operations" if any("op" in item for item in found) else "nodes"
-    return {name: found, "report": report, "salvaged": True}
+    return {name: found, "report": decoded(REPORT) or "", "salvaged": True}
+
+
+REPORT = r'"report"\s*:\s*(?=")'

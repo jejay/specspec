@@ -114,25 +114,34 @@ browser to explore and export node palettes.
 
 `tools/guide_quiz/` checks a wording of the agent guide against models. A model gets one
 guide version as its only instruction and solves quizzes: dilemmas with one keyed answer
-and open tasks, such as drawing a graph from an owner's brief or revising one. A stronger
-model grades the open answers without knowing which model or guide produced them, and
-specspec's own validator checks every drawn graph.
+and open tasks, such as drawing a graph from an owner's brief, revising one, reviewing
+nodes the owner edited by hand or writing the commands for a change. A stronger model
+grades the open answers without knowing which model or guide produced them. specspec's
+own validator checks every drawn graph, and its command line runs the commands of an
+answer on a temporary copy of the task's graph.
 
 ```sh
 python -m tools.guide_quiz guides                    # guide versions and their sizes
 python -m tools.guide_quiz dilemmas --guides shipped,2026-11-10-before-structure-rules
 python -m tools.guide_quiz tasks --tasks clinic,bakery,revise,review
-python -m tools.guide_quiz grade
-python -m tools.guide_quiz report
+python -m tools.guide_quiz grade                     # the grader's verdicts and the command runs
+python -m tools.guide_quiz report --guides shipped,2026-11-10-before-structure-rules
+python -m tools.guide_quiz agreement --graders claude-opus-5-5,claude-haiku-5-5
+python -m tools.guide_quiz costs
 ```
 
 Every guide name is a file in `tools/guide_quiz/guides/`. `shipped` stands for the package
 template and resolves to the dated file with the same content, so that every result names
 a text that stays; after changing the shipped guide, copy it there under a new dated name
 before you quiz it. The default model is Claude Haiku 5.5, the weakest model the guide is
-written for; `--models` takes others.
+written for; `--models` takes others. A wording to try out is a file under
+`guides/experiments/`: a trimmed guide is quizzed like any other version, and the cuts
+that leave the results where they were are candidates for the shipped guide.
 
 Calls go through the `claude` command of Claude Code under your own login and cost money,
-so no test and no CI job makes them. Runs are resumable: answers already given are kept.
-Raw answers stay in the ignored `tools/guide_quiz/results/`; put the numbers that justify
-a wording into the commit message.
+so no test and no CI job makes them; `costs` adds up what the recorded calls cost. Grading
+by Claude Opus 5.5 is most of that. `agreement` shows, criterion by criterion, where a
+cheaper grader comes to the same verdicts. Runs are resumable: answers already given are
+kept under the name of their task or dilemma, so a brief or a dilemma whose wording
+changes gets a new name. Raw answers stay in the ignored `tools/guide_quiz/results/`; put
+the numbers that justify a wording into the commit message.

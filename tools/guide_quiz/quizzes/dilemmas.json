@@ -549,7 +549,7 @@
   "id": "P21",
   "topic": "phases",
   "rule": "Edits by the owner get a structure review: suggestions, and the graph stays as it is",
-  "stated": "yes",
+  "stated": "no",
   "stem": "`specspec diff` shows at the start of a session that the owner added three nodes by hand. One of them blends two decisions, and one hangs under the wrong parent. The owner writes: \"Carry on.\" What do you do about the two nodes?",
   "options": [
    "Tell the owner what you would split and move and why, leave the graph as it is, and apply only what they accept.",
@@ -562,7 +562,7 @@
   "id": "P22",
   "topic": "phases",
   "rule": "What the owner does not accept stays in the owner's words",
-  "stated": "yes",
+  "stated": "no",
   "stem": "In a structure review you suggested splitting a node the owner wrote. The owner answered: \"No, leave that one.\" Later the owner asks you to change the spec in the same area. What happens to that node?",
   "options": [
    "It stays in the owner's words; you commit it as they wrote it and make your changes around it.",
@@ -575,7 +575,7 @@
   "id": "P23",
   "topic": "writing",
   "rule": "The time before the product stays out of node text",
-  "stated": "yes",
+  "stated": "partly",
   "stem": "The owner says: \"Today we take orders by phone and half of them get lost. I want customers to order on their phone.\" Which sentence belongs in the node?",
   "options": [
    "Customers place their order on their phone.",
@@ -588,7 +588,7 @@
   "id": "P24",
   "topic": "writing",
   "rule": "What the product is not stays out of node text",
-  "stated": "yes",
+  "stated": "partly",
   "stem": "The owner wants reservations for whole days only. Which sentence states that in a node?",
   "options": [
    "A reservation covers one or more whole days.",

@@ -7,7 +7,7 @@ import concurrent.futures
 import random
 import sys
 
-from . import dilemmas, grading, guides, models, report, results, tasks
+from . import commands, dilemmas, grading, guides, models, report, results, tasks
 
 HAIKU = "claude-haiku-5-5"
 
@@ -124,49 +124,73 @@ def ask_tasks(arguments) -> None:
 
 
 def grade(arguments) -> None:
-    """Let the grader judge every answer of a graded task it has not judged yet."""
+    """Judge every answer that has no verdict yet: by the grader, or by running its commands."""
     done = {
-        grade["answer"]
+        (grade["answer"], grade.get("grader"))
         for grade in results.load("grades")
-        if grade.get("verdict") and grade.get("grader") == arguments.grader
+        if grade.get("verdict")
     }
     pending = {}
     for answer in results.load("tasks"):
         task = tasks.TASKS.get(answer["task"])
-        if task and task.rubric and answer.get("text"):
+        if task and grading.judged(task) and answer.get("text"):
             identity = grading.answer_id(task.name, answer["text"])
-            if identity not in done:
+            judge = commands.GRADER if task.answer == "commands" else arguments.grader
+            if (identity, judge) not in done:
                 pending[identity] = (task, answer["text"])
     system = grading.context()
     log = results.Log("grades")
 
     def work(job) -> None:
         identity, (task, text) = job
-        question = grading.prompt(task, text)
-        if question is None:
-            return
-        answer = models.ask(arguments.grader, system, question)
-        verdict = tasks.parse(answer.text)
-        log.append(
-            {
-                "answer": identity,
-                "task": task.name,
+        if task.answer == "commands":
+            data = tasks.parse(text)
+            if not data:
+                return
+            record = {"grader": commands.GRADER, "verdict": commands.run(data, task.base)}
+        else:
+            question = grading.prompt(task, text)
+            if question is None:
+                return
+            answer = models.ask(arguments.grader, system, question)
+            verdict = tasks.parse(answer.text)
+            record = {
                 "grader": arguments.grader,
                 "verdict": verdict,
                 "text": None if verdict else answer.text,
                 "error": answer.error,
                 "cost": answer.cost,
             }
-        )
-        print(f"{'ok' if verdict else 'failed'} {task.name} {identity}", flush=True)
+        log.append({"answer": identity, "task": task.name, **record})
+        print(f"{'ok' if record['verdict'] else 'failed'} {task.name} {identity}", flush=True)
 
     run(list(pending.items()), work, arguments.workers)
 
 
+def chosen(records: list[dict], arguments) -> list[dict]:
+    """The records of the named models and guides; without names, all of them."""
+    try:
+        kept = {guides.resolve(name) for name in listed(arguments.guides)}
+    except ValueError as problem:
+        raise SystemExit(str(problem)) from problem
+    wanted = set(listed(arguments.models))
+    return [
+        record
+        for record in records
+        if (not kept or record["guide"] in kept) and (not wanted or record["model"] in wanted)
+    ]
+
+
 def show(arguments) -> None:
-    print(report.dilemma_report(results.load("dilemmas"), reasons=arguments.reasons))
+    answers = chosen(results.load("dilemmas"), arguments)
+    print(report.dilemma_report(answers, reasons=arguments.reasons))
     print()
-    print(report.task_report(results.load("tasks"), results.load("grades"), arguments.grader))
+    answers = chosen(results.load("tasks"), arguments)
+    print(report.task_report(answers, results.load("grades"), arguments.grader))
+
+
+def show_spending(arguments) -> None:
+    print(report.spending({kind: results.load(kind) for kind in results.KINDS}))
 
 
 def compare_graders(arguments) -> None:
@@ -214,8 +238,11 @@ def parser() -> argparse.ArgumentParser:
     sub = command("report", show, "Print the result tables.")
     sub.add_argument("--grader", default=grading.GRADER)
     sub.add_argument("--reasons", action="store_true", help="list answers that miss the key")
+    sub.add_argument("--models", default="", help="only these model IDs, comma-separated")
+    sub.add_argument("--guides", default="", help="only these guide names, comma-separated")
     sub = command("agreement", compare_graders, "Compare two graders on the answers both graded.")
     sub.add_argument("--graders", required=True, help="two model IDs, comma-separated")
+    command("costs", show_spending, "Count the recorded calls and add up their cost.")
     return main
 
 
