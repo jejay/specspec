@@ -6,10 +6,6 @@ parents:
 ---
 # Assign Added its green cue and Requirement the remaining green
 
-Use one-based color 4 (`#37b390`) for Added and color 5 (`#92a64b`) for Requirement.
-Implementation uses color 1, changed color 2, removed color 7 and source
-impact color 6. Keep the seven ordered swatches and selected parameters exact.
+Counted from one, color 4 (`#37b390`) stands for Added and color 5 (`#92a64b`) for Requirement. Implementation has color 1, changed color 2, removed color 7 and source impact color 6. The seven ordered swatches and the selected parameters are exact.
 
-The standalone selection tool prioritizes Added near its default green text cue
-and gives Requirement the nearest suitable unused entry afterward, with reuse
-when the chosen palette has exhausted its entries. Explain that priority.
+The standalone selection tool gives priority to Added, close to the green of its default text cue, and afterward gives Requirement the nearest suitable entry that is unused; where the chosen palette has no entry left, an entry is used twice. The tool explains this priority.

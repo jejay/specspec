@@ -6,22 +6,10 @@ parents:
 - VDss3KM=
 - L0KGXB8=
 ---
-# Share graph reads across both hosts with optional document overlays
+# Read the graph for both editors through one shared coordinator, with unsaved editor text laid over the files
 
-Both Electron and VS Code use one shared project read/comparison coordinator and
-backend operation. Electron supplies saved files; VS Code additionally supplies its
-actual native document overlays. Historical targets bypass workspace buffers. Share
-bounded verified baseline hints, identical in-flight reads, isolated per-view payloads,
-project disposal and working-first startup followed by explicit comparison adoption.
-Ongoing full refreshes use one comparison request rather than export plus diff.
+The desktop app and VS Code read and compare a project through one shared coordinator and one operation of the backend. The desktop app supplies the saved files, and VS Code adds the actual text of its open node documents, laid over those files. A read of a historical target takes no text from open documents. The coordinator shares the verified hints about the baseline, within their size limit, shares one read among identical requests that are in flight, gives every view a payload of its own and is disposed with its project. A view starts with the working graph and adopts the comparison as an explicit second step. A full refresh in a running view is one request that returns the snapshot together with its comparison.
 
-Keep the first working phase explicitly provisional; preserve later input, camera,
-focus, drafts and render membership acknowledgements. Graph-invalid files display fresh diagnosable context; unavailable current-file
-reads retain marked last-usable context; comparison failures leave usable current context with a
-clear unavailable note. Watch events remain hints and explicit refresh is current.
-Project switches dispose caches and reject stale generations/text versions.
+The first phase, which shows the working graph alone, is marked as provisional. When the comparison arrives, the input made in the meantime, the camera, the focus and the drafts are as the user left them, and each phase is acknowledged by the view with the full list of the nodes it rendered. Files that form an invalid graph are shown fresh, with what can be diagnosed. When the current files cannot be read, the view keeps the last usable graph and marks it as such. When the comparison fails, the view keeps the usable working graph with a clear note that the comparison is unavailable. A watch event is a hint to read again, and an explicit Refresh reads the current state. A switch of the project disposes the caches, and a result of an outdated generation or of an outdated text version is rejected.
 
-Read/compare is separate from native document edit planning and managed persistence.
-Native plans remain non-writing and VS Code owns document application/Save/undo.
-Electron/project actions retain the managed writer. Shared reads do not install a
-server, introduce a persistent worker, or weaken fresh mutation and exact-index checks.
+Reading and comparing are separate from planning an edit of an editor document and from saving through the writer. An edit plan writes nothing, and VS Code applies it to its document and owns Save and undo. Actions in the desktop app and actions on the whole project write through the writer. The shared reads run the backend as child processes of the editor, and every edit and every check of the exact index reads the current files and objects for itself.

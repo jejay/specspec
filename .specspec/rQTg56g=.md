@@ -5,19 +5,8 @@ parents:
 - 7tMgRa8=
 - P2i_png=
 ---
-# Parse spotlight IDs and one message with base and target options
+# Take the node IDs and one message of a spotlight as plain arguments, with options for base and target
 
-Expose spotlight add NODE_ID... MESSAGE with --base REV and --target REV|workspace.
-The implicit comparison is live HEAD versus workspace; explicit Git refs resolve
-to immutable commits. Read the leading canonical full IDs, including dash-leading
-IDs, then join the remaining message words. Require unique IDs, at least one member
-and a nonblank message of at most 500 characters. Colors are ordinary message text,
-not structural arguments. Validate identities from parsed target/base records, declared missing references
-and inventoried canonical filenames before publication. Unreadable file identities
-remain unavailable bindings rather than invented graph membership. No input JSON/file is needed.
+`spotlight add NODE_ID... MESSAGE` records one message about nodes of a comparison, which `--base REV` and `--target REV|workspace` select. Without them the comparison is the live HEAD against the working files, and a Git ref that is named resolves to an immutable commit. The command reads full node IDs from the front of its arguments, including IDs that begin with a dash, and joins the remaining words into the message. It requires at least one ID, each ID once, and a message that is not blank and has at most 500 characters. A word for a color is ordinary text of the message and has no structural role. Before a spotlight is published, each ID is validated against what the comparison knows: the nodes parsed from the target and from the base, the IDs that nodes declare as parents and that are missing, and the names of the node files in the inventory. An ID whose file cannot be read stays an unavailable member and adds no node to the graph. The arguments are the whole input of the command.
 
-Spotlight show optionally selects one full shot ID and reports each record's own
-comparison, message, derived comparison/availability status, title and workspace/context warnings.
---json exposes the same records and structured statuses. Explicit spotlight flush
---yes clears the local store. The color-free application creation operation accepts
-one message and node-ID list, with trusted current comparison and native overlays.
+`spotlight show` takes an optional full spotlight ID and reports for each record its own comparison, its message, the status of each member as derived from that comparison or its unavailability, the titles, and warnings about the working files and the context. `--json` gives the same records with structured statuses. `spotlight flush --yes` clears the local store explicitly. The creation operation of the application protocol takes one message and a list of node IDs, without colors, together with the current comparison of the editor and the trusted text of its open documents.

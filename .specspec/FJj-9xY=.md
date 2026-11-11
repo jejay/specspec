@@ -5,14 +5,6 @@ parents:
 - tGpRMLM=
 - CmZafVM=
 ---
-# Measure loading phases and qualify host behavior explicitly
+# Measure the phases of loading on request and report each qualified run with its limits
 
-Provide opt-in host diagnostics for discovery, CLI duration, readiness, first working
-render, full comparison and render acknowledgement, recording durations/counts rather
-than project text or credentials. Distinguish backend timing from complete useful UI
-latency and cold/warm/project/native/multi-tab measurements. Exercise delayed reads,
-external edits, changing HEAD/index, invalid/vanished files, partial staging, source
-availability, bounded cache eviction, disposal and uncertain remote mutation outcomes.
-Use maintained current-schema history for serious Git/host tests. Report each actual
-client/host/transport run and its limitations. Individual deadlines, assertions,
-production geometry/camera and default-off polling keep their existing contracts.
+Diagnostics that the owner switches on record the phases of loading in the process that hosts the editor: the discovery of the project, the duration of command-line calls, readiness, the first drawing of the working graph, the full comparison and the render acknowledgement. They record durations and counts, and project text and credentials stay out of the records. The measurements keep the time of the backend apart from the whole time until the view is useful, and they keep apart cold and warm starts, graph panels, node-file editors and several tabs. The tests exercise delayed reads, edits from outside, a changing HEAD and index, invalid and vanished files, partial staging, the availability of sources, the eviction from the limited cache, disposal and uncertain outcomes of changes over a remote connection. Serious tests of Git and of the installed editors use the maintained history in the current node format. Each actual run is reported with its client, its host, its transport and its limitations. The deadlines of single operations, the assertions, the geometry and the camera of production and polling that is off by default are the same with diagnostics as without them.

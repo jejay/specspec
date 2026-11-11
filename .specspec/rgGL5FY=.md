@@ -4,14 +4,8 @@ type: requirement
 parents:
 - 0dvOn3A=
 ---
-# Author ordinary changes directly through command arguments
+# Write ordinary changes directly in the arguments of a command
 
-People and coding agents supply binding text and coherent multi-node changes directly
-in an invocation, without preparing auxiliary input files or pipes. Literal Markdown,
-Unicode and explicit relationship choices retain their meaning. Everyday help makes
-this direct authoring discoverable and keeps the command vocabulary compact.
+People and coding agents give the text of a node, and a coherent change to several nodes, directly in one invocation: the arguments alone carry the change. Markdown and Unicode in an argument are taken literally, and the links are exactly the ones that the arguments name. Everyday help shows this way of writing a change, and the set of commands stays small.
 
-The visual hosts retain their established communication and persistence ownership.
-Narrow integration interfaces can carry larger payloads separately from ordinary
-argument-based authoring. Platform argument limits remain explicit rather than
-silently truncating or redirecting input.
+The graph editors have their own channel to the backend and their own way of saving. The interfaces for integrations carry larger content apart from the arguments. A limit of the platform on arguments is reported as an error, and the input is taken whole or not at all.

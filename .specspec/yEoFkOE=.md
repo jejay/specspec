@@ -2,24 +2,13 @@
 id: yEoFkOE=
 type: requirement
 parents:
-- 3V6SdSA=
+- tGpRMLM=
+- tvic3PQ=
 ---
 # Discover Git watch paths asynchronously and coalesce notifications
 
-Resolve private/common Git metadata paths with a bounded asynchronous Git command.
-Coalesce discovery requests while one command is active, then adopt only current
-results. Keep each command within three seconds; retry transient failures up to
-three attempts with 200/400 ms waits. Reuse valid watches during retry, and report
-an exhausted failure. Root metadata identity avoids redundant discovery on ordinary
-index/ref changes. Keep the host event loop responsive for renderer acknowledgements, source
-previews and native documents. Watch HEAD and shared refs with the existing
-bounded directory watches and reattach after replacement, including linked worktrees.
+The private and the common metadata directory of the Git repository are found with an asynchronous Git command that is limited in time and output. While one command runs, further requests for discovery are coalesced, and a result is adopted only when it is current. Each command has three seconds. A failure that may pass is retried, up to three attempts with waits of 200 and 400 ms; valid watches stay in use during the retries, and a failure after the last attempt is reported. The identity of the `.git` entry at the project root tells whether a discovery is needed, so that ordinary changes of the index and of refs start none. The event loop of the process that hosts the editor stays free for render acknowledgements, source previews and editor documents. HEAD and the shared refs are watched through watches on single directories, which attach again after a replacement, in linked worktrees as well.
 
-Treat non-Git folders as supported, surface real discovery failures, and dispose
-pending discovery without late watches or reload notifications. Git reads preserve
-index/ref ownership; filesystem hints continue to trigger fresh backend reads.
+A folder without Git is supported. A real failure of discovery is shown. A discovery that is pending when its view closes is disposed and leaves neither a late watch nor a late reload notification. Reading Git leaves the index and the refs in the hands of Git, and hints from the file system lead to fresh reads by the backend.
 
-Both hosts use this shared HEAD/ref notification path. Index stat-cache writes
-and Git-extension status events leave HEAD-to-working presentation unchanged.
-Canonical file notifications cover working text; staged source actions and checks
-read actual current index bytes at invocation. Preserve stage/commit ghost behavior.
+Both graph editors use this shared path for notifications about HEAD and refs. Writes to the stat cache of the index and status events of the Git extension leave the displayed comparison of HEAD with the working files as it is. Notifications about node files cover the working text, and staged source actions and checks read the actual bytes of the index when they are invoked. A deleted node stays visible when its deletion is staged and disappears when it is committed.

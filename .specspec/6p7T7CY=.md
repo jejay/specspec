@@ -4,32 +4,12 @@ type: requirement
 parents:
 - sJ5dyh4=
 ---
-# Summarize invocation effects with grouped full node IDs
+# Report what an edit did as full node IDs grouped by action
 
-Ordinary mutation feedback addresses specification nodes through their full IDs.
-Each nonempty action group occupies one unindented line: the action, a colon and
-one space, then IDs separated by comma-space. Use Added, Modified, Deleted and
-Unchanged in that order, retaining the writer's target order within each group.
-The first manifesto created by init belongs to Added. A full ID appears once in
-its action group. This node-oriented summary leaves storage paths to structured
-records, raw inspection, file-focused diagnostics and full review patches.
+The readable receipt of an edit names nodes by their full IDs. Each action with at least one node has one line that starts at the left margin: the action, a colon and one space, then the IDs separated by a comma and one space. The actions are `Added`, `Modified`, `Deleted` and `Unchanged`, in this order, and within a line the IDs stand in the order in which the writer handled its targets. The manifesto that `init` creates is listed under `Added`. A full ID appears once in the line of its action. The receipt speaks of nodes, and the paths of their files are found in the structured records, in raw reads, in diagnostics about files and in the patches of a full review.
 
-Classify the invocation's original/candidate logical node text under its writer
-lock. A new document is Added; different logical content is Modified; a selected
-removed document is Deleted; equal logical text is Unchanged. Newline encoding
-alone retains Unchanged; physical transaction checks still compare exact bytes.
-Body, parent and source edits share this classification, including replacements
-and composed commands. Git comparisons independently describe selected revisions.
+The action of a node follows from its logical text before and after the invocation, which the writer compares under its lock. A document that is new is `Added`, a document whose logical content differs is `Modified`, a selected document that is removed is `Deleted`, and a document with equal logical text is `Unchanged`. A difference in newline encoding alone is `Unchanged`, while the checks of the transaction compare exact bytes all the same. Edits of the body, of the parents and of the sources are classified in this one way, replacements and combined commands included. The receipt describes this one invocation, and a comparison with Git describes the revisions that are selected for it.
 
-Non-writing previews use Would add, Would modify and Would delete for those
-changes, and Unchanged for equal logical text. Provisional generated IDs remain
-unreserved. Completed output follows successful transaction verification; rejected
-operations retain explicit diagnostics. Saved/proposed graph validity, analysis
-completeness, potential scope, initialization instructions and deletion consent
-remain independently visible.
+A preview that writes nothing uses `Would add`, `Would modify` and `Would delete` for the same changes and `Unchanged` for equal logical text. An ID that a preview generates is provisional and reserves nothing. The receipt of a completed edit is printed after the transaction has verified its result, and a rejected operation prints its diagnostics. Each of these is reported on its own, apart from the action lines: the validity of the saved or of the proposed graph, an incomplete analysis, the possibly affected scope, what `init` did with the agent instructions and the consent to a deletion.
 
-Requested alias associations remain available on one unpadded comma-separated
-Aliases line. They add local-name mappings rather than another action summary.
-Structural references and diagnostics retain the IDs needed for their own meaning.
-Structured application protocol receipts keep their existing fields, IDs and paths. Outcome
-classification is transient Python result metadata; canonical nodes retain their current fields.
+The local names that an invocation gave to new nodes are reported on one `Aliases` line, as pairs separated by a comma and one space, without padding into columns. This line maps local names to IDs and is no further action line. Lines about structure and diagnostics name the IDs that they are about. A structured receipt of the application protocol carries its fields with the IDs and the paths. The classification by action is a transient part of the result of one invocation inside the Python backend, and a node file has the same fields whatever happened to it.

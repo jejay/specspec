@@ -4,23 +4,10 @@ type: requirement
 parents:
 - 6QB9hRY=
 ---
-# Generate copyable OKLCH palettes in an offline playground
+# Generate OKLCH palettes in an offline playground and offer them for copying
 
-Use local plain HTML/JS/CSS in `tools/rainbow-playground`, opening directly from disk.
-Defaults are count 7, L=.69, C=.12, hue 320→20. Expose count 2–32, lightness/chroma
-and hue endpoints, dark/light preview, reset, swatches and tinted/hover samples.
-Interpolate linearly between hue endpoints in either direction. A 150px gray circle
-illustrates the manifesto; other distance samples are generic tinted cards.
+The playground is plain HTML, JavaScript and CSS in `tools/rainbow-playground` and opens directly from the disk. Its defaults are 7 colors, lightness 0.69, chroma 0.12 and a hue sweep from 320 to 20. It offers a count from 2 to 32, lightness, chroma and the two hue endpoints, a preview on a dark and on a light canvas, a reset, swatches and samples of tinted and hovered cards. The hue is interpolated linearly between the endpoints, in either direction. A gray circle of 150px shows the manifesto, and the other samples for distances are generic tinted cards.
 
-Convert OKLCH to sRGB. Out-of-gamut samples reduce chroma by binary search at fixed
-lightness/hue and report their indices. Exports include parameters JSON, full palette/
-mapping JSON and CSS custom properties. Clipboard success follows resolved writes;
-unavailable/rejected clipboard selects text for manual copy. Invalid inputs retain
-the last valid preview and disable automatic copy. Exports are deliberately applied
-by the owner/assistant through an authorized change.
+A color is converted from OKLCH to sRGB. A sample outside the gamut gets its chroma reduced by a binary search at fixed lightness and hue, and the indices of such samples are reported. The exports are the parameters as JSON, the full palette with its mapping as JSON, and CSS custom properties. A copy counts as successful once the write to the clipboard has resolved, and when the clipboard is unavailable or refuses, the text is selected for copying by hand. Invalid input leaves the last valid preview in place and disables the automatic copy. The playground applies nothing to specspec by itself: the owner or the agent brings an export into the product through a deliberate, authorized change.
 
-Prioritize Added at hue 149.5°, based on the fixed default added text `#81b88b`.
-Retain other hue targets and changed-color reuse. Assign Requirement last to the
-unused entry nearest hue 165°, or the nearest full-table entry when all are used.
-Equal distances choose the earlier entry. Explain the fixed-reference priority and
-reuse; host themes and actual display perception have their own conditions.
+The mapping gives Added priority at hue 149.5°, the hue of the fixed default color of added text, `#81b88b`. The other roles have hue targets of their own: Implementation 300°, Modified 264°, Deleted 30° and source impact 75°. Requirement is assigned last, to the unused entry nearest to hue 165°, or to the nearest entry of the whole table when all are used. Of two entries at the same distance the earlier one is taken. The page explains the priority of the fixed reference and the reuse of entries. The theme of an editor can set other colors, and how a display shows them has conditions of its own.

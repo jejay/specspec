@@ -4,14 +4,8 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Use a literal local webview with guarded graph actions
+# Draw the graph in a local webview that shows project text literally and guards every action
 
-Render native DOM node cards and SVG relationships in a nonce-protected local
-VS Code webview. Project text uses DOM text APIs. Bundle the renderer and assets
-locally with strict CSP. The Python backend plans binding-text, parent and source
-changes and validates canonical mutations.
+Node cards are DOM elements and relationships are SVG, in a local VS Code webview that runs only scripts carrying its nonce. Project text enters the page through DOM text APIs, so it is shown literally. The renderer and its assets are bundled locally and run under a strict content security policy. The Python backend plans every change to a node's text, parents and sources and validates every change to the node files.
 
-Trusted working views enable applicable save/add/delete/source actions; historical
-views provide copyable read-only details. Graph-invalid reloads retain input while displaying fresh broken relationships
-and diagnostics. Unavailable loads retain marked last-usable context. Subscribe to canonical and Git notifications.
-The owner controls staging, commits and hook setup through normal Git workflows.
+A view of the working files in a trusted project enables the actions that apply: saving, adding, deleting and the source actions. A comparison between commits shows details that are read-only and can be copied. When a reload finds a graph that breaks a rule, the input stays, and the view shows the current broken relationships and their diagnostics. When a load is unavailable, the view keeps the last graph that loaded and marks it as such. The view subscribes to notifications about the node files and about Git. The owner stages, commits and sets up hooks through the normal Git workflow.

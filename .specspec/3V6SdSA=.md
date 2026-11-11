@@ -5,18 +5,8 @@ parents:
 - tGpRMLM=
 - tvic3PQ=
 ---
-# Share identical in-flight project reads and reuse native bootstrap context
+# Share one read among identical concurrent requests and reuse the first read of a node-file editor
 
-Coalesce concurrent reads with the same project, base, generation and actual open-
-document text/version/dirty/EOL stamp. Give each view its own presentation payload.
-Recheck stamps after loading and before adopting bootstrap context; changes cause
-fresh reads. Dispose project state on final close. Native bootstrap supplies the
-first working snapshot when usable, with asynchronous custom-editor wiring and a
-fresh comparison phase. Invalid documents retain their established repair behavior.
-Notifications remain hints; ongoing refreshes reread files and resolve current refs.
-Explicit Refresh performs a current read. Managed actions retain fresh validation,
-project-wide dirty guards, writer locking and reviewed deletion rechecking.
+Concurrent reads are answered by one read when they agree in project, base, generation and the stamp of the actually open documents, which consists of their text, version, unsaved state and newline style. Each view receives its own copy of the result for presentation. The stamps are checked again after loading and before the first read of a node-file editor is adopted, and a change leads to a fresh read. The state of a project is disposed when its last view closes. The read that VS Code makes while it opens a node-file editor supplies the first working snapshot when it is usable; the wiring of the custom editor completes asynchronously, and a fresh comparison follows as a second phase. A document with invalid text stays repairable as in every other read. Notifications are hints: each refresh reads the files again and resolves the current refs, and Refresh performs a current read. An action through the writer validates the current files, requires that no document of the project has unsaved changes, takes the lock of the writer and checks a reviewed deletion plan again.
 
-The shared read/comparison coordinator also serves Electron with an empty native
-document set. Both hosts retain fresh reads and verified baseline hints; VS Code
-alone supplies native document overlays, bootstrap and edit/Save ownership.
+The same coordinator of reads and comparisons serves the desktop app, with an empty set of editor documents. Both graph editors read afresh and pass verified hints about the base of the comparison. VS Code alone supplies the overlay of open documents, the first read of a node-file editor and the editing and saving of documents by the editor itself.

@@ -8,23 +8,8 @@ parents:
 ---
 # Offer compact and human query presentations with comma-separated lists
 
-The default readable query keeps its one-line body projection and groups each node's
-source items into one line beginning with "sources: ", separated by a comma and one
-space. Keep the normalized comparison order and all duplicate occurrences. Each item
-retains its selected path/ranges and its own declaration, broken-link, restoration
-or uncertainty hints. Quote unusual paths, including commas, as in individual source
-readings; range components retain their existing spelling.
+The default readable `query` prints each body on one line and groups the source items of a node on one line that begins with `sources: `, separated by a comma and one space. The items stand in the normalized order of the comparison, and every duplicate occurrence appears. Each item has its selected path and ranges and its own hints: a link that was added or removed, a broken link, a restored link or an uncertainty. A path with unusual characters, a comma among them, is quoted in the same way as on a source line of its own. A range is written as `12-30` or as a single line number, and several ranges of one item are joined by commas.
 
-The --human flag preserves each binding's logical lines, blank lines, indentation,
-tabs and trailing spaces, normalizing node newline encodings for readable output and applying shared
-terminal-control escaping. It lists each source occurrence on its own "sources: "
-line. Current nodes retain target bodies and deleted nodes retain base bodies in
-both presentations. Full lowercase headers, sparse hints, root alignment, compact
-rails and last-occurrence ownership remain the same.
+With `--human` each body keeps its logical lines, blank lines, indentation, tabs and trailing spaces. The newline encodings of the node are normalized for reading, and the text passes through the shared escaping of terminal control characters. Each source occurrence has a `sources: ` line of its own. In both presentations a current node shows its target body and a deleted node its base body, and both have the same full lowercase headers, the same sparse hints, the same alignment of the root, the same compact rails and the same place of a record at its last occurrence.
 
-Every full parent header uses ascending full case-sensitive IDs separated by comma
-and space after @, including the display parent, in both presentations. Consistent
-list punctuation improves scanning while complete items preserve review context.
-Human is a text presentation choice: --json remains the authoritative complete application protocol
-comparison, including when combined with --human. Both presentations share the same
-fresh read and source facts, with existing contracts, budgets and read-only boundaries.
+In both presentations a full header names every parent after `@`, in ascending order of the full IDs compared case-sensitively, separated by a comma and one space, the parent under which the record is printed included. The same punctuation in every list makes a reading quick to scan, and complete items give a reviewer the context. `--human` chooses a presentation of text. `--json` gives the complete comparison of the application protocol, which is the authoritative form, also when it is combined with `--human`. Both presentations come from the same fresh read and the same source facts, within the same limits, and both are read-only.

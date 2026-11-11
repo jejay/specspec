@@ -5,16 +5,8 @@ parents:
 - DG-JpDc=
 - SRsw2W0=
 ---
-# Associate a spotlight with its revision comparison
+# Tie each spotlight to the comparison in which it was made
 
-An owner or agent selects nodes and one message in a workspace/HEAD view or an
-explicit comparison of workspace and commits or branches. The message can discuss
-added, deleted, changed and unchanged nodes together. Selecting that spotlight in
-either host switches the graph to its comparison and highlights the available
-members, including deleted base nodes. The ordinary default is workspace versus
-fresh HEAD. Git remains the source of committed node contents.
+An owner or an agent selects nodes and writes one message, either in the view of the working files against HEAD or in a chosen comparison of the working files, commits or branches. One message can speak about added, deleted, changed and unchanged nodes together. Selecting the spotlight in either graph editor switches the graph to that comparison and highlights the members that are available, including nodes that the base holds and the target deleted. The usual comparison is the working files against HEAD as it resolves at that moment. The content of committed nodes comes from Git.
 
-Workspace changes after capture produce a visible warning in CLI and UI. Keep the
-best available highlighting by node identity even when versions drift or members
-are absent. Spotlight records carry the comparison and references as local helper
-data; committed revisions provide historical contents.
+When the working files change after a spotlight was captured, the command line and the editors show a warning. The members are highlighted by node ID as well as the displayed graph allows, also when their versions have drifted or some are absent. A spotlight record carries its comparison and its references as local helper data, and the committed revisions supply the earlier content.

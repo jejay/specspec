@@ -3,17 +3,9 @@ id: bLBNk80=
 type: requirement
 parents:
 - pqNhV6s=
-- xCOHepQ=
 ---
-# Strengthen colored hover lightness and chroma in its hue
+# Emphasize a colored border or link on hover with more lightness and chroma in its own hue
 
-For colored card borders and added/removed/draft incident curve/head inks, derive
-relative OKLCH with L + 0.10 capped at 0.95, C × 1.30 and unchanged H. Incident ink
-uses full opacity. The neutral distance/type manifesto uses a white border; a
-revision-colored manifesto uses the same hue emphasis as other colored nodes.
-Normal neutral links retain theme-foreground contrast mixing.
+The border of a hovered colored card and the ink of an incident curve and arrowhead that is added, removed or part of a draft are derived in OKLCH from their own color: lightness plus 0.10, capped at 0.95, chroma times 1.30 and the hue as it is. Incident ink is fully opaque. The gray manifesto of the distance and type modes has a white border on hover, and a manifesto colored by revision status is emphasized in its hue like every other colored node. An ordinary neutral link is emphasized by mixing its color with the foreground color of the theme.
 
-Preserve shared tint/text, darkening, pairing/order, width/dash/path/head geometry,
-camera and native form/draft/caret. Verify computed lightness/chroma/hue and exact
-restoration in dark/light/contrast probes, expanded and minimum-zoom cases.
-Browser gamut mapping and display conditions bound the color evidence.
+The emphasis changes these inks alone. The tints and the text, the darkening, the pairing and the order of curve and arrowhead, their width, dashes, path and head geometry, the camera and the form with its draft and text cursor are the same during and after a hover. The computed lightness, chroma and hue and the exact restoration of the paint are verified in dark, light and high-contrast themes, on an expanded card and at the smallest zoom. How a browser maps the colors into its gamut and how a display shows them limit what these checks prove.

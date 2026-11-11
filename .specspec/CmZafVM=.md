@@ -6,9 +6,4 @@ parents:
 ---
 # Use specspec with VS Code Remote SSH and Remote Tunnels
 
-Provide the same graph, native documents, comparisons and source-region workflows
-when VS Code connects to a real project filesystem through Remote SSH or Remote
-Tunnels. Support desktop clients and browser clients connected to VS Code Server.
-Execution and canonical persistence belong beside that workspace, while graph
-presentation and gestures belong to the client. Preserve trust, retained input,
-managed deletion consent, native Save ownership and Git consistency.
+When VS Code connects to a real project file system through Remote SSH or Remote Tunnels, the owner has the same graph, node-file editors, comparisons and work with source regions as on a local project. This holds for a desktop client and for a browser client that is connected to VS Code Server. Trust, the keeping of unsaved input, the consent to a deletion by the writer, saving by VS Code and consistency with Git apply over the connection as they do locally.

@@ -4,14 +4,8 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Synchronize permitted manual edits while preserving user input
+# Follow edits made outside the editors and keep the owner's unsaved input
 
-Keep both UIs synchronized with external canonical Markdown changes through file
-watchers. Offer explicit configurable polling as an optional supplement, initially
-disabled. Retain unsaved text, caret and camera state during synchronization.
+Both graph editors follow the changes that are made to the node files outside of them. While they catch up, unsaved text, the text cursor and the camera stay as they are.
 
-Display the fresh diagnosable graph with missing endpoints and structural
-diagnostics. Unreadable document content retains explicit raw-repair access;
-transport or unavailable-schema failures retain marked last-usable context. Saving an externally changed edited node requires overwrite
-confirmation; unrelated graph changes leave a draft usable. Canonical consistency
-is determined by contents, with transaction guards based on original file bytes.
+The editors show the graph as the files give it at that moment. When it breaks a rule and can still be diagnosed, they show it with stand-ins for the missing ends of links and with the structural diagnostics. A document whose content cannot be read stays reachable as raw Markdown for repair. When the command line gives no answer or the format of the graph is unavailable, the editors keep the last graph that loaded and mark it as such. Saving a node that changed outside while the owner edited it requires a confirmation to overwrite, and changes elsewhere in the graph leave a draft usable. Whether the node files and the state of an editor agree is decided by comparing contents, and the writer guards every write by the original bytes of the files.

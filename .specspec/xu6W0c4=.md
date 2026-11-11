@@ -5,11 +5,6 @@ parents:
 - 3wsnEjk=
 - SRsw2W0=
 ---
-# Keep removed specifications in Git and deleted views against HEAD
+# Keep a removed node readable in Git and show the owner what a change removes
 
-Withdrawing a node physically removes its canonical Markdown file. Git commits
-record reasons and predecessor snapshots retain its earlier text and relationships.
-
-Default workspace views compare against freshly resolved HEAD. Deleted committed
-nodes remain visible as D through staging and disappear after commit. Explicit
-historical comparisons retain access to earlier specification snapshots.
+A node that is removed from the specification stays readable: the Git history holds its earlier text and its links, and the commit that removes it records the reason. The owner sees which nodes an uncommitted change removes, with their text and their links, and reaches every earlier snapshot of the specification by comparing revisions.

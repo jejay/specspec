@@ -4,22 +4,10 @@ type: requirement
 parents:
 - 0dvOn3A=
 ---
-# Expose everyday commands and focused advanced tools
+# Offer seven everyday commands and three advanced tools
 
-The everyday vocabulary is init, query, add, update, delete, check and diff. Query
-owns all specification inspection, check validates working, staged and source
-state, and diff shows complete specification changes between revisions, defaulting
-to freshly resolved HEAD versus the working files. Commands run in the current
-project directory, like Git.
+The everyday commands are `init`, `query`, `add`, `update`, `delete`, `check` and `diff`. `query` does all reading of the specification. `check` validates the working files, the staged index and the state of the source links. `diff` shows every change to the specification between two revisions, by default between a freshly resolved HEAD and the working files. A command runs in the directory of the project, like Git.
 
-Init, add and update take literal repeatable -m/--message paragraphs and repeated
-full --parent IDs. Add creates requirements by default and implementations with
---type implementation. An update's --parent list replaces the node's parents. Add,
-update and delete can combine into one invocation; other commands stand alone.
+`init`, `add` and `update` take the text as literal `-m`/`--message` paragraphs, one option for each paragraph. `add` and `update` take each parent as a full ID in a `--parent` option of its own. `add` creates a requirement by default and an implementation with `--type implementation`. The `--parent` options of an `update` replace the parent list of the node. `add`, `update` and `delete` can be combined in one invocation, and every other command stands alone.
 
-Advanced groups cover source links (sources show/capture/reanchor), transaction
-recovery (recover) and owner/agent spotlights (spotlight add/show/flush). Help
-separates the everyday vocabulary from these tools. Integration inputs such as
-source arrays, reviewed deletion plans and structured requests through a hidden api
-command stay out of everyday help. Each operation has one spelling. Owners connect
-check --staged to their own Git hooks and CI.
+The advanced tools come in three groups: `sources` with `show`, `capture` and `reanchor` for source links, `recover` for an interrupted transaction, and `spotlight` with `add`, `show` and `flush` for the messages that owner and agent attach to nodes. Help lists the everyday commands apart from these tools. Everyday help leaves out the inputs of integrations: arrays of sources, reviewed deletion plans and structured requests through a hidden `api` command. Each operation has one spelling. An owner connects `check --staged` to their own Git hooks and CI.

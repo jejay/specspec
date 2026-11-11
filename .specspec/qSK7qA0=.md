@@ -4,18 +4,8 @@ type: requirement
 parents:
 - PAkzXxk=
 ---
-# Keep native repair-form fields distinct from canonical graph membership
+# Offer a repair form for an editor document that cannot be parsed, apart from the nodes of the graph
 
-A recognized current-format header can supply bounded identifiable native form
-fields even when an empty body or intermediate source JSON prevents canonical node
-parsing. Return those actual native candidate/overlay fields separately from snapshot
-nodes. Preserve literal source input and the existing native document/version owner.
-The view remains editable for repair without substituting old text or claiming the
-invalid document is a valid canonical binding. Node deletion and source capture
-still require an applicable identifiable canonical target.
+A node document that is open in VS Code and whose header is recognized as the current format supplies the fields of a form, within the size limit and identified by its ID, also when an empty body or half-typed source JSON keeps the document from being parsed as a node. These fields are those of the actual document, with its unsaved text laid over the file, and they are returned apart from the nodes of the snapshot. The source input is kept literally, and the editor document stays the owner of its text and its version. The view stays editable for the repair and shows the fields that the document has at that moment, and the document counts as a node of the graph once it parses. Deleting a node and capturing a source need a target that the graph identifies as a node.
 
-Only existing direct documents with matching canonical identity, known type and
-usable parent syntax supply repair forms. Unsupported schemas, malformed identity
-or unusable YAML retain explicit raw repair access. Recognition of current version
-metadata is independent of body validity. Safe managed document schema checks,
-byte/identity guards, native undo and absent-buffer non-resurrection remain intact.
+A repair form is offered only for a document that exists directly in `.specspec`, whose ID matches its file name, whose type is known and whose parents are written in usable syntax. A document in an unsupported format version, with a malformed ID or with unusable YAML is reached through its raw Markdown. The format version of the manifesto is recognized from its header whatever the state of its body. The checks of the writer on node documents, the guards on bytes and IDs, undo in VS Code and the rule that an absent file is never created from an open buffer apply to a repair as to every other edit.

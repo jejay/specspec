@@ -4,13 +4,8 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Use concise positive present-tense interface copy
+# Word the interface concisely, positively and in the present tense
 
-Tool-authored labels, tooltips and routine status text describe the current state,
-available action or repair step directly and concisely. Apply this to the graph,
-host dialogs and bundled palette playground. Keep user/project text and structured
-validation evidence literal. Preserve actionable failure causes and safety checks.
+The labels, tooltips and routine status texts that the tool itself writes describe the current state, the available action or the step of repair directly and concisely. This holds for the graph, for the dialogs of the editors and for the bundled palette playground. Text of the user and of the project and the structured findings of validation are shown literally. A message keeps the cause of a failure that the reader can act on, and the safety checks stay in place.
 
-Reserve the graph's screen space for navigation, editing and actual color legends.
-Legends pair colors with short labels or scale endpoints. Put tutorials, normalization explanations and interaction walkthroughs in the
-editor guide.
+The screen space of the graph is kept for navigation, editing and the actual color legends. A legend pairs colors with short labels or with the ends of a scale. Tutorials, explanations of normalization and walkthroughs of interactions are in the editor guide.

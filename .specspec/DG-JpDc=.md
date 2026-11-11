@@ -7,14 +7,6 @@ parents:
 ---
 # Exchange owner and agent messages as local node spotlights
 
-Owners and external coding agents exchange one message and selected full node IDs
-as a local spotlight. Both visual hosts offer retained messages in the Spotlights
-dropdown. Selection switches to the associated revision comparison, highlights the
-available nodes together in one shared ink and frames them in graph context.
+An owner and an external coding agent exchange spotlights: one message together with the full IDs of selected nodes. Both graph editors offer the stored messages under Spotlights. Selecting one switches to the comparison of revisions that belongs to it, highlights those of its nodes that are available, all in one shared ink, and frames them in their graph context.
 
-Manual and spotlight-applied highlights form one editable per-view set. Owners
-can save it with a message as a new immutable spotlight for an external agent to
-read. Arrivals attract attention through a new-count badge while preserving editing
-and navigation. Spotlights remain local, outside Git, across sessions and branch
-changes until explicitly flushed. Git supplies committed versions; workspace drift
-is advisory and preserves useful identity-based highlighting.
+The highlights that the owner sets by hand and those that a spotlight applied form one editable set per view. The owner can save this set with a message as a new spotlight, which is immutable, for an external agent to read. An arriving spotlight draws attention through a count of new ones and leaves editing and navigation undisturbed. Spotlights stay local and outside Git, through sessions and changes of branch, until they are flushed explicitly. Git supplies the committed versions of the nodes. When the working files have changed since a spotlight was taken, the editors say so as advice and go on highlighting the nodes by their IDs.

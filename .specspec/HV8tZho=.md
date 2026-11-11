@@ -4,9 +4,6 @@ type: requirement
 parents:
 - t8RQMdE=
 ---
-# Open graph context in the main editor area
+# Open the graph in the main editor area of VS Code
 
-Make specspec easy to discover and open as a large VS Code editor workspace.
-Canonical node files open their focused graph context and retain direct raw-text
-access. Independent tabs may show different nodes, cameras or comparisons. Settings
-expand inside the selected card. Respect standard editor and document navigation.
+In VS Code the graph is easy to find and opens as a large tab in the main editor area. A node file opens with its node selected among its parents and children, and its raw text stays directly accessible. Separate tabs can show different nodes, camera positions or comparisons. The settings of a node expand inside its selected card. The tabs follow the standard navigation of VS Code between editors and documents.

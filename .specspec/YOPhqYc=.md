@@ -4,16 +4,8 @@ type: requirement
 parents:
 - PL1IogE=
 ---
-# Share one local renderer and guarded session through narrow ports
+# Build both graph editors from one shared renderer and session behind small adapters
 
-`graph-ui-common` owns native DOM/SVG rendering, pure layout/metrics, camera,
-HTML/CSS, bounded CLI invocation, project discovery and serialized session handling.
-Adapters supply messaging/state, trusted executable configuration, project selection,
-confirmations, revisions, watchers, themes and asset URLs. Build self-contained host
-outputs from this common source with pinned offline libraries and license notices.
+The directory `graph-ui-common` holds what both graph editors share: the rendering of cards as DOM elements and of links as SVG, the pure functions for layout and metrics, the camera, the HTML and CSS, the invocation of the command line within limits of time and output, the discovery of the project and a session that checks every request and handles one operation after another. Each editor adds an adapter that supplies the exchange of messages and the stored view state, the trusted configuration of the executable, the selection of a project, confirmations, the input of revisions, file watchers, themes and the addresses of assets. Both editors are built from this common source into self-contained outputs, which include libraries of pinned versions that work offline and their license notices.
 
-Scope state by project and view. Project-level native document coordination shares
-text contents; each view owns focus/cameras/comparisons and unapplied-form recovery.
-Token-matched complete-visible-membership acknowledgements check rendering. Optional
-native document/overlay ports use the Python planner; managed project/Electron ports
-use the writer. Agent transports can use this same portability seam.
+State is kept per project and per view. The views of one project share the text of the open documents, and each view has its own focus, cameras, comparison and recovery of form input that is not applied yet. The renderer acknowledges every snapshot with its token and the complete list of the nodes it shows, and the session checks both. An adapter may connect the open documents of its editor: their text is laid over the files for reading, and the Python planner plans every edit to them without writing. Without that connection, as in a graph panel and in the desktop app, a save goes through the Python writer. An adapter for the transport of a coding agent can use the same interface.

@@ -6,8 +6,4 @@ parents:
 ---
 # Keep navigation in a compact floating canvas control
 
-Place zoom and framing actions in a rounded floating rectangle over the canvas.
-The canvas occupies its available area. Frame graph and Frame node use recognizable
-icons with accessible names and tooltips. Frame node appears for a focused selection
-or draft. Rectangle framing follows those actions, second in the overview framing
-group and third when Frame node is available. Retain zoom steps and actual size.
+The actions for zoom and framing are in a rounded rectangle that floats over the canvas, and the canvas takes its whole available area. Frame graph and Frame node have recognizable icons with accessible names and tooltips. Frame node appears when a selected node or a draft is focused. Frame rectangle follows these actions: it is the second action of the framing group in the overview and the third when Frame node is shown. The control also holds the zoom steps and the return to actual size.
