@@ -6,11 +6,6 @@ format_version: 7
 ---
 # Support intention-conclusion specification-spectrum development
 
-Help owners and coding agents express a product's core goals, develop separately
-revisable conclusions, navigate their justifications, and connect the specification
-to its implementation. A rooted directed graph expresses the spectrum from the
-owner's intention to concrete realization. Its current text records the desired
-product and its actual realization; Git records their evolution.
+Help an owner and their coding agents keep a product's specification as what it is: intentions and the conclusions drawn from them, down to the code. Whoever reads it can tell what was concluded from what, replace any conclusion while its intentions stay, and follow the specification into the code that realizes it.
 
-Review follows uncertainty, impact and the owner's attention and risk budget.
-Implementation and feedback provide evidence for the next informed decision.
+The owner directs as much as they want and delegates the rest, part by part, and spends their attention where uncertainty and impact are highest. What gets built, and how it fares, informs the next round of the specification.

@@ -2,7 +2,6 @@
 id: Es6S-yg=
 type: requirement
 parents:
-- 1T-fMcs=
 - WpYvGUo=
 ---
 # Install the command-line tool from PyPI by default

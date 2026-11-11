@@ -4,8 +4,6 @@ type: requirement
 parents:
 - XV5_rPQ=
 ---
-# Offer visually guided graph editing in VS Code
+# Let the owner read and edit the specification as a graph
 
-Provide a VS Code extension that displays the specification graph and offers
-visually guided editing. Make graph-aware editing a convenient recommended owner
-workflow alongside direct access to canonical Markdown.
+The owner sees the specification as a graph and edits it there, guided by the graph's rules, with direct access to the Markdown files beside it. A graph editor is the recommended way for an owner to work on the specification.

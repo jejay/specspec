@@ -2,7 +2,7 @@
 id: WpYvGUo=
 type: requirement
 parents:
-- XV5_rPQ=
+- 1T-fMcs=
 ---
 # Distribute an isolated global Python command-line application
 
