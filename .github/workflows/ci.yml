@@ -9,6 +9,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python: ['3.11', '3.14']
     runs-on: ${{ matrix.os }}
+    # Every job has a limit of a few times its usual duration; the platform's own is six hours.
+    timeout-minutes: 30
     steps:
       # Source anchors refer to Git objects, so the graph checks need the full history.
       - uses: actions/checkout@v4
@@ -33,6 +35,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,6 +52,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -79,6 +83,7 @@ jobs:
       - run: npm run package:electron
   gantt:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

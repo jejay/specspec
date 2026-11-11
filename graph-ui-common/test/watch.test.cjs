@@ -7,6 +7,8 @@ const { tmpdir } = require('node:os');
 const { GraphWatcher } = require('../host/watch.cjs');
 const pause = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(check) { for (let i = 0; i < 200; i++) { if (check()) return; await pause(10); } assert.ok(check(), 'Watcher did not notify in time.'); }
+// macOS starts a watch shortly after fs.watch() returns, so a change made at once can go unreported.
+const started = () => pause(200);
 
 test('directory watches reattach on replacement and missing filenames without recursive watching', () => {
   let ino = 1, exists = true, changes = 0;
@@ -33,12 +35,12 @@ test('real watcher-only saves, atomic replacements, deletion and directory recre
   const watcher = new GraphWatcher(root, () => changes++, error => errors.push(error));
   t.after(() => { watcher.close(); rmSync(root, { recursive: true, force: true }); });
   const file = join(dir, 'node.md');
-  let before = changes; writeFileSync(file, '# Original'); await waitFor(() => changes > before);
+  await started(); let before = changes; writeFileSync(file, '# Original'); await waitFor(() => changes > before);
   before = changes; writeFileSync(file, '# Manual'); await waitFor(() => changes > before);
   before = changes; writeFileSync(join(dir, 'temporary.md'), '# Atomic'); renameSync(join(dir, 'temporary.md'), file); await waitFor(() => changes > before);
   before = changes; unlinkSync(file); await waitFor(() => changes > before);
   before = changes; renameSync(dir, join(root, 'old-graph')); mkdirSync(dir); await waitFor(() => changes > before && watcher.nodes);
-  await pause(30); before = changes; writeFileSync(file, '# Recreated'); await waitFor(() => changes > before);
+  await started(); before = changes; writeFileSync(file, '# Recreated'); await waitFor(() => changes > before);
   assert.deepEqual(errors, []);
   watcher.close(); before = changes; writeFileSync(file, '# Closed'); await pause(40); assert.equal(changes, before);
 });

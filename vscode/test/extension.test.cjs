@@ -1,7 +1,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const Module = require('node:module');
-const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = require('node:fs');
+const fs = require('node:fs');
+const { mkdtempSync, mkdirSync, writeFileSync } = fs;
+const { rm } = require('node:fs/promises');
+const { EventEmitter } = require('node:events');
 const { tmpdir } = require('node:os');
 const { join, resolve } = require('node:path');
 
@@ -18,6 +21,10 @@ function fixture(t, options = {}) {
   const uri = path => ({ scheme: 'file', fsPath: resolve(path), toString() { return this.fsPath; } });
   const calls = { commands: new Map(), errors: [], warnings: [], logs: [], cli: [], panels: [], dialogs: 0, picks: 0, watchers: [], gitWatchers: [], sessions: [], gitLookups: [], textListeners: [], saveListeners: [], closeListeners: [], edits: [], executed: [] };
   calls.probes = [];
+  // Both shared watchers get scripted file-system hints. A real macOS watch also reports the
+  // fixture's own creation, which would arrive as an uncounted refresh in the middle of a test.
+  calls.annotationHints = new Map();
+  const scripted = hints => ({ ...fs, watch: (path, hint) => { hints.set(path, hint); return Object.assign(new EventEmitter(), { close() {} }); } });
   const backups = new Map();
   const context = { extensionUri: uri(join(root, 'vscode')), extensionMode: 2, subscriptions: [],
     workspaceState: { get: key => backups.get(key), keys: () => [...backups.keys()], update: async (key, value) => { value === undefined ? backups.delete(key) : backups.set(key, value); } } };
@@ -166,17 +173,26 @@ function fixture(t, options = {}) {
         const portable = originalLoad.call(this, request, parent, ...rest);
         return { ...portable, GitWatcher: class extends portable.GitWatcher {
           constructor(root, changed, failed) {
-            super(root, changed, failed, undefined, options.gitExecute); calls.gitWatchers.push(this);
+            super(root, changed, failed, scripted(new Map()), options.gitExecute); calls.gitWatchers.push(this);
           }
+        } };
+      }
+      if (request === './common/host/annotations.cjs' && parent?.filename === extensionPath) {
+        const portable = originalLoad.call(this, request, parent, ...rest);
+        return { ...portable, AnnotationWatcher: class extends portable.AnnotationWatcher {
+          constructor(root, changed, failed) { super(root, changed, failed, scripted(calls.annotationHints)); }
         } };
       }
       return originalLoad.call(this, request, parent, ...rest);
     };
     require(extensionPath).activate(context);
   } finally { Module._load = originalLoad; }
-  t.after(() => {
+  t.after(async () => {
     calls.panels.forEach(panel => panel.dispose()); calls.provider.dispose();
-    rmSync(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 });
+    // Real Git runs with the project as its working directory, which Windows keeps busy until
+    // the process has exited; rm() also retries the EBUSY that rmSync() reports at once.
+    if (!options.gitExecute) await Promise.all(calls.gitWatchers.map(watcher => watcher.discovery));
+    await rm(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 });
     delete require.cache[extensionPath];
   });
   const openDocument = async node => {
@@ -526,6 +542,7 @@ test('external annotation shots notify all project views without reloading their
   mkdirSync(path, { recursive: true });
   options.shots = [{ id: '1'.repeat(32), message:'External answer',nodes:[],comparison:{base:'HEAD',target:'workspace'},workspace:{head:null,changes:{}} }];
   writeFileSync(join(path, '1'.repeat(32) + '.json'), '{}');
+  f.calls.annotationHints.get(join(f.root, '.specspec'))('rename', 'local');
   await waitFor(() => f.calls.panels.every(panel => panel.messages.some(m => m.type === 'annotations' && m.shots.length === 1)));
   assert.equal(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'read').length, reads);
   assert.ok(f.calls.cli.filter(c => c.args[0] === 'api' && JSON.parse(c.input).op === 'annotations').every(c => c.root === f.root));

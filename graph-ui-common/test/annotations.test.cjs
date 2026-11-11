@@ -7,6 +7,9 @@ const { tmpdir } = require('node:os');
 const { AnnotationWatcher } = require('../host/annotations.cjs');
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function waitFor(check) { for (let i = 0; i < 100; i++) { if (check()) return; await pause(10); } assert.ok(check()); }
+// macOS starts a watch shortly after fs.watch() returns and delivers reports in batches, so a
+// change made at once can go unreported and an earlier one can still arrive.
+const started = () => pause(200);
 
 test('real annotation watches attach after late directory creation, atomic shots and replacement, and close', async t => {
   const root = mkdtempSync(join(tmpdir(), 'specspec-annotations-watch-'));
@@ -14,15 +17,15 @@ test('real annotation watches attach after late directory creation, atomic shots
   const watcher = new AnnotationWatcher(root, () => changes++, error => errors.push(error));
   t.after(() => { watcher.close(); rmSync(root, { recursive: true, force: true }); });
   const path = join(root, '.specspec/local', 'annotations');
-  mkdirSync(path, { recursive: true }); await waitFor(() => watcher.watches.size === 4);
-  const before = changes; writeFileSync(join(path, '.shot-one.tmp'), '{}');
+  await started(); mkdirSync(path, { recursive: true }); await waitFor(() => watcher.watches.size === 4);
+  await started(); const before = changes; writeFileSync(join(path, '.shot-one.tmp'), '{}');
   renameSync(join(path, '.shot-one.tmp'), join(path, 'one.json'));
   await waitFor(() => changes > before);
-  const published = changes; await pause(30);
+  await started(); const published = changes;
   writeFileSync(join(path, '.shot-two.tmp'), '{}'); await pause(30);
   assert.equal(changes, published, 'Unpublished payloads do not trigger arrivals.');
   renameSync(path, path + '-old'); mkdirSync(path); await waitFor(() => watcher.watches.size === 4 && changes > published);
-  const replaced = changes; writeFileSync(join(path, 'two.json'), '{}'); await waitFor(() => changes > replaced);
+  await started(); const replaced = changes; writeFileSync(join(path, 'two.json'), '{}'); await waitFor(() => changes > replaced);
   watcher.close(); const closed = changes; writeFileSync(join(path, 'three.json'), '{}'); await pause(30);
   assert.equal(changes, closed); assert.equal(watcher.watches.size, 0); assert.deepEqual(errors, []);
 });

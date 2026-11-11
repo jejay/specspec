@@ -108,7 +108,7 @@
   "scripts": {
     "compile": "tsc -p . && node scripts/build-webview.cjs",
     "watch": "node scripts/build-webview.cjs && tsc -w -p .",
-    "test": "npm run compile && node --test test/*.test.cjs",
+    "test": "npm run compile && node --test --test-timeout=120000 test/*.test.cjs",
     "test:host": "npm run compile && node test-host/run.cjs",
     "vscode:prepublish": "npm run compile",
     "package": "node scripts/package.cjs"

@@ -6,7 +6,7 @@
   "description": "Shared local graph renderer and guarded host protocol",
   "scripts": {
     "build": "node scripts/build.cjs",
-    "test": "npm run build && node --test test/*.test.cjs"
+    "test": "npm run build && node --test --test-timeout=120000 test/*.test.cjs"
   },
   "dependencies": {
     "@codemirror/commands": "6.11.1",
