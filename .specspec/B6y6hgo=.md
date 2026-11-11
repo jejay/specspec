@@ -20,11 +20,11 @@ tabs and trailing spaces, normalizing node newline encodings for readable output
 terminal-control escaping. It lists each source occurrence on its own "sources: "
 line. Current nodes retain target bodies and deleted nodes retain base bodies in
 both presentations. Full lowercase headers, sparse hints, root alignment, compact
-rails and last-occurrence ownership remain the same.
+rails and last-occurrence ownership are the same.
 
 Every full parent header uses ascending full case-sensitive IDs separated by comma
 and space after @, including the display parent, in both presentations. Consistent
 list punctuation improves scanning while complete items preserve review context.
-Human is a text presentation choice: --json remains the authoritative complete application protocol
+Human is a text presentation choice: --json is the authoritative complete application protocol
 comparison, including when combined with --human. Both presentations share the same
 fresh read and source facts, with contracts, budgets and read-only boundaries.

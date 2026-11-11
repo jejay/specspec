@@ -21,13 +21,12 @@ current nodes and base records/parents for deleted nodes. This supplies every ch
 record's displayed parent path. Historical justification at a particular revision
 uses explicit version selection; current readings retain target text for surviving
 ancestors even when a deleted record has a changed surviving parent. Original
-revision records, old edge deltas and boundary parents remain reconstructible in JSON.
+revision records, old edge deltas and boundary parents are reconstructible in JSON.
 
 Selection metadata separates matched_ids, additional ancestor_ids and final ids.
 Retain original per-criterion priority records and induced final edges. Identify
 omitted direct children and siblings of the original matches, where siblings share
-at least one direct parent. Their bodies remain outside the reading; each category
-and the deduplicated omitted-ID union stay explicit. Added ancestors do not expand
+at least one direct parent. Their bodies are outside the reading; each category and the deduplicated omitted-ID union are explicit. Added ancestors do not expand
 this surrounding-neighbor scope. Compact/human presentation, complete bodies,
 source contracts and version choices share the query pipeline.
 

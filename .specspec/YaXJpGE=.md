@@ -13,7 +13,7 @@ Reconstruct in a fresh external repository through current CLI calls. Each retai
 snapshot describes its current state positively, with separate intentions and
 conclusions; agent planning commits precede code and implementation mappings.
 
-Retain an empty predecessor, three specification/code pairs and a final audit.
+The history has an empty predecessor, three specification/code pairs and a final audit.
 The portfolio→personal→workshop redirects preserve earlier reasoning in predecessor
 trees and deletion reasons in commit messages. Execute receipts/checks for real.
 Refresh all refs, ledger, source anchors, snapshot and bundle together on schema

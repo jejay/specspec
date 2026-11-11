@@ -9,7 +9,7 @@ parents:
 Both hosts display current diagnosable relationships and structural errors, including
 missing endpoint stubs, disconnected and cyclic components. Earlier D records remain
 historical and unsavable; unresolved current references remain visible after default
-D membership disappears at commit. Historical comparisons remain read-only.
+D membership disappears at commit. Historical comparisons are read-only.
 
 Safe identifiable current forms remain editable with fresh backend preflights and
 normal persistence owners. Native dirty protections, missing-file rejection, overwrite confirmation, drafts/caret/cameras, source isolation and trust boundaries hold here too.

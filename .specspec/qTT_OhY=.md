@@ -23,7 +23,7 @@ Ordinary diff includes all meaningful canonical text and metadata changes with
 LF patch lines. Encoding-only differences contribute no node or file-only change
 and no newline-counter dump. EOF termination changes use ordinary patch markers.
 Structured file-patch records retain physical-layout metadata where a
-meaningful change exists. Raw query remains exact physical evidence.
+meaningful change exists. Raw query is exact physical evidence.
 
 Reads and comparisons leave files unchanged. Git configuration, attributes, index,
 hooks and filters are owner-controlled; application normalization needs no

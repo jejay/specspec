@@ -11,7 +11,7 @@ explicit candidate and diagnose its complete graph. Managed edits target uniquel
 identified current-format documents and have schema, bounded-input and physical
 path safeguards. Invalid surrounding graphs and intermediate graph-invalid results
 remain editable; --require-valid additionally requires a valid complete candidate
-before any canonical write. The manifesto stays protected from deletion/reparenting.
+before any canonical write. The manifesto is protected from deletion/reparenting.
 
 Stage bytes on the same filesystem, journal original/replacement/absence states,
 compare original bytes before replacement and verify resulting files. A successful

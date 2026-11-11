@@ -15,4 +15,4 @@ smooth tangent joins from curve to filled arrowhead.
 Hover emphasizes immediate displayed incoming/outgoing curve/head pairs in both
 views, including expanded cards and historical/draft relationships. Restore their
 paint on exit. Colored incident connections gain brightness and saturation in
-their own hue; Git patterns and relationship direction remain readable.
+their own hue; Git patterns and relationship direction are readable.

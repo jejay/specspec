@@ -14,7 +14,7 @@ Markdown markers, Unicode and headless text. The one-line projection is the defa
 
 A space at a soft line break keeps adjacent words separate. The projection is a
 compact text reading, rather than a Markdown renderer: list items, code lines and
-hard breaks follow the same literal newline rule. Complete logical layout remains in structured comparison records, with CRLF
+hard breaks follow the same literal newline rule. Complete logical layout is in structured comparison records, with CRLF
 normalized to LF. Canonical files/raw queries retain physical bodies and line endings; diff supplies
 logical content changes independently of newline encoding.
 Shared terminal-control escaping, complete untruncated text, full parent headers, last-occurrence placement, selected-record deletion context and source semantics hold here too.

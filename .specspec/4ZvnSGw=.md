@@ -10,7 +10,7 @@ parents:
 Maintain one command/protocol implementation with coordinated Python,
 shared-host, VS Code and Electron changes and explicit incompatible-version errors.
 Guides, architecture examples, agent operational recipes, hooks/CI examples and tests
-name commands and payloads. Owner source documents remain preserved.
+name commands and payloads. Owner source documents are preserved.
 
 Refresh the maintained independent Gantt history's actual CLI receipts,
 positive command descriptions, ledgers, refs, source retention, bundle and tracked

@@ -11,4 +11,4 @@ shared header. Use its alpha mask with host foreground for theme-compatible
 single-ink chrome. Import the supplied 512px spectrum launcher
 tile for Electron and extension package icons. Keep source paths and SHA-256 import
 digests locally so builds and artifact checks are independent of the sibling
-branding workspace. Brand colors and graph/Git/diagnostic semantics stay separate.
+branding workspace. Brand colors and graph/Git/diagnostic semantics are separate.

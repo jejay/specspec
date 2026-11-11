@@ -17,6 +17,6 @@ and its full node ID, then every direct parent in ascending case-sensitive full-
 order after @, separated by a comma and one space in every presentation. Include
 the parent under which the record is printed.
 The manifesto ends at its ID before comparison status when present. Earlier shared
-occurrences remain short unexpanded pointers. Lowercase status words identify node
+occurrences are short unexpanded pointers. Lowercase status words identify node
 change, contract-relevant linked-source changes and literal file change. The preamble
 contains selected revisions and applicable notes; headers carry their own meaning.

@@ -12,5 +12,4 @@ The self-referencing development graph receives current-workspace validation and
 source checks. Current readers diagnose unsupported historical development schemas.
 
 Serious Git regression tests use the independent Gantt example with every retained
-revision compliant with today's tools. Preserve meaningful redirects, specification
-before code, stage reasoning and runnable prototypes in that maintained corpus.
+revision compliant with today's tools. That maintained corpus has meaningful redirects, specification before code, stage reasoning and runnable prototypes.

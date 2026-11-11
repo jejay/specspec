@@ -6,7 +6,7 @@ parents:
 ---
 # Follow the guide's opening with a short working routine
 
-The packaged AGENTS.md guide stays within about 14 KB. Right after its opening
+The packaged AGENTS.md guide is within about 14 KB. Right after its opening
 statement of purpose comes a numbered routine: check what the owner changed since the newest agent planning commit, committed or not, and spotlights,
 read relevant nodes with their ancestors in bounded queries, work in the requested
 phase, edit through add, update and delete, check the graph and its source links

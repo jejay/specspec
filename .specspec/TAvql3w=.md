@@ -8,7 +8,7 @@ parents:
 
 Maintain specspec's working graph alongside its code. Use independent realistic
 example repositories for serious Git, temporal, application and host integration
-checks; focused unit tests may use smaller independent current-schema graphs.
+checks; focused unit tests may use smaller independent graphs.
 
 For each node-schema change, reconstruct the entire maintained example history,
 including every revision, ref and deleted predecessor node, with the current

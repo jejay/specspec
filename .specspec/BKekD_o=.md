@@ -21,4 +21,4 @@ nonempty stdin payload ambiguously; parse and preflight every step before reads 
 writes. Metadata-only chains with no input are possible.
 
 Both managed UIs pass complete body text on stdin without a body option. Native VS Code forms use non-writing plans and native persistence. Reviewed deletion plans and private application channels have their independent inputs. Argument, body,
-aggregate and operating-system limits remain separate and explicit.
+aggregate and operating-system limits are separate and explicit.

@@ -8,7 +8,7 @@ parents:
 ---
 # Derive physical-deletion ghosts from freshly resolved HEAD
 
-Represent the saved graph with physically present current-schema node files. Managed
+Represent the saved graph with physically present node files. Managed
 deletion follows AuhoBoU='s exact-selection plan and writer guards. The user records
 reasons in ordinary Git commits; predecessor trees retain removed node reasoning.
 

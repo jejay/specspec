@@ -15,5 +15,5 @@ changes and optional owner messages support intent inference without deciding it
 
 Inspection includes disconnected and cyclic components and reports unavailable
 metrics honestly. Deliberate resolution may rewrite, split, relink or explicitly
-remove conclusions. Completed validity remains independently checkable, including
+remove conclusions. Completed validity is independently checkable, including
 against exact staged bytes. No canonical lifecycle or approval metadata is required.

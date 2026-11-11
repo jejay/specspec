@@ -16,7 +16,7 @@ immutable file under the cooperating workspace writer lock. Complete shot files
 are the list source of truth. Protect malformed records with actionable errors;
 limits reject additions rather than evicting existing records. Explicit flush
 removes spotlight metadata and obsolete blob files while preserving recovery and
-other local state. Publication retains ordinary lock and recovery behavior.
+other local state. Publication uses ordinary lock and recovery behavior.
 
 The public commands are spotlight add/show/flush. CLI capture reads saved files;
 UI capture includes trusted native overlays and the current comparison. A spotlight

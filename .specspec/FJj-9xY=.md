@@ -13,5 +13,5 @@ than project text or credentials. Distinguish backend timing from complete usefu
 latency and cold/warm/project/native/multi-tab measurements. Exercise delayed reads,
 external edits, changing HEAD/index, invalid/vanished files, partial staging, source
 availability, bounded cache eviction, disposal and uncertain remote mutation outcomes.
-Use maintained current-schema history for serious Git/host tests. Report each actual
+Use maintained history for serious Git/host tests. Report each actual
 client/host/transport run and its limitations. Individual deadlines, assertions, production geometry/camera and default-off polling hold here too.

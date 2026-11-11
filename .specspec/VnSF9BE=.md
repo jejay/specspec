@@ -30,4 +30,4 @@ mode and symbol; preview is read-only. Capture/reanchor updates use the current
 writer. Reanchor uses reliable mapped ranges or explicitly supplied conflict
 replacement ranges. `check --staged --sources` evaluates exact staged graph/code and
 retention; default staged checks evaluate graph structure. Region navigation supplies context
-while source-change impact remains conservative per file.
+while source-change impact is conservative per file.

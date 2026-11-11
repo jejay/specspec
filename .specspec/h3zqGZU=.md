@@ -13,8 +13,7 @@ in relationship context, ordered by last occurrence. Full headers retain all par
 
 Present all binding content once per selected node: target text for surviving/added nodes
 and base text for deleted nodes. The compact default body projection occupies one
-line; structured bodies retain logical layout with CRLF normalized to LF. Extensions and source locations remain compact metadata above the body; internal
-format versions stay out of ordinary headers. Readable text uses
+line; structured bodies retain logical layout with CRLF normalized to LF. Extensions and source locations are compact metadata above the body; internal format versions are out of ordinary headers. Readable text uses
 shared terminal-control escaping.
 
 Show added/modified/deleted for semantic node changes, and
@@ -24,12 +23,12 @@ semantic classification. Unchanged
 headers have no badge. Display selected revision names once; committed identities
 and full before/target records remain available in structured output.
 
-Readable source items retain one location per reference occurrence. Compact output
+Readable source items have one location per reference occurrence. Compact output
 groups them into one line per node; human output lists them individually. Show the target path and
 actual ranges, or the base location for removed declarations. Normal readings are
 unmarked. Sparse hints identify ref+/ref- independently of contract-relevant code
 changes. Each source class defines permitted edits; those edits add no change cue.
-Broken or uncertain links remain explicit, with side labels where needed. Detailed blob,
+Broken or uncertain links are explicit, with side labels where needed. Detailed blob,
 mode, description, both locations and diagnostics stay in comparison JSON.
 
 Query builds semantic/literal change summaries and complete source facts. Exact

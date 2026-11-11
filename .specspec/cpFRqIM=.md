@@ -24,7 +24,7 @@ operation requests a full diff. Explicit rooted query selections scope the
 comparison records to selected IDs while preserving full parent references and
 needed source evidence; selection metadata identifies the partial view and its
 external boundary. Ancestor-completed selections distinguish matched IDs, added
-ancestor IDs, final IDs and omitted surrounding child/sibling identities. Validation describes the complete original revisions. Reconstruct existing renderer records once in the
+ancestor IDs, final IDs and omitted surrounding child/sibling identities. Validation describes the complete original revisions. Reconstruct renderer records once in the
 shared host adapter; avoid duplicating targets inside an outer loaded snapshot.
 
 HEAD is resolved freshly. Staged deletion leaves HEAD membership and D ghosts intact;

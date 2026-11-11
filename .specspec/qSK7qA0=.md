@@ -12,7 +12,7 @@ parsing. Return those actual native candidate/overlay fields separately from sna
 nodes. Literal source input and the native document/version owner hold here too.
 The view remains editable for repair without substituting old text or claiming the
 invalid document is a valid canonical binding. Node deletion and source capture
-still require an applicable identifiable canonical target.
+require an applicable identifiable canonical target.
 
 Only existing direct documents with matching canonical identity, known type and
 usable parent syntax supply repair forms. Unsupported schemas, malformed identity

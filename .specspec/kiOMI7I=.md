@@ -18,7 +18,6 @@ changes while readers focus on the current specification. Detailed historical te
 Identify every direct parent locally in full node headers. Explain source-reference
 changes separately from linked-code changes and derived source locations in each
 compared version. Treat a source-reference class as the contract for which changes
-matter: permitted changes stay quiet, while broken links and uncertainty remain
-visible. Keep deleted bindings in the comparison's relationship context.
+matter: permitted changes are quiet, while broken links and uncertainty are visible. Keep deleted bindings in the comparison's relationship context.
 Read-only exploration preserves canonical files, native buffers and Git state.
 The presentation serves human and agent readers with the same information.

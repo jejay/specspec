@@ -17,7 +17,7 @@ For valid input revisions the projection is acyclic. Invalid working references
 can connect missing/deleted parents to current conclusions, and cyclic inputs need
 cycle-safe explicit-component presentation. Earlier bindings stay historical context,
 not current justification. Keep lost base relationships among surviving nodes in
-the structured comparison and diff. Full old/new edge unions remain separate facts.
+the structured comparison and diff. Full old/new edge unions are separate facts.
 
 Validate each canonical revision independently. A display projection can contain a
 shortcut newly created by changed current ancestry, a former requirement now typed

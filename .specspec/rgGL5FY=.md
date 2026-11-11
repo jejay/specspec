@@ -12,5 +12,5 @@ Unicode and explicit relationship choices retain their meaning. Everyday help ma
 this direct authoring discoverable and keeps the command vocabulary compact.
 
 The visual hosts have their own communication and persistence ownership. Narrow integration interfaces can carry larger payloads separately from ordinary
-argument-based authoring. Platform argument limits remain explicit rather than
+argument-based authoring. Platform argument limits are explicit rather than
 silently truncating or redirecting input.

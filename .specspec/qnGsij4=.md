@@ -14,6 +14,6 @@ presentation choices per view. Full records retain canonical identity and bindin
 text; graph geometry and color metrics are derived state.
 
 Measure intrinsic border boxes before routing. Attach distributed side ports to
-actual shape boundaries and retain curved obstacle-aware reserved corridors.
+actual shape boundaries and use curved obstacle-aware reserved corridors.
 Expanded input resizing recomputes geometry around the same form DOM. Keep pure
 layout/metric helpers locally bundled and verify painted clearance in real hosts.

@@ -15,7 +15,7 @@ same code-version reader when both selected commits are identical.
 
 Caches live only within this source comparison. Resolve refs and saved files freshly
 for every invocation. Workspace target bytes come from saved files, not staged/index
-blob addresses; anchor blobs remain immutable Git reads. Missing/wrong-type/oversized
+blob addresses; anchor blobs are immutable Git reads. Missing/wrong-type/oversized
 objects and exhausted budgets stay explicit. Oversized objects reserve no content
 bytes and do not consume the admission budget of unrelated eligible blobs. Per-object, request, mapping, rename, entry/path and UTF-8 limits are in force.
 
