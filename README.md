@@ -169,9 +169,9 @@ puts what is beneath it up for review.
 As the owner you read and edit the graph in a graph editor: the VS Code extension or
 the desktop app, which draw the same zoomable canvas.
 
-<img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode.png" alt="VS Code with the Explorer on the left, listing the Markdown node files in .specspec, and the specspec graph in an editor tab: about 250 nodes in columns, colored from purple to orange by their distance from the manifesto.">
+<img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode.png" alt="VS Code with the Explorer on the left, listing the Markdown node files in .specspec, and the specspec graph in an editor tab: about 280 nodes in columns, colored from purple to orange by their distance from the manifesto.">
 
-This is specspec's own graph in VS Code from far above: about 250 nodes, colored by
+This is specspec's own graph in VS Code from far above: about 280 nodes, colored by
 their distance from the manifesto. The node files are in the Explorer on the left.
 
 <img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-desktop.png" alt="The desktop app comparing two stages of the example planner. Deleted nodes are red with a D, added nodes are green with an A and unchanged nodes are gray, under a toolbar and a legend.">
