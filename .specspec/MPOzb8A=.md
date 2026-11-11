@@ -4,11 +4,6 @@ type: requirement
 parents:
 - r1wddEQ=
 ---
-# Inspect and preserve the owner's uncommitted specification input
+# Inspect and preserve the owner's own specification input
 
-Before acting, inspect the working and staged differences for manual owner
-specification changes and read open spotlights. Read their affected context and
-infer their intention/conclusion meaning. A request for agent planning authorizes
-one commit of these edits before any agent edit, titled
-`Owner specspec changes: <intention/conclusion understanding>`. Validate the exact
-intended index and keep the owner's original input and local work intact.
+Before acting, the agent inspects what the owner changed in the specification by hand since the newest agent planning commit: commits the owner made themselves and the working and staged differences. It reads open spotlights, reads the affected context and infers the intention/conclusion meaning of the changes. The owner's original input and local work stay intact.
