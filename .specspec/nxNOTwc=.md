@@ -21,7 +21,7 @@ sources:
 # Package and safely concatenate initialization instructions
 
 The distribution contains one static generic guide, loaded through package resources.
-It says what the graph is for in two opening paragraphs, continues with a numbered routine and stays under 10 KB; tests check its essentials,
+It says what the graph is for in two opening paragraphs, continues with a numbered routine and stays under 10 KB, counted with LF line endings; tests check its essentials,
 its size and that every option it teaches appears in visible help. Its concept sections use the outcome/choice and intention/conclusion vocabulary with one example graph, each phase names what starts it, the implementation phase begins with agent planning, and the report step asks for a spotlight on the nodes discussed.
 Initialization validates a single manifesto and safe root instruction target, checks
 Git availability and ensures a Git working tree before publishing node/guide bytes,
