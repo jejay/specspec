@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 
 from . import graphs, tasks
@@ -220,8 +221,8 @@ def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
         and reminder in email_above
         and text_message not in email_above,
         "e-mail descends from the EU constraint": europe in email_above,
-        "the unrelated sentence is split out or named": verdict.get("signin_sentence")
-        in ("moved_to_own_node", "flagged_in_report"),
+        "the stray sentence in a committed node stays where it is": verdict.get("signin_sentence")
+        in ("left_unmentioned", "flagged_in_report"),
         "no contrast with the past": not verdict.get("historic_contrast"),
         "no implementation node for unbuilt work": not verdict.get("added_implementation_nodes"),
         "titles are statements": not verdict.get("label_titles"),
@@ -235,6 +236,9 @@ def score_revision(task: tasks.Task, data: dict, verdict: dict) -> dict:
         "nodes updated": len(summary["updated"]),
         "nodes deleted": len(summary["deleted"]),
         "slot node kept": int(slots in nodes),
+        "share of reports that mention the stray sentence": int(
+            verdict.get("signin_sentence") == "flagged_in_report"
+        ),
     }
     return {"pass": passed, "counts": {}, "numbers": numbers}
 
@@ -279,7 +283,7 @@ def score_discussion(task: tasks.Task, data: str, verdict: dict) -> dict:
     return {"pass": passed, "counts": {}, "numbers": numbers}
 
 
-def score_owner_review(task: tasks.Task, data: str, verdict: dict) -> dict:
+def score_owner_review(task: tasks.Task, data: str | dict, verdict: dict) -> dict:
     """The structure review of the owner's edits: found problems and how they are put."""
     identified = {
         name: yes(value) for name, value in sorted((verdict.get("identified") or {}).items())
@@ -290,6 +294,20 @@ def score_owner_review(task: tasks.Task, data: str, verdict: dict) -> dict:
         "the answer suggests and leaves the graph as it is": yes(verdict.get("suggests_only")),
         "it says that what is not accepted stays": yes(verdict.get("says_declined_stays")),
     }
+    if isinstance(data, dict):  # the review as a dry run: commits, operations, report
+        _, summary = graphs.revised(data, task.base)
+        commits = [str(title) for title in data.get("commits") or []]
+        passed = {
+            "the owner's edits are committed first, under the owner's title": bool(commits)
+            and commits[0].startswith("Owner specspec changes:"),
+            "no commit of the agent's own before the owner answers": not any(
+                title.startswith("Agent specspec changes:") for title in commits
+            ),
+            "the graph is left as it is": not any(
+                summary[kind] for kind in ("added", "updated", "deleted")
+            ),
+            **passed,
+        }
     numbers = {
         "planted problems found": sum(identified.values()),
         "further suggestions": len(verdict.get("other_suggestions") or []),
@@ -376,13 +394,16 @@ def score_owner_apply(task: tasks.Task, data: dict, verdict: dict) -> dict:
 
 
 def score_owner_plan(task: tasks.Task, data: dict, verdict: dict) -> dict:
-    """Planning a new request while the owner's own edits are unreviewed.
+    """Planning a new request beside nodes with planted problems.
 
-    The owner asked for payment by card and for the specification to be changed. Their
-    edits stay as written, because nobody accepted a change to them; the report is where
-    the agent raises what it would change. The graph is judged from the operations and
-    the report by the grader.
+    The owner asked for payment by card and for the specification to be changed. In one
+    task the flawed nodes are the owner's uncommitted edits, in one the owner committed
+    them by hand, in one an agent planning commit has sealed them. They stay as written
+    every time. Open nodes get suggestions in the report; sealed ones get no remark,
+    because the request has nothing to do with them. The graph is judged from the
+    operations and the report by the grader.
     """
+    situation = {"manual-plan": "manual", "sealed-plan": "sealed"}.get(task.name, "open")
     nodes, summary = graphs.revised(data, task.base)
     original, _ = graphs.base(task.base)
     commits = [str(title) for title in data.get("commits") or []]
@@ -407,23 +428,57 @@ def score_owner_plan(task: tasks.Task, data: dict, verdict: dict) -> dict:
     }
     added = [f"{nodes[key]['title']} {nodes[key]['body']}".lower() for key in summary["added"]]
     raised = [yes(value) for value in (verdict.get("raised") or {}).values()]
-    passed = {
-        "resulting graph passes the structure check": not graphs.problems(nodes),
-        "the owner's edits are committed first, under the owner's title": bool(commits)
-        and commits[0].startswith("Owner specspec changes:"),
-        "the agent's changes follow under the agent's title": len(commits) > 1
-        and commits[1].startswith("Agent specspec changes:"),
+    passed = {"resulting graph passes the structure check": not graphs.problems(nodes)}
+    if situation == "open":
+        passed |= {
+            "the owner's edits are committed first, under the owner's title": bool(commits)
+            and commits[0].startswith("Owner specspec changes:"),
+            "the agent's changes follow under the agent's title": len(commits) > 1
+            and commits[1].startswith("Agent specspec changes:"),
+        }
+    else:
+        passed |= {
+            "the planning is committed under the agent's title": any(
+                title.startswith("Agent specspec changes:") for title in commits
+            ),
+            "no commit is made in the owner's name": not any(
+                title.startswith("Owner specspec changes:") for title in commits
+            ),
+        }
+    passed |= {
         "payment by card is a new node": any("card" in text and "pay" in text for text in added),
         **kept,
-        "the report raises at least one of the planted problems": any(raised),
-        "the report leaves the raised changes to the owner": yes(
-            verdict.get("asks_before_changing")
-        ),
-        "the report says that the owner's edits are kept": yes(verdict.get("says_edits_kept")),
     }
+    if situation == "sealed":
+        passed["the report makes no remark about the sealed nodes"] = not any(raised)
+    else:
+        passed |= {
+            "the report raises at least one of the planted problems": any(raised),
+            "the report leaves the raised changes to the owner": yes(
+                verdict.get("asks_before_changing")
+            ),
+        }
+    if situation == "open":
+        passed["the report says that the owner's edits are kept"] = yes(
+            verdict.get("says_edits_kept")
+        )
+    labels = {
+        "open": (
+            "owner's edits left as written, of 7",
+            "planted problems raised in the report, of 6",
+        ),
+        "manual": (
+            "owner's nodes left as written, of 7",
+            "planted problems raised in the report, of 6",
+        ),
+        "sealed": (
+            "sealed nodes left as written, of 7",
+            "remarks about sealed nodes in the report, of 6",
+        ),
+    }[situation]
     numbers = {
-        "owner's edits left as written, of 7": sum(kept.values()),
-        "planted problems raised in the report, of 6": sum(raised),
+        labels[0]: sum(kept.values()),
+        labels[1]: sum(raised),
         "nodes added": len(summary["added"]),
         "nodes updated": len(summary["updated"]),
         "nodes deleted": len(summary["deleted"]),
@@ -432,14 +487,67 @@ def score_owner_plan(task: tasks.Task, data: dict, verdict: dict) -> dict:
     return {"pass": passed, "counts": {}, "numbers": numbers}
 
 
+def score_sealed_feature(task: tasks.Task, data: dict, verdict: dict) -> dict:
+    """A request that needs a sealed node restructured: NFC stickers replace the QR tags.
+
+    The sealed node blends the QR tag with its purpose. The best graph gives the purpose
+    a node of its own with the NFC choice beneath it, and every other sealed node stays
+    as it is. Decided from the operations alone.
+    """
+    nodes, summary = graphs.revised(data, task.base)
+    original, _ = graphs.base(task.base)
+    text = {key: f"{record['title']} {record['body']}".lower() for key, record in nodes.items()}
+    stickers = [key for key, words in text.items() if "nfc" in words]
+    beneath_purpose = any(
+        parent in nodes
+        and parent != graphs.ROOT
+        and "nfc" not in text[parent]
+        and PURPOSE.search(text[parent]) is not None
+        for key in stickers
+        for parent in nodes[key]["parents"]
+    )
+
+    def written(*keys: str) -> bool:
+        return all(nodes.get(key) == original[key] for key in keys)
+
+    others = {
+        "the card view": written("Jb1Brd8="),
+        "the text-message node": written("Sm5Txt4="),
+        "the node about the order of work": written("St3Pln8="),
+        "the three limit nodes": written("Lm1Nte0=", "Lm2Prt4=", "Lm3Pht8="),
+        "the warranty slip": written("Wr8Nty0="),
+        "the overdue rule": written("Du2Srt4="),
+    }
+    passed = {
+        "resulting graph passes the structure check": not graphs.problems(nodes),
+        "the NFC sticker is recorded": bool(stickers),
+        "its purpose is a node of its own above the NFC choice": beneath_purpose,
+        "the QR tag is gone from the graph": not any("qr" in words for words in text.values()),
+        "every other sealed node stays as written": all(others.values()),
+        "the report names the sealed node it changed": "qr" in str(data.get("report")).lower(),
+    }
+    numbers = {
+        "other sealed nodes left as written, of 6": sum(others.values()),
+        "nodes added": len(summary["added"]),
+        "nodes updated": len(summary["updated"]),
+        "nodes deleted": len(summary["deleted"]),
+    }
+    return {"pass": passed, "counts": {}, "numbers": numbers}
+
+
+# Words by which a node states why bikes carry a tag at all.
+PURPOSE = re.compile(r"mix|confus|apart|identif|wrong bike|belongs to")
 SCORERS = {"clinic": score_drawing, "bakery": score_drawing, "review": score_review}
-SCORERS["owner-edits-plan"] = score_owner_plan
+SCORERS["owner-edits-plan"] = SCORERS["manual-plan"] = score_owner_plan
+SCORERS["sealed-plan"] = score_owner_plan
+SCORERS["sealed-feature"] = score_sealed_feature
 SCORERS["discuss"] = score_discussion
 SCORERS.update({"revise": score_revision, "revise-phones": score_revision})
 SCORERS.update({"owner-edits": score_owner_review, "owner-edits-apply": score_owner_apply})
+SCORERS["owner-edits-review"] = score_owner_review
 SCORERS["owner-edits-unanswered"] = SCORERS["owner-edits-commands"] = score_owner_apply
 # Scored from the answer alone, without a grader.
-AUTOMATIC = frozenset({"owner-edits-apply", "owner-edits-unanswered"})
+AUTOMATIC = frozenset({"owner-edits-apply", "owner-edits-unanswered", "sealed-feature"})
 
 
 def judged(task: tasks.Task) -> bool:

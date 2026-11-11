@@ -125,6 +125,7 @@ python -m tools.guide_quiz guides                    # guide versions and their 
 python -m tools.guide_quiz dilemmas --guides shipped,2026-11-10-before-structure-rules
 python -m tools.guide_quiz tasks --tasks clinic,bakery,revise,review
 python -m tools.guide_quiz grade                     # the grader's verdicts and the command runs
+python -m tools.guide_quiz scorecard --guides 2026-11-10-before-structure-rules,shipped
 python -m tools.guide_quiz report --guides shipped,2026-11-10-before-structure-rules
 python -m tools.guide_quiz agreement --graders claude-opus-5-5,claude-haiku-5-5
 python -m tools.guide_quiz costs
@@ -137,6 +138,11 @@ before you quiz it. The default model is Claude Haiku 5.5, the weakest model the
 written for; `--models` takes others. A wording to try out is a file under
 `guides/experiments/`: a trimmed guide is quizzed like any other version, and the cuts
 that leave the results where they were are candidates for the shipped guide.
+
+`scorecard` is the place to start reading results: about twenty behaviours, such as "your
+edits left as you wrote them" or "summaries without a remark about sealed nodes", each with
+a sentence on what the model was asked and what is counted, one column per guide in the
+order given. `report` prints every criterion behind those rows.
 
 Calls go through the `claude` command of Claude Code under your own login and cost money,
 so no test and no CI job makes them; `costs` adds up what the recorded calls cost. Grading

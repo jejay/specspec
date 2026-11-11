@@ -18,6 +18,7 @@ from tools.guide_quiz import (
     models,
     report,
     results,
+    scorecard,
     tasks,
 )
 
@@ -353,7 +354,10 @@ def test_review_and_revision_answers_are_scored():
     assert passed["e-mail descends from the EU constraint"]
     assert passed["the replaced choice is deleted"]
     assert not passed["the reply is recorded in a new node"]
-    assert not passed["the unrelated sentence is split out or named"]
+    assert passed["the stray sentence in a committed node stays where it is"]
+    moved = {**verdict, "signin_sentence": "moved_to_own_node"}
+    moved = grading.score(tasks.TASKS["revise"], json.dumps(operations), moved)
+    assert not moved["pass"]["the stray sentence in a committed node stays where it is"]
     phones = grading.score(tasks.TASKS["revise-phones"], json.dumps(operations), verdict)
     assert "the replaced choice is deleted" not in phones["pass"]
 
@@ -498,6 +502,22 @@ def test_a_structure_review_and_the_planning_after_it_are_scored():
     assert review["numbers"]["planted problems found"] == 2
     assert review["pass"]["the answer suggests and leaves the graph as it is"]
     assert not review["pass"]["it says that what is not accepted stays"]
+    first = "the owner's edits are committed first, under the owner's title"
+    assert first not in review["pass"]
+    look = tasks.TASKS["owner-edits-review"]
+    assert "before the owner answers" in tasks.brief(look.name)
+    kept = {"commits": ["Owner specspec changes: limits and tags"], "report": "Six points."}
+    score = grading.score(look, json.dumps(kept), {"identified": {"E5_limits": True}})
+    assert score["pass"][first] and score["pass"]["the graph is left as it is"]
+    assert score["pass"]["no commit of the agent's own before the owner answers"]
+    assert score["numbers"]["planted problems found"] == 1
+    hasty = {
+        "commits": ["Agent specspec changes: tidy"],
+        "operations": [{"op": "delete", "id": "St3Pln8="}],
+    }
+    score = grading.score(look, json.dumps(hasty), {})
+    assert not score["pass"][first] and not score["pass"]["the graph is left as it is"]
+    assert not score["pass"]["no commit of the agent's own before the owner answers"]
 
     task = tasks.TASKS["owner-edits-apply"]
     obedient = {
@@ -564,6 +584,138 @@ def test_a_structure_review_and_the_planning_after_it_are_scored():
     score = grading.score(silent, json.dumps(eager))
     assert score["numbers"]["unanswered suggestions left as written"] == 0
     assert not score["pass"]["unanswered: the warranty slip stays under the card view"]
+
+
+def test_planning_beside_hand_committed_and_sealed_nodes_is_scored():
+    for name in ("manual-plan", "sealed-plan", "sealed-feature"):
+        brief = tasks.brief(name)
+        assert "`git status` is clean" in brief and "8a1f3b6 Agent specspec changes:" in brief
+    assert "The owner made the commit `7be4f10` by hand" in tasks.brief("manual-plan")
+    assert "shows no specification changes" in tasks.brief("sealed-plan")
+    answer = {
+        "commits": ["Agent specspec changes: customers pay by card at pickup"],
+        "operations": [
+            {
+                "op": "add",
+                "key": "card",
+                "parents": ["Bx7Rp2A="],
+                "title": "Customers pay by card at pickup",
+                "body": "The counter takes the payment by card.",
+            }
+        ],
+        "report": "I would merge the three limits; tell me whether you want that.",
+    }
+    raised = {"raised": {"E5_limits": True, "E4_work_order": False}, "asks_before_changing": True}
+    manual = grading.score(tasks.TASKS["manual-plan"], json.dumps(answer), raised)
+    assert all(manual["pass"].values()), manual["pass"]
+    assert manual["numbers"]["owner's nodes left as written, of 7"] == 7
+    assert manual["numbers"]["planted problems raised in the report, of 6"] == 1
+    assert "the owner's edits are committed first, under the owner's title" not in manual["pass"]
+
+    sealed = grading.score(tasks.TASKS["sealed-plan"], json.dumps(answer), raised)
+    assert not sealed["pass"]["the report makes no remark about the sealed nodes"]
+    assert sealed["numbers"]["remarks about sealed nodes in the report, of 6"] == 1
+    assert sealed["numbers"]["sealed nodes left as written, of 7"] == 7
+    quiet = grading.score(tasks.TASKS["sealed-plan"], json.dumps(answer), {"raised": {}})
+    assert all(quiet["pass"].values()), quiet["pass"]
+    owner = {**answer, "commits": ["Owner specspec changes: nothing", *answer["commits"]]}
+    owner = grading.score(tasks.TASKS["sealed-plan"], json.dumps(owner), {})
+    assert not owner["pass"]["no commit is made in the owner's name"]
+
+
+def test_a_request_that_needs_a_sealed_node_changed_is_scored():
+    task = tasks.TASKS["sealed-feature"]
+    assert "NFC stickers" in tasks.brief(task.name) and task.name in grading.AUTOMATIC
+    split = {
+        "operations": [
+            {
+                "op": "update",
+                "id": "Qr5Tag0=",
+                "title": "No two bikes get mixed up",
+                "body": "Every bike in the shop can be told apart from every other bike.",
+            },
+            {
+                "op": "add",
+                "key": "sticker",
+                "parents": ["Qr5Tag0="],
+                "title": "Put an NFC sticker on every bike",
+                "body": "Each bike gets a sticker at drop-off.",
+            },
+        ],
+        "report": "The request needed the sealed node about the QR tag changed.",
+    }
+    score = grading.score(task, json.dumps(split))
+    assert all(score["pass"].values()), score["pass"]
+    assert score["numbers"]["other sealed nodes left as written, of 6"] == 6
+
+    beside = {
+        "operations": [
+            {
+                "op": "add",
+                "key": "sticker",
+                "parents": ["Bx7Rp2A="],
+                "title": "Put an NFC sticker on every bike",
+            },
+            {"op": "delete", "id": "St3Pln8="},
+        ],
+        "report": "Added the stickers.",
+    }
+    score = grading.score(task, json.dumps(beside))
+    assert score["pass"]["the NFC sticker is recorded"]
+    assert not score["pass"]["its purpose is a node of its own above the NFC choice"]
+    assert not score["pass"]["the QR tag is gone from the graph"]
+    assert not score["pass"]["every other sealed node stays as written"]
+    assert not score["pass"]["the report names the sealed node it changed"]
+    assert score["numbers"]["other sealed nodes left as written, of 6"] == 5
+
+
+def test_the_scorecard_names_criteria_that_the_scorers_produce():
+    drawing = json.dumps({"nodes": [], "report": ""})
+    plan = json.dumps({"operations": [], "report": ""})
+    ran = {"nodes": {}, "summary": {}, "runs": []}
+    samples = {
+        "clinic": grading.score(tasks.TASKS["clinic"], drawing, {"own_choice_nodes": []}),
+        "bakery": grading.score(tasks.TASKS["bakery"], drawing, {"own_choice_nodes": []}),
+        "revise": grading.score(tasks.TASKS["revise"], plan, {}),
+        "discuss": grading.score(tasks.TASKS["discuss"], "A reply.", {}),
+        "owner-edits-review": grading.score(tasks.TASKS["owner-edits-review"], plan, {}),
+        "owner-edits-commands": grading.score(
+            tasks.TASKS["owner-edits-commands"], json.dumps({"commands": ["x"]}), ran
+        ),
+    }
+    for name in ("owner-edits-plan", "manual-plan", "sealed-plan", "sealed-feature"):
+        samples[name] = grading.score(tasks.TASKS[name], plan, {})
+    rows = [row for _, group in scorecard.GROUPS for row in group]
+    assert len({row.label for row in rows}) == len(rows) and all(row.meaning for row in rows)
+    for row in rows:
+        assert row.kind == "dilemmas" or row.tasks, row.label
+        for name in row.tasks:
+            assert any(key in samples[name][row.kind] for key in row.keys), (row.label, name)
+
+    item = dilemmas.items()[0]
+    answered = [
+        {
+            "model": "m",
+            "guide": "g",
+            "item": item["id"],
+            "repetition": n,
+            "picked": n,
+            "correct": n == 0,
+        }
+        for n in range(2)
+    ]
+    answered.append({**answered[0], "item": "retired"})
+    scores = {
+        ("discuss", "m", "g"): [samples["discuss"], None],
+        ("clinic", "m", "g"): [samples["clinic"]],
+    }
+    table = scorecard.table(scores, answered, "m", ["g", "other"])
+    lines = {line[:58].strip(): line[58:].split() for line in table.splitlines()}
+    assert lines["Gives an overview of its understanding"] == ["0", "of", "1", "-"]
+    assert lines["Nodes per graph"] == ["0.0", "(n=1)", "-"]
+    assert lines["A way and its purpose become two nodes"] == ["0", "of", "2", "-"]
+    assert lines["Right choice in short cases"] == ["50", "%", "of", "2", "-"]
+    assert "What the rows mean" in table and "  A: g" in table
 
 
 def test_a_round_of_tandem_planning_is_scored():

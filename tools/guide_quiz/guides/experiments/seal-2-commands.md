@@ -1,0 +1,100 @@
+# Working with a specspec graph
+
+This project is developed with specspec, short for *specification spectrum*. Its specification is a graph of Markdown nodes in `.specspec/`, whose root states what the product is for. Every other node is a *conclusion* drawn from its parents, which are its *intentions*: it refines them, chooses a way to achieve them or explains what was built. From the root outward, the nodes run from what the owner (the person you work for) wants, through ever more concrete conclusions, to the actual files. That range is the spectrum.
+
+The graph exists because a specification worked out with a coding agent blends two things: the outcomes the owner wants, and choices that were proposed and accepted along the way. A few rounds later it is hard to tell which details are essential. Here each outcome and each meaningful choice is a node of its own, so a choice can be replaced while the outcome it serves stays, and the owner can specify one branch in detail and delegate another. Many choices will be yours. Record each as its own node under the intention it serves, where the owner can review and replace it.
+
+## Routine
+
+1. Check for owner input first: `git status`, `specspec diff` for specification changes since the last commit, the diffs of other files (including untracked ones), and `specspec spotlight show` for messages the owner attached to nodes. The owner may also have committed edits themselves: `git log -1 --format=%h --grep='Agent specspec changes:'` names the newest planning commit, and `specspec diff COMMIT` shows every specification change since it. Uncommitted changes from an earlier agent session are your own unfinished work; ask when unsure whose a change is.
+2. Find the nodes your task touches: `specspec query --max-distance 2` shows the top of the graph, and `specspec sources show` lists which implementation node links which file.
+3. Before you change a node or the artifacts it describes, read it with its ancestors: `specspec query ID --max-distance 0 --with-ancestors`. Its ancestors are the reasons it exists, and they bind as much as the node itself.
+4. Work in the phase the owner asked for (see Phases). You change the graph only in agent planning and implementation, with `specspec add`, `update` and `delete`.
+5. After changing the graph or linked artifacts, run `specspec check --sources`. Before any commit, stage the complete change and run `specspec check --staged --sources --warnings-as-errors`, which validates exactly what will be committed.
+6. Report what you changed, the choices you made on the owner's behalf and what remains uncertain. Whenever you discuss specific nodes, also spotlight them and say so: `specspec spotlight add ID... 'message'` shows them in the owner's graph editor.
+
+## The graph
+
+Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`, `parents`, `sources`) and a Markdown body. The *manifesto* is the root. A *requirement* states an outcome the product should achieve, a constraint it must respect or a choice of how, and names the parents it serves. An *implementation* node is a leaf under requirements: it explains how actual artifacts realize them and links them in `sources`.
+
+```text
+manifesto: Help a small team agree on a plan
+  requirement: Make timing easy to read
+    requirement: Show tasks on a weekday timeline
+      implementation: Timeline rendering (sources: app.js)
+```
+
+Each indented line is a conclusion from the line above it, and that line is its intention; the two middle lines are both at once. No field stores this; it follows from the `parents` links. If a milestone list turns out to read better, the timeline node and its implementation are deleted and a new choice is added under "Make timing easy to read", which stays as it is.
+
+To decide what belongs in a node, ask what should survive a change of approach. That outcome gets a node, and each choice with a real alternative gets its own node beneath it, so a choice can be replaced without erasing its outcome. Neither authorship nor specificity decides where a statement goes: a technology the owner must use is a constraint near the root, and one the owner merely suggested is a choice under the outcome it serves. Split a node when its parts are decisions that could be replaced or reviewed separately. Values that one decision settles stay in one node, such as a list of limits: a value is edited in place, while an approach is replaced. An order of work, an option you did not choose, a topic that only groups other nodes and a rewording of the parent are not nodes.
+
+An owner's sentence often names a way and leaves the outcome to you. Each becomes two nodes:
+
+```text
+owner: "a timeline, so everyone sees when things happen"
+  requirement: Everyone sees when things happen
+    requirement: Show tasks on a timeline
+owner: "an SMS when the parcel ships"
+  requirement: Customers know when their parcel ships
+    requirement: Send an SMS when the parcel ships
+owner: "the open tickets on the office TV"
+  requirement: The team sees its open tickets at a glance
+    requirement: Show the open tickets on the office TV
+```
+
+A node may name several parents: every intention it serves or must respect. Keep the graph shortcut-free: a node serving both P and a descendant of P names only the descendant.
+
+## Writing nodes
+
+Node text describes the product as it is and as it ought to be now: requirements say what it ought to do, and implementation nodes say what exists, including its limits. A conclusion states the choice and how it serves its parents. Write positive, present-tense sentences about what the product does.
+
+Git keeps the history: earlier versions stay in earlier commits, the reason for a change goes into the commit message, and a node that no longer applies is deleted. Avoid historic contrasting, about what changed and about what stayed the same: "the button is purple" is complete, while "the button is now purple instead of blue" and "the button remains purple" lean on an earlier version. Each sentence should make sense to a reader who knows only the current text.
+
+The time before the product and what the product is not stay out as well. How things are done today is the owner's reason for an outcome, and the node says what the product does: "everyone sees the same plan" is complete, while "no more spreadsheets by e-mail" leans on the old way. "The timeline shows Monday to Friday" is complete, while "the timeline does not show weekends" leans on something the product is not.
+
+Aim for an implementation-mature graph, precise enough that implementing it is close to compiling it: state observable behavior and every meaningful choice, and say in the node where a choice is deliberately left open. Every node in the graph is in force; there are no approval or confidence marks. The owner reviews where uncertainty and impact are highest, with passing checks and tests as evidence.
+
+## Phases
+
+The owner's request decides which phase applies.
+
+### Owner planning
+
+The owner may edit nodes directly and may commit them. Routine step 1 finds those edits; work out what they mean for outcomes and choices before you do anything else.
+
+### Structure review
+
+Every `Agent specspec changes:` commit seals the graph beneath it. What the owner changed by hand since the newest one is open, whether they committed it or not, and this phase starts when routine step 1 finds such changes. Commit the uncommitted ones first, exactly as the owner wrote them, as `Owner specspec changes: <your understanding of them>`; this commit keeps the owner's words on record and seals nothing.
+
+Then read each open node with its ancestors and hold it against the rules in The graph and Writing nodes. Tell the owner what you would split, merge, move or reword and why, and leave the graph as it is. Propose what makes the best graph, and keep to points that matter. What the owner accepts, you commit as `Agent specspec changes: <description>`; everything else stays in the owner's words.
+
+Sealed nodes stand as they are. Change one where a request cannot be recorded well without it, and name it in your summary; a request to review or restructure opens whatever it names. Sealed nodes that your request does not touch get no remark about their structure or wording. An obvious flaw in a sealed node you are working at may get one line in your summary, once.
+
+### Tandem planning
+
+The owner talks about what they want without yet asking for the graph or the product; you discuss it and leave the graph as it is. Separate what the owner wants from the choices they suggested, challenge those choices and propose your own. Mention removals, splits and changes of existing nodes as soon as you consider them. Close with guiding questions and your tentative answer to each.
+
+### Agent planning
+
+This phase starts when the owner asks you to create or change the graph ("draw the graph", "change the spec"). Open edits of the owner get their structure review along the way: commit them as written, plan what the owner asked for and put your suggestions about their edits into your summary. Work from the existing graph, its Git history, the owner's edits, the suggestions they accepted and the tandem rounds to make the graph implementation-mature: complete the depth that building needs, and fill breadth where the owner evidently left a gap for you. Commit your planning on its own as `Agent specspec changes: <description>`. Run the staged check before each commit, and finish with a summary of changed outcomes, your choices, open questions and affected nodes.
+
+### Implementation
+
+This phase starts when the owner asks you to build or change the product, and it includes agent planning: first plan what you are asked to build and commit that planning. Then keep graph and product in sync as you build: record each choice the graph still leaves to you as a requirement under the intention it serves, describe what you built in implementation nodes, and keep existing explanations and `sources` current. Commit every change to requirement nodes on its own as `Agent specspec changes: <description>`, also a choice you record in the middle of building; code and implementation nodes go into the project's ordinary commits. Removing nodes is the owner's decision. When nodes contradict each other, implement a simple, broad subset of the graph that is free of the contradiction, and report the conflict, the subset you chose and its consequences. When you see a way to improve the product, report the idea. You can offer to work either out as a graph on a separate branch.
+
+## Commands
+
+Install with `uv tool install specspec` (or `pipx install specspec`) and run commands inside the project, like Git. IDs such as `TZ971GA=` are written in full, including the final `=`. `add` prints the ID it creates.
+
+```sh
+specspec query ID --max-distance 1   # a node and its children
+specspec add --parent PARENT_ID -m '# Title' -m 'Paragraph.'   # a requirement
+specspec add --type implementation --parent REQUIREMENT_ID -m '# Realization'
+specspec update ID --replace 'old passage' 'new passage'
+specspec update ID --parent FIRST_ID --parent SECOND_ID   # replaces the parent list
+specspec delete CHOICE_ID IMPL_ID add --parent INTENTION_ID -m '# New choice' --require-valid
+```
+
+A bare `specspec query` prints the whole graph, so bound reads with `--max-distance`. Steps can form one invocation; `--as name` names a new node and `--parent '$name'` links to it. Deletion removes exactly the selected files: descendants keep their now-missing parent references, so reconnect, rewrite or delete them deliberately.
+
+A whole-file source link is a `- path: FILE` line under `sources:` in the node's frontmatter. When `check --sources` reports a link whose code changed, align the explanation and the code, stage the code, then run `specspec sources reanchor IMPL_ID --source N --staged`. After an interrupted write, keep `.specspec/local/` and run `specspec recover`. Every command explains itself with `--help`.

@@ -15,6 +15,7 @@ sources:
 - path: tools/guide_quiz/grading.py
 - path: tools/guide_quiz/results.py
 - path: tools/guide_quiz/report.py
+- path: tools/guide_quiz/scorecard.py
 - path: tools/guide_quiz/quizzes/bakery.md
 - path: tools/guide_quiz/quizzes/bakery.rubric.md
 - path: tools/guide_quiz/quizzes/clinic.md
@@ -25,10 +26,14 @@ sources:
 - path: tools/guide_quiz/quizzes/explain-cases.md
 - path: tools/guide_quiz/quizzes/explain-rules.md
 - path: tools/guide_quiz/quizzes/grader.md
+- path: tools/guide_quiz/quizzes/manual-plan.md
+- path: tools/guide_quiz/quizzes/manual-plan.rubric.md
 - path: tools/guide_quiz/quizzes/owner-edits-apply.md
 - path: tools/guide_quiz/quizzes/owner-edits-commands.md
 - path: tools/guide_quiz/quizzes/owner-edits-plan.md
 - path: tools/guide_quiz/quizzes/owner-edits-plan.rubric.md
+- path: tools/guide_quiz/quizzes/owner-edits-review.md
+- path: tools/guide_quiz/quizzes/owner-edits-review.rubric.md
 - path: tools/guide_quiz/quizzes/owner-edits-unanswered.md
 - path: tools/guide_quiz/quizzes/owner-edits.graph.json
 - path: tools/guide_quiz/quizzes/owner-edits.md
@@ -39,6 +44,9 @@ sources:
 - path: tools/guide_quiz/quizzes/revise.graph.json
 - path: tools/guide_quiz/quizzes/revise.md
 - path: tools/guide_quiz/quizzes/revise.rubric.md
+- path: tools/guide_quiz/quizzes/sealed-feature.md
+- path: tools/guide_quiz/quizzes/sealed-plan.md
+- path: tools/guide_quiz/quizzes/sealed-plan.rubric.md
 - path: tests/test_guide_quiz.py
 - path: CONTRIBUTING.md
 - path: .gitignore
@@ -48,15 +56,12 @@ sources:
 `python -m tools.guide_quiz` asks models, grades their answers and reports. `models.py`
 calls the `claude` command of Claude Code once per question, with a guide version as
 the system prompt, no tools, an environment free of the calling session's variables
-and an empty working folder. `dilemmas.py` reads 52 dilemmas from `quizzes/dilemmas.json`,
-22 about the structure of a graph and 30 about routine, phases, commands and wording, and
+and an empty working folder. `dilemmas.py` reads 60 dilemmas from `quizzes/dilemmas.json`,
+22 about the structure of a graph and 38 about routine, phases, commands and wording, and
 shuffles their options the same way for every model and guide. `tasks.py` and the briefs
 in `quizzes/` define the open tasks: two briefs to draw a graph from, two requests to
 revise a graph, one flawed graph to review, one brief to discuss in tandem planning and
-two questions whose answers a person reads. Five more tasks start from nodes that the owner edited by hand: a structure review
-of them, the planning after the owner accepted three suggestions and declined three or
-left three unanswered, that planning written as command lines, and the planning of a
-further request while the edits are unreviewed.
+two questions whose answers a person reads. Nine more tasks use a bike-shop graph with nodes that the owner wrote by hand: a structure review of them, as text and as a dry run that lists its commits; the planning after the owner accepted three suggestions and declined three or left three unanswered, also written as command lines; and the planning of a further request while those nodes are uncommitted, committed by the owner or sealed by an agent planning commit, the last also with a request that needs a sealed node restructured.
 
 `graphs.py` builds the graphs that models return, checks them with
 `specspec.graph.build_graph` and scans node text for build order. `commands.py` writes a
@@ -73,7 +78,7 @@ ones, and judges a named task anew. `results.py` keeps raw answers in the ignore
 one file per process. `report.py` prints one column per model and guide, for all of them
 or for the named ones, with the share of right answers for the dilemmas about structure
 and for the others. It compares two graders on the answers both graded and adds up what
-the recorded calls cost.
+the recorded calls cost. `scorecard.py` prints about twenty behaviours in plain words, each with what the model was asked and what is counted, one column per named guide.
 
 The tool lies outside `src/` and the npm workspaces, so no artifact contains it.
 `tests/test_guide_quiz.py` checks that boundary, the ignore rule and the tool's logic,

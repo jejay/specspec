@@ -7,7 +7,7 @@ import concurrent.futures
 import random
 import sys
 
-from . import commands, dilemmas, grading, guides, models, report, results, tasks
+from . import commands, dilemmas, grading, guides, models, report, results, scorecard, tasks
 
 HAIKU = "claude-haiku-5-5"
 
@@ -192,6 +192,16 @@ def show(arguments) -> None:
     print(report.task_report(answers, results.load("grades"), arguments.grader))
 
 
+def show_scorecard(arguments) -> None:
+    """The behaviours in plain words, one column per named guide."""
+    try:
+        kept = [guides.resolve(name) for name in listed(arguments.guides)]
+    except ValueError as problem:
+        raise SystemExit(str(problem)) from problem
+    scores = report.scored(results.load("tasks"), results.load("grades"), arguments.grader)
+    print(scorecard.table(scores, results.load("dilemmas"), arguments.model, kept))
+
+
 def show_spending(arguments) -> None:
     print(report.spending({kind: results.load(kind) for kind in results.KINDS}))
 
@@ -250,6 +260,10 @@ def parser() -> argparse.ArgumentParser:
     sub = command("agreement", compare_graders, "Compare two graders on the answers both graded.")
     sub.add_argument("--graders", required=True, help="two model IDs, comma-separated")
     command("costs", show_spending, "Count the recorded calls and add up their cost.")
+    sub = command("scorecard", show_scorecard, "Print the main behaviours in plain words.")
+    sub.add_argument("--guides", required=True, help="guide names, comma-separated")
+    sub.add_argument("--model", default=HAIKU)
+    sub.add_argument("--grader", default=grading.GRADER)
     return main
 
 

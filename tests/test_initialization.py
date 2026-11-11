@@ -267,7 +267,7 @@ def test_packaged_guide_matches_current_behavior():
     raw = guide_bytes()
     text = raw.decode("utf8")
     # The limit counts LF line endings; a Windows checkout may hold the template with CRLF.
-    assert len(raw.replace(b"\r\n", b"\n")) <= 12288
+    assert len(raw.replace(b"\r\n", b"\n")) <= 14336
     for phrase in [
         "specification spectrum",
         ".specspec/<id>.md",
@@ -275,7 +275,13 @@ def test_packaged_guide_matches_current_behavior():
         "spotlight show",
         "spotlight add",
         "Structure review",
+        "seals the graph beneath it",
+        "seals nothing",
+        "get no remark about their structure or wording",
         "stays in the owner's words",
+        "Close with guiding questions",
+        "on its own as `Agent specspec changes:",
+        "Separate what the owner wants from the choices they suggested",
         "Tandem planning",
         "Agent planning",
         "Implementation",

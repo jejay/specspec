@@ -3,16 +3,24 @@
 ## Unreleased
 
 **Agent guide.** `specspec init` ships a shorter AGENTS.md (about 12 KB). It starts with
-what the graph is for and a working routine, shows a small example graph, reads
-spotlights as owner input and states which commits a planning request authorizes: the
-owner's pending specification edits, then the agent's result. A request to build includes
-that planning, and every other commit follows the project's own rules. The agent leaves a
-spotlight on the nodes it discusses, so the owner can open them in a graph editor. Three
-worked examples show how a sentence from the owner becomes an outcome and a choice beneath
-it. The guide keeps a list of limits in one node and names what stays out of the graph,
-such as an order of work. When the owner has edited nodes by hand, the agent first tells
-them what it would split, move or reword; what the owner does not accept stays as they
-wrote it. Node text leaves out the time before the product and what the product is not.
+what the graph is for and a working routine, shows a small example graph and reads
+spotlights as owner input. The agent leaves a spotlight on the nodes it discusses, so the
+owner can open them in a graph editor. Three worked examples show how a sentence from the
+owner becomes an outcome and a choice beneath it. The guide keeps a list of limits in one
+node and names what stays out of the graph, such as an order of work. Node text leaves out
+the time before the product and what the product is not.
+
+The guide names two kinds of commits. `Owner specspec changes:` holds the owner's hand
+edits exactly as they wrote them; the agent makes this commit before it questions
+anything. `Agent specspec changes:` holds the agent's planning, apart from implementation,
+and seals the graph beneath it: the agent changes older nodes when a request needs it or
+the owner asks for a review, and makes no remarks about their structure otherwise. A
+request to build includes that planning, and every other commit follows the project's own
+rules. What the owner changed by hand since the newest such commit, committed or not, gets
+a structure review: the agent says what it would split, merge, move or reword, and what
+the owner does not accept stays as they wrote it. In a discussion before any planning, the
+agent tells what the owner wants apart from the ways they suggested and closes with
+guiding questions and its own tentative answers.
 
 **CLI fixes**
 - A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT

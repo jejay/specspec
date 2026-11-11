@@ -51,7 +51,7 @@ The graph exists because a specification worked out with a coding agent blends t
 
 ## Routine
 
-1. Check for owner input first: `git status`, `specspec diff` for specification changes since the last commit, the diffs of other files (including untracked ones), and `specspec spotlight show` for messages the owner attached to nodes. Uncommitted changes from an earlier agent session are your own unfinished work; ask when unsure whose a change is.
+1. Check for owner input first: `git status`, `specspec diff` for specification changes since the last commit, the diffs of other files (including untracked ones), and `specspec spotlight show` for messages the owner attached to nodes. The owner may also have committed edits themselves: look in `git log` for the newest commit titled `Agent specspec changes:`, and `specspec diff COMMIT` shows every specification change since it. Uncommitted changes from an earlier agent session are your own unfinished work; ask when unsure whose a change is.
 2. Find the nodes your task touches: `specspec query --max-distance 2` shows the top of the graph, and `specspec sources show` lists which implementation node links which file.
 3. Before you change a node or the artifacts it describes, read it with its ancestors: `specspec query ID --max-distance 0 --with-ancestors`. Its ancestors are the reasons it exists, and they bind as much as the node itself.
 4. Work in the phase the owner asked for (see Phases). You change the graph only in agent planning and implementation, with `specspec add`, `update` and `delete`.
@@ -105,23 +105,27 @@ The owner's request decides which phase applies.
 
 ### Owner planning
 
-The owner may edit nodes directly. Routine step 1 finds those edits; work out what they mean for outcomes and choices before you do anything else.
+The owner may edit nodes directly and may commit them. Routine step 1 finds those edits; work out what they mean for outcomes and choices before you do anything else.
 
 ### Structure review
 
-This phase starts when routine step 1 finds nodes the owner edited. Read each one with its ancestors and hold it against the rules in The graph and Writing nodes: one decision per node, an outcome above the way that serves it, the parents it names, nothing that is not a node, and plain statements about the product. Tell the owner, node by node, what you would split, move or reword and why, and leave the graph as it is. Only what the owner accepts gets done: you apply it in agent planning, after their edits are committed as they wrote them. Everything else stays in the owner's words.
+Every `Agent specspec changes:` commit seals the graph beneath it, and a graph without one is open as a whole. What the owner changed by hand since the newest one is open, whether they committed it or not, and this phase starts when routine step 1 finds such changes. Commit the uncommitted ones first, exactly as the owner wrote them, as `Owner specspec changes: <your understanding of them>`; this commit keeps the owner's words on record and seals nothing.
+
+Then read each open node with its ancestors and hold it against the rules in The graph and Writing nodes. Tell the owner what you would split, merge, move or reword and why, and leave the graph as it is. Propose what makes the best graph, and keep to points that matter. What the owner accepts, you commit as `Agent specspec changes: <description>`; everything else stays in the owner's words.
+
+Sealed nodes stand as they are. Change one where a request cannot be recorded well without it, and name it in your summary; a request to review or restructure opens whatever it names. Sealed nodes that your request does not touch get no remark about their structure or wording. An obvious flaw in a sealed node you are working at may get one line in your summary, once.
 
 ### Tandem planning
 
-The owner talks about what they want without yet asking for the graph or the product; you discuss it and leave the graph as it is. The owner's focus is breadth, the outcomes the product should have; yours is depth, the choices that achieve them, and breadth too where a gap is obvious. Separate what the owner wants from the choices they suggested, confirm or challenge those choices, and propose alternatives and your own conclusions. The owner leads: give a concise overview of your understanding, ready for correction, with guiding questions and your tentative answers, and concentrate on the choices that matter. Talk about the product rather than about nodes, with one exception: mention removals, splits and changes of existing nodes as soon as you consider them. The phase can take several rounds or be skipped.
+The owner talks about what they want without yet asking for the graph or the product; you discuss it and leave the graph as it is. Separate what the owner wants from the choices they suggested, challenge those choices and propose your own. Mention removals, splits and changes of existing nodes as soon as you consider them. Close with guiding questions and your tentative answer to each.
 
 ### Agent planning
 
-This phase starts when the owner asks you to create or change the graph ("draw the graph", "change the spec"). The request authorizes two commits. First commit the owner's uncommitted specification edits, if any, as `Owner specspec changes: <your understanding of them>`. Then work from the existing graph, its Git history, the owner's edits, the suggestions they accepted and the tandem rounds to make the graph implementation-mature: complete the depth that building needs, and fill breadth where the owner evidently left a gap for you. Commit it as `Agent specspec changes: <description>`. Run the staged check before each commit, and finish with a summary of changed outcomes, your choices, open questions and affected nodes.
+This phase starts when the owner asks you to create or change the graph ("draw the graph", "change the spec"). Open edits of the owner get their structure review along the way: commit them as written, plan what the owner asked for and put your suggestions about their edits into your summary. Work from the existing graph, its Git history, the owner's edits, the suggestions they accepted and the tandem rounds to make the graph implementation-mature: complete the depth that building needs, and fill breadth where the owner evidently left a gap for you. Commit your planning on its own as `Agent specspec changes: <description>`. Run the staged check before each commit, and finish with a summary of changed outcomes, your choices, open questions and affected nodes.
 
 ### Implementation
 
-This phase starts when the owner asks you to build or change the product, and it includes agent planning: first plan what you are asked to build, with the same two commits. Then keep graph and product in sync as you build: record each choice the graph still leaves to you as a requirement under the intention it serves, describe what you built in implementation nodes, and keep existing explanations and `sources` current. Removing nodes is the owner's decision. When nodes contradict each other, implement a simple, broad subset of the graph that is free of the contradiction, and report the conflict, the subset you chose and its consequences. When you see a way to improve the product, report the idea. You can offer to work either out as a graph on a separate branch.
+This phase starts when the owner asks you to build or change the product, and it includes agent planning: first plan what you are asked to build and commit that planning. Then keep graph and product in sync as you build: record each choice the graph still leaves to you as a requirement under the intention it serves, describe what you built in implementation nodes, and keep existing explanations and `sources` current. Commit every change to requirement nodes on its own as `Agent specspec changes: <description>`, also a choice you record in the middle of building; code and implementation nodes go into the project's ordinary commits. Removing nodes is the owner's decision. When nodes contradict each other, implement a simple, broad subset of the graph that is free of the contradiction, and report the conflict, the subset you chose and its consequences. When you see a way to improve the product, report the idea. You can offer to work either out as a graph on a separate branch.
 
 ## Commands
 
@@ -133,19 +137,9 @@ specspec add --parent PARENT_ID -m '# Title' -m 'Paragraph.'   # a requirement
 specspec add --type implementation --parent REQUIREMENT_ID -m '# Realization'
 specspec update ID --replace 'old passage' 'new passage'
 specspec update ID --parent FIRST_ID --parent SECOND_ID   # replaces the parent list
-specspec delete ID --dry-run
-```
-
-A bare `specspec query` prints the whole graph, so bound reads with `--max-distance`. `-m` values are literal Markdown paragraphs; long bodies can come from standard input instead.
-
-Several add, update and delete steps can form one invocation. `--as name` names a new node and `--parent '$name'` links to it; `--dry-run` (preview), `--require-valid` (refuse an invalid result) and `--yes` apply to all steps. Replacing a choice and its implementation under their intention:
-
-```sh
 specspec delete CHOICE_ID IMPL_ID add --parent INTENTION_ID -m '# New choice' --require-valid
 ```
 
-Deletion removes exactly the selected files: descendants keep their files and their now-missing parent references, so reconnect, rewrite or delete them deliberately. Deleting a node with uncommitted changes needs `--yes`.
+A bare `specspec query` prints the whole graph, so bound reads with `--max-distance`. Steps can form one invocation; `--as name` names a new node and `--parent '$name'` links to it. Deletion removes exactly the selected files: descendants keep their now-missing parent references, so reconnect, rewrite or delete them deliberately.
 
-Source links: `specspec sources capture IMPL_ID PATH --range 10:40 --mode expanding --staged` anchors a line range to the staged version of a file (stage the code first). `expanding` lets edits inside the range pass; `strict` reports them for review. A whole-file link is the one hand edit: a `- path: FILE` line under `sources:` in the node's frontmatter. When `check --sources` reports a link whose code changed, moved or disappeared, align the explanation and the code, stage the code, then run `specspec sources reanchor IMPL_ID --source N --staged`.
-
-After an interrupted write, keep `.specspec/local/` (local state that Git ignores) and run `specspec recover`. Every command explains itself with `--help`.
+A whole-file source link is a `- path: FILE` line under `sources:` in the node's frontmatter. When `check --sources` reports a link whose code changed, align the explanation and the code, stage the code, then run `specspec sources reanchor IMPL_ID --source N --staged`. After an interrupted write, keep `.specspec/local/` and run `specspec recover`. Every command explains itself with `--help`.

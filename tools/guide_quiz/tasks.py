@@ -64,6 +64,13 @@ TASKS = {
             about="The owner edited nodes by hand; six edits have a planted problem.",
         ),
         Task(
+            "owner-edits-review",
+            "operations",
+            "owner-edits-review",
+            about="As owner-edits, answered with the commits made now and a report.",
+            base="owner-edits",
+        ),
+        Task(
             "owner-edits-apply",
             "operations",
             about="The owner accepts three suggestions and declines three; then plan.",
@@ -86,6 +93,26 @@ TASKS = {
             "operations",
             "owner-edits-plan",
             about="The owner edited nodes by hand and asks for one more thing; then plan.",
+            base="owner-edits",
+        ),
+        Task(
+            "manual-plan",
+            "operations",
+            "manual-plan",
+            about="The owner committed nodes by hand and asks for one more thing; then plan.",
+            base="owner-edits",
+        ),
+        Task(
+            "sealed-plan",
+            "operations",
+            "sealed-plan",
+            about="The same nodes, sealed by an agent planning commit; the request is unrelated.",
+            base="owner-edits",
+        ),
+        Task(
+            "sealed-feature",
+            "operations",
+            about="A request needs a sealed node restructured: NFC stickers replace QR tags.",
             base="owner-edits",
         ),
         Task(

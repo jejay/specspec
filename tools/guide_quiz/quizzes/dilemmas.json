@@ -674,5 +674,109 @@
    "A list of the commands you ran, in order.",
    "A confirmation that the graph is complete and correct."
   ]
+ },
+ {
+  "id": "P31",
+  "topic": "phases",
+  "rule": "A sealed node is left alone when the request does not need it changed",
+  "stated": "no",
+  "stem": "The newest commit of a project is `Agent specspec changes: reminders`, and `git status` is clean. While reading the graph you notice that an old requirement blends two decisions. The owner asks you to plan a feature that has nothing to do with that node. What do you do about it?",
+  "options": [
+   "Nothing: it is sealed, the request does not need it changed, and a small point like this stays unsaid.",
+   "Split it while you are planning, since the rules of the graph are clear, and mention it in your summary.",
+   "List the split as a suggestion in your summary, and again in every later session until the owner decides.",
+   "Stop and ask the owner about the node before you plan the feature."
+  ]
+ },
+ {
+  "id": "P32",
+  "topic": "phases",
+  "rule": "A request that needs it changes a sealed node, and the summary says so",
+  "stated": "no",
+  "stem": "A sealed requirement reads 'Print a QR tag for every bike so nobody mixes up two bikes'. The owner writes: \"We are replacing the QR tags by NFC stickers. Change the spec.\" What do you do with the sealed node?",
+  "options": [
+   "Make 'No two bikes get mixed up' a node of its own, put the NFC choice beneath it in place of the QR choice, and name the sealed node in your summary.",
+   "Add a new node 'Put an NFC sticker on every bike' next to it and leave the sealed node exactly as it is.",
+   "Ask the owner for permission to touch a sealed node and plan nothing until they answer.",
+   "Leave the graph as it is and remember the change for when you build."
+  ]
+ },
+ {
+  "id": "P33",
+  "topic": "phases",
+  "rule": "What the owner committed by hand after the newest agent planning commit is open",
+  "stated": "no",
+  "stem": "`git status` is clean. The newest commit, `more spec`, was made by the owner by hand and adds three nodes; the commit before it is `Agent specspec changes: job list`. One of the three nodes hangs under a parent it does not follow from. The owner asks you to plan a new feature. What about that node?",
+  "options": [
+   "It is open: tell the owner in your summary that you would move it and why, and leave it as it is unless they accept.",
+   "It is committed and therefore sealed; you say nothing about it.",
+   "Move it now, since nobody has reviewed it yet, and mention the move in your summary.",
+   "Revert the owner's commit and ask them to add nodes through you."
+  ]
+ },
+ {
+  "id": "P34",
+  "topic": "phases",
+  "rule": "The owner's uncommitted edits are committed as they wrote them before they are questioned",
+  "stated": "no",
+  "stem": "At the start of a session `specspec diff` shows two nodes that the owner edited by hand and has not committed. One of them blends two decisions. The owner writes: \"Have a look.\" What is your first step?",
+  "options": [
+   "Commit both edits exactly as the owner wrote them, as `Owner specspec changes: ...`, and then tell the owner what you would split and why.",
+   "Tell the owner what you would split, and commit nothing before they have answered.",
+   "Split the node and commit everything together as `Agent specspec changes: ...`.",
+   "Commit the edits as `Agent specspec changes: ...`, so that they are sealed."
+  ]
+ },
+ {
+  "id": "P35",
+  "topic": "phases",
+  "rule": "An owner commit keeps the owner's words and seals nothing",
+  "stated": "no",
+  "stem": "A minute ago you committed the owner's hand edits as `Owner specspec changes: limits and a warranty slip`. Are those nodes sealed now?",
+  "options": [
+   "No. Only an `Agent specspec changes:` commit seals; the owner's edits stay open for your structure review.",
+   "Yes. Every commit that you make seals the graph beneath it.",
+   "Yes. A node is settled as soon as it is committed, whoever wrote it.",
+   "Only the nodes that pass `specspec check` are sealed."
+  ]
+ },
+ {
+  "id": "P36",
+  "topic": "phases",
+  "rule": "Planning is committed apart from implementation",
+  "stated": "no",
+  "stem": "While building a notes app you decide to keep the notes in the browser's localStorage, and you write `storage.js`. You add a requirement for that choice and an implementation node that explains the file. How do you commit?",
+  "options": [
+   "The requirement on its own as `Agent specspec changes: ...`, and the code with its implementation node in an ordinary commit of the project.",
+   "Everything in one commit titled `Agent specspec changes: ...`.",
+   "Everything in one ordinary commit, because the planning commit was made before you started to build.",
+   "The code now; the requirement and the implementation node wait for the next planning request."
+  ]
+ },
+ {
+  "id": "P37",
+  "topic": "phases",
+  "rule": "A point about a sealed node is raised once and not at every opportunity",
+  "stated": "no",
+  "stem": "A sealed node has an obvious flaw: a sentence about signing in sits in a node about reminder texts. You mentioned it in your summary last week, and the owner did not react. Today you add a child beneath that node for a new feature. What do you do about the flaw?",
+  "options": [
+   "Leave the node as it is; one line in your summary is the most the flaw gets.",
+   "Move the sentence into a node of its own now, since you are working there anyway.",
+   "Open your reply with the flaw and wait for the owner's decision before you add the child.",
+   "Remind the owner of it in every summary until they decide."
+  ]
+ },
+ {
+  "id": "P38",
+  "topic": "phases",
+  "rule": "In tandem planning, what the owner wants is told apart from the way they suggested",
+  "stated": "partly",
+  "stem": "In a tandem planning round the owner says: \"Customers get an e-mail when their order is ready, so nobody waits in the shop for nothing.\" What does your reply do with this sentence?",
+  "options": [
+   "It tells the want (customers know when their order is ready) apart from the suggested way (an e-mail) and says what you think of that way.",
+   "It lists the nodes you will add for the e-mail and their parents.",
+   "It asks which e-mail provider the owner prefers and moves on.",
+   "It confirms the e-mail as a requirement and turns to the next point."
+  ]
  }
 ]
