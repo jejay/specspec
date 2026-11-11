@@ -6,7 +6,7 @@ parents:
 ---
 # Keep a separate versioned Gantt product specification
 
-Use an independent graph for the local Gantt app. Separate owner outcomes, solution
+Use an independent graph for the local Gantt app. Separate owner intentions, solution
 conclusions and terminal implementation mappings. Each product direction has an
 agent-planned spec checkpoint before its runnable code. Major redirects delete
 obsolete branches with reasons in commits and explanations retained in predecessor

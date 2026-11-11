@@ -18,6 +18,5 @@ conclusions separate and explain their intention relationships.
 Inspect deletion scope and reconnect retained children deliberately when consolidating
 reasoning. Validate the complete intended graph and exact staged source/index state.
 The planning request also authorizes committing the result as
-`Agent specspec changes: <description>`. Every other commit follows the project's own rules. Summarize changed intentions, choices,
-implementation gaps and affected nodes. Schema-breaking history
+`Agent specspec changes: <description>`. Every other commit follows the project's own rules. Summarize the intentions read into the owner's words, the agent's own conclusions, open questions, implementation gaps and affected nodes. Schema-breaking history
 is handled with current workspace evidence and independent compliant fixtures.

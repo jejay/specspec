@@ -8,5 +8,5 @@ parents:
 
 Keep this repository's active specification in `.specspec` and connect its
 implementation leaves to actual code and verification. Provide discoverable
-inspection/editing instructions. Distinguish owner intentions, revisable choices
+inspection/editing instructions. Distinguish owner intentions, revisable conclusions
 and implemented behavior through their graph relationships.

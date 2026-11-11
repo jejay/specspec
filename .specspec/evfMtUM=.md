@@ -9,7 +9,7 @@ parents:
 
 CI validates the working root graph and live source references with warnings as
 errors. Repository tests inspect current complete context and permitted manual
-changes while allowing identities, counts and revisable choices to evolve. A development launch exposes this specification, and repository tests check node
+changes while allowing identities, counts and revisable conclusions to evolve. A development launch exposes this specification, and repository tests check node
 text for doubled words and sentence-case starts.
 
 Independent current-schema graphs and the complete maintained Gantt corpus supply

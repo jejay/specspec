@@ -18,4 +18,4 @@ when it has to be reconsidered whenever either of them changes and neither desce
 from the other.
 
 A statement goes under the most specific node that is its reason, and no lower: a need
-noticed while detailing a choice goes where it survives that choice.
+noticed while detailing a conclusion goes where it survives that conclusion.
