@@ -1,0 +1,110 @@
+[
+ {
+  "id": "Kq3x9bA=",
+  "type": "manifesto",
+  "parents": [],
+  "title": "Run a physiotherapy practice's appointments",
+  "body": "One place where the front desk and four therapists book, see and change appointments, and patients are reminded of them."
+ },
+ {
+  "id": "B00kMv1=",
+  "type": "requirement",
+  "parents": [
+   "Kq3x9bA="
+  ],
+  "title": "The front desk books, moves and cancels appointments",
+  "body": "One person at the front desk handles all changes. Moving an appointment takes a few seconds."
+ },
+ {
+  "id": "ImB00k2=",
+  "type": "implementation",
+  "parents": [
+   "B00kMv1="
+  ],
+  "title": "Booking form and drag-to-move",
+  "body": "`booking.js` holds the booking form and moves an appointment when its card is dragged to another time."
+ },
+ {
+  "id": "EuData9=",
+  "type": "requirement",
+  "parents": [
+   "Kq3x9bA="
+  ],
+  "title": "Patient data stays on servers in the EU",
+  "body": "No patient data is stored or processed outside the EU, including by services the app calls."
+ },
+ {
+  "id": "Rm1ndR3=",
+  "type": "requirement",
+  "parents": [
+   "Kq3x9bA="
+  ],
+  "title": "Patients are reminded of their appointment in time",
+  "body": "A patient hears from the practice early enough to rearrange their day or to cancel."
+ },
+ {
+  "id": "SmsDay6=",
+  "type": "requirement",
+  "parents": [
+   "EuData9=",
+   "Rm1ndR3="
+  ],
+  "title": "Send the reminder as a text message the day before",
+  "body": "Texts go out at 18:00 on the day before the appointment, through an SMS gateway hosted in Frankfurt. The front desk signs in with the practice's Microsoft accounts."
+ },
+ {
+  "id": "ImSms77=",
+  "type": "implementation",
+  "parents": [
+   "SmsDay6="
+  ],
+  "title": "Evening reminder job",
+  "body": "`reminders.py` runs at 18:00, selects tomorrow's appointments and sends one text per patient through the gateway's HTTP API."
+ },
+ {
+  "id": "Wk7fTq0=",
+  "type": "requirement",
+  "parents": [
+   "Kq3x9bA="
+  ],
+  "title": "Everyone sees who is treated when and by whom",
+  "body": "Front desk and therapists see the practice's appointments without opening single ones."
+ },
+ {
+  "id": "Gr1dCc4=",
+  "type": "requirement",
+  "parents": [
+   "Wk7fTq0="
+  ],
+  "title": "Show the week as a grid with one column per therapist",
+  "body": "A week view in the style of a desktop calendar: the days side by side, and within each day one column per therapist."
+ },
+ {
+  "id": "C0lrTy2=",
+  "type": "requirement",
+  "parents": [
+   "Gr1dCc4="
+  ],
+  "title": "Colour each appointment by treatment type",
+  "body": "Manual therapy, massage and training each have their own colour, so the mix of a day shows without reading."
+ },
+ {
+  "id": "Sl0tRw8=",
+  "type": "requirement",
+  "parents": [
+   "Gr1dCc4="
+  ],
+  "title": "Rows are 15-minute slots from 7:00 to 20:00",
+  "body": "Every appointment starts and ends on a slot boundary."
+ },
+ {
+  "id": "ImGr1d5=",
+  "type": "implementation",
+  "parents": [
+   "C0lrTy2=",
+   "Sl0tRw8="
+  ],
+  "title": "Week grid rendering",
+  "body": "`week-grid.js` draws the grid, places appointments on their slots and colours them by treatment type."
+ }
+]

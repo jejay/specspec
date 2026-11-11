@@ -1,0 +1,266 @@
+[
+ {
+  "id": "I01",
+  "rule": "A technology the owner must use is a constraint near the root",
+  "stated": "yes",
+  "stem": "You are planning the graph for a physiotherapy practice's appointment app. The owner says: \"It has to run on the PostgreSQL server our IT contractor already hosts. He supports nothing else.\" The graph has the manifesto and beneath it the outcome 'Appointments are still there after a restart'. Where does the PostgreSQL statement go?",
+  "options": [
+   "A requirement directly under the manifesto, 'Store all data in the contractor's PostgreSQL server'; nodes about how data is stored name it as a parent.",
+   "A requirement under 'Appointments are still there after a restart', as the way that outcome is achieved.",
+   "A sentence added to that outcome, so that it reads 'Appointments are still there after a restart, kept in the contractor's PostgreSQL server'.",
+   "An implementation node under 'Appointments are still there after a restart' that names PostgreSQL."
+  ]
+ },
+ {
+  "id": "I02",
+  "rule": "A technology the owner suggested is a choice under the outcome it serves",
+  "stated": "yes",
+  "stem": "The owner of an appointment app says: \"For the reminder texts maybe use Twilio, or whatever you find best.\" You look into it and Twilio fits. The graph has the manifesto, beneath it the outcome 'Patients are reminded of their appointment in time', and beneath that the choice 'Send the reminder as a text message the day before'. Where does Twilio go?",
+  "options": [
+   "A requirement under 'Send the reminder as a text message the day before': 'Send the texts through Twilio'.",
+   "A requirement directly under the manifesto, since the owner named it.",
+   "A sentence added to the outcome, so that it reads 'Patients are reminded of their appointment in time through Twilio'.",
+   "Nowhere in the graph; which provider sends the texts is a detail for the code and its configuration."
+  ]
+ },
+ {
+  "id": "I03",
+  "rule": "Separate the outcome from the choice that achieves it (depth)",
+  "stated": "yes",
+  "stem": "The owner of an appointment app says: \"Patients get a text message the day before, so fewer of them forget their appointment.\" Nothing else is known about why it should be a text message. The graph has only the manifesto so far. How do you record this?",
+  "options": [
+   "Two nodes in a line under the manifesto: 'Patients are reminded of their appointment in time', and beneath it 'Send the reminder as a text message the day before'.",
+   "One node under the manifesto: 'Send patients a text message the day before', with 'so that fewer of them forget their appointment' in its text.",
+   "Two nodes next to each other under the manifesto: 'Fewer patients forget their appointment' and 'Send patients a text message the day before'.",
+   "Three nodes next to each other under the manifesto: one for reminding, one for the text message, one for the day before."
+  ]
+ },
+ {
+  "id": "I04",
+  "rule": "A choice that builds on another choice goes below that choice, not beside it",
+  "stated": "no",
+  "stem": "A graph has the outcome 'Everyone sees the week at a glance' and beneath it the choice 'Show the week as a grid with one column per therapist'. You now decide how the grid treats time: 'Rows are 15-minute slots from 7:00 to 20:00.' The owner may well want to change this later without touching anything else. Where does it go?",
+  "options": [
+   "A new requirement under 'Show the week as a grid with one column per therapist'.",
+   "A new requirement under 'Everyone sees the week at a glance', next to the grid choice.",
+   "A new requirement that names both 'Everyone sees the week at a glance' and the grid choice as parents.",
+   "A sentence added to 'Everyone sees the week at a glance'."
+  ]
+ },
+ {
+  "id": "I05",
+  "rule": "One conclusion that serves two intentions is one node with two parents",
+  "stated": "yes",
+  "stem": "A graph has two outcomes under the manifesto: 'The front desk can settle who changed an appointment' and 'Insurers get evidence for a disputed invoice'. You conclude that one thing serves both: 'Keep a change history for every appointment: who, when, old and new value.' How do you record it?",
+  "options": [
+   "One requirement that names both outcomes as parents.",
+   "Two requirements with the same text, one under each outcome.",
+   "One requirement directly under the manifesto, because it serves more than one outcome.",
+   "One requirement under the first outcome; the text of the second outcome mentions the change history."
+  ]
+ },
+ {
+  "id": "I06",
+  "rule": "Shortcut-free: name the descendant, not also its ancestor",
+  "stated": "yes",
+  "stem": "A graph has this chain: manifesto, beneath it 'Patients are reminded of their appointment in time', beneath that 'Send the reminder as a text message the day before'. You add 'Send the texts through an SMS gateway hosted in Frankfurt' as the way the text message is sent. It obviously also helps patients to be reminded in time. Which parents does the new node name?",
+  "options": [
+   "Only 'Send the reminder as a text message the day before'.",
+   "'Send the reminder as a text message the day before' and 'Patients are reminded of their appointment in time'.",
+   "Only 'Patients are reminded of their appointment in time'.",
+   "All three: the manifesto and both requirements."
+  ]
+ },
+ {
+  "id": "I07",
+  "rule": "Facets settled by one decision stay in one node, and they are in the graph",
+  "stated": "partly",
+  "stem": "You settle what a booking form accepts: the patient name has 1 to 80 characters; the phone number has 6 to 15 digits; the note has at most 500 characters; the date of birth lies in the past. Nobody has singled out any of these limits. How do you record them under 'The front desk books appointments'?",
+  "options": [
+   "One requirement, 'Accept only well-formed bookings', that lists the four limits.",
+   "Four requirements next to each other, one per limit, so that each can be replaced on its own.",
+   "Four requirements in a line, each a child of the one before.",
+   "Nowhere in the graph; limits like these are details for the code and its tests."
+  ]
+ },
+ {
+  "id": "I08",
+  "rule": "Unrelated decisions in one node are split, each under the intention it serves",
+  "stated": "yes",
+  "stem": "An existing requirement under 'Run the front desk smoothly' reads: 'Staff sign in with the practice's Microsoft accounts. Reminder texts go out at 18:00 on the day before.' The owner asks you to tidy the graph. What do you do with this node?",
+  "options": [
+   "Split it into two requirements, each under the intention it serves.",
+   "Leave it; both sentences are short and concern the front desk.",
+   "Keep the one node and give each sentence its own heading inside it.",
+   "Make the reminder sentence a child node of the sign-in sentence."
+  ]
+ },
+ {
+  "id": "I09",
+  "rule": "A topic or category is not a node; group only under a shared intention",
+  "stated": "no",
+  "stem": "The manifesto of a shop's inventory app has eleven requirements directly beneath it, each an outcome the owner asked for. To make the graph easier to take in, you consider adding three requirements between the manifesto and those eleven, 'Frontend', 'Backend' and 'Operations', and moving each outcome under the one it belongs to. Neither the owner nor any node says anything about frontend, backend or operations as such. What do you do?",
+  "options": [
+   "Leave the eleven outcomes directly under the manifesto.",
+   "Add the three nodes and move each outcome under the one it belongs to.",
+   "Add the three nodes as second parents, so that each outcome names the manifesto and its area.",
+   "Add the three nodes, move the outcomes, and write into each of the three a summary of the outcomes beneath it."
+  ]
+ },
+ {
+  "id": "I10",
+  "rule": "A need noticed while detailing a choice goes under the intention it would survive with",
+  "stated": "no",
+  "stem": "A graph has the outcome 'Patients are reminded of their appointment in time' and beneath it the choice 'Send the reminder as a text message the day before'. While you detail the text message, you realise that some patients have no mobile phone and need reminding too. Where does 'Patients without a mobile phone are reminded as well' go?",
+  "options": [
+   "Under 'Patients are reminded of their appointment in time', next to the text-message choice.",
+   "Under 'Send the reminder as a text message the day before', as one of its details.",
+   "As a sentence added to 'Send the reminder as a text message the day before'.",
+   "Directly under the manifesto."
+  ]
+ },
+ {
+  "id": "I11",
+  "rule": "An outcome's text does not name the means chosen beneath it",
+  "stated": "no",
+  "stem": "A graph has the outcome node 'Everyone sees the week at a glance in a grid with one column per therapist' and beneath it the choice node 'Show the week as a grid with one column per therapist'. You are asked to review the structure. What do you change?",
+  "options": [
+   "Reword the outcome to 'Everyone sees the week at a glance' and leave the grid to the choice beneath it.",
+   "Nothing; the outcome and the choice agree with each other.",
+   "Delete the choice node; the outcome already says it.",
+   "Move the choice node up, so that it sits next to the outcome."
+  ]
+ },
+ {
+  "id": "I12",
+  "rule": "A choice made while building becomes a requirement; the implementation node explains the code",
+  "stated": "yes",
+  "stem": "You are building a notes app. The graph has the outcome 'Notes are still there after a restart' and nothing beneath it. You decide to keep the notes in the browser's localStorage rather than in a file or on a server, and you write `storage.js`. How do you record this?",
+  "options": [
+   "A requirement 'Keep notes in the browser's localStorage' under the outcome, and an implementation node under that requirement which explains `storage.js` and links it.",
+   "An implementation node directly under the outcome which explains `storage.js`, says that it uses localStorage and links it.",
+   "Change the outcome to 'Notes are still there after a restart, kept in localStorage', and add an implementation node under it that links `storage.js`.",
+   "An implementation node under the manifesto, since storage concerns the whole app."
+  ]
+ },
+ {
+  "id": "I13",
+  "rule": "Only what is in force is a node; an option not chosen goes into the report",
+  "stated": "partly",
+  "stem": "For the outcome 'Notes are still there after a restart' you hesitate between localStorage and IndexedDB. Both would work; IndexedDB handles more data. The owner asked you to draw the graph and build the app today. What goes into the graph?",
+  "options": [
+   "One requirement for the option you pick, with its reason; your report tells the owner about the other option.",
+   "Two requirements under the outcome, 'Option A: localStorage' and 'Option B: IndexedDB', for the owner to pick from.",
+   "One requirement that describes both options with their advantages and drawbacks.",
+   "Nothing yet; you add a node once the owner has decided."
+  ]
+ },
+ {
+  "id": "I14",
+  "rule": "A constraint is a parent of the choice it shaped",
+  "stated": "yes",
+  "stem": "Directly under the manifesto of an appointment app there is the requirement 'Patient data stays on servers in the EU'. Elsewhere, under 'Send the reminder as a text message the day before', you add your choice of SMS gateway. You picked this gateway because it is hosted in Frankfurt. Which parents does the gateway node name?",
+  "options": [
+   "'Send the reminder as a text message the day before' and 'Patient data stays on servers in the EU'.",
+   "Only 'Send the reminder as a text message the day before'; the EU requirement applies to the whole graph anyway.",
+   "Only 'Patient data stays on servers in the EU'.",
+   "'Send the reminder as a text message the day before' and the manifesto."
+  ]
+ },
+ {
+  "id": "I15",
+  "rule": "Tasks and the order of work are not nodes",
+  "stated": "no",
+  "stem": "The owner of a new project says: \"First set up the repository with CI, then build the booking form, and do the reminders last.\" You are asked to draw the graph. How does this order appear in it?",
+  "options": [
+   "It does not appear; the graph gets requirements for what the product does, and you follow the order while you work.",
+   "As a chain: 'Set up the repository with CI', beneath it 'Build the booking form', beneath that 'Add reminders', so that depth shows the order.",
+   "As one requirement under the manifesto, 'Build order', that lists the three steps.",
+   "As three requirements under the manifesto, titled 'Step 1: Repository and CI', 'Step 2: Booking form' and 'Step 3: Reminders'."
+  ]
+ },
+ {
+  "id": "I16",
+  "rule": "A node that only rephrases its parent is dropped",
+  "stated": "no",
+  "stem": "You drafted this chain for a notes app: 'Notes are still there after a restart', beneath it 'Persist the notes', beneath that 'Save notes to storage', beneath that 'Keep notes in the browser's localStorage'. Before you write it into the graph, you review it. What do you do?",
+  "options": [
+   "Drop the two middle nodes, which leaves the outcome and beneath it the localStorage choice.",
+   "Keep the chain; each step is a little more concrete than the one before.",
+   "Keep the four nodes, but place the three lower ones next to each other under the outcome.",
+   "Add a fifth node at the end that names the storage key."
+  ]
+ },
+ {
+  "id": "I17",
+  "rule": "A node that relies on a decision in another branch names it as a parent",
+  "stated": "no",
+  "stem": "In a planning app, the requirement 'A workday is Monday to Friday; public holidays count as workdays' sits under 'Forecast finish dates'. In another branch, under 'Show tasks on a timeline', you write the choice 'Shade the days that are not workdays'. It only makes sense with that definition of a workday. How do you connect them?",
+  "options": [
+   "The shading node names two parents: 'Show tasks on a timeline' and the workday requirement.",
+   "The shading node has the one parent 'Show tasks on a timeline' and repeats the definition of a workday in its text.",
+   "The shading node has the one parent 'Show tasks on a timeline' and says 'see the workday requirement' in its text.",
+   "The workday requirement moves up directly under the manifesto, and the shading node keeps its one parent."
+  ]
+ },
+ {
+  "id": "I18",
+  "rule": "A title states the outcome or choice, not a topic or a task",
+  "stated": "partly",
+  "stem": "You add a requirement to a library app. Its text says that a librarian finds a member's overdue books within a few seconds, by name or card number. Which title do you give the node?",
+  "options": [
+   "Find a member's overdue books in seconds",
+   "Overdue search",
+   "Implement overdue book search",
+   "Search requirements"
+  ]
+ },
+ {
+  "id": "I19",
+  "rule": "Implementation nodes describe what exists",
+  "stated": "partly",
+  "stem": "The owner of a brand-new project asks you to draw the graph. Nothing has been built and you will not build today. Your requirements reach down to 'Keep notes in the browser's localStorage'. Do you add implementation nodes?",
+  "options": [
+   "No; implementation nodes come when there are files to explain and link.",
+   "Yes, one under each lowest requirement, describing the code you plan to write.",
+   "Yes, one under each lowest requirement, with the text 'Not built yet'.",
+   "Yes, a single one that lists the planned files."
+  ]
+ },
+ {
+  "id": "I20",
+  "rule": "Use more separate nodes where a decision is uncertain or contested",
+  "stated": "partly",
+  "stem": "Two parts of a booking app need detailing. Part one is the sign-in form: e-mail, password, the usual. Part two is what happens when two people book the same slot at the same moment; you see three reasonable behaviours and the owner has not said which they want. Where do you use more separate nodes?",
+  "options": [
+   "In part two: the conflict behaviour and each choice it involves get their own nodes, while sign-in is one node.",
+   "In both alike: every sentence that could change gets its own node.",
+   "In both alike: one node per part keeps the graph even.",
+   "In part one: sign-in has more fields and rules to list."
+  ]
+ },
+ {
+  "id": "I21",
+  "rule": "Replacing a choice keeps its outcome and re-homes what still applies",
+  "stated": "partly",
+  "stem": "Under the outcome 'Everyone sees who is treated when' the choice 'Show the week as a grid with one column per therapist' has two children: 'Rows are 15-minute slots' and 'Colour each appointment by treatment type'. The owner replaces the grid with a list per day. Slots no longer apply; colouring by treatment type still does. What is the resulting structure?",
+  "options": [
+   "The outcome stays. The grid node and the slot node are deleted. A new choice 'Show each day as a list' goes under the outcome, and the colouring node gets the new choice as its parent.",
+   "The outcome stays. The grid node is rewritten in place to describe the day list and keeps both children.",
+   "The outcome stays. A new choice 'Show each day as a list' is added under the grid node, which is kept as the earlier approach.",
+   "The outcome, the grid node and both children are deleted, and a new outcome with the day list beneath it is added."
+  ]
+ },
+ {
+  "id": "I22",
+  "rule": "A broad technical choice of the agent hangs under the outcomes it serves, not at the root",
+  "stated": "yes",
+  "stem": "Nobody told you how a notes app should be built. You decide it is a single HTML page without a server, because the graph has the outcomes 'Works offline on any laptop' and 'Needs no installation', both directly under the manifesto. Where does 'Ship one self-contained HTML page' go?",
+  "options": [
+   "One requirement that names both outcomes as parents.",
+   "Directly under the manifesto, since it shapes the whole app.",
+   "Under 'Works offline on any laptop' only, so that every node keeps a single parent.",
+   "Into the text of the manifesto."
+  ]
+ }
+]

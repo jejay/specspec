@@ -16,3 +16,5 @@ electron/release/
 *.vsix
 # Generated local Python Environments discovery; launch/tasks/workspace stay shared.
 /.vscode/settings.json
+# Raw model answers of the guide quiz stay on the developer's machine.
+/tools/guide_quiz/results/

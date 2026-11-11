@@ -18,7 +18,7 @@ implementation nodes and their `sources` current with the code. Coding agents fo
 | `.specspec/` | This product's own specification graph |
 | `example/gantt/` | Runnable example and tracked snapshot of its independent Git history |
 | `branding/`, `docs/images/` | Imported brand assets and README figures |
-| `tools/` | Release, icon, figure and palette tools |
+| `tools/` | Release, icon, figure and palette tools, and the agent-guide quiz |
 
 ## Development setup
 
@@ -109,3 +109,29 @@ the Windows launcher icon. `python tools/readme_figures.py` redraws the README
 figures in `docs/images/` (it needs `fonttools` and the brand kit's Manrope font). The
 palette playground is `tools/rainbow-playground/index.html`; open it directly in a
 browser to explore and export node palettes.
+
+## Quizzing models on the agent guide
+
+`tools/guide_quiz/` checks a wording of the agent guide against models. A model gets one
+guide version as its only instruction and solves quizzes: dilemmas with one keyed answer
+and open tasks, such as drawing a graph from an owner's brief or revising one. A stronger
+model grades the open answers without knowing which model or guide produced them, and
+specspec's own validator checks every drawn graph.
+
+```sh
+python -m tools.guide_quiz guides                    # guide versions and their sizes
+python -m tools.guide_quiz dilemmas --guides shipped,2026-11-10-before-structure-rules
+python -m tools.guide_quiz tasks --tasks clinic,bakery,revise,review
+python -m tools.guide_quiz grade
+python -m tools.guide_quiz report
+```
+
+`shipped` is the package template, and every other guide name is a file in
+`tools/guide_quiz/guides/`. Before you change the shipped guide, copy it there under a
+dated name, so that later results compare with the same text. The default model is Claude
+Haiku 5.5, the weakest model the guide is written for; `--models` takes others.
+
+Calls go through the `claude` command of Claude Code under your own login and cost money,
+so no test and no CI job makes them. Runs are resumable: answers already given are kept.
+Raw answers stay in the ignored `tools/guide_quiz/results/`; put the numbers that justify
+a wording into the commit message.

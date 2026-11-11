@@ -1,0 +1,1 @@
+Before we start on the graph, I want to check that we mean the same thing. In your own words: how do you decide whether two statements about the product become (a) one node, (b) two nodes next to each other under the same parent, or (c) a parent node and its child? Give one short example for each case, and say which test you apply to tell them apart.

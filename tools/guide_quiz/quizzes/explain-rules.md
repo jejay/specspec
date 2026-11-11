@@ -1,0 +1,1 @@
+Before we start on the graph: list the rules you will follow for its structure, most important first. I mean what becomes a node and what does not, where a node goes, and how nodes are linked. One line per rule. Mark each rule with [guide] when AGENTS.md states it, or with [mine] when it is your own inference.
