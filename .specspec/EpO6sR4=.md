@@ -33,7 +33,7 @@ sources:
 
 The complete standalone bundle has an empty predecessor, three specification/code
 pairs and an audit. The local browser planner's independent graph maps intentions through conclusions about manual dates, weekdays, baselines and JSON files to the actual model and browser code. Its manifesto holds intentions only, and the node on readable timing has the shared calendar axis beneath it. The example's AGENTS.md is a short section followed by the guide that init appended during the rebuild. `history/rebuild.py` rebuilds the whole history from its receipts, or from a plan with other node texts and links, and installs the result in the snapshot.
-Each stage's positive binding text precedes its runnable code. Redirect commits
+Each stage's node text precedes its runnable code. Redirect commits
 explain removed branches and predecessor trees retain their reasoning.
 
 `cli.jsonl` contains actual managed CLI inputs/results; `revisions.json` records

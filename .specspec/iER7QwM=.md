@@ -60,6 +60,6 @@ phases with separate bounded aggregate guards. CDP failure/foregrounding regress
 and explicit-value Code launch arguments protect diagnostic meaning and workspace
 selection. Disposable profiles alone enable loading traces and background-throttling
 controls. Complete installed Windows suites exercise all backchannel,
-exact-deletion/repair/recovery and host-native checks. Binding-text regression guards
+exact-deletion/repair/recovery and host-native checks. Node-text regression guards
 recognize retired-design sections while permitting current runtime read-supersession
 contracts. Static-help subprocess tests cover legacy Windows pipe encodings.
