@@ -25,28 +25,10 @@ sources:
 - path: tests/test_invalid_workflow.py
 - path: tests/test_editor.py
 ---
-# Implement invalid-state authoring through shared backend evidence
+# Read, edit and repair an invalid graph through the shared backend and both editors
 
-The snapshot/graph layer retains file inventory, parsed records, declared references,
-resolved traversals and structured diagnostics. Shared inspection computes broken
-reference scope, finite cause witnesses and contextual historical/current readings.
-CLI query/diff/check and API reads consume that evidence without a global valid-
-starting-graph gate. The writer/batch planner retains byte-safe journaled transactions
-and optional complete candidate validation; recovery can restore invalid originals.
+`workspace.py` and `graph.py` keep, for every snapshot, the inventory of the files, the parsed node records, the declared references, the resolved links and structured diagnostics. `inspection.py` computes the scope of broken references, one finite cause path for each cause and node, and the earlier and the current reading of a node. `query`, `diff` and `check` in `cli.py`, `query.py` and `query_select.py` and the reads of the application protocol in `application.py` use these findings, and each of them starts from the graph as it is, valid or invalid. The writer in `workspace.py` and the planner of combined edits in `batch.py` write in journaled transactions that are safe byte for byte and validate the complete candidate on request. `deletion.py` plans the deletion of exactly the named files and reports the references that it leaves unresolved. Recovery restores the original files also when they formed an invalid graph.
 
-Shared host reads/session/model/forms adopt application protocol, preserve actual broken endpoints
-and diagnose invalid working graphs while retaining safe targeted editing. Tests
-exercise exclusive/shared/deep deletions, cyclic/disconnected/unreadable inputs,
-completeness and metrics, explicit repair choices, batching, consent, races/recovery,
-protocol boundaries and installed host editing. The independent Gantt history is
-reconstructed with actual current receipts and all retained refs remain checked.
+The shared reads, the session, the model and the forms of the graph editors, in `reads.cjs`, `session.cjs`, `graph-model.js` and `graph.js`, speak the application protocol, show the endpoints that are actually broken and diagnose an invalid working graph while the form of a single safe node stays editable. `editor.py` returns the fields of a repair form apart from the nodes of the graph. The header of a manifesto in the current format gives the format version also when its body is invalid, and an edit of an editor document with an empty body or half-typed source JSON works on the fields laid over the file. A `diff` with context reads one snapshot for its context and for its patches. A metric check that starts at a root leaves aside the cycles outside the nodes it was asked for. Outside a Git repository a report with context keeps what the current files show and is marked incomplete. The drift check of a spotlight in `annotations.py` reads the bytes at the node paths, and an unreadable file counts as a present file.
 
-
-Native repair-form fields remain separate from canonical nodes. The current-format
-manifesto header retains version identity through an invalid body, and native
-empty-body/source-JSON editing uses actual overlay fields rather than old bindings.
-Contextual diff shares its canonical comparison snapshot; rooted metric checks
-exclude cycles outside their requested population. Safety regressions exercise
-arbitrary path/schema rejection independently of graph validity. Non-Git contextual
-reports preserve incomplete current evidence, and spotlight drift checks actual
-canonical-path bytes without turning unreadable files into deleted-node markers.
+`tests/test_invalid_workflow.py` and `tests/test_editor.py` cover the deletion of a node that is the only parent, a shared parent or deep in the graph; cyclic, disconnected and unreadable input; completeness and metrics; explicit steps of repair; combined edits; consent to deletion; races and recovery; the limits of the protocol; and, independently of the validity of the graph, the rejection of arbitrary paths and of other format versions. The editing in the installed editors is covered by the suites that run in them. The independent Gantt history is rebuilt with receipts of the current tools, and every ref kept in it is checked.

@@ -43,27 +43,14 @@ sources:
 - path: vscode/test/host.test.cjs
 - path: vscode/test/project.test.cjs
 ---
-# Adapt VS Code documents and panels to the shared graph
+# Connect the node-file editors and graph panels of VS Code to the shared session
 
-`GraphEditors` contributes `**/.specspec/???????=.md`; `GraphProject` coordinates
-backend/document planning and watchers; `GraphView` owns independent focus/cameras/
-comparisons. Node tabs stay bound to their resource, neighbors open their files,
-project/revision panels remain independent and raw text is directly accessible.
+In `vscode/src/extension.ts`, `GraphEditors` is the custom editor provider for the pattern `**/.specspec/???????=.md` that `vscode/package.json` declares. `GraphProject` coordinates the backend, the planning of document edits and the watchers of one project, and `GraphView` holds the focus, the cameras and the comparison of one view. A node tab stays bound to its file, a neighbor opens in its own file, graph panels and comparison panels are independent of each other, and the raw text is directly accessible.
 
-Python's non-writing `editor_request` validates overlay paths/text/size, plans one
-existing-file edit and returns graph diagnostics. `ProjectDocuments` serializes
-read/plan/apply, compares versions/text around native WorkspaceEdit and protects
-project-wide dirty documents during managed mutations. Missing-buffer text is
-validated before omission; absent-resource edits fail.
+`editor_request` in `src/specspec/editor.py` writes nothing: it validates the paths, the text and the size of the overlaid documents, plans one edit of an existing file and returns the diagnostics of the graph. `ProjectDocuments` in `graph-ui-common/host/documents.cjs` runs reading, planning and applying one after another, compares the version and the text of the document around the `WorkspaceEdit`, and refuses a change through the writer while any specspec document of the project has unsaved changes. The text of a buffer without a file is validated before it is left out, and an edit to an absent file fails.
 
-Native Save/autosave/undo/redo/dirty recovery persist TextDocuments. Per-view backups
-retain unapplied form text with explicit recovery. Shared typing/sequence handling
-preserves newer input and caret against late peer acknowledgements. Tests cover
-races, invalid-buffer repair, bound actions, split synchronization/cameras, independent
-tabs and CRLF/Unicode native saves. Executable/trust/startup errors are reported. Node-file editors hold their
-project during the CLI check and first read and release its watchers and CLI
-client when either fails.
+Save, autosave, undo, redo and the recovery of unsaved documents in VS Code persist the `TextDocument`. Each view keeps a backup of form text that is not applied yet, and recovering it is an explicit step. The handling of typing and of sequence numbers, which both editors share, keeps newer input and the text cursor when an acknowledgement from a peer view arrives late. Errors of the executable, of workspace trust and of startup are reported. A node-file editor holds its project during the check of the command line and the first read, and releases the project's watchers and command-line client when either fails.
 
-The adapter declares workspace-host execution for real remote filesystems and
-uses shared version-checked reads, native bootstrap context and working-first
-comparison delivery. Opt-in loading phases and remote qualification expose scope.
+The tests cover races, the repair of an invalid buffer, the actions of a bound editor, the synchronization and the separate cameras of split views, independent tabs, and saves of CRLF and Unicode text through VS Code.
+
+The extension declares that it runs on the workspace host, which covers real file systems on remote machines. It uses the shared reads that check document versions, the first read of a node-file editor as initial context and the delivery of the working graph before its comparison. The logging of loading phases and the qualification of remote connections are opt-in, and each reports what it covered.

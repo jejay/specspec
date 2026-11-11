@@ -13,15 +13,8 @@ sources:
 - path: vscode/test-host/run.cjs
 - path: electron/test-host/run.cjs
 ---
-# Paint shared tints and fit readable editor and Git information
+# Paint the shared tints and fit the editor and the Git letters into the cards
 
-Shared CSS uses ordinary theme text, 15% resting/24% hovered accent tints and shared
-contrast-theme rules. Neutral distance/type roots keep `#d3d3d3`, with a `#767676` resting outline on
-VS Code light themes for 4.3:1 contrast against the tint; colored hover
-borders use the hue emphasis contract. Expanded ordinary cards are 860 wide and
-the inline binding editor keeps an 822px content budget with host monospace
-font/size and room for its line-number/change gutters. Typical 80-column ASCII fitting is checked at 13/14/16px.
+`graph-ui-common/media/graph.css` gives every card the ordinary text color of the theme, a tint of 15% of its accent at rest and 24% on hover, and one rule for the high-contrast themes. A manifesto of the distance and type modes has the accent `#d3d3d3`. On the light themes of VS Code its border at rest is `#767676`, which has a contrast of 4.3:1 against the tint. The border of a hovered colored card is emphasized in its hue. An expanded card of a requirement or an implementation is 860 wide, and the inline editor of the node text has 822px for its content, uses the monospace font and font size of the editor it runs in and has room for its gutters of line numbers and change marks. Tests check that a typical line of 80 ASCII columns fits at 13, 14 and 16px.
 
-Git letters are 20px/800 weight with bottom-right anchoring and badge clearance.
-Actual-host tests check compact content/corner fit, circular marker placement,
-inline-editor width, tint/hover restoration, native DOM/caret and unchanged geometry.
+The Git letters are 20px high with weight 800, anchored at the bottom right, and the badges keep clear of them. The tests in the installed VS Code and desktop app check that the content and the corner letter of a compact card fit, that the letter of a round manifesto is placed inside it, the width of the inline editor, that tint and hover paint are restored, and that the DOM of the form, the text cursor and the geometry are the same afterwards.

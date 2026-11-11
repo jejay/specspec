@@ -15,16 +15,8 @@ sources:
 - path: tests/test_cli_compact.py
 - path: tests/test_invalid_workflow.py
 ---
-# Implement message and automatic-stdin authoring through the shared writer
+# Join message paragraphs or read standard input in the command line and pass the text to the shared writer
 
-The CLI shares bounded literal paragraph joining and automatic UTF-8 stdin input
-across init/add/update. Body-mode selection happens
-after complete grammar/field preflight; replacements do not read stdin, empty metadata
-updates retain their body, and a nonempty stream cannot target multiple steps.
+`src/specspec/cli.py` gives `init`, `add` and `update` the same input: `-m` paragraphs that are joined literally within the size limit, or UTF-8 text from standard input when there are none. Which step receives the text of standard input is decided after every step has been parsed and its fields checked. A step with replacements leaves standard input unread, an update of metadata with empty input keeps its body, and nonempty input that more than one step could take is rejected. `src/specspec/batch.py` counts the bytes of the supplied bodies.
 
-The common UI session omits body options and sends complete managed body text on
-stdin. Native document planning/save ownership remains separate. Tests cover direct
-and redirected bodies, messages without reads, empty/invalid/oversized input,
-metadata preservation, replacement isolation, chain ambiguity and actual subprocess
-transport. Serialization retains document style, meaningful whitespace and EOF rules.
-Maintained receipts are real current CLI executions across the complete Gantt history.
+The session that both graph editors share sends the complete body on standard input when it saves through the writer, and it names no option for a body. The planning of an edit to a VS Code document and the saving of that document are a separate path. `tests/test_cli_arguments.py`, `tests/test_cli_compact.py`, `tests/test_api.py` and `tests/test_invalid_workflow.py` cover text given directly and by redirection, messages that read nothing, empty, invalid and oversized input, bodies kept through an update of metadata, replacements that leave standard input alone, an ambiguous chain and the transport through a real subprocess. Serialization keeps the style of the document, the whitespace that carries meaning and the rule for the end of the file. The receipts in `example/gantt/history/cli.jsonl` are real runs of the current command line over the complete Gantt history, and `example/gantt/history/verify.py` checks them.

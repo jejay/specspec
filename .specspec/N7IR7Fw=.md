@@ -22,36 +22,12 @@ sources:
 - path: graph-ui-common/test/wire.test.cjs
 - path: electron/main.cjs
 ---
-# Adapt workspace-host execution and working-first graph delivery
+# Run on the workspace host and deliver the working graph before its comparison
 
-The VS Code manifest declares workspace placement, real-filesystem capability,
-and opt-in loading diagnostics. The adapter uses host-file resources, remote
-executable settings, VS Code asset routing/messages and native persistence.
-ProjectReads shares identical in-flight reads in Electron and VS Code with
-before/after document/generation stamps, isolated view payloads and bounded verified
-baseline hints. ProjectDocuments adds native planning and persistence coordination. Native bootstrap
-supplies initial usable context while preserving asynchronous editor wiring.
-GraphSession first renders explicit provisional working context, then a fresh
-comparison; historical views retain their selected read-only comparison. The renderer
-preserves drafts/caret/camera and restricts provisional project controls. Loading
-records measure host phases and client rendering with their respective clocks.
+`vscode/package.json` declares that the extension runs on the workspace host, that it needs a real file system and that loading diagnostics are opt-in. The adapter in `vscode/src/extension.ts` uses files of the host as resources, the executable settings of the remote machine, the asset addresses and messages of VS Code and saving by VS Code. `ProjectReads` in `graph-ui-common/host/reads.cjs` shares identical reads in flight in the desktop app and in VS Code: it compares the stamps of documents and generation before and after a read, gives each view its own copy of the result and passes hints about the base of the comparison, which are limited in size and verified. `ProjectDocuments` in `graph-ui-common/host/documents.cjs` adds the planning of edits to editor documents and the coordination of their saving. The first read of a node-file editor supplies the initial usable graph while the wiring of the editor completes asynchronously. `GraphSession` in `graph-ui-common/host/session.cjs` first draws the working graph, explicitly marked as provisional, and then a fresh comparison; a comparison between commits shows its selected revisions read-only. The renderer in `graph-ui-common/media/graph.js` keeps drafts, text cursor and camera and restricts the project controls while the graph is provisional. The loading records measure the phases in the host process and the drawing in the client, each with its own clock.
 
-Subprocess failures after a mutation starts explain an unconfirmed outcome for
-current-state inspection; actions are not automatically replayed. Adapter/session
-regressions cover shared/bootstrap races, delayed comparisons, disposal, trust,
-resource boundaries, bound native documents and lost replies. The opt-in remote
-module checks actual workspace-host placement, native overlays, rendered membership
-and source objects on a disposable history clone. Transport qualification is reported from dispatched runs individually.
+When the command-line process fails after a change has started, the error explains that the outcome is unconfirmed and asks to inspect the current state, and no action is repeated automatically. The regression tests of adapter and session cover races of shared and first reads, delayed comparisons, disposal, trust, the boundaries of resources, bound editor documents and lost replies. The opt-in module `vscode/test-host/remote.cjs` checks on a disposable clone of the history that execution is actually placed on the workspace host, that open documents are overlaid, which nodes are rendered and that source objects resolve. The qualification of a transport is reported for each dispatched run separately.
 
-Project reads tag superseded generations/document stamps distinctly from closed
-projects and validation failures. The session keeps current presentation during
-bounded attempts and coalesces a fresh event-driven automatic refresh after repeated
-supersession. Explicit working reads retain an actionable retry error and a follow-up.
-Actual invalid graphs retain the established marked repair state and fresh managed
-mutation preflights. Tests cover repeated generation/text races, repair, explicit
-reads and cancellation/disposal without introducing polling or longer deadlines.
+The project reads mark a result as superseded when the generation or the document stamp changed, apart from a closed project and from a validation failure. The session keeps the current presentation during the limited attempts and coalesces one fresh automatic refresh, driven by an event, after repeated supersession. A read of the working files that the owner requested ends with an error that says to retry and with a follow-up. A graph that is actually invalid gets the marked repair state, and a change through the writer begins with a fresh read. `graph-ui-common/test/loading.test.cjs` covers repeated races of generation and text, repair, requested reads and cancellation on disposal, with polling off and the deadlines at their length.
 
-Per-project API channels reuse interpreter lifetime while every frame retains fresh
-validation and source previews use an independent channel. Native bootstrap retries
-superseded reads before attachment; fallback reporting keeps editor wiring free
-of notification interaction. Host projects dispose their owned API channels.
+One API channel per project keeps its interpreter running across requests, every request is validated afresh, and source previews use a channel of their own. The first read of a node-file editor is retried when it is superseded, before the editor is attached, and the fallback is reported without making the wiring of the editor wait for an answer to a notification. A project in the host process disposes the API channels it owns.

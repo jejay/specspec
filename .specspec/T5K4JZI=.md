@@ -9,14 +9,8 @@ sources:
 - path: graph-ui-common/test-host/ui.cjs
 - path: README.md
 ---
-# Derive stronger same-hue card and incident-edge hover paint
+# Derive the hover paint of colored cards and incident links in their own hue
 
-Shared CSS derives colored hovered borders and added/removed/draft incident ink
-with OKLCH L+0.10 capped .95, C×1.30 and unchanged H. Neutral distance/type manifesto
-borders are white; revision-colored roots use their hue. Neutral normal links use
-theme contrast; unrelated darkening retains its separate membership and ink.
+`graph-ui-common/media/graph.css` derives the border of a hovered colored card and the ink of incident added, removed and draft links in OKLCH from their own color: lightness plus 0.10 up to 0.95, chroma times 1.30 and the same hue. The border of the gray manifesto of the distance and type modes is white on hover, and a manifesto colored by revision status takes its own hue. A neutral ordinary link mixes its color with the foreground color of the theme, and the darkening of unrelated cards and links has its own membership and its own ink.
 
-Computed-paint tests convert actual browser colors to OKLCH and check brighter,
-more saturated same-hue results, exact pair membership/restoration and stable
-width/dashes/routes/head geometry/native forms. Evidence covers tested host/theme
-probes with browser gamut and display conditions.
+The tests convert the colors that the browser actually computed to OKLCH and check that the result is lighter, more saturated and of the same hue, that exactly the incident pairs are emphasized and restored, and that width, dashes, routes, head geometry and the form are the same throughout. These checks hold for the editors and themes that were probed, within the gamut mapping of the browser and the conditions of the display.
