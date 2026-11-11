@@ -6,7 +6,7 @@ parents:
 ---
 # Follow the guide's opening with a short working routine
 
-The packaged AGENTS.md guide stays within about 11 KB. Right after its opening
+The packaged AGENTS.md guide stays within about 12 KB. Right after its opening
 statement of purpose comes a numbered routine: check owner changes and spotlights,
 read relevant nodes with their ancestors in bounded queries, work in the requested
 phase, edit through add, update and delete, check the graph and its source links

@@ -6,7 +6,7 @@ parents:
 ---
 # Plan an implementation-mature current specification spectrum
 
-Apply owner, tandem, agent-planning and implementation phases to specification
+Apply owner, structure-review, tandem, agent-planning and implementation phases to specification
 work. Distinguish the owner's outcomes from suggested solutions and independently
 reason the conclusions needed for precise implementation. Inspect owner edits before
 action. Current binding text describes the product at this point in positive language;
