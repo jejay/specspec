@@ -5,14 +5,8 @@ parents:
 - 7woeTpk=
 - 6IzHBjQ=
 ---
-# Derive path bounds independently for each revision
+# Compute the shortest and the longest distance from the manifesto for each revision on its own
 
-Compute minimum distance by iterative BFS and maximum by topological dynamic
-programming over all snapshot links. Count directed edges with zero at the
-manifesto. Deduplicate edges; unknown/unreachable or cycle-blocked paths remain
-unknown with neutral fills. Defensive inputs terminate even when cyclic.
+The minimum distance of a node from the manifesto is computed by an iterative breadth-first search and the maximum distance by dynamic programming in topological order, both over all links of a revision. A distance counts directed links, and the manifesto has distance zero. A link that occurs twice counts once. A node that cannot be reached, or whose paths a cycle blocks, has an unknown distance and a neutral fill. The computation ends for every input, also for one that contains a cycle.
 
-Surviving nodes use target metrics and removed nodes use base metrics. Display
-unions and placement backbones are presentation, while complete snapshots determine
-semantic paths. Persist minimum/maximum as separate view preferences. A color switch
-retains canonical records, form/draft/caret, camera, routing and world positions.
+In a comparison a node that the target contains takes its distances from the target, and a deleted node takes them from the base. The distances follow from the complete graph of a revision. The union of both sides that a comparison draws and the forest that places the nodes are presentation. The minimum and the maximum distance are separate color meanings, and each view stores which one is selected. A switch of the color meaning leaves the node records, the form with its draft and text cursor, the camera, the routes and the positions in the world as they are.

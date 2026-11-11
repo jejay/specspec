@@ -6,15 +6,8 @@ parents:
 - 6IzHBjQ=
 - bOXyw00=
 ---
-# Focus the existing form and derive distinct downstream counts
+# Move the form into the expanded card of the selected node and count the unique descendants of each child
 
-Move the same native form into the expanded selected card, with direct compact
-parents and children around it. Back retains the draft; changing focus confirms
-any requested dirty-form discard. Keep actual parent links separate from the Add
-parent candidate picker; choosing a candidate alone retains the link set.
+The selected node becomes an expanded card, and the one form of the editor, with the text, the parent links and the source links of the node, moves into it as the same DOM element. The direct parents and children of the node stand around it as compact cards. The Total graph action returns to the overview and keeps the draft, and selecting another node while the form has unsaved changes asks the owner to confirm that they are discarded. The form lists the actual parent links apart from the picker that offers candidates for Add parent, and choosing a candidate in the picker leaves the links as they are until Add parent is pressed.
 
-Count each child's unique all-depth descendants iteratively, excluding that child.
-A leaf shows zero. Distinct child totals may overlap. Use revision-local path and
-relationship contexts: base for removed nodes, target for surviving nodes. Retain
-historical overlay links and mark their comparison meaning. Metrics and layout are
-transient presentation derived from canonical links.
+Each child card shows the number of its unique descendants at every depth, counted iteratively and without the child itself. A leaf shows zero, and the totals of two children can overlap. Distances and relationships come from one revision: from the base for a deleted node and from the target for every other node. The links that only the base has are drawn over the graph and marked with what the comparison says about them. The counts and the layout are presentation that is derived from the links of the node files and lasts as long as the view.

@@ -5,42 +5,14 @@ parents:
 - -9Up2uc=
 - 7tMgRa8=
 ---
-# Complete query matches with every ancestor and optional surrounding identities
+# Add every ancestor of the matched nodes to a query and name the surrounding nodes by ID
 
-The query --with-ancestors flag adds every ancestor of every matched record after
-normal rooted selection and independent metric unions. Metrics, root-relative
-values, population denominators and quotas describe the original matches. Ancestors
-are additional complete bindings, deduplicated across all parent paths; they consume
-no quota. Root-only selection at --max-distance 0 gives one node's complete upstream
-reading. A root without criteria still selects its whole reachable subgraph before
-completion. The unfiltered complete comparison already includes every ancestor.
-Empty matches acquire no ancestors or surrounding identities.
+`query --with-ancestors` adds every ancestor of every matched node. It does so after the ordinary selection from a root is complete, the union of the selections of several measures included. The measures, the values relative to the root, the size of the population and the quotas describe the original matches. An ancestor is an additional node with its complete text. It appears once, whichever paths lead to it, and uses up no quota. `--max-distance 0` selects the root alone, so that together with `--with-ancestors` the reading is one node and everything above it. A root without a limit selects everything that it reaches, and the ancestors are added to that. A query without a root and without limits already contains every ancestor. An empty set of matches gets neither ancestors nor surrounding IDs.
 
-Complete the same selected-record projection that query reads: target records/parents for
-current nodes and base records/parents for deleted nodes. This supplies every chosen
-record's displayed parent path. Historical justification at a particular revision
-uses explicit version selection; current readings retain target text for surviving
-ancestors even when a deleted record has a changed surviving parent. Original
-revision records, old edge deltas and boundary parents remain reconstructible in JSON.
+The ancestors are taken from the display graph of the comparison that `query` reads: a current node has its target record with the parents of that record, and a deleted node has its base record with the parents of that record. Every node shown thus has the path of parents under which it is displayed. The ancestors that a node had at an earlier revision are read by naming that revision explicitly with `--base` and `--target`. A reading of the current state shows a surviving ancestor with its target text, also above a deleted node whose surviving parent has changed since. The records of both original revisions, the links that changed and the parents outside the selection can be rebuilt from the JSON form.
 
-Selection metadata separates matched_ids, additional ancestor_ids and final ids.
-Retain original per-criterion priority records and induced final edges. Identify
-omitted direct children and siblings of the original matches, where siblings share
-at least one direct parent. Their bodies remain outside the reading; each category
-and the deduplicated omitted-ID union stay explicit. Added ancestors do not expand
-this surrounding-neighbor scope. Compact/human presentation, complete bodies,
-source contracts and version choices share the existing query pipeline.
+The metadata of the selection lists `matched_ids`, the additional `ancestor_ids` and the final `ids` separately. It keeps, for each measure, the matched nodes in their order with their values, and the links among the final nodes. It names the direct children and the siblings of the original matches that the reading leaves out, where a sibling is a node that shares at least one direct parent with a match. Their texts stay outside the reading, and their IDs are listed as `child_ids`, as `sibling_ids` and as their union without duplicates, `omitted_ids`. The surrounding nodes are those of the matches alone, and an added ancestor contributes none. The compact and the human presentation, the complete texts, the modes of source links and the selection of revisions work as in every other query.
 
-One iterative multi-source parent walk completes all matches before constructing
-the final induced view and resolving sources. Deduplicate matched parents before
-collecting sibling identities. Reuse the projection, metric batch, revision reads
-and source comparison across all criteria and presentations. Selected ancestors
-retain their original-graph source badges: including the manifesto can require
-source evidence from other branches, even when those bindings remain omitted.
+One iterative walk over the parents, started from all matches at once, adds the ancestors before the final view is built and before sources are resolved. The parents of the matches are collected once each before the siblings are looked up. The display graph, the batch of measures, the reads of the revisions and the source comparison are computed once and shared by all measures and both presentations. An added ancestor carries the `source-changed` hint that it has in the original graphs: adding the manifesto, for example, can require source facts from other branches, whose nodes stay out of the reading.
 
-An explicit advanced --max-bytes bounds the actual UTF-8 result plus its final
-newline, including terminal escaping or the JSON envelope. Format once and fail
-before emitting a partial result when the chosen representation exceeds the budget.
-The specification-reading interface is query; everyday verbs are init, query,
-add, update, delete, check and diff. Guides, checks and actual retained example
-receipts use that current interface. Internal format/protocol metadata stays out of ordinary readings.
+The advanced option `--max-bytes` limits the size of the actual result in UTF-8 bytes, the final newline included, as it is printed: with the escaping of terminal control characters, or with the JSON envelope. The result is formatted once, and a result over the budget fails as a whole before any part of it is printed. This reading belongs to `query`, the one command that reads the specification among the everyday commands `init`, `query`, `add`, `update`, `delete`, `check` and `diff`. The guides, the checks and the recorded command receipts of the Gantt example use `query` for it. The version numbers of the node format and of the protocol appear in the JSON form and stay out of the readable text.

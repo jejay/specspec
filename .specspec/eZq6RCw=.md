@@ -6,10 +6,4 @@ parents:
 ---
 # Start work with clear prerequisites and project initialization
 
-Opening either visual host immediately checks that the external specspec CLI is
-available. Missing CLI displays a prominent blocking installation message with
-explicit retry; no project mutation or package installation happens automatically.
-Once prerequisites are available, an authorized directory without a specification
-shows a centered initialization action. The owner supplies the manifesto and
-explicitly initializes that exact directory through the shared CLI, then enters the
-graph. Broken existing specifications remain repair cases rather than being replaced.
+A person who opens a graph editor learns at once whether the specspec command line, which the editor needs and does not contain, is available. When it is missing, the editor says what to install and lets the person try again. Installing a package and changing a project are always explicit actions of the person, and the editor does neither on its own. Once the prerequisites are met, a directory that the person has authorized and that holds no specification can be initialized from within the editor: the owner writes the manifesto, initializes exactly that directory with an explicit action and arrives in the graph. An existing specification that is broken is a case for repair, and initialization is offered only where no specification exists.

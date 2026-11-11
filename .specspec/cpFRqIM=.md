@@ -4,31 +4,12 @@ type: requirement
 parents:
 - LvYBN_4=
 ---
-# Use compact reconstructible application protocol data
+# Exchange compact protocol data from which both complete revisions can be rebuilt
 
-The shared application protocol stays internal; canonical Markdown keeps its node
-format, IDs, fields and source grammar. Negotiate/reject protocol
-versions explicitly and update host adapters together. Emit one compact UTF-8 JSON envelope with api_version, ok, result and diagnostics.
-Exit code 0 reports a delivered operation or read, 1 a failed check or rejected
-request, and 2 an invocation or I/O failure; an edit that leaves the graph invalid
-still succeeds. Keep descriptive field names,
-structured diagnostics and explicit successful-plan versus valid-graph meaning.
+The application protocol is an internal interface of the tools. The node files, with their format, their IDs, their fields and their source syntax, are independent of it. Both sides state the protocol version, a version that does not match is rejected with an explicit message, and the adapters of both graph editors change together with the protocol. A reply is one compact UTF-8 JSON envelope with `api_version`, `ok`, `result` and `diagnostics`. Exit code 0 reports an operation or a read that was delivered, 1 a failed check or a rejected request, and 2 a failure of the invocation or of input and output; an edit that leaves the graph invalid still succeeds. Field names are descriptive, diagnostics are structured, and a reply says separately whether a plan succeeded and whether the graph is valid.
 
-Return purpose-shaped records: mutation receipts contain changed ID/path and affected
-scope, not a whole graph. A comparison carries one complete target, complete previous
-records only where a target record differs or is absent, base metadata/resolved commit,
-ID-based changes, relationships and source/file impact. Every base node is either
-shared with an unchanged target record or present in previous records; added target
-IDs are excluded from base reconstruction. Preserve both complete revision structures,
-old bodies/sources for deleted/historical nodes, and logical file changes where the
-operation requests a full diff. Explicit rooted query selections scope the
-comparison records to selected IDs while preserving full parent references and
-needed source evidence; selection metadata identifies the partial view and its
-external boundary. Ancestor-completed selections distinguish matched IDs, added
-ancestor IDs, final IDs and omitted surrounding child/sibling identities. Validation describes the complete original revisions. Reconstruct existing renderer records once in the
-shared host adapter; avoid duplicating targets inside an outer loaded snapshot.
+Each reply has the shape that its purpose needs. The receipt of an edit holds the changed IDs with their paths and the affected nodes, and it is small because it carries no graph. A comparison carries the complete target revision once, a complete earlier record only for a node whose target record differs or is absent, the metadata and the resolved commit of the base, the changes by node ID, the changed relationships and the impact of changed sources and files. Every node of the base is either identical to its target record or present among the earlier records, and a node that the target added is left out when the base is rebuilt. Both revisions can be rebuilt completely in this way, with the earlier texts and sources of deleted and changed nodes, and with the logical changes of the files where the operation asks for a full diff.
 
-HEAD is resolved freshly. Staged deletion leaves HEAD membership and D ghosts intact;
-commit removes that membership on reread. Missing comparisons stay explicitly
-unavailable. Verified hints remain derived and bounded; no transport payload becomes
-canonical tombstones, node fingerprints or write consent. One JSON dialect serves every caller.
+A query that selects a part of the graph from a root limits the records of the comparison to the selected IDs. Each record keeps all of its parent references, and the source facts that the selection needs are included. The metadata of the selection marks the view as partial and names the parents outside it. A selection that was completed with ancestors lists the matched IDs, the added ancestor IDs, the final IDs and the IDs of the surrounding children and siblings that it leaves out. The validation results describe the complete original revisions. The shared adapter of the graph editors expands the compact data once into the records that the renderer uses, and a loaded snapshot holds its target revision a single time.
+
+HEAD is resolved anew for every read. A node whose deletion is staged is still part of HEAD and still appears as a deleted record, and it is gone from the next read after the deletion is committed. A comparison that cannot be made is reported as unavailable. The cache hints that an editor passes back with a read are derived data of limited size, and the backend verifies them before it uses them. The node files and Git are the whole record of the graph: a payload of the protocol serves one exchange, and none is kept as the mark of a deleted node, as the fingerprint of a node or as consent to a write. One JSON dialect serves every caller.

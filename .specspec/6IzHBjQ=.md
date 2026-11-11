@@ -5,12 +5,8 @@ parents:
 - eLTZ3sg=
 - W8_8BXA=
 ---
-# Show relationship context and all-depth potential impact
+# Show a selected node among its relationships and show what a change could affect
 
-Keep understandable upstream/downstream context around a focused node. Explain
-minimum and maximum manifesto distance through color and the selected legend.
-Keep compact and expanded cards concise. Each child shows the total number of
-unique descendants at every depth, excluding that child itself.
+Around a selected node the owner sees the nodes it was concluded from and the nodes concluded from it, in a context that is easy to take in. Color and the legend of the selected color meaning explain the shortest and the longest distance of a node from the manifesto. Compact and expanded cards are concise. Each child of the selected node shows the total number of its unique descendants at every depth, without the child itself.
 
-Treat these derived cues as potential scope for investigation. Per-child totals
-may overlap; their meaning follows actual graph links at the selected revision.
+These derived cues show what a change could affect, as a scope to investigate. The totals of two children can overlap, and what they mean follows from the actual links of the graph at the selected revision.
