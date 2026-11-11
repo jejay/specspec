@@ -19,5 +19,5 @@ current authorization and files and surface launch/process/render errors.
 
 Resolve explicit executable paths once from trusted launch options/environment
 against the launch directory. Absolute paths retain their meaning; bare names use
-PATH. Selected project cwd determines project operations. Python and Git are external
+PATH. Project operations receive the selected project as `--root` and run from a neutral working directory. Python and Git are external
 prerequisites; delivery targets are a portable desktop app and local host integration.

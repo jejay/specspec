@@ -24,4 +24,4 @@ Project switches dispose caches and reject stale generations/text versions.
 Read/compare is separate from native document edit planning and managed persistence.
 Native plans remain non-writing and VS Code owns document application/Save/undo.
 Electron/project actions retain the managed writer. Shared reads do not install a
-server, introduce a persistent worker, or weaken fresh mutation and exact-index checks.
+server or weaken fresh mutation and exact-index checks.
