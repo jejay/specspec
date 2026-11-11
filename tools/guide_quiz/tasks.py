@@ -198,7 +198,9 @@ def parse(text: str | None) -> dict | None:
         name, found = "commands", decoded(r'"commands"\s*:\s*(?=\[)')
     if not found:
         return None
-    return {name: found, "report": decoded(REPORT) or "", "salvaged": True}
+    salvaged = {name: found, "report": decoded(REPORT) or "", "salvaged": True}
+    commits = decoded(r'"commits"\s*:\s*(?=\[)')
+    return {**salvaged, "commits": commits} if isinstance(commits, list) else salvaged
 
 
 REPORT = r'"report"\s*:\s*(?=")'

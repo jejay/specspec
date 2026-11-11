@@ -157,6 +157,11 @@ def test_answers_are_parsed_with_or_without_a_fence_and_salvaged_when_broken():
     }
     assert tasks.parse('{"commands": "none", "report": "r"]}') is None
     assert tasks.parse("no json here") is None and tasks.parse(None) is None
+    plan = (
+        '{"commits": ["Owner specspec changes: x"], "operations": [{"op": "delete", "id": "A="}]]}'
+    )
+    assert tasks.parse(plan)["commits"] == ["Owner specspec changes: x"]
+    assert tasks.parse(plan)["operations"] == [{"op": "delete", "id": "A="}]
 
 
 def drawing(*nodes):

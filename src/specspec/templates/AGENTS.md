@@ -46,8 +46,6 @@ owner: "the open tickets on the office TV"
 
 A node may name several parents: every intention it serves or must respect. Keep the graph shortcut-free: a node serving both P and a descendant of P names only the descendant.
 
-Every node except the manifesto can be held against its intentions: does it make sense for them, and would another conclusion serve them better? Nodes far from the root meet this question most often, because more of them is conclusion. A statement directly beneath the manifesto meets it too: when it makes no sense for the product the manifesto describes, tell the owner. The manifesto itself is intention only. What can be questioned in it is a conclusion in its wording, such as a layout or a technology that is not a given; it belongs in a node beneath the manifesto.
-
 ## Writing nodes
 
 Node text describes the product as it is and as it ought to be now: requirements say what it ought to do, and implementation nodes say what exists, including its limits. A conclusion says what the product does and how that serves its intentions. Write positive, present-tense sentences about what the product does.
@@ -70,7 +68,7 @@ The owner may edit nodes directly and may commit them. Routine step 1 finds thos
 
 Every `Agent specspec changes:` commit seals the graph beneath it, and a graph without one is open as a whole. What the owner changed by hand since the newest one is open, whether they committed it or not, and this phase starts when routine step 1 finds such changes. Commit the uncommitted ones first, exactly as the owner wrote them, as `Owner specspec changes: <your understanding of them>`; this commit keeps the owner's words on record and seals nothing.
 
-Then read each open node with its ancestors and hold it against the rules in The graph and Writing nodes, an open manifesto included: its wording should hold intentions only. Tell the owner what you would split, merge, move or reword and why, and leave the graph as it is. Propose what makes the best graph, and keep to points that matter. What the owner accepts, you commit as `Agent specspec changes: <description>`; everything else stays in the owner's words.
+Then read each open node with its ancestors and hold it against the rules in The graph and Writing nodes. An open manifesto is read too: it holds intentions only, so a conclusion in its wording, such as a layout or a technology that is not a given, belongs in a node beneath it. Tell the owner what you would split, merge, move or reword and why, and leave the graph as it is. Propose what makes the best graph, and keep to points that matter. What the owner accepts, you commit as `Agent specspec changes: <description>`; everything else stays in the owner's words.
 
 Sealed nodes stand as they are. Change one where a request cannot be recorded well without it, and name it in your summary; a request to review or restructure opens whatever it names. Sealed nodes that your request does not touch get no remark about their structure or wording. An obvious flaw in a sealed node you are working at may get one line in your summary, once.
 
