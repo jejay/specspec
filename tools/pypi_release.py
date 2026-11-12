@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import re
@@ -12,6 +13,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import urllib.request
 import venv
 import zipfile
 from email import policy
@@ -47,11 +49,11 @@ def verify(root: Path, directory: Path, expected: str) -> dict:
         raise ValueError("Distributions must be regular files, not symlinks.")
     sources = {
         p.relative_to(root / "src").as_posix(): p.read_bytes()
-        for p in (root / "src/specspec").rglob("*.py")
+        for p in (
+            *(root / "src/specspec").rglob("*.py"),
+            *(root / "src/specspec/templates").rglob("*.md"),
+        )
     }
-    sources["specspec/templates/AGENTS.md"] = (
-        root / "src/specspec/templates/AGENTS.md"
-    ).read_bytes()
     wheel = directory / f"specspec-{release}-py3-none-any.whl"
     with zipfile.ZipFile(wheel) as package:
         members = package.namelist()
@@ -169,10 +171,15 @@ def smoke(root: Path, directory: Path, expected: str) -> dict:
             receipt = json.loads(run([command, "init", "-m", "# Release smoke", "--json"], project))
             identity = receipt["result"]["changed_ids"][0]
             guide = (project / "AGENTS.md").read_bytes()
+            # The appended guide follows the CRLF line endings of the owner's text.
+            template = (root / "src/specspec/templates/AGENTS.md").read_bytes()
             if not guide.startswith(prefix) or not guide.endswith(
-                (root / "src/specspec/templates/AGENTS.md").read_bytes()
+                template.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
             ):
                 raise ValueError("Installed init failed exact-prefix guide concatenation.")
+            refreshed = run([command, "guide"], project)
+            if "guide already current" not in refreshed:
+                raise ValueError("Installed guide refresh does not recognize its own guide.")
             if not (project / ".git").exists():
                 raise ValueError("Installed init did not establish Git.")
             body = "# Automatic stdin\n\nLiteral release smoke text.\n"
@@ -192,19 +199,65 @@ def smoke(root: Path, directory: Path, expected: str) -> dict:
     return report
 
 
+def lf(text: bytes) -> bytes:
+    return text.replace(b"\r\n", b"\n")
+
+
+def carried_guides(root: Path) -> list[bytes]:
+    templates = root / "src/specspec/templates"
+    return [lf((templates / "AGENTS.md").read_bytes())] + [
+        lf(path.read_bytes()) for path in sorted((templates / "earlier").glob("*.md"))
+    ]
+
+
+def published_guide(index: str = "https://pypi.org/pypi/specspec/json") -> tuple[str, bytes]:
+    """The guide inside the wheel of the newest specspec release on PyPI."""
+    with urllib.request.urlopen(index, timeout=60) as response:
+        project = json.load(response)
+    latest = project["info"]["version"]
+    wheel = next(f for f in project["releases"][latest] if f["packagetype"] == "bdist_wheel")
+    with urllib.request.urlopen(wheel["url"], timeout=120) as response:
+        raw = response.read(64 * 1024 * 1024)
+    if hashlib.sha256(raw).hexdigest() != wheel["digests"]["sha256"]:
+        raise ValueError(f"The specspec {latest} wheel does not match its PyPI digest.")
+    with zipfile.ZipFile(io.BytesIO(raw)) as package:
+        return latest, package.read("specspec/templates/AGENTS.md")
+
+
+def guides(root: Path, published: tuple[str, bytes] | None = None) -> dict:
+    """specspec guide can replace the guide of the newest release on PyPI."""
+    latest, guide = published or published_guide()
+    if lf(guide) not in carried_guides(root):
+        raise ValueError(
+            f"The guide of specspec {latest} on PyPI is neither the current guide nor carried "
+            f"for specspec guide; copy it to src/specspec/templates/earlier/{latest}.md."
+        )
+    return {"published": latest, "carried": True}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=["version", "verify", "smoke"])
+    parser.add_argument("operation", choices=["version", "verify", "smoke", "guides"])
     parser.add_argument("--expected", required=True)
     parser.add_argument("--directory", type=Path, default=ROOT / "dist/pypi")
     args = parser.parse_args()
     try:
         if args.operation == "version":
             print(expected_version(ROOT, args.expected))
+        elif args.operation == "guides":
+            expected_version(ROOT, args.expected)
+            print(json.dumps(guides(ROOT), indent=2))
         else:
             operation = verify if args.operation == "verify" else smoke
             print(json.dumps(operation(ROOT, args.directory, args.expected), indent=2))
-    except (ValueError, OSError, KeyError, zipfile.BadZipFile, tarfile.TarError) as error:
+    except (
+        ValueError,
+        OSError,
+        KeyError,
+        StopIteration,
+        zipfile.BadZipFile,
+        tarfile.TarError,
+    ) as error:
         raise SystemExit(str(error)) from error
 
 

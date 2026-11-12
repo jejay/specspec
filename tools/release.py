@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import tarfile
@@ -179,10 +180,7 @@ def check(root: Path, platform: str, arch: str) -> dict:
         ):
             raise ValueError("VSIX contains development-only material.")
         metadata = json.loads(package.read("extension/package.json"))
-        if (
-            metadata.get("name") != "specspec-vscode"
-            or metadata.get("displayName") != "specspec-vscode"
-        ):
+        if metadata.get("name") != "specspec-vscode" or metadata.get("displayName") != "specspec":
             raise ValueError("VSIX product naming differs from the current release.")
         if metadata["version"] != release or metadata["contributes"]["customEditors"][0][
             "selector"
@@ -238,9 +236,23 @@ def check(root: Path, platform: str, arch: str) -> dict:
     return report
 
 
+def notes(root: Path, release: str) -> str:
+    """The CHANGELOG section of one release, which becomes its GitHub release notes."""
+    text = (root / "CHANGELOG.md").read_text(encoding="utf-8").replace("\r\n", "\n")
+    match = re.search(
+        rf"^## {re.escape(release)}(?:[ \t][^\n]*)?\n(.*?)(?=^## |\Z)", text, re.M | re.S
+    )
+    if not match or not match.group(1).strip():
+        raise ValueError(f"CHANGELOG.md has no section for {release}.")
+    return match.group(1).strip() + "\n"
+
+
 def main():
+    if len(sys.argv) == 3 and sys.argv[1] == "notes":
+        sys.stdout.write(notes(ROOT, sys.argv[2]))
+        return
     if sys.argv[1:] not in (["archive"], ["check"]):
-        raise SystemExit("Usage: python tools/release.py archive|check")
+        raise SystemExit("Usage: python tools/release.py archive|check|notes VERSION")
     platform, arch = target()
     (archive if sys.argv[1] == "archive" else check)(ROOT, platform, arch)
 

@@ -60,5 +60,5 @@ Source impact is conservative per file. Identical source versions resolve before
 end only at LF, CRLF or CR, like logical node text. SourceReader looks up referenced
 paths in chunks and loads a complete tree listing only for rename searches and
 retention checks; Git read failures become per-object unavailable results with
-SOURCE_LINK diagnostics. Tests and retained strict-schema/expanding-resolver
+SOURCE_LINK diagnostics. check_results explains strict conflicts and ambiguous locations and names the sources reanchor command for the node and source number. Tests and retained strict-schema/expanding-resolver
 anchors exercise the feature's own addressing contract.

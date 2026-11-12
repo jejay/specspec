@@ -181,8 +181,8 @@ def test_duplicate_ids_and_missing_parents(workspace):
     node = snapshot.nodes[0]
     duplicates = {**snapshot.files, f".specspec/{node.id}duplicate.md": snapshot.files[node.path]}
     assert not snapshot_from_files(root, duplicates).valid
-    with pytest.raises(SpecError, match="Missing parent"):
-        add_node(root, "requirement", ["bWlzc2k="], "Missing\n", require_valid=True)
+    with pytest.raises(SpecError, match="Parent bWlzc2k= does not exist"):
+        add_node(root, "requirement", ["bWlzc2k="], "Missing\n")
     with pytest.raises(SpecError, match="duplicates"):
         add_node(root, "requirement", [manifesto, manifesto], "Duplicate\n")
 

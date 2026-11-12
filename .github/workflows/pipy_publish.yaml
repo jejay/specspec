@@ -6,7 +6,7 @@ on:
       version:
         description: Expected X.Y.Z version in all maintained package metadata
         required: true
-        default: '0.0.1'
+        default: '0.1.0'
         type: string
 
 permissions:
@@ -44,6 +44,10 @@ jobs:
         run: |
           version="$(python -m tools.pypi_release version --expected "$EXPECTED_VERSION")"
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+      - name: Check that specspec guide replaces the newest published guide
+        env:
+          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
+        run: python -m tools.pypi_release guides --expected "$EXPECTED_VERSION"
       - run: specspec check --sources --warnings-as-errors
       - run: specspec --root example/gantt check --sources --warnings-as-errors
       - run: python example/gantt/history/verify.py --history

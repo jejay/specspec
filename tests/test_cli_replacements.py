@@ -13,7 +13,7 @@ from click.testing import CliRunner
 from specspec import batch, body_replacements, cli
 from specspec.body_replacements import input_bytes, replace_body
 from specspec.model import MAX_FILE_BYTES, SpecError
-from specspec.workspace import add_node, load_snapshot, recover, update_node
+from specspec.workspace import add_node, delete_nodes, load_snapshot, recover, update_node
 
 
 def call(root, *args, input=None):
@@ -277,7 +277,10 @@ def test_replacement_repair_aliases_and_exact_deletion_share_one_transaction(
 
 def test_preview_and_optional_whole_graph_validation_are_preserved(workspace):
     root, parent = workspace
-    _, id = add_node(root, "requirement", ["AAAAAAA="], "# Old\n")
+    # Deleting a parent leaves its child with a missing parent: an invalid graph.
+    _, gone = add_node(root, "requirement", [parent], "# Gone\n")
+    _, id = add_node(root, "requirement", [gone], "# Old\n")
+    delete_nodes(root, [gone], allow_uncommitted=True)
     before = load_snapshot(root).files
     result, data = call(root, "update", id, "--replace", "Old", "New", "--dry-run")
     assert result.exit_code == 0 and not data["result"]["applied"]

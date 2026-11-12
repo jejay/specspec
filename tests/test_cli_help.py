@@ -24,6 +24,7 @@ PATHS = [
     ["check"],
     ["diff"],
     ["recover"],
+    ["guide"],
     ["sources"],
     ["sources", "show"],
     ["sources", "capture"],
@@ -98,6 +99,7 @@ def test_root_lists_seven_commands_without_summary_ellipses_and_query_examples()
         "sources",
         "spotlight",
         "recover",
+        "guide",
     }
     commands = text.split("Everyday commands:", 1)[1]
     assert not any(line.rstrip().endswith("...") for line in commands.splitlines())

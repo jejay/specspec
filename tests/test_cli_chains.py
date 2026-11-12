@@ -307,7 +307,7 @@ def test_selected_deletions_ask_once_for_the_whole_chain(workspace, monkeypatch)
     root, parent = workspace
     children = [add_node(root, "requirement", [parent], "# Remove")[1] for _ in range(2)]
     confirmations = []
-    monkeypatch.setattr(cli, "interactive_stdin", lambda: True)
+    monkeypatch.setattr(cli, "interactive_terminal", lambda: True)
     monkeypatch.setattr(
         cli.click, "confirm", lambda message, **kw: confirmations.append(message) or True
     )
@@ -501,7 +501,7 @@ def test_cancelling_deletion_cancels_unrelated_adds_too(workspace, monkeypatch):
     root, parent = workspace
     _, child = add_node(root, "requirement", [parent], "# Keep")
     before = load_snapshot(root).files
-    monkeypatch.setattr(cli, "interactive_stdin", lambda: True)
+    monkeypatch.setattr(cli, "interactive_terminal", lambda: True)
     monkeypatch.setattr(cli.click, "confirm", lambda *args, **kwargs: False)
     result = invoke(root, "add", "--parent", parent, "-m", "# Cancel me", "delete", child)
     assert result.exit_code == 1 and "cancelled" in result.stderr

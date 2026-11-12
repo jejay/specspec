@@ -21,6 +21,7 @@ from .sources import BAD_OUTCOMES
 from .workspace import Snapshot
 
 STATUS = {"added": "added", "changed": "modified", "removed": "deleted"}
+WRITE_STATES = {"LOCKED", "RECOVERY"}
 
 
 @dataclass
@@ -112,8 +113,13 @@ def read_query(
             )
         else:
             if not old.complete or not new.complete:
+                # A running or interrupted write is the cause to report, not the scope.
+                writing = [
+                    d for d in (*new.diagnostics, *old.diagnostics) if d.code in WRITE_STATES
+                ]
                 raise SpecError(
-                    [
+                    writing
+                    or [
                         Diagnostic(
                             "QUERY",
                             "Metric/rooted scope is incomplete; inspect --issues, "

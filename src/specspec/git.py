@@ -32,11 +32,21 @@ def repository_paths(root: Path) -> tuple[Path, str]:
 
 
 def resolve_commit(root: Path, ref: str) -> str:
-    return (
-        run_git(root, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}")
-        .decode()
-        .strip()
-    )
+    try:
+        completed = run_git_process(
+            root, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}"
+        )
+    except GitProcessError as error:
+        raise SpecError([Diagnostic("GIT", str(error))], 2) from error
+    if completed.returncode:
+        message = completed.stderr.decode("utf-8", errors="replace").strip()
+        if "not a git repository" not in message.lower():
+            message = (
+                f"Unknown revision {ref!r}: no commit, branch or tag of that name in this "
+                "repository. git log --oneline and git branch list the available ones."
+            )
+        raise SpecError([Diagnostic("GIT", message)], 2)
+    return completed.stdout.decode().strip()
 
 
 def unborn_head(root: Path) -> bool:

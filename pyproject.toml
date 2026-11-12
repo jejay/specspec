@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "specspec"
-version = "0.0.1"
-description = "Connect intentions, revisable choices and implementation in versioned Markdown"
+version = "0.1.0"
+description = "Keep a specification as intentions and the conclusions drawn from them, down to the code"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -27,7 +27,8 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/jejay/specspec"
 Repository = "https://github.com/jejay/specspec"
-Documentation = "https://github.com/jejay/specspec/tree/main/docs"
+Documentation = "https://github.com/jejay/specspec#readme"
+Changelog = "https://github.com/jejay/specspec/blob/main/CHANGELOG.md"
 Issues = "https://github.com/jejay/specspec/issues"
 
 [project.optional-dependencies]

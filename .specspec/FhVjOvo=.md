@@ -38,7 +38,7 @@ reads avoid the two extra unborn-branch processes.
 
 The `git cat-file` batches of git_objects.py start Git with `git_command` and `git_environment` from git_process. Every other Git subprocess runs through git_process.run_git_process, which turns off
 fsmonitor and signature display, disables lazy fetch, optional locks, remote
-protocols and terminal prompts, closes stdin and applies per-site timeouts and
+protocols and terminal prompts, closes stdin, reports a missing git executable with GIT_MISSING, which says how to install Git, and applies per-site timeouts and
 output caps. Source-impact reads pass referenced paths in chunks of at most 8 KiB
 so command lines stay within Windows limits. The header cache holds 65,536 parsed
 headers. Cached editor reads leave non-UTF-8 HEAD files to a fresh Git read with

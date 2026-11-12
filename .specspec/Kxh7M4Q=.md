@@ -113,8 +113,7 @@ Surrounding IDs come only from omitted children/siblings of the original matches
 shared matched parents contribute their child sets once. Empty selections remain
 empty, and complete unfiltered comparisons need no extra projection. The query
 preamble distinguishes match quotas from extra ancestors, which may lie outside
-the rooted population. CLI query carries --with-ancestors and an advanced exact
-UTF-8 byte budget through a single-format emitter; there is one ancestor-reading
+the rooted population. CLI query carries --with-ancestors and an advanced exact UTF-8 byte budget through a single-format emitter. A rooted or metric query over a workspace with a remaining lock or an interrupted edit reports that LOCKED or RECOVERY diagnostic; there is one ancestor-reading
 command. Tests cover independent closure/neighbor oracles, multi-parent completion,
 ancestor provenance, historical ghosts and changed parents, representation/budget
 boundaries, complete source evidence and invocation-local pass/read counts.

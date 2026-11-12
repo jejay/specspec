@@ -14,14 +14,15 @@ parents:
 - S1GCPJs=
 - 4k0oj5Y=
 sources:
+- path: pyproject.toml
+- path: src/specspec/cli.py
+- path: src/specspec/guide.py
+- path: src/specspec/output.py
 - path: src/specspec/templates/AGENTS.md
 - path: src/specspec/workspace.py
-- path: src/specspec/cli.py
-- path: src/specspec/output.py
-- path: pyproject.toml
 - path: tests/test_initialization.py
-- path: tests/test_release.py
 - path: tests/test_local_state.py
+- path: tests/test_release.py
 ---
 # Package and safely concatenate initialization instructions
 
@@ -33,9 +34,7 @@ Git availability and ensures a Git working tree before publishing node/guide byt
 reusing a containing repository instead of creating nested Git metadata. Git metadata is not claimed by graph rollback. No staging, commit, identity
 configuration or hook management is performed.
 
-The workspace lock and bounded byte journal live inside .specspec/local. An absent
-guide is exclusively created; an existing regular file retains its exact byte prefix
-and receives the template after a separating paragraph. Changed targets reject
+The workspace lock and bounded byte journal live inside .specspec/local. An absent guide is exclusively created. For an existing regular file, guide.place_guide keeps a current guide, replaces the exact text of a guide from templates/earlier in place and in its line endings, leaves a hand-edited guide as it is, and otherwise keeps the exact byte prefix and appends the template after a separating paragraph, in the line endings of the file's first line. Changed targets reject
 publication and recovery. Initialization recovery permits AGENTS.md originals while
 ordinary edit journals are direct-node-only. Direct nodes and the runtime subtree
 have separate inventories. Interrupted initialization can recover partial publication.

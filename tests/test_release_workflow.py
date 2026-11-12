@@ -13,7 +13,7 @@ def test_pypi_publisher_matches_owner_configuration_and_is_explicit():
     workflow = YAML(typ="safe").load(WORKFLOW.read_text())
     assert set(workflow["on"]) == {"workflow_dispatch"}
     version = workflow["on"]["workflow_dispatch"]["inputs"]["version"]
-    assert version["required"] is True and version["default"] == "0.0.1"
+    assert version["required"] is True and version["default"] == "0.1.0"
     assert workflow["permissions"] == {"contents": "read"}
     assert workflow["concurrency"]["cancel-in-progress"] is False
     assert set(workflow["jobs"]) == {"build", "publish"}
@@ -55,6 +55,7 @@ def test_release_actions_are_pinned_and_artifacts_have_one_build_owner():
     for required in [
         '"twine==7.0.0"',
         "python -m tools.pypi_release version",
+        "python -m tools.pypi_release guides",
         "python -m pytest",
         "python -m build --outdir dist/pypi",
         "python -m tools.pypi_release verify",
@@ -87,3 +88,40 @@ def test_current_guides_and_startup_screens_prefer_pypi_installation():
         assert "uv tool install /path/to/specspec.whl" not in (ROOT / path).read_text(
             encoding="utf8"
         )
+
+
+def test_version_tags_attach_the_editor_packages_to_their_github_release():
+    workflow = YAML(typ="safe").load(
+        (ROOT / ".github/workflows/release-build.yml").read_text(encoding="utf8")
+    )
+    assert workflow["on"]["push"] == {"tags": ["v*.*.*"]}
+    assert workflow["permissions"] == {"contents": "read"}
+    build = workflow["jobs"]["local-artifacts"]
+    assert "permissions" not in build
+    checks = "\n".join(step.get("run", "") for step in build["steps"])
+    assert 'test "$GITHUB_REF_NAME" = "v$VERSION"' in checks
+    assert "git merge-base --is-ancestor HEAD origin/main" in checks
+    for required in ["python -m pytest", "npm test", "npm run package:all"]:
+        assert required in checks
+    release = workflow["jobs"]["github-release"]
+    assert release["needs"] == "local-artifacts"
+    assert release["if"] == "startsWith(github.ref, 'refs/tags/v')"
+    assert release["permissions"] == {"contents": "write"}
+    commands = "\n".join(step.get("run", "") for step in release["steps"])
+    for asset in [
+        "specspec-vscode-$VERSION.vsix",
+        "specspec-desktop-$VERSION-win32-x64.zip",
+        "specspec-desktop-$VERSION-linux-x64.tar.gz",
+        "SHA256SUMS",
+        "--verify-tag",
+        "tools/release.py notes",
+    ]:
+        assert asset in commands
+    assert "secrets." not in (ROOT / ".github/workflows/release-build.yml").read_text()
+
+
+def test_release_notes_are_the_changelog_section_of_the_current_version():
+    from tools import release
+
+    notes = release.notes(ROOT, release.version(ROOT))
+    assert notes.strip() and "\n## " not in notes and not notes.startswith("## ")

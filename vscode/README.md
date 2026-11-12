@@ -12,30 +12,38 @@ standalone desktop app (**specspec-desktop**). Both draw the same canvas and run
 1. Install the CLI (Python 3.11+ and Git): `uv tool install specspec` or
    `pipx install specspec`. Check it with `specspec --version`. If the command is
    missing, run `uv tool update-shell` or `pipx ensurepath` and restart the editor.
-2. Build the editors from the repository (Node 22.12+ and npm 10+):
+2. Download an editor from the
+   [latest release](https://github.com/jejay/specspec/releases/latest):
+   - **VS Code:** `specspec-vscode-<version>.vsix`. Install it with
+     `code --install-extension specspec-vscode-<version>.vsix`, or use
+     **Extensions → … → Install from VSIX…**, then reload the window.
+   - **Desktop app:** `specspec-desktop-<version>-win32-x64.zip` for Windows or
+     `specspec-desktop-<version>-linux-x64.tar.gz` for Linux. Unpack it and start
+     `specspec-desktop.exe` or `specspec-desktop`. The Windows build is unsigned, so
+     Windows may ask before its first start: **More info → Run anyway**.
 
-   ```sh
-   git clone https://github.com/jejay/specspec.git
-   cd specspec
-   npm ci
-   npm run package:vscode     # creates dist/specspec-vscode-<version>.vsix
-   npm run desktop            # starts the desktop app from source
-   ```
+The desktop app runs on Windows and Linux; on macOS, use the VS Code extension.
 
-3. Install the extension with
-   `code --install-extension dist/specspec-vscode-<version>.vsix`, or use
-   **Extensions → … → Install from VSIX…**, then reload the window.
+To build the editors from the repository instead (Node 22.12+ and npm 10+):
 
-The desktop app runs on Windows and Linux; `npm run package:electron` creates a
-portable folder and archive in `dist/`. On macOS, use the VS Code extension.
+```sh
+git clone https://github.com/jejay/specspec.git
+cd specspec
+npm ci
+npm run package:vscode     # creates dist/specspec-vscode-<version>.vsix
+npm run desktop            # starts the desktop app from source
+```
+
+`npm run package:electron` creates a portable desktop folder and archive in `dist/`.
 
 ## Open a project
 
 - **VS Code:** open the project folder, trust it, and run **specspec: Open Graph**
   from the Command Palette (also in the Explorer context menu). **specspec: Select
-  Project** picks another graph in the workspace.
-- **Desktop:** choose **Open project** (Ctrl+O, Command+O on macOS) and confirm that
-  you trust the folder, or start with `npm run desktop -- --project PATH`.
+  Project** opens a folder dialog to pick another project.
+- **Desktop:** choose **Open project** (Ctrl+O) and confirm that you trust the
+  folder, or start the app with `--project PATH` (from source:
+  `npm run desktop -- --project PATH`).
 
 A folder without a graph shows an **Initialize specspec** form: enter the
 manifesto, the project's core goal. Initialization creates `.specspec/`, sets up Git

@@ -43,7 +43,7 @@ def test_explicit_text_modes_and_interactive_metadata_do_not_read_stdin(
     elif mode == "replace":
         args = ["--replace", "Before", "After"]
     else:
-        monkeypatch.setattr(cli, "interactive_stdin", lambda: True)
+        monkeypatch.setattr(cli, "stdin_terminal", lambda: True)
         args = ["--parent", parent]
     result, _ = invoke(root, "update", node, *args)
     assert result.exit_code == 0, result.output
@@ -130,6 +130,10 @@ def test_help_bodies_are_fifty_to_seventy_percent_of_the_previous_guides():
         "api": 161,
     }
     for name, text in HELP.items():
+        if name not in baseline:
+            # Commands added after the shortening stay as compact as the shortened ones.
+            assert len(text.split()) <= 150, name
+            continue
         ratio = len(text.split()) / baseline[name]
         assert 0.5 <= ratio <= 0.7, (name, ratio)
         assert not any(flag in text for flag in ["--root", "--json", "--body", "API-7", "API 7"])

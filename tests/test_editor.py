@@ -216,7 +216,7 @@ def test_invalid_raw_text_is_not_repaired_and_runtime_lock_is_not_overlaid(works
     assert (root / node.path).read_bytes() == before
     (root / ".specspec/local").mkdir(exist_ok=True)
     (root / ".specspec/local/lock").write_text("123")
-    with pytest.raises(SpecError, match="progress"):
+    with pytest.raises(SpecError, match="writing to this graph"):
         editor_request(root, {"documents": {node.path: before.decode()}})
 
 

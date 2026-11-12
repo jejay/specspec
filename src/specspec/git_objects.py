@@ -8,7 +8,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from .git_process import git_command, git_environment
+from .git_process import GIT_MISSING, git_command, git_environment
 from .model import MAX_FILE_BYTES, Diagnostic, SpecError
 
 BATCH_COUNT = 256
@@ -35,6 +35,8 @@ def batch_request(root: Path, option: str, ids: list[str], limit: int) -> bytes:
             stderr=subprocess.PIPE,
             env=git_environment(),
         )
+    except FileNotFoundError:
+        fail(GIT_MISSING)
     except OSError as error:
         fail(str(error))
 

@@ -292,6 +292,24 @@ HELP = {
     useful evidence with nonzero status. Output budgets fail rather than truncate.
     No changes to files, checkout, index, refs or linked code; no missing-object fetch.
     """,
+    "guide": """Bring AGENTS.md to the agent guide of the installed specspec release.
+
+    Run it in each project after upgrading specspec. It finds the guide that this
+    or an earlier release added to AGENTS.md by exact match, with LF or CRLF line
+    endings, and replaces an earlier one with the current guide. Every other byte of
+    the file stays as it is. A file without a guide gets the guide appended, as init
+    does, and a missing AGENTS.md is created.
+
+    \b
+    Examples:
+      specspec guide
+      specspec guide --print
+
+    When the guide in AGENTS.md was edited by hand, nothing is changed and the
+    command fails with an explanation: take the current guide from --print, put it
+    in place of the old guide section and keep your own edits where you want them.
+    Nothing is staged or committed.
+    """,
     "recover": """Roll back an interrupted managed write while preserving external edits.
 
     Recognizes original/intended/absent states, restores originals and removes new

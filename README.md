@@ -20,7 +20,7 @@ The name is short for *specification spectrum*.
   [replacing a conclusion](#replacing-a-conclusion-keeps-the-intention-it-was-drawn-from)
 - In practice: [the editors](#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app),
   [working with your agent](#how-you-and-your-agent-work-on-the-graph),
-  [building the editors](#build-the-graph-editors),
+  [installing the editors](#install-the-graph-editors),
   [the command line](#the-command-line-your-agent-uses)
 - [Example](#example-a-planning-app-that-changed-direction-twice),
   [status and limits](#status-and-limits), [guides](#guides)
@@ -46,7 +46,7 @@ you already have. If your agent reads a different instructions file, point it to
 `AGENTS.md`.
 
 You can leave it at that. When you want more control, open the graph in
-[a graph editor](#build-the-graph-editors): look at it from as far above as you like,
+[a graph editor](#install-the-graph-editors): look at it from as far above as you like,
 open the nodes the agent pointed you to, change a node or replace a conclusion, and
 tell the agent to carry on. The rest of this page explains what you are looking at.
 
@@ -218,23 +218,31 @@ Each attempt is evidence for the next revision. The
 [agent guide](https://github.com/jejay/specspec/blob/main/src/specspec/templates/AGENTS.md)
 is the file `init` adds.
 
-## Build the graph editors
+## Install the graph editors
 
-For now you build both editors from this repository, which needs Node 22.12+ and npm
-10+. Both run the `specspec` command you installed.
+Both editors are downloads on the
+[latest release](https://github.com/jejay/specspec/releases/latest), and both run the
+`specspec` command you installed.
+
+- **VS Code:** download `specspec-vscode-0.1.0.vsix` and run
+  `code --install-extension specspec-vscode-0.1.0.vsix`, or use **Extensions → … →
+  Install from VSIX…**. Then run **specspec: Open Graph** from the Command Palette.
+- **Desktop app** for Windows and Linux: download the archive for your system, unpack
+  it and start `specspec-desktop`. The Windows build is unsigned, so Windows may ask
+  before its first start: **More info → Run anyway**. On macOS, use VS Code.
+
+To build both editors from this repository instead, you need Node 22.12+ and npm 10+:
 
 ```sh
 git clone https://github.com/jejay/specspec.git
 cd specspec
 npm ci
-npm run package:vscode    # then: code --install-extension dist/specspec-vscode-0.0.1.vsix
+npm run package:vscode    # then: code --install-extension dist/specspec-vscode-0.1.0.vsix
 npm run desktop           # or start the desktop app from source
 ```
 
-In VS Code, run **specspec: Open Graph** from the Command Palette. The desktop app runs
-on Windows and Linux; on macOS, use VS Code. The
-[editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md) covers the canvas, reviewing changes,
-spotlights and settings.
+The [editor guide](https://github.com/jejay/specspec/blob/main/vscode/README.md) covers
+the canvas, reviewing changes, spotlights and settings.
 
 ## The command line your agent uses
 
@@ -253,8 +261,10 @@ specspec check                                       # structural validation
 ```
 
 Every command has `--help` with examples. If `specspec` isn't found, run
-`uv tool update-shell` (or `pipx ensurepath`) and open a new terminal; upgrade with
-`uv tool upgrade specspec`.
+`uv tool update-shell` (or `pipx ensurepath`) and open a new terminal. Upgrade with
+`uv tool upgrade specspec`, then run `specspec guide` in each project: it replaces the
+guide an earlier release added to `AGENTS.md` with the new one and leaves the rest of
+the file as it is.
 
 ## Example: a planning app that changed direction twice
 
@@ -274,8 +284,8 @@ run `specspec diff stage/01-code stage/02-spec` inside it.
 
 ## Status and limits
 
-specspec 0.0.1 is the first public release. The CLI is on PyPI; the editors are built
-locally. Expect rough edges and changing commands.
+specspec 0.1.0 is the first public release. The CLI is on PyPI, and the editors are
+downloads on the GitHub release. Expect rough edges and changing commands.
 
 Everything runs on your machine. The graph is Markdown in your repository, and you
 stage and commit it like any other file. `specspec check` confirms that the graph is

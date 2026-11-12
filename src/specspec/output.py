@@ -96,10 +96,22 @@ def action_lines(actions, *, dry_run=False):
     ]
 
 
+INSTRUCTION_STATUS = {
+    "created": "created",
+    "appended": "template appended",
+    "replaced": "guide of an earlier release replaced",
+    "current": "guide already current",
+    "edited": "holds an edited guide, left as it is; see specspec guide --help",
+}
+
+
 def render_receipt(result, actions, *, dry_run=False):
     lines = action_lines(actions, dry_run=dry_run)
     if instructions := result.get("agent_instructions"):
-        status = "created" if instructions["created"] else "template appended"
+        status = INSTRUCTION_STATUS.get(
+            instructions.get("action"),
+            "created" if instructions["created"] else "template appended",
+        )
         lines.append(f"Agent instructions: {instructions['path']} ({status})")
     if result.get("aliases"):
         lines.append(

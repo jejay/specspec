@@ -491,11 +491,29 @@ def resolve_nodes(
     ]
 
 
+def link_explanation(result: dict) -> str:
+    """Say what a bad source outcome means and what brings the link back in line."""
+    reanchor = (
+        f"Align node {result['id']}'s explanation with {result['path']}, stage the code, "
+        f"then run specspec sources reanchor {result['id']} --source {result['source']} "
+        "--staged."
+    )
+    if result["outcome"] == "conflict":
+        return (
+            "The linked lines changed since they were captured, and strict links do not "
+            "follow edits. " + reanchor
+        )
+    if result["outcome"] == "ambiguous":
+        found = result.get("message") or "The linked lines now match several places."
+        return f"{found} {reanchor}"
+    return result.get("message", "")
+
+
 def check_results(results: list[dict]) -> list[Diagnostic]:
     return [
         Diagnostic(
             "SOURCE_LINK",
-            f"Source {r['source']}: {r['outcome']}. {r.get('message', '')}",
+            f"Source {r['source']}: {r['outcome']}. {link_explanation(r)}".rstrip(),
             r["path"],
             r["id"],
         )

@@ -20,6 +20,13 @@ MAX_OUTPUT = 64 * 1024 * 1024
 PATHSPEC_CHARS = 8 * 1024
 
 
+GIT_MISSING = (
+    "Git was not found: specspec runs the git command, which is not installed or not "
+    "on PATH. Install Git from https://git-scm.com/downloads, check that git --version "
+    "works in a new terminal, then retry."
+)
+
+
 class GitProcessError(Exception):
     """Git could not start, missed its deadline or exceeded its output budget."""
 
@@ -59,6 +66,8 @@ def run_git_process(
         )
     except subprocess.TimeoutExpired as error:
         raise GitProcessError(f"Git did not finish within {timeout} seconds.") from error
+    except FileNotFoundError as error:
+        raise GitProcessError(GIT_MISSING) from error
     except (OSError, subprocess.SubprocessError) as error:
         raise GitProcessError(str(error) or type(error).__name__) from error
     if len(completed.stdout) > max_output:

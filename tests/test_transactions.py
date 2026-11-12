@@ -59,7 +59,7 @@ def test_other_writers_are_blocked_by_workspace_lock(workspace):
     root, _ = workspace
     with module.workspace_lock(root):
         assert not load_snapshot(root).valid
-        with pytest.raises(SpecError, match="locked"):
+        with pytest.raises(SpecError, match="writing to this graph"):
             with module.workspace_lock(root):
                 pytest.fail("A concurrent writer acquired the lock.")
     assert load_snapshot(root).valid

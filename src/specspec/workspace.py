@@ -8,21 +8,42 @@ import os
 import secrets
 import shutil
 import subprocess
+import time
 from collections.abc import Callable, Collection
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
-from importlib.resources import files as package_files
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .format import parse_node, read_document, serialize
 from .git_process import GitProcessError, run_git_process
 from .graph import Graph, build_graph
+from .guide import INSTRUCTIONS, place_guide, read_instructions
 from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
 from .node_text import logical_bytes
 
 SPEC_DIR = ".specspec"
 STATE_DIR = ".specspec/local"
+# Another writer's edit takes milliseconds; reads and writes wait this long for its lock.
+LOCK_WAIT_SECONDS = 3.0
+LOCKED_MESSAGE = (
+    "Another specspec command is writing to this graph. Retry in a moment; if no specspec "
+    "command is running, an interrupted write left the lock and specspec recover "
+    "--force-lock clears it."
+)
+
+
+def wait_for_lock(state: Path, seconds: float = LOCK_WAIT_SECONDS) -> bool:
+    """Wait for another writer's lock to go away; true when it is gone."""
+    deadline = time.monotonic() + seconds
+    delay = 0.02
+    while (state / "lock").exists():
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        time.sleep(min(delay, remaining))
+        delay = min(delay * 2, 0.25)
+    return True
 
 
 @dataclass
@@ -35,6 +56,7 @@ class Snapshot:
     commit: str | None = None
     declared_version: int | None = None
     created_instructions: bool | None = None
+    instructions_action: str | None = None
     # Transient invocation outcomes; excluded from snapshots' protocol/canonical data.
     mutation_actions: dict[str, list[str]] | None = None
 
@@ -130,14 +152,12 @@ def runtime_diagnostics(root: Path) -> list[Diagnostic]:
         return [Diagnostic("STATE", "Runtime state must be a real directory.", STATE_DIR)]
     if state.exists() and any(entry.is_symlink() for entry in state.iterdir()):
         return [Diagnostic("STATE", "Runtime state contains a forbidden symlink.", STATE_DIR)]
+    # A running writer holds the lock while its journal exists; only a journal
+    # without a lock is an interrupted edit.
+    if not wait_for_lock(state):
+        return [Diagnostic("LOCKED", LOCKED_MESSAGE, STATE_DIR)]
     if (state / "journal.json").exists():
         return [Diagnostic("RECOVERY", "An interrupted edit needs specspec recover.", STATE_DIR)]
-    if (state / "lock").exists():
-        return [
-            Diagnostic(
-                "LOCKED", "An edit is in progress or a stale lock needs recovery.", STATE_DIR
-            )
-        ]
     if state.exists() and any(state.glob("stage-*")):
         return [Diagnostic("RECOVERY", "Unfinished staging needs specspec recover.", STATE_DIR)]
     return []
@@ -320,12 +340,18 @@ def workspace_lock(root: Path, *, recovering: bool = False):
 
     require_recovered()
     lock = state / "lock"
-    try:
-        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-    except FileExistsError as error:
-        raise SpecError(
-            [Diagnostic("LOCKED", "Workspace is locked; recover a stale lock explicitly.")]
-        ) from error
+    deadline = time.monotonic() + (0 if recovering else LOCK_WAIT_SECONDS)
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            break
+        except FileExistsError as error:
+            # Another writer finishes within milliseconds; a lock that stays is reported.
+            if time.monotonic() >= deadline or not wait_for_lock(
+                state, deadline - time.monotonic()
+            ):
+                raise SpecError([Diagnostic("LOCKED", LOCKED_MESSAGE)]) from error
+            require_recovered()
     try:
         with os.fdopen(fd, "w") as stream:
             stream.write(str(os.getpid()))
@@ -345,10 +371,32 @@ def decode(raw: str | None) -> bytes | None:
     return base64.b64decode(raw, validate=True) if raw is not None else None
 
 
+def write_durably(path: Path, data: bytes) -> None:
+    """Write bytes and flush them to disk before any later step relies on them."""
+    with path.open("wb") as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def sync_directory(path: Path) -> None:
+    """Flush a directory entry change where the platform supports it (not Windows)."""
+    if os.name == "nt":
+        return
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def write_journal(state: Path, data: dict[str, Any]) -> None:
+    # The journal reaches the disk before the first canonical change, so a journal
+    # that cannot be read belongs to an edit that changed no node yet.
     temp = state / "journal.tmp"
-    temp.write_text(json.dumps(data), encoding="utf-8")
+    write_durably(temp, json.dumps(data).encode("utf-8"))
     os.replace(temp, state / "journal.json")
+    sync_directory(state)
 
 
 def cleanup(state: Path) -> None:
@@ -384,26 +432,11 @@ def initialize(root: Path, body: str) -> Snapshot:
     snapshot_from_files(root, {example.path: serialize(example)}).require_valid()
     if diagnostics := runtime_diagnostics(root):
         raise SpecError(diagnostics)
-    instructions = root / "AGENTS.md"
-    if instructions.is_symlink() or (instructions.exists() and not instructions.is_file()):
-        raise SpecError([Diagnostic("INSTRUCTIONS", "AGENTS.md must be a regular file or absent.")])
-    old_guide = None
-    if instructions.exists():
-        with instructions.open("rb") as stream:
-            old_guide = stream.read(16 * 1024 * 1024 + 1)
-        if len(old_guide) > 16 * 1024 * 1024:
-            raise SpecError(
-                [Diagnostic("INSTRUCTIONS", "AGENTS.md exceeds the 16 MiB append limit.")]
-            )
-    template = package_files("specspec").joinpath("templates/AGENTS.md").read_bytes()
-    separator = (
-        b""
-        if not old_guide or old_guide.endswith(b"\n\n")
-        else b"\n"
-        if old_guide.endswith((b"\n", b"\r"))
-        else b"\n\n"
-    )
-    guide = (old_guide or b"") + separator + template
+    instructions = root / INSTRUCTIONS
+    old_guide = read_instructions(instructions)
+    # The guide appears once: an earlier shipped guide is replaced in place, and an
+    # edited one stays as the owner left it.
+    guide, guide_action = place_guide(old_guide)
     # Explicit init authorizes Git initialization, not identity, hooks or index edits.
     environment = {
         key: value
@@ -436,7 +469,7 @@ def initialize(root: Path, body: str) -> Snapshot:
             git = run_git_process(root, "init", "--quiet", env=environment, timeout=30)
     except GitProcessError as error:
         raise SpecError(
-            [Diagnostic("GIT", f"Git is required for initialization: {error}")], 2
+            [Diagnostic("GIT", f"Git is required for initialization. {error}")], 2
         ) from error
     if git.returncode:
         raise SpecError(
@@ -462,8 +495,8 @@ def initialize(root: Path, body: str) -> Snapshot:
         raw = serialize(node)
         snapshot_from_files(root, {node.path: raw}).require_valid()
         staged_node, staged_guide = state / "stage-init", state / "stage-init-agents"
-        staged_node.write_bytes(raw)
-        staged_guide.write_bytes(guide)
+        write_durably(staged_node, raw)
+        write_durably(staged_guide, guide)
         write_journal(
             state,
             {
@@ -512,9 +545,37 @@ def initialize(root: Path, body: str) -> Snapshot:
             )
         result.require_valid()
         result.created_instructions = old_guide is None
+        result.instructions_action = guide_action
         result.mutation_actions = {"added": [node.id]}
         cleanup(state)
     return result
+
+
+def require_known_parents(
+    before: Snapshot, candidate: Snapshot, changes: dict[str, bytes | None]
+) -> None:
+    """A parent an edit introduces must exist; references a node already has stay editable."""
+    known = {node.id for node in candidate.nodes} | {
+        PurePosixPath(path).stem for path in candidate.files
+    }
+    declared = {node.path: set(node.parents) for node in before.nodes}
+    missing = [
+        Diagnostic(
+            "PARENT",
+            f"Parent {parent} does not exist, so nothing was written. Check the ID: copy "
+            "IDs whole, including the final '='; specspec query --max-distance 2 lists the "
+            "top of the graph.",
+            node.path,
+            node.id,
+            parent_id=parent,
+        )
+        for node in candidate.nodes
+        if changes.get(node.path) is not None
+        for parent in node.parents
+        if parent not in known and parent not in declared.get(node.path, set())
+    ]
+    if missing:
+        raise SpecError(missing)
 
 
 def mutate(
@@ -559,6 +620,7 @@ def mutate(
         for path, raw in changes.items():
             if raw is not None:
                 require_node(candidate, PurePosixPath(path).stem)
+        require_known_parents(before, candidate, changes)
         if require_valid:
             candidate.require_valid()
         actions: dict[str, list[str]] = {}
@@ -584,7 +646,7 @@ def mutate(
         for index, (path, raw) in enumerate(sorted(changes.items())):
             if raw is not None:
                 temporary = state / f"stage-{index}"
-                temporary.write_bytes(raw)
+                write_durably(temporary, raw)
                 staged[path] = temporary
         current_files, current_errors = read_files(root)
         if current_errors or current_files != before.files:
@@ -768,7 +830,26 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
             cleanup(state)
             return {"restored": []}
         try:
-            journal = json.loads(journal_path.read_text(encoding="utf-8"))
+            journal = json.loads(journal_path.read_bytes().decode("utf-8"))
+        except ValueError as error:
+            # Journals reach the disk before any canonical change, so one that cannot
+            # be read belongs to an edit that changed no node; keeping it helps nobody.
+            cleanup(state)
+            return {
+                "restored": [],
+                "diagnostics": [
+                    Diagnostic(
+                        "RECOVERY",
+                        f"The interrupted edit's journal could not be read ({error}) and was "
+                        "removed with its staged files. specspec writes the journal before it "
+                        "changes any node, so no node was changed or restored; specspec diff "
+                        "shows the nodes as they are.",
+                        STATE_DIR,
+                        severity="warning",
+                    ).to_dict()
+                ],
+            }
+        try:
             if journal["kind"] not in {"edit", "init"} or not isinstance(journal["files"], dict):
                 raise ValueError("Unsupported journal.")
             originals: dict[str, bytes | None] = {}

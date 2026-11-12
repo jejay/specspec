@@ -11,7 +11,7 @@ import pytest
 
 from tools import pypi_release, release
 
-VERSION = "0.0.1"
+VERSION = "0.1.0"
 
 
 def put(root, path, content=b""):
@@ -68,7 +68,7 @@ def products(tmp_path):
 def make_ui(root, platform):
     metadata = {
         "name": "specspec-vscode",
-        "displayName": "specspec-vscode",
+        "displayName": "specspec",
         "version": VERSION,
         "contributes": {
             "customEditors": [{"selector": [{"filenamePattern": "**/.specspec/???????=.md"}]}]
@@ -201,7 +201,7 @@ def test_real_monorepo_versions_and_packaged_resource_are_aligned():
 
     assert tomllib.loads((root / "pyproject.toml").read_text())["project"]["name"] == "specspec"
     vscode = json.loads((root / "vscode/package.json").read_text())
-    assert vscode["name"] == vscode["displayName"] == "specspec-vscode"
+    assert vscode["name"] == "specspec-vscode" and vscode["displayName"] == "specspec"
     desktop = json.loads((root / "electron/package.json").read_text())
     assert desktop["name"] == desktop["productName"] == "specspec-desktop"
     assert (root / "src/specspec/templates/AGENTS.md").is_file()
@@ -291,3 +291,18 @@ def test_publication_rejects_sdist_links_without_extracting_them(products):
     with pytest.raises(ValueError, match="unsafe member/type"):
         pypi_release.verify(products, products / "dist", VERSION)
     assert not (products.parent / "outside").exists()
+
+
+def test_publication_requires_the_newest_published_guide_to_be_carried(products):
+    put(products, "src/specspec/templates/earlier/0.0.9.md", "# Earlier guide\r\n")
+    assert pypi_release.guides(products, ("0.0.9", b"# Earlier guide\n"))["carried"]
+    assert pypi_release.guides(products, ("0.1.0", b"# Packaged current guide\r\n"))["carried"]
+    with pytest.raises(ValueError, match="templates/earlier/0.0.8.md"):
+        pypi_release.guides(products, ("0.0.8", b"# A guide nobody kept\n"))
+
+
+def test_the_real_earlier_guides_include_the_published_0_0_1_guide():
+    root = Path(__file__).resolve().parents[1]
+    guide = (root / "src/specspec/templates/earlier/0.0.1.md").read_bytes()
+    digest = __import__("hashlib").sha256(guide.replace(b"\r\n", b"\n")).hexdigest()
+    assert digest == "af7e999818bfe8ba9376cf599f0c42a4bb6c9708196461c3cd656e1a4d866080"

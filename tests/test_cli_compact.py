@@ -55,6 +55,7 @@ def test_everyday_commands_advanced_help_and_no_parallel_legacy_surface(workspac
         "sources",
         "spotlight",
         "recover",
+        "guide",
     }
     assert set(main.commands["sources"].commands) == {"show", "capture", "reanchor"}
     assert set(main.commands["spotlight"].commands) == {"add", "show", "flush"}

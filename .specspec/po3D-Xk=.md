@@ -29,12 +29,12 @@ sources:
 # Implement aligned PyPI releases and public installation guidance
 
 Python/runtime metadata, all maintained npm packages and their local lock entries
-agree on 0.0.1. The release inspector checks that alignment without changing
+agree on 0.1.0. The release inspector checks that alignment without changing
 third-party versions or internal node/protocol contracts. User/agent/remote guides and both startup surfaces recommend the public isolated PyPI installation;
 source/wheel alternatives and explicit replacement of older local builds are available.
 
 The manually dispatched pipy_publish.yaml matches repository jejay/specspec and
-environment pypi. Its read-only build job verifies expected version, graph/source
+environment pypi. Its read-only build job verifies expected version, that the guide of the newest release on PyPI is current or carried in templates/earlier, graph/source
 consistency, maintained history, lint/tests, exact wheel/sdist contents and fresh
 installed CLI behavior. The separate publisher downloads the two verified artifacts
 without a project checkout, alone requests OIDC, and uses pinned PyPA tooling with
@@ -48,7 +48,6 @@ settings, dispatch, upgrades, failure/partial-upload inspection and public-index
 verification. Release commit messages record executed qualification and actual publication,
 separately from workflow declarations.
 
-The 0.0.1 CLI wheel and source distribution are available from PyPI through the
-declared workflow publisher, with public provenance binding their file hashes.
+Each published CLI wheel and source distribution is on PyPI through the declared workflow publisher, with public provenance binding its file hashes.
 Fresh isolated index and source-distribution installations confirm the shipped CLI
 and guide contracts.

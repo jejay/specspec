@@ -105,12 +105,17 @@ def register(main, root_path, emit, guarded, json_option):
     @guarded
     def flush(root, yes, as_json):
         """Clear spotlight metadata and obsolete copies; keep specification/recovery."""
-        if not yes and (as_json or not sys.stdin.isatty()):
-            raise SpecError(
-                [Diagnostic("SPOTLIGHTS", "Review spotlight show, then use flush --yes.")]
-            )
-        if not yes and not click.confirm("Flush all local spotlights?", default=False):
-            return
+        refusal = SpecError(
+            [Diagnostic("SPOTLIGHTS", "Review spotlight show, then use flush --yes.")]
+        )
+        # Agents capture output, and Windows reports its NUL input device as a terminal.
+        if not yes and (as_json or not (sys.stdin.isatty() and sys.stdout.isatty())):
+            raise refusal
+        try:
+            if not yes and not click.confirm("Flush all local spotlights?", default=False):
+                return
+        except click.Abort as error:
+            raise refusal from error
         emit(
             annotations.flush(root_path(root)),
             as_json=as_json,

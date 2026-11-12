@@ -36,8 +36,7 @@ sources:
 
 The shared deletion planner selects only requested identifiable IDs, assesses selected
 paths with ordinary Git semantics, and computes surviving broken references and
-potential descendants without selecting them for removal. CLI and hosts share the
-preview, warning, consent and under-lock reviewed-plan checks. The journaled writer
+potential descendants without selecting them for removal. CLI and hosts share the preview, warning, consent and under-lock reviewed-plan checks. The CLI asks for consent only when interactive_terminal finds both standard input and output to be terminals; otherwise, and when a question gets no answer, UNCOMMITTED_REFUSAL names --yes. The journaled writer
 removes only selected files and reports the resulting graph independently of applied
 operation success. Recovery restores recognized bytes, including invalid originals.
 

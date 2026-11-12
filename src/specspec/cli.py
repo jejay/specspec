@@ -20,6 +20,7 @@ from .cli_help import HELP, install_help
 from .deletion import deletion_plan, deletion_warnings
 from .edit_cli import EDIT_COMMANDS, CanonicalIdCommand, EditInvocation
 from .editor import MAX_REQUEST_BYTES
+from .guide import current_guide, refresh_guide
 from .inspection import findings, raw_document, walks
 from .model import ID_RE, MAX_FILE_BYTES, Diagnostic, SpecError, unexpected_error
 from .output import (
@@ -121,7 +122,7 @@ class Commands(click.Group):
                 "Everyday commands",
                 ["init", "query", "add", "update", "delete", "check", "diff"],
             ),
-            ("Advanced tools", ["sources", "spotlight", "recover"]),
+            ("Advanced tools", ["sources", "spotlight", "recover", "guide"]),
         ]:
             with formatter.section(label):
                 formatter.write_dl(
@@ -136,11 +137,39 @@ def root_path(explicit):
     return explicit.absolute() if explicit is not None else discover_root()
 
 
+NO_TEXT = (
+    "No node text given. Pass it with -m, for example -m '# Title' -m 'Paragraph.', "
+    "or pipe Markdown into the command."
+)
+
+
+def stdin_terminal():
+    """Nothing is piped in: standard input is a terminal (or Windows' empty NUL device)."""
+    return sys.stdin.isatty()
+
+
 def read_body():
+    """Bounded UTF-8 standard input without a byte-order mark; never wait on a terminal."""
+    if stdin_terminal():
+        raise SpecError([Diagnostic("ARGUMENT", NO_TEXT)], 2)
     raw = sys.stdin.buffer.read(MAX_FILE_BYTES + 1)
     if len(raw) > MAX_FILE_BYTES:
         raise SpecError([Diagnostic("FORMAT", "Body exceeds the 1 MiB node limit.")], 2)
-    return raw.decode("utf8")
+    try:
+        text = raw.decode("utf8")
+    except UnicodeDecodeError as error:
+        raise SpecError(
+            [
+                Diagnostic(
+                    "FORMAT",
+                    f"Standard input is not UTF-8 text: byte {raw[error.start]:#04x} at "
+                    f"position {error.start}. Save the text as UTF-8, or pass it with -m.",
+                )
+            ],
+            2,
+        ) from error
+    # Windows PowerShell and some editors start UTF-8 text with a byte-order mark.
+    return text.removeprefix("﻿")
 
 
 def body_options(function):
@@ -179,6 +208,20 @@ def source_input(value):
 
 
 def parent_input(parents, encoded):
+    for parent in parents:
+        if not ID_RE.fullmatch(parent) and not parent.startswith("$"):
+            raise SpecError(
+                [
+                    Diagnostic(
+                        "ARGUMENT",
+                        f"--parent {parent!r} is not a node ID. IDs have eight characters "
+                        "and end in '='; copy them whole, for example from specspec query "
+                        "--max-distance 2. A new node of the same invocation is named "
+                        "with --as NAME and referenced as --parent '$NAME'.",
+                    )
+                ],
+                2,
+            )
     if encoded is None:
         return list(parents) if parents else None
     if parents:
@@ -251,8 +294,11 @@ def fill_stdin(edits, steps):
     def metadata_only(edit):
         return edit["op"] == "update" and any(k in edit for k in ("parents", "sources"))
 
-    if interactive_stdin() and all(metadata_only(edits[i]) for i in eligible):
-        return
+    if stdin_terminal():
+        # Nothing is piped: metadata-only steps keep their bodies, others need text.
+        if all(metadata_only(edits[i]) for i in eligible):
+            return
+        raise SpecError([Diagnostic("ARGUMENT", NO_TEXT)], 2)
     text = read_body()
     if text and len(eligible) != 1:
         raise SpecError(
@@ -271,7 +317,7 @@ def fill_stdin(edits, steps):
     else:
         for i in eligible:
             if edits[i]["op"] == "add":
-                edits[i]["body"] = ""
+                raise SpecError([Diagnostic("ARGUMENT", NO_TEXT)], 2)
             elif not metadata_only(edits[i]):
                 raise SpecError(
                     [
@@ -312,6 +358,7 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
                     "agent_instructions": {
                         "path": "AGENTS.md",
                         "created": snapshot.created_instructions,
+                        "action": snapshot.instructions_action,
                     }
                 }
                 if snapshot.created_instructions is not None
@@ -353,6 +400,8 @@ def main(context, root):
 def init(root, messages, as_json):
     """Initialize Git and a graph from messages or standard input."""
     text = body_input(messages)
+    if not messages and not text.strip():
+        raise SpecError([Diagnostic("ARGUMENT", NO_TEXT)], 2)
     snapshot = initialize(root.absolute() if root is not None else Path.cwd(), text)
     mutation_output(snapshot, [snapshot.nodes[0].id], as_json)
 
@@ -450,8 +499,27 @@ def update(root, **params):
     mutation_output(snapshot, [edit["id"]], params["as_json"])
 
 
-def interactive_stdin():
-    return sys.stdin.isatty()
+UNCOMMITTED_REFUSAL = (
+    "No files removed: Git does not hold these nodes' current text, so the deletion "
+    "cannot be undone. Rerun with --yes to delete them, or confirm in an interactive "
+    "terminal; specspec delete --dry-run shows the plan."
+)
+
+
+def interactive_terminal():
+    """A person can answer a question: standard input and output are both terminals.
+
+    Agents capture output, and Windows reports its empty NUL input device as a terminal,
+    so input alone does not tell.
+    """
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def confirm_deletion(question):
+    try:
+        return click.confirm(question, default=False)
+    except click.Abort as error:
+        raise SpecError([Diagnostic("DELETE_CONFIRMATION", UNCOMMITTED_REFUSAL)]) from error
 
 
 def read_deletion_plan(path):
@@ -513,17 +581,10 @@ def delete(root, ids, dry_run, yes, reviewed_plan, require_valid, as_json):
         nonlocal actual, warned
         actual = plan
         warnings = deletion_warnings(plan)
-        if warnings and not yes and (as_json or not interactive_stdin()):
+        if warnings and not yes and (as_json or not interactive_terminal()):
             emit(
                 plan,
-                [
-                    *warnings,
-                    Diagnostic(
-                        "DELETE_CONFIRMATION",
-                        "No files removed. Review --dry-run, then use --yes "
-                        "or an interactive terminal.",
-                    ),
-                ],
+                [*warnings, Diagnostic("DELETE_CONFIRMATION", UNCOMMITTED_REFUSAL)],
                 as_json=as_json,
                 ok=False,
                 text=render_plan,
@@ -533,10 +594,9 @@ def delete(root, ids, dry_run, yes, reviewed_plan, require_valid, as_json):
             emit(None, warnings)
             warned = warnings
             if not yes:
-                return click.confirm(
+                return confirm_deletion(
                     f"Delete exactly {len(plan['deleted_ids'])} selected nodes? "
-                    "Descendants and their parent references remain.",
-                    default=False,
+                    "Descendants and their parent references remain."
                 )
         return True
 
@@ -835,21 +895,13 @@ def write_edits(root, edits, *, dry_run, yes, require_valid, as_json):
         if warnings:
             emit(None, warnings)
             if not yes:
-                if as_json or not interactive_stdin():
+                if as_json or not interactive_terminal():
                     raise SpecError(
-                        [
-                            *warnings,
-                            Diagnostic(
-                                "DELETE_CONFIRMATION",
-                                "No files changed. Review --dry-run and use --yes "
-                                "for selected deletion.",
-                            ),
-                        ]
+                        [*warnings, Diagnostic("DELETE_CONFIRMATION", UNCOMMITTED_REFUSAL)]
                     )
-                return click.confirm(
+                return confirm_deletion(
                     f"Delete exactly {len(plan['deleted_ids'])} selected files "
-                    "as part of this batch?",
-                    default=False,
+                    "as part of this batch?"
                 )
         return True
 
@@ -882,6 +934,39 @@ def write_edits(root, edits, *, dry_run, yes, require_valid, as_json):
 def recover_command(root, force_lock, as_json):
     """Advanced: recover an interrupted managed edit."""
     emit(recover(root_path(root), force_lock=force_lock), as_json=as_json)
+
+
+@main.command(
+    name="guide",
+    help=HELP["guide"],
+    short_help="Bring AGENTS.md to the agent guide of the installed release.",
+)
+@click.option(
+    "--print",
+    "print_guide",
+    is_flag=True,
+    help="Write the current guide to standard output and change nothing.",
+)
+@click.pass_obj
+@guarded
+def guide_command(root, print_guide):
+    """Replace an earlier shipped guide in AGENTS.md, or print the current one."""
+    if print_guide:
+        click.echo(current_guide(), nl=False)
+        return
+    action = refresh_guide(root_path(root))
+    emit(
+        f"AGENTS.md: {GUIDE_ACTIONS[action]} (specspec {__version__})",
+        as_json=False,
+    )
+
+
+GUIDE_ACTIONS = {
+    "created": "created with the guide",
+    "appended": "guide appended",
+    "replaced": "guide of an earlier release replaced",
+    "current": "guide already current",
+}
 
 
 @main.command(hidden=True, help=HELP["api"])

@@ -74,20 +74,29 @@ change and run both graph checks with `--staged`; they validate the exact index.
 ## Releasing
 
 All products share one version: `pyproject.toml`, `specspec.__version__`, the four
-npm `package.json` files and their lockfile entries change together.
+npm `package.json` files and their lockfile entries change together, and so do the
+default of `pipy_publish.yaml` and the `VERSION` of `tests/test_release.py`.
 
-1. Build and inspect locally with `npm run package:all` and `npm run verify:packages`.
+1. When the agent guide changed since the newest release on PyPI, copy that release's
+   guide to `src/specspec/templates/earlier/<version>.md`, so that `specspec guide` can
+   replace it. The publish workflow checks this.
+2. Give the version a section `## X.Y.Z` in CHANGELOG.md; it becomes the GitHub
+   release notes.
+3. Build and inspect locally with `npm run package:all` and `npm run verify:packages`.
    Local builds never publish.
-2. Commit and push the release revision to `main`.
-3. Run **Actions → Publish CLI to PyPI** with the exact version. The `build` job tests,
+4. Commit and push the release revision to `main`.
+5. Run **Actions → Publish CLI to PyPI** with the exact version. The `build` job tests,
    builds and smoke-tests the wheel and source distribution; only the separate
    `publish` job receives the short-lived OIDC identity for PyPI's trusted publisher
    (repository `jejay/specspec`, workflow `pipy_publish.yaml`, environment `pypi`).
-4. Confirm the files on [PyPI](https://pypi.org/project/specspec/) and test a fresh
-   `uv tool install specspec`.
+6. Push the tag `vX.Y.Z` on that revision. **Build release artifacts** checks that the
+   tag names the version and is on `main`, builds the editors on Windows and Linux and
+   creates the GitHub release with the VSIX, both desktop archives and `SHA256SUMS`.
+7. Confirm the files on [PyPI](https://pypi.org/project/specspec/) and the GitHub
+   release, and test a fresh `uv tool install specspec`.
 
-Tags, signing, Marketplace submission and hook changes each need their own explicit
-authorization.
+Signing, Marketplace submission and hook changes each need their own explicit
+authorization, and so does every tag.
 
 ## Maintaining the Gantt example history
 

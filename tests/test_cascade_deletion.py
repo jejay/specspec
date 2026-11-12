@@ -142,7 +142,7 @@ def test_whole_action_human_consent_keeps_descendants(workspace, monkeypatch, an
     before, a, b, c, d = branch(root, manifesto)
     update_node(root, a, body="# Pending selected node\n")
     before = load_snapshot(root).files
-    monkeypatch.setattr(cli_module, "interactive_stdin", lambda: True)
+    monkeypatch.setattr(cli_module, "interactive_terminal", lambda: True)
     result = CliRunner().invoke(main, ["--root", str(root), "delete", a], input=answer + "\n")
     assert "uncommitted" in result.stderr and "exactly 1 selected nodes" in result.stdout
     if deleted:

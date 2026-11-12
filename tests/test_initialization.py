@@ -2,6 +2,7 @@
 
 import json
 import re
+import shutil
 import subprocess
 from importlib.resources import files
 from pathlib import Path
@@ -12,6 +13,7 @@ from click.testing import CliRunner
 
 from specspec import workspace as module
 from specspec.cli import main
+from specspec.guide import earlier_guides, with_endings
 from specspec.model import SpecError
 from specspec.workspace import initialize, load_snapshot, recover, write_journal
 
@@ -57,15 +59,34 @@ def test_existing_instructions_are_an_exact_prefix_followed_by_template(tmp_path
     path = tmp_path / "AGENTS.md"
     path.write_bytes(body)
     snapshot = initialize(tmp_path, "# Product\n")
+    # The guide follows the file's own line endings, judged by its first line.
+    crlf = body.startswith(b"Owner instructions\r\n")
+    newline = b"\r\n" if crlf else b"\n"
     separator = (
         b""
         if not body or body.endswith(b"\n\n")
-        else b"\n"
+        else newline
         if body.endswith((b"\n", b"\r"))
-        else b"\n\n"
+        else newline * 2
     )
     assert snapshot.created_instructions is False
-    assert path.read_bytes() == body + separator + guide_bytes()
+    assert snapshot.instructions_action == "appended"
+    assert path.read_bytes() == body + separator + with_endings(guide_bytes(), crlf)
+
+
+def test_init_keeps_one_guide_and_replaces_an_earlier_release_guide(tmp_path):
+    path = tmp_path / "AGENTS.md"
+    earlier = earlier_guides()["0.0.1"].replace(b"\n", b"\r\n")
+    path.write_bytes(b"# Owner\r\n\r\n" + earlier + b"\r\nOwner footer\r\n")
+    snapshot = initialize(tmp_path, "# Product\n")
+    assert snapshot.instructions_action == "replaced"
+    assert path.read_bytes() == (
+        b"# Owner\r\n\r\n" + with_endings(guide_bytes(), True) + b"\r\nOwner footer\r\n"
+    )
+    shutil.rmtree(tmp_path / ".specspec")
+    snapshot = initialize(tmp_path, "# Product again\n")
+    assert snapshot.instructions_action == "current"
+    assert path.read_bytes().count(b"# Working with a specspec graph") == 1
 
 
 def test_an_instruction_directory_is_rejected_before_git_or_graph_creation(tmp_path):
@@ -246,9 +267,15 @@ def test_cli_reports_instruction_creation_or_amendment(tmp_path, existing):
     result = CliRunner().invoke(main, ["--root", str(tmp_path), "init", "-m", "Test", "--json"])
     assert result.exit_code == 0, result.output
     value = json.loads(result.stdout)["result"]
-    assert value["agent_instructions"] == {"path": "AGENTS.md", "created": not existing}
+    assert value["agent_instructions"] == {
+        "path": "AGENTS.md",
+        "created": not existing,
+        "action": "appended" if existing else "created",
+    }
     assert len(value["changed_ids"]) == 1
-    assert (tmp_path / "AGENTS.md").read_bytes().endswith(guide_bytes())
+    # A created file holds the packaged bytes; an appended guide follows the file's endings.
+    expected = with_endings(guide_bytes(), False) if existing else guide_bytes()
+    assert (tmp_path / "AGENTS.md").read_bytes().endswith(expected)
 
 
 @pytest.mark.parametrize("existing", [False, True])

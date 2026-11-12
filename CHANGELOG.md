@@ -1,6 +1,20 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 — first public release
+
+The first release announced for feedback. The CLI is on PyPI
+(`uv tool install specspec` or `pipx install specspec`); the VS Code extension and the
+desktop app for Windows and Linux are downloads on the GitHub release. The changes below
+are relative to 0.0.1, which was on PyPI without an announcement.
+
+**Upgrading.** `specspec guide` brings a project's AGENTS.md to the guide of the
+installed release: it finds the guide an earlier release added by exact match and
+replaces it, and every other byte stays. A guide edited by hand is left alone with an
+explanation. `init` adds the guide once and replaces an earlier release's guide in place.
+
+**Editors.** Each version tag attaches the VSIX and the portable desktop archives to its
+GitHub release, so the editors no longer need a build from source. The extension's
+display name is specspec.
 
 **Agent guide.** `specspec init` ships a shorter AGENTS.md (about 14 KB). It starts with
 what the graph is for and a working routine, shows a small example graph and reads
@@ -31,6 +45,18 @@ the owner does not accept stays as they wrote it. A discussion before any planni
 with guiding questions and the agent's own tentative answers.
 
 **CLI fixes**
+- Commands that need node text stop with a hint when nothing is piped in, instead of
+  waiting. A UTF-8 byte-order mark on standard input is dropped, and other encodings
+  are named in the error.
+- A parent ID that does not exist is rejected before anything is written.
+- Deleting uncommitted nodes asks only when both input and output are a terminal, and a
+  refusal names `--yes`; on Windows an agent got a bare "Aborted!".
+- Reads and writes wait a few seconds for another writer's lock and then name the cause;
+  bounded queries report a lock or an interrupted edit as such.
+- Staged files and the recovery journal reach the disk before any node changes, and
+  `recover` removes a journal that cannot be read.
+- Missing Git, an unknown revision and a conflicting strict source link each get a
+  message that says what to do.
 - A malformed node (deep nesting, oversized numbers, impossible dates) gets a FORMAT
   diagnostic of its own; the other nodes still load and raw reads still work.
 - Unexpected errors produce a structured INTERNAL diagnostic instead of a traceback, and
@@ -61,10 +87,11 @@ conclusion as a relation that holds at every depth. The editor guide is
 the extension's README. Design notes and evidence moved into the specification graph
 and commit messages.
 
-## 0.0.1 — first public release
+## 0.0.1
 
-The CLI is on PyPI (`uv tool install specspec` or `pipx install specspec`); the VS Code
-extension and the desktop app are built locally from this repository.
+Published to PyPI on 2026-10-27 without an announcement. The CLI installed with
+`uv tool install specspec` or `pipx install specspec`; the VS Code extension and the
+desktop app were built locally from this repository.
 
 - Seven everyday commands with task-oriented `--help`: init, query, add, update, delete,
   check and diff.
@@ -79,7 +106,3 @@ extension and the desktop app are built locally from this repository.
 - `init` sets up Git and adds the agent guide to AGENTS.md.
 - One graph canvas in VS Code and in a Windows/Linux desktop app, with native node
   editing, revision comparisons and spotlights.
-
-Development builds before 0.0.1 used `_specspec/` and the version 0.1.0. Rename the
-folder to `.specspec/` after finishing or recovering interrupted writes, and replace
-such a build with `uv tool install --force specspec`.
