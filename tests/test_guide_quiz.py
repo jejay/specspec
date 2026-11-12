@@ -69,7 +69,8 @@ def test_guide_versions_resolve_by_name(tmp_path, monkeypatch):
     # A result names a text that stays: the shipped guide counts through its kept copy.
     kept = guides.FOLDER / "2026-11-10-before-structure-rules.md"
     template = tmp_path / "AGENTS.md"
-    template.write_bytes(kept.read_bytes().replace(b"\n", b"\r\n"))
+    # Windows checkouts already hold CRLF; normalize first so no line gets a second CR.
+    template.write_bytes(kept.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
     monkeypatch.setattr(guides, "TEMPLATE", template)
     assert guides.resolve(guides.SHIPPED) == kept.stem
     assert guides.text(guides.SHIPPED) == guides.text(kept.stem)
