@@ -1,5 +1,10 @@
 name: Checks
-on: [push, pull_request]
+# Branch pushes and pull requests; a version tag points to a main commit that already
+# ran these checks, and release-build.yml runs them again for the tag.
+on:
+  push:
+    branches: ['**']
+  pull_request:
 permissions:
   contents: read
 jobs:
@@ -92,7 +97,16 @@ jobs:
       - name: Clone independent maintained history
         run: python example/gantt/history/checkout.py "${{ runner.temp }}/gantt"
       - run: npm --prefix "${{ runner.temp }}/gantt" test
+      # The real-browser test fails rarely and only on runners (once on the v0.1.0 tag of
+      # 702ef3c, 0 of 20 in a repeat on that commit). A second attempt decides; the first
+      # attempt's output stays readable as a warning annotation.
       - name: Real local browser app
         env:
           GANTT_BROWSER: /usr/bin/google-chrome
-        run: npm --prefix "${{ runner.temp }}/gantt" run test:browser
+          GANTT: ${{ runner.temp }}/gantt
+        shell: bash
+        run: |
+          if npm --prefix "$GANTT" run test:browser > first.txt 2>&1; then cat first.txt; exit 0; fi
+          cat first.txt
+          python3 -c "import sys; t=open('first.txt').read()[-3500:]; print('::warning title=Gantt browser test failed once and is retried::' + t.replace('%','%25').replace('\r','%0D').replace('\n','%0A'))"
+          npm --prefix "$GANTT" run test:browser

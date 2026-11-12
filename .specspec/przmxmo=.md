@@ -61,9 +61,7 @@ and preserved owner bytes outside the checkout. Artifact-host probes install the
 VSIX in a disposable extensions directory with a separate test controller, and run
 the unpacked desktop executable against the isolated global-style CLI. Complete canvas, native-document, source, consent, invalid-graph, watcher, Git,
 spotlight and reload suites have their assertions and production safeguards.
- Build
-artifact workflows upload builds without publication, tags, owner installs or Git
-writes. Public CLI publication has its own explicitly authorized release workflow.
+ Manual artifact builds upload without publication, owner installs or Git writes; a pushed version tag also attaches the editor packages to the GitHub release of that tag. Public CLI publication has its own explicitly authorized release workflow.
 
 Permission-sensitive Linux archive verification executes on a POSIX filesystem.
 Qualification records distinguish the executed Python/archive environment from

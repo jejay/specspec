@@ -44,7 +44,7 @@ sources:
 ---
 # Validate and document the working graph and planning process
 
-CI and repository tests validate this graph, its source references, complete agent
+CI, on every branch push and pull request, and repository tests validate this graph, its source references, complete agent
 context and manual-edit behavior. Repository tests also check node text for doubled
 words and lowercase sentence starts, keep AGENTS.md equal to a repository section
 followed by the shipped guide, resolve local links in the kept documents and check

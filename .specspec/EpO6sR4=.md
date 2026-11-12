@@ -40,5 +40,4 @@ explain removed branches and predecessor trees retain their reasoning.
 stage commits and receipt ordinals. The verifier checks all retained refs, current
 schema/DAG/source retention, exact indexes, recorded ancestor-query/dependent results, stage order,
 semantic/edge/source deltas, redirects and isolated model stages. Runtime/snapshot
-agreement is checked byte-for-byte. Browser tests cover real local planning/input/
-file/storage behavior. Independent corpus clones supply Git and host integration.
+agreement is checked byte-for-byte. Browser tests cover real local planning/input/ file/storage behavior. CI runs them in Chrome on Ubuntu; when the first attempt fails, a second attempt decides and the first attempt's output becomes a warning annotation. Independent corpus clones supply Git and host integration.
