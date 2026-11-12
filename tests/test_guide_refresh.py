@@ -13,7 +13,8 @@ def run(root, *args):
 
 def test_an_earlier_release_guide_is_replaced_and_every_other_byte_stays(workspace):
     root, _ = workspace
-    earlier = earlier_guides()["0.0.1"]
+    # Checkouts may hold either line ending; the owner's text around it decides here.
+    earlier = with_endings(earlier_guides()["0.0.1"], False)
     owner_before, owner_after = b"# Our rules\n\nUse tabs.\n\n", b"\n## Local notes\nKeep.\n"
     (root / "AGENTS.md").write_bytes(owner_before + earlier + owner_after)
     result = run(root)
@@ -65,6 +66,7 @@ def test_files_without_a_guide_get_one_and_print_changes_nothing(workspace):
 def test_every_carried_guide_differs_from_the_current_one_and_is_recognized():
     current = with_endings(current_guide(), False)
     for version, guide in earlier_guides().items():
-        assert with_endings(guide, False) != current, version
+        guide = with_endings(guide, False)
+        assert guide != current, version
         data, action = place_guide(b"Prefix\n\n" + guide)
         assert action == "replaced" and data == b"Prefix\n\n" + current, version

@@ -76,7 +76,7 @@ def test_existing_instructions_are_an_exact_prefix_followed_by_template(tmp_path
 
 def test_init_keeps_one_guide_and_replaces_an_earlier_release_guide(tmp_path):
     path = tmp_path / "AGENTS.md"
-    earlier = earlier_guides()["0.0.1"].replace(b"\n", b"\r\n")
+    earlier = with_endings(earlier_guides()["0.0.1"], True)
     path.write_bytes(b"# Owner\r\n\r\n" + earlier + b"\r\nOwner footer\r\n")
     snapshot = initialize(tmp_path, "# Product\n")
     assert snapshot.instructions_action == "replaced"
