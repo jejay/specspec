@@ -11,14 +11,14 @@ exactly two LF characters, preserving literal words, Unicode and whitespace. New
 encoding follows the target document, and serialization appends only a missing
 complete-document terminator. A filename or dash passed to -m is literal text.
 
-When messages are absent, init and add read bounded UTF-8 standard input. Updates
+When messages are absent, init and add read bounded UTF-8 standard input and drop a leading byte-order mark. Updates
 without messages or replacements accept a whole-body stdin replacement. Empty stdin
 with explicit metadata edits retains the body; a metadata-only interactive update
 need not wait for text. Explicit empty -m is a schema-checked edit. --replace
 uses selected original passages and does not consume stdin. There is no body-file
 option: shell redirection supplies files. Multiple eligible steps cannot share a
 nonempty stdin payload ambiguously; parse and preflight every step before reads or
-writes. Metadata-only chains with no input are possible.
+writes. Metadata-only chains with no input are possible. A command that needs text and finds standard input to be a terminal stops with a message naming -m and piped text instead of waiting; empty text for init or add and input that is not UTF-8 get such a message too.
 
 Both managed UIs pass complete body text on stdin without a body option. Native VS Code forms use non-writing plans and native persistence. Reviewed deletion plans and private application channels have their independent inputs. Argument, body,
 aggregate and operating-system limits are separate and explicit.

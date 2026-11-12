@@ -19,7 +19,7 @@ Assess only selected paths with NUL-delimited literal Git status, disabled optio
 index refresh/fsmonitor, and clean-filter/EOL semantics. Staged/new/ignored/comment/
 mode/rename/unmerged changes warn; unavailable assessment warns for every selected
 file. Dry runs write no canonical files. Warned interactive deletion asks one whole-
-action confirmation; warned noninteractive/JSON deletion requires --yes. Warnings
+action confirmation when both standard input and standard output are terminals; otherwise, and with JSON, warned deletion requires --yes, and a refusal or an unanswered confirmation names --yes. Warnings
 remain visible before unlinking. Clean committed selections proceed directly.
 
 Both hosts confirm exact scope and explain retained dangling references. Recompute
