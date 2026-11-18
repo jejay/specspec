@@ -3,12 +3,7 @@
   <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-light.png" alt="specspec — Engineering is on the spectrum now" width="640">
 </picture>
 
-specspec connects your intentions to revisable decisions and to the code that realizes
-them, so you can choose how much to direct or delegate at every step. The specification
-is a graph of Markdown files in your Git repository. You read and edit it in a visual
-graph editor, and your coding agent works on it through a command-line tool.
-
-The name is short for *specification spectrum*.
+specspec organizes a **specification** as a **spectrum** from intentions to conclusions for human-agentic co-work. A specspec graph starts with the core idea, the manifesto, and connects it all the way to the artifacts (lines of code, paragraphs in a book, graphics in a presentation, etc.) that realizes it. For each part of the specification you can decide at which level of abstraction you want to delegate.
 
 <a href="#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app"><img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode-small.png" alt="The specspec graph in VS Code, seen from far above." height="190"></a>
 <a href="#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app"><img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-desktop-small.png" alt="The specspec desktop app comparing two revisions of a graph." height="190"></a>
