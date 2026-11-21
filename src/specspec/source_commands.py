@@ -103,7 +103,7 @@ def register(main, root_path, emit, guarded, json_option):
     @main.group(
         name="sources",
         help=HELP["sources"],
-        short_help="Inspect and maintain links from implementations to files.",
+        short_help="Inspect and maintain implementation-to-file links.",
     )
     def group():
         """Advanced: inspect, capture and deliberately reanchor source regions."""

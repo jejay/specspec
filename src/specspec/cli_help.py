@@ -327,7 +327,7 @@ HELP = {
     journal. Initialization rollback restores amended instructions but keeps Git
     metadata. No staging, commits or linked-file deletion.
     """,
-    "sources": """Inspect and maintain links from implementations to files.
+    "sources": """Inspect and maintain implementation-to-file links.
 
     Links cite whole files or Git-anchored inclusive ranges. Source numbers are
     1-based; links provide context, not proof.
