@@ -113,6 +113,8 @@ def render_receipt(result, actions, *, dry_run=False):
             "created" if instructions["created"] else "template appended",
         )
         lines.append(f"Agent instructions: {instructions['path']} ({status})")
+        if instructions.get("imported_by"):
+            lines.append(f"Claude Code: {instructions['imported_by']} imports AGENTS.md")
     if result.get("aliases"):
         lines.append(
             "Aliases: "

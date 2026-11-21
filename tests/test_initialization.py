@@ -97,22 +97,113 @@ def test_an_instruction_directory_is_rejected_before_git_or_graph_creation(tmp_p
     assert not (tmp_path / ".specspec").exists() and not (tmp_path / ".git").exists()
 
 
-@pytest.mark.parametrize("dangling", [False, True])
-def test_instruction_symlinks_are_rejected_without_following_them(tmp_path, dangling):
-    target = tmp_path / "owner.md"
-    if not dangling:
-        target.write_bytes(b"Owner text\xff\r\n")
-    path = tmp_path / "AGENTS.md"
+def link(path, target):
     try:
         path.symlink_to(target)
     except OSError:
         pytest.skip("Symlinks are unavailable on this host.")
-    with pytest.raises(SpecError, match="regular file"):
-        initialize(tmp_path, "# Product\n")
-    assert path.is_symlink() and target.exists() is not dangling
-    assert not (tmp_path / ".specspec").exists() and not (tmp_path / ".git").exists()
-    if not dangling:
-        assert target.read_bytes() == b"Owner text\xff\r\n"
+
+
+@pytest.mark.parametrize("where", ["missing", "outside"])
+def test_instruction_links_to_missing_or_outside_files_are_rejected(tmp_path, where):
+    project, outside = tmp_path / "project", tmp_path / "shared.md"
+    project.mkdir()
+    if where == "outside":
+        outside.write_bytes(b"Shared text\xff\r\n")
+    link(project / "AGENTS.md", outside if where == "outside" else project / "owner.md")
+    with pytest.raises(SpecError, match="regular file") as error:
+        initialize(project, "# Product\n")
+    assert ("outside the project" if where == "outside" else "missing file") in str(error.value)
+    assert (project / "AGENTS.md").is_symlink()
+    assert not (project / ".specspec").exists() and not (project / ".git").exists()
+    if where == "outside":
+        assert outside.read_bytes() == b"Shared text\xff\r\n"
+
+
+def test_a_linked_instructions_file_is_written_where_it_points(tmp_path):
+    (tmp_path / "docs").mkdir()
+    target = tmp_path / "docs/agents.md"
+    target.write_bytes(b"Owner text\r\n")
+    link(tmp_path / "AGENTS.md", target)
+    snapshot = initialize(tmp_path, "# Product\n")
+    assert (tmp_path / "AGENTS.md").is_symlink()
+    assert target.read_bytes() == b"Owner text\r\n\r\n" + with_endings(guide_bytes(), True)
+    assert snapshot.instructions_path == "docs/agents.md"
+
+
+def test_agents_and_claude_linked_to_each_other_hold_one_guide(tmp_path):
+    (tmp_path / "CLAUDE.md").write_bytes(b"Claude rules\n")
+    link(tmp_path / "AGENTS.md", tmp_path / "CLAUDE.md")
+    snapshot = initialize(tmp_path, "# Product\n")
+    data = (tmp_path / "CLAUDE.md").read_bytes()
+    assert data == b"Claude rules\n\n" + with_endings(guide_bytes(), False)
+    assert b"@AGENTS.md" not in data
+    assert snapshot.instructions_path == "CLAUDE.md"
+    assert snapshot.instructions_imported_by is None
+
+
+@pytest.mark.parametrize("name", ["CLAUDE.md", ".claude/CLAUDE.md"])
+def test_a_claude_file_without_agents_md_receives_the_guide(tmp_path, name):
+    (tmp_path / name).parent.mkdir(exist_ok=True)
+    (tmp_path / name).write_bytes(b"Claude rules\n")
+    snapshot = initialize(tmp_path, "# Product\n")
+    expected = b"Claude rules\n\n" + with_endings(guide_bytes(), False)
+    assert (tmp_path / name).read_bytes() == expected
+    assert not (tmp_path / "AGENTS.md").exists()
+    assert snapshot.instructions_path == name and snapshot.created_instructions is False
+    assert snapshot.instructions_imported_by is None
+
+
+@pytest.mark.parametrize(
+    ("name", "line"),
+    [
+        ("CLAUDE.md", b"@AGENTS.md"),
+        (".claude/CLAUDE.md", b"@../AGENTS.md"),
+        ("CLAUDE.local.md", b"@AGENTS.md"),
+    ],
+)
+def test_claude_code_files_import_the_guide_in_agents_md(tmp_path, name, line):
+    (tmp_path / name).parent.mkdir(exist_ok=True)
+    (tmp_path / name).write_bytes(b"Claude rules\r\nMention `@AGENTS.md` only.\r\n")
+    if name != "CLAUDE.local.md":
+        (tmp_path / "AGENTS.md").write_bytes(b"Shared rules\n")
+    snapshot = initialize(tmp_path, "# Product\n")
+    assert (tmp_path / name).read_bytes() == (
+        b"Claude rules\r\nMention `@AGENTS.md` only.\r\n\r\n" + line + b"\r\n"
+    )
+    agents = (tmp_path / "AGENTS.md").read_bytes().replace(b"\r\n", b"\n")
+    assert agents.endswith(with_endings(guide_bytes(), False))
+    assert snapshot.instructions_path == "AGENTS.md"
+    assert snapshot.instructions_imported_by == name
+
+
+@pytest.mark.parametrize(
+    "claude", [b"Rules\n\n@./AGENTS.md\n", b"- see @AGENTS.md\n", "symlink"], ids=str
+)
+def test_an_existing_import_or_link_adds_no_second_import(tmp_path, claude):
+    (tmp_path / "AGENTS.md").write_bytes(b"Shared rules\n")
+    if claude == "symlink":
+        link(tmp_path / "CLAUDE.md", tmp_path / "AGENTS.md")
+    else:
+        (tmp_path / "CLAUDE.md").write_bytes(claude)
+    snapshot = initialize(tmp_path, "# Product\n")
+    assert snapshot.instructions_imported_by is None
+    if claude != "symlink":
+        assert (tmp_path / "CLAUDE.md").read_bytes() == claude
+
+
+def test_recovery_restores_the_guide_and_the_claude_import(tmp_path, monkeypatch):
+    (tmp_path / "AGENTS.md").write_bytes(b"Shared rules\n")
+    (tmp_path / "CLAUDE.md").write_bytes(b"Claude rules\n")
+    with monkeypatch.context() as patch:
+        patch.setattr(module, "cleanup", lambda _: (_ for _ in ()).throw(OSError("Interrupted")))
+        with pytest.raises(OSError):
+            initialize(tmp_path, "# Product\n")
+    assert (tmp_path / "CLAUDE.md").read_bytes().endswith(b"@AGENTS.md\n")
+    result = recover(tmp_path)
+    assert set(result["restored"]) >= {"AGENTS.md", "CLAUDE.md"}
+    assert (tmp_path / "AGENTS.md").read_bytes() == b"Shared rules\n"
+    assert (tmp_path / "CLAUDE.md").read_bytes() == b"Claude rules\n"
 
 
 @pytest.mark.parametrize(
@@ -252,10 +343,11 @@ def test_instruction_exception_never_allows_other_journal_paths(tmp_path, kind, 
         recover(tmp_path)
 
 
-def test_edit_journals_cannot_write_root_instructions(tmp_path):
+@pytest.mark.parametrize("name", ["AGENTS.md", "CLAUDE.md", ".claude/CLAUDE.md"])
+def test_edit_journals_cannot_write_root_instructions(tmp_path, name):
     state = tmp_path / ".specspec/local"
     state.mkdir(parents=True)
-    write_journal(state, {"kind": "edit", "files": {"AGENTS.md": {"old": None, "new": ""}}})
+    write_journal(state, {"kind": "edit", "files": {name: {"old": None, "new": ""}}})
     with pytest.raises(SpecError, match="Unsafe journal path"):
         recover(tmp_path)
 
@@ -276,6 +368,24 @@ def test_cli_reports_instruction_creation_or_amendment(tmp_path, existing):
     # A created file holds the packaged bytes; an appended guide follows the file's endings.
     expected = with_endings(guide_bytes(), False) if existing else guide_bytes()
     assert (tmp_path / "AGENTS.md").read_bytes().endswith(expected)
+
+
+def test_cli_reports_the_claude_import(tmp_path):
+    (tmp_path / "CLAUDE.md").write_bytes(b"Claude rules\n")
+    (tmp_path / "AGENTS.md").write_bytes(b"Shared rules\n")
+    result = CliRunner().invoke(main, ["--root", str(tmp_path), "init", "-m", "Test", "--json"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["result"]["agent_instructions"] == {
+        "path": "AGENTS.md",
+        "created": False,
+        "action": "appended",
+        "imported_by": "CLAUDE.md",
+    }
+    shutil.rmtree(tmp_path / ".specspec")
+    (tmp_path / "CLAUDE.md").write_bytes(b"Claude rules\n")
+    readable = CliRunner().invoke(main, ["--root", str(tmp_path), "init", "-m", "Test"])
+    assert readable.exit_code == 0, readable.output
+    assert "Claude Code: CLAUDE.md imports AGENTS.md" in readable.stdout
 
 
 @pytest.mark.parametrize("existing", [False, True])

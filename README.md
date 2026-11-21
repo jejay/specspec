@@ -42,12 +42,17 @@ specspec init -m "# Help a small team agree on a plan" -m "Everyone sees the sam
 ```
 
 Then start your coding agent in the project and tell it what you want, as you would
-anyway. Any agent that can run shell commands works. `init` wrote an `AGENTS.md` that
-teaches it the rest: it plans in the graph before it builds, records the conclusions it
-draws for you, keeps graph and product in sync and reports what it decided and what is
-uncertain. `init` also sets up Git if the folder has none and appends to an `AGENTS.md`
-you already have. If your agent reads a different instructions file, point it to
-`AGENTS.md`.
+anyway. Any agent that can run shell commands works. `init` wrote a guide to `AGENTS.md`
+that teaches it the rest: it plans in the graph before it builds, records the
+conclusions it draws for you, keeps graph and product in sync and reports what it
+decided and what is uncertain. `init` also sets up Git if the folder has none.
+
+If you already have instructions for your agent, `init` adds the guide to them. It
+appends to your `AGENTS.md`, or to your `CLAUDE.md` when you have no `AGENTS.md`. When
+you have both, it appends the line `@AGENTS.md` to `CLAUDE.md`, because Claude Code
+reads `AGENTS.md` only in projects without a `CLAUDE.md`. A symlinked instructions file
+gets the guide in the file it points to. If your agent reads yet another file, point it
+to the one with the guide.
 
 You can leave it at that. When you want more control, open the graph in
 [a graph editor](#install-the-graph-editors): look at it from as far above as you like,
@@ -191,7 +196,7 @@ Selecting a node opens its text, parents and sources for editing.
 
 ## How you and your agent work on the graph
 
-The guide in `AGENTS.md` sets out how the agent works with you:
+The guide that `init` adds sets out how the agent works with you:
 
 1. You describe what you want. The agent first tells your intentions from the
    conclusions you have already drawn and says how it read you. It asks when it cannot
@@ -271,8 +276,8 @@ specspec check                                       # structural validation
 Every command has `--help` with examples. If `specspec` isn't found, run
 `uv tool update-shell` (or `pipx ensurepath`) and open a new terminal. Upgrade with
 `uv tool upgrade specspec`, then run `specspec guide` in each project: it replaces the
-guide an earlier release added to `AGENTS.md` with the new one and leaves the rest of
-the file as it is.
+guide an earlier release added to `AGENTS.md` or `CLAUDE.md` with the new one and leaves
+the rest of the file as it is.
 
 ## Example: a planning app that changed direction twice
 

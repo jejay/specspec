@@ -356,9 +356,14 @@ def mutation_output(snapshot: Snapshot, ids, as_json):
             **(
                 {
                     "agent_instructions": {
-                        "path": "AGENTS.md",
+                        "path": snapshot.instructions_path,
                         "created": snapshot.created_instructions,
                         "action": snapshot.instructions_action,
+                        **(
+                            {"imported_by": snapshot.instructions_imported_by}
+                            if snapshot.instructions_imported_by
+                            else {}
+                        ),
                     }
                 }
                 if snapshot.created_instructions is not None
@@ -939,7 +944,7 @@ def recover_command(root, force_lock, as_json):
 @main.command(
     name="guide",
     help=HELP["guide"],
-    short_help="Bring AGENTS.md to the agent guide of the installed release.",
+    short_help="Bring the agent instructions to the guide of the installed release.",
 )
 @click.option(
     "--print",
@@ -950,15 +955,15 @@ def recover_command(root, force_lock, as_json):
 @click.pass_obj
 @guarded
 def guide_command(root, print_guide):
-    """Replace an earlier shipped guide in AGENTS.md, or print the current one."""
+    """Replace an earlier shipped guide in the instructions, or print the current one."""
     if print_guide:
         click.echo(current_guide(), nl=False)
         return
-    action = refresh_guide(root_path(root))
-    emit(
-        f"AGENTS.md: {GUIDE_ACTIONS[action]} (specspec {__version__})",
-        as_json=False,
-    )
+    placement = refresh_guide(root_path(root))
+    lines = [f"{placement.shown}: {GUIDE_ACTIONS[placement.action]} (specspec {__version__})"]
+    if placement.imported_by:
+        lines.append(f"{placement.imported_by}: imports AGENTS.md for Claude Code")
+    emit("\n".join(lines), as_json=False)
 
 
 GUIDE_ACTIONS = {

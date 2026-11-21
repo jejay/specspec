@@ -18,7 +18,7 @@ from typing import Any
 from .format import parse_node, read_document, serialize
 from .git_process import GitProcessError, run_git_process
 from .graph import Graph, build_graph
-from .guide import INSTRUCTIONS, place_guide, read_instructions
+from .guide import INSTRUCTION_FILES, claude_import, guide_file, locate, place_guide
 from .model import FORMAT_VERSION, Diagnostic, SpecError, SpecNode
 from .node_text import logical_bytes
 
@@ -57,6 +57,8 @@ class Snapshot:
     declared_version: int | None = None
     created_instructions: bool | None = None
     instructions_action: str | None = None
+    instructions_path: str | None = None
+    instructions_imported_by: str | None = None
     # Transient invocation outcomes; excluded from snapshots' protocol/canonical data.
     mutation_actions: dict[str, list[str]] | None = None
 
@@ -419,6 +421,15 @@ def initialization_available(root: Path) -> bool:
     return directory.is_dir() and all(entry.name == "local" for entry in directory.iterdir())
 
 
+def unchanged_instructions(root: Path, target: Any, expected: bytes | None) -> bool:
+    """Whether TARGET's name still leads to the same file and that file holds EXPECTED."""
+    try:
+        now = locate(root, target.name)
+    except SpecError:
+        return False
+    return now.path == target.path and now.data == expected
+
+
 def initialize(root: Path, body: str) -> Snapshot:
     root = root.absolute()
     if not root.is_dir():
@@ -432,11 +443,14 @@ def initialize(root: Path, body: str) -> Snapshot:
     snapshot_from_files(root, {example.path: serialize(example)}).require_valid()
     if diagnostics := runtime_diagnostics(root):
         raise SpecError(diagnostics)
-    instructions = root / INSTRUCTIONS
-    old_guide = read_instructions(instructions)
-    # The guide appears once: an earlier shipped guide is replaced in place, and an
-    # edited one stays as the owner left it.
+    # The guide appears once, in AGENTS.md or a CLAUDE.md: an earlier shipped guide is
+    # replaced in place, and an edited one stays as the owner left it. Claude Code reads
+    # AGENTS.md only without a CLAUDE.md, so an existing CLAUDE.md may get an import.
+    instructions = guide_file(root)
+    old_guide = instructions.data
     guide, guide_action = place_guide(old_guide)
+    importer = claude_import(root, instructions)
+    writes = [(instructions, guide), *([importer] if importer else [])]
     # Explicit init authorizes Git initialization, not identity, hooks or index edits.
     environment = {
         key: value
@@ -494,16 +508,23 @@ def initialize(root: Path, body: str) -> Snapshot:
         node = new_node("manifesto", [], body)
         raw = serialize(node)
         snapshot_from_files(root, {node.path: raw}).require_valid()
-        staged_node, staged_guide = state / "stage-init", state / "stage-init-agents"
+        staged_node = state / "stage-init"
         write_durably(staged_node, raw)
-        write_durably(staged_guide, guide)
+        staged = []
+        for index, (target, data) in enumerate(writes):
+            path = state / ("stage-init-agents" if index == 0 else f"stage-init-import-{index}")
+            write_durably(path, data)
+            staged.append((target, path, data))
         write_journal(
             state,
             {
                 "kind": "init",
                 "files": {
                     node.path: {"old": None, "new": encode(raw)},
-                    "AGENTS.md": {"old": encode(old_guide), "new": encode(guide)},
+                    **{
+                        target.name: {"old": encode(target.data), "new": encode(data)}
+                        for target, data in writes
+                    },
                 },
             },
         )
@@ -517,28 +538,23 @@ def initialize(root: Path, body: str) -> Snapshot:
                 ]
             )
         os.link(staged_node, root / node.path)
-        current = (
-            instructions.read_bytes()
-            if instructions.exists() and not instructions.is_symlink()
-            else None
-        )
-        if instructions.is_symlink() or current != old_guide:
-            raise SpecError(
-                [
-                    Diagnostic(
-                        "CONCURRENT", "Instructions changed during init; recover before retrying."
-                    )
-                ]
-            )
-        if old_guide is None:
-            os.link(staged_guide, instructions)
-        else:
-            os.replace(staged_guide, instructions)
+        for target, path, _ in staged:
+            if not unchanged_instructions(root, target, target.data):
+                raise SpecError(
+                    [
+                        Diagnostic(
+                            "CONCURRENT",
+                            "Instructions changed during init; recover before retrying.",
+                        )
+                    ]
+                )
+            if target.data is None:
+                os.link(path, target.path)
+            else:
+                os.replace(path, target.path)
         result = load_snapshot(root, ignore_state=True)
-        if (
-            result.files != {node.path: raw}
-            or instructions.is_symlink()
-            or instructions.read_bytes() != guide
+        if result.files != {node.path: raw} or not all(
+            unchanged_instructions(root, target, data) for target, _, data in staged
         ):
             raise SpecError(
                 [Diagnostic("CONCURRENT", "Files changed during init; recover before retrying.")]
@@ -546,6 +562,8 @@ def initialize(root: Path, body: str) -> Snapshot:
         result.require_valid()
         result.created_instructions = old_guide is None
         result.instructions_action = guide_action
+        result.instructions_path = instructions.shown
+        result.instructions_imported_by = importer[0].shown if importer else None
         result.mutation_actions = {"added": [node.id]}
         cleanup(state)
     return result
@@ -853,6 +871,7 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
             if journal["kind"] not in {"edit", "init"} or not isinstance(journal["files"], dict):
                 raise ValueError("Unsupported journal.")
             originals: dict[str, bytes | None] = {}
+            targets: dict[str, Path] = {}
             for path, states in journal["files"].items():
                 pure = PurePosixPath(path)
                 node_path = (
@@ -861,22 +880,35 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
                     and pure.as_posix() == path
                     and "\\" not in path
                 )
-                instruction_path = journal["kind"] == "init" and path == "AGENTS.md"
+                instruction_path = journal["kind"] == "init" and path in INSTRUCTION_FILES
                 if not (node_path or instruction_path):
                     raise ValueError("Unsafe journal path.")
                 old, new = decode(states["old"]), decode(states["new"])
-                target = root / path
-                if (root / SPEC_DIR).is_symlink() or target.is_symlink():
+                if (root / SPEC_DIR).is_symlink():
                     raise ValueError("Canonical paths must not be symlinks.")
-                current = target.read_bytes() if target.exists() else None
+                if instruction_path:
+                    # Instructions are restored where their name leads, as init wrote them.
+                    try:
+                        found = locate(root, path)
+                    except SpecError as error:
+                        raise ValueError(error.diagnostics[0].message) from error
+                    if old is None and (root / path).is_symlink():
+                        raise ValueError(f"External edit to {path}; refusing to overwrite it.")
+                    target, current = found.path, found.data
+                else:
+                    target = root / path
+                    if target.is_symlink():
+                        raise ValueError("Canonical paths must not be symlinks.")
+                    current = target.read_bytes() if target.exists() else None
                 if current not in (old, new):
                     raise ValueError(f"External edit to {path}; refusing to overwrite it.")
                 originals[path] = old
+                targets[path] = target
             if journal["kind"] == "init":
                 if any(
                     original is not None
                     for path, original in originals.items()
-                    if path != "AGENTS.md"
+                    if path not in INSTRUCTION_FILES
                 ):
                     raise ValueError("Initialization journal cannot contain original nodes.")
                 directory = root / SPEC_DIR
@@ -894,7 +926,7 @@ def recover(root: Path, *, force_lock: bool = False) -> dict[str, Any]:
         except (ValueError, KeyError, TypeError) as error:
             raise SpecError([Diagnostic("RECOVERY", str(error))]) from error
         for index, (path, original) in enumerate(originals.items()):
-            target = root / path
+            target = targets[path]
             if original is None:
                 target.unlink(missing_ok=True)
             else:

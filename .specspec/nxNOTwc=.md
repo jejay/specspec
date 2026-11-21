@@ -14,6 +14,8 @@ parents:
 - S1GCPJs=
 - 4k0oj5Y=
 - bAxm6Zk=
+- Vrh8YAI=
+- OVmYLNU=
 sources:
 - path: pyproject.toml
 - path: src/specspec/cli.py
@@ -35,13 +37,13 @@ Git availability and ensures a Git working tree before publishing node/guide byt
 reusing a containing repository instead of creating nested Git metadata. Git metadata is not claimed by graph rollback. No staging, commit, identity
 configuration or hook management is performed.
 
-The workspace lock and bounded byte journal live inside .specspec/local. An absent guide is exclusively created. For an existing regular file, guide.place_guide keeps a current guide, replaces the exact text of a guide from templates/earlier in place and in its line endings, leaves a hand-edited guide as it is, and otherwise keeps the exact byte prefix and appends the template after a separating paragraph, in the line endings of the file's first line. Changed targets reject
-publication and recovery. Initialization recovery permits AGENTS.md originals while
+The workspace lock and bounded byte journal live inside .specspec/local. guide.guide_file chooses the file for the guide among AGENTS.md, CLAUDE.md and .claude/CLAUDE.md: the one with a guide heading, else the first that exists, else a new AGENTS.md. guide.locate follows a symbolic link to a regular file inside the project and outside .specspec and rejects any other link. guide.claude_import appends @AGENTS.md (@../AGENTS.md in .claude/CLAUDE.md) to the first existing CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md when the guide is in AGENTS.md and none of them imports it outside backticks and fenced blocks or is AGENTS.md itself. init and specspec guide share these functions and report the guide file and the importing file. An absent AGENTS.md is exclusively created. For an existing file, guide.place_guide keeps a current guide, replaces the exact text of a guide from templates/earlier in place and in its line endings, leaves a hand-edited guide as it is, and otherwise keeps the exact byte prefix and appends the template after a separating paragraph, in the line endings of the file's first line. Changed targets reject
+publication and recovery. Initialization journals the guide file and the importing file under their root names; recovery resolves them again and permits originals only for AGENTS.md, CLAUDE.md, .claude/CLAUDE.md and CLAUDE.local.md, while
 ordinary edit journals are direct-node-only. Direct nodes and the runtime subtree
 have separate inventories. Interrupted initialization can recover partial publication.
 
 Tests cover real Git setup and missing/failing Git, invalid bodies, empty/binary
-prefixes, unsafe targets, append/create receipts, concurrent changes, publication
+prefixes, unsafe targets, followed and rejected links, guides in CLAUDE.md, imports and their absence, append/create receipts, concurrent changes, publication
 interruptions and all-before-any rollback. Package and installed-host checks exercise
 the actual template and initialization flow without owner installation.
 

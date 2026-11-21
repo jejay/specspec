@@ -1,4 +1,4 @@
-"""specspec guide brings AGENTS.md to the installed guide by exact match, nothing else."""
+"""specspec guide brings the instructions to the installed guide by exact match."""
 
 from click.testing import CliRunner
 
@@ -61,6 +61,33 @@ def test_files_without_a_guide_get_one_and_print_changes_nothing(workspace):
     )
     printed = CliRunner().invoke(main, ["guide", "--print"])
     assert printed.exit_code == 0 and printed.stdout_bytes == current_guide()
+
+
+def test_a_project_with_claude_md_gets_one_import_of_the_current_guide(workspace):
+    root, _ = workspace
+    (root / "CLAUDE.md").write_bytes(b"Claude rules\n")
+    first = run(root)
+    assert first.exit_code == 0, first.output
+    assert "AGENTS.md: guide already current" in first.stdout
+    assert "CLAUDE.md: imports AGENTS.md for Claude Code" in first.stdout
+    assert (root / "CLAUDE.md").read_bytes() == b"Claude rules\n\n@AGENTS.md\n"
+    again = run(root)
+    assert again.exit_code == 0 and "imports" not in again.stdout
+    assert (root / "CLAUDE.md").read_bytes() == b"Claude rules\n\n@AGENTS.md\n"
+
+
+def test_a_guide_in_claude_md_stays_there_when_agents_md_appears(workspace):
+    root, _ = workspace
+    (root / "AGENTS.md").unlink()
+    earlier = with_endings(earlier_guides()["0.0.1"], False)
+    (root / "CLAUDE.md").write_bytes(b"Claude rules\n\n" + earlier)
+    (root / "AGENTS.md").write_bytes(b"Codex rules\n")
+    result = run(root)
+    assert result.exit_code == 0, result.output
+    assert "CLAUDE.md: guide of an earlier release replaced" in result.stdout
+    expected = b"Claude rules\n\n" + with_endings(current_guide(), False)
+    assert (root / "CLAUDE.md").read_bytes() == expected
+    assert (root / "AGENTS.md").read_bytes() == b"Codex rules\n"
 
 
 def test_every_carried_guide_differs_from_the_current_one_and_is_recognized():

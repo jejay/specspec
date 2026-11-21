@@ -84,7 +84,7 @@ HELP = {
     "init": """Initialize Git and a graph with one manifesto: the product's core goal.
 
     Requires Git. Creates .specspec/ and a randomly identified manifesto.
-    Creates AGENTS.md or appends the packaged guide after existing instructions.
+    Adds the agent guide to AGENTS.md or CLAUDE.md, as guide --help explains.
     Unsafe targets are rejected. Existing graphs are never overwritten; use query/update.
 
     -m/--message is literal Markdown, not a filename. Repeat it for paragraphs.
@@ -292,23 +292,24 @@ HELP = {
     useful evidence with nonzero status. Output budgets fail rather than truncate.
     No changes to files, checkout, index, refs or linked files; no missing-object fetch.
     """,
-    "guide": """Bring AGENTS.md to the agent guide of the installed specspec release.
+    "guide": """Bring the agent instructions to the guide of the installed specspec release.
 
-    Run it in each project after upgrading specspec. It finds the guide that this
-    or an earlier release added to AGENTS.md by exact match, with LF or CRLF line
-    endings, and replaces an earlier one with the current guide. Every other byte of
-    the file stays as it is. A file without a guide gets the guide appended, as init
-    does, and a missing AGENTS.md is created.
+    Run it in each project after upgrading specspec. The guide lives in AGENTS.md,
+    CLAUDE.md or .claude/CLAUDE.md: the one that holds it, else the first that exists,
+    else a new AGENTS.md. A symlink is followed to its target inside the project. An
+    earlier release's guide is found by exact match, in LF or CRLF line endings, and
+    replaced; every other byte stays. A file without a guide gets it appended. Claude
+    Code skips AGENTS.md while a CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md exists,
+    so the first of these gets an @AGENTS.md import unless one already has it.
 
     \b
     Examples:
       specspec guide
       specspec guide --print
 
-    When the guide in AGENTS.md was edited by hand, nothing is changed and the
-    command fails with an explanation: take the current guide from --print, put it
-    in place of the old guide section and keep your own edits where you want them.
-    Nothing is staged or committed.
+    A guide edited by hand stays as it is: the command fails and explains how to put
+    the current guide from --print in its place, keeping your own edits. Nothing is
+    staged or committed.
     """,
     "recover": """Roll back an interrupted managed write while preserving external edits.
 

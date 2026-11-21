@@ -47,7 +47,8 @@ npm run desktop            # starts the desktop app from source
 
 A folder without a graph shows an **Initialize specspec** form: enter the
 manifesto, the project's core goal. Initialization creates `.specspec/`, sets up Git
-if needed and adds the agent guide to `AGENTS.md`. If the CLI is missing, the editor
+if needed and adds the agent guide to `AGENTS.md`, or to `CLAUDE.md` when the project
+has only that. If the CLI is missing, the editor
 shows installation steps and a **Retry** button.
 
 ## Read the canvas
