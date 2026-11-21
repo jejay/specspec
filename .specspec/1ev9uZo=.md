@@ -10,8 +10,7 @@ parents:
 ---
 # Package the selected identity with a concise product introduction
 
-Keep locally imported final Spectrum flow light/dark primary logos and tagline
-lockups for introductions, the optical symbol in application chrome and the supplied
+Keep locally imported final Spectrum flow light/dark primary logos for introductions, the optical symbol in application chrome and the supplied
 launcher for packages. Preserve selected artwork and record import digests/provenance.
 The README opens with the light/dark primary logo at 640 px, above the brand guide's 480 px minimum, and the headline The Missing Why in Your Specification, followed by a short product description. Small versions of the two editor screenshots, a table of contents and a quick start come next: install, initialize, then tell the agent what you want.
 
