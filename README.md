@@ -44,7 +44,7 @@ specspec init -m "# Help a small team agree on a plan" -m "Everyone sees the sam
 Then start your coding agent in the project and tell it what you want, as you would
 anyway. Any agent that can run shell commands works. `init` wrote an `AGENTS.md` that
 teaches it the rest: it plans in the graph before it builds, records the conclusions it
-draws for you, keeps graph and code in sync and reports what it decided and what is
+draws for you, keeps graph and product in sync and reports what it decided and what is
 uncertain. `init` also sets up Git if the folder has none and appends to an `AGENTS.md`
 you already have. If your agent reads a different instructions file, point it to
 `AGENTS.md`.
@@ -62,8 +62,8 @@ and it builds. A few rounds later, what you wanted and what the agent suggested 
 merged into one plan. Some details are there because you need them, others because
 they were the first idea that worked, and the plan reads the same either way.
 
-That matters once you want to try something else. With an agent, rebuilding the data
-model or the UI takes minutes. The hard part is knowing what the old one was for, so
+That matters once you want to try something else. With an agent, rebuilding an app's
+data model or rewriting a chapter takes minutes. The hard part is knowing what the old one was for, so
 that the new one keeps it.
 
 It also decides how closely you can follow the work. A plan that mixes goals with
@@ -71,7 +71,7 @@ details has no good place to stop reading: you go through all of it or you take 
 trust. Most projects need something in between, close attention to a few parts and a
 rough idea of the rest.
 
-specspec keeps the plan in the repository as a graph, next to the code, ordered from
+specspec keeps the plan in the repository as a graph, next to the files it describes, ordered from
 what you want to how it gets done.
 
 ## The specification is a graph from intention to conclusion
@@ -84,12 +84,17 @@ what you want to how it gets done.
 Every node is a short Markdown file in `.specspec/`. The root is the *manifesto*: what
 the project is for. Every other node names its parents and is a *conclusion* drawn from
 them: it refines them or settles a way to achieve them. The parents are the node's
-*intentions*. *Implementation* nodes at the outer edge explain how the code realizes a
-requirement and link to the files and line ranges involved.
+*intentions*. *Implementation* nodes at the outer edge explain how the artifacts realize
+a requirement and link to the files involved: to line ranges in text such as code or a
+manuscript, or to whole files such as images, slide decks or video.
+
+The product can be software, a book, a report, a slide deck or a video. The examples on
+this page come from a small planning app; a graph for a book has the same shape, with
+chapters where the app has code.
 
 Intention and conclusion are the two ends of a link, not two kinds of node. "Make timing
 easy to read" is a conclusion from the manifesto, and it is the intention behind "Show
-tasks on a weekday timeline". Every node between the manifesto and the code is both.
+tasks on a weekday timeline". Every node between the manifesto and the artifacts is both.
 Near the manifesto a node is mostly intention: what you want and why, with much hanging
 on it. Further out it is mostly conclusion: how it gets done. That range is the
 spectrum, and a node's place on it follows from its position in the graph. Branches go
@@ -122,7 +127,7 @@ Compare the plan with the previous commit and mark changed dates.
 
 The graph runs from intention to conclusion, so every depth is a place where you can
 stop. You can write only the manifesto and let the agent draw everything below it. You
-can pin one branch down conclusion by conclusion, as far as the code. Reading works the
+can pin one branch down conclusion by conclusion, as far as the artifacts. Reading works the
 same way: skim the top two levels of what the agent drew, or follow one branch node by
 node until you understand every step in it. Past the point where you stop, the agent
 concludes on its own and records its conclusions as nodes like any other.
@@ -139,9 +144,8 @@ proposals work is still the agent's part: a JSON file in the repository, pull re
 and a schema check. You have never read that branch closely, and it is there whenever
 you want to.
 
-The depths you can choose form one range. At one end is
-hands-on engineering, where you make every decision yourself. At the other is vibe
-coding, where the agent makes them for you. With specspec you pick a point on it for
+The depths you can choose form one range. At one end you work hands-on and make every
+decision yourself. At the other the agent makes them for you, as in vibe coding. With specspec you pick a point on it for
 each part of a project and move it as the project goes on: go deep where something
 surprised you, and step back where things have settled.
 
@@ -207,9 +211,9 @@ The guide in `AGENTS.md` sets out how the agent works with you:
    your own. When you have edited nodes, the agent first tells you what it would split,
    move or reword, and whatever you do not accept stays as you wrote it.
 4. The agent implements, after planning whatever the graph does not cover yet. Before
-   it changes code, it reads the node and every ancestor that justifies it. It keeps
-   graph and code in sync: what it settles on the way becomes further conclusions, and
-   implementation nodes link to the code. When it finds a contradiction, it builds a
+   it changes the product, it reads the node and every ancestor that justifies it. It
+   keeps graph and product in sync: what it settles on the way becomes further
+   conclusions, and implementation nodes link to the files. When it finds a contradiction, it builds a
    consistent part and reports the rest.
 5. When you change your mind, you replace the node, at whatever depth, and the agent
    looks again at what hangs beneath it. The graph describes the current plan; Git keeps
@@ -295,9 +299,9 @@ Everything runs on your machine. The graph is Markdown in your repository, and y
 stage and commit it like any other file. `specspec check` confirms that the graph is
 well formed: one manifesto, every node reachable from it, no cycles. Whether the
 product does what the nodes describe is for you, your tests and your agent to judge.
-Implementation nodes help by pointing at the exact code, and
-`specspec check --sources` flags linked code that has changed or disappeared since it
-was linked.
+Implementation nodes help by pointing at the exact files and lines, and
+`specspec check --sources` flags linked lines that have changed and linked files that
+have disappeared since they were linked.
 
 specspec is developed with specspec. Its own graph is in
 [`.specspec/`](https://github.com/jejay/specspec/tree/main/.specspec), and

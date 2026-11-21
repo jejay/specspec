@@ -4,6 +4,7 @@ type: implementation
 parents:
 - 1ev9uZo=
 - Q7FDb7A=
+- bAxm6Zk=
 sources:
 - path: package.json
 - path: package-lock.json
@@ -48,7 +49,7 @@ and creates a current-platform portable archive. The standard-library release
 inspector checks versions, resources, runtime membership, asset/license presence
 and archive semantics, then writes artifact digests and a manifest.
 
-README.md opens with the primary logo, a headline, small editor screenshots, a table of contents and a quick start, then explains both spectra with figures and screenshots;
+README.md opens with the primary logo, a headline, small editor screenshots, a table of contents and a quick start, then explains both spectra with figures and screenshots in terms of the product and its artifacts, with the planning app as one example;
 the editor guide in vscode/README.md, CONTRIBUTING.md and CHANGELOG.md cover editor
 use, development and releases, and release notes.
 The original supplied artwork and local experiments are preserved.

@@ -45,7 +45,7 @@ Whatever the owner says or writes, first tell intention from conclusion: what do
 
 ## The graph
 
-Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`, `parents`, `sources`) and a Markdown body. The *manifesto* is the root and holds intentions only. A *requirement* states what the product should do or respect and names the parents it is concluded from. An *implementation* node is a leaf under requirements: it explains how actual artifacts realize them and links them in `sources`.
+Each node is one file, `.specspec/<id>.md`, with YAML frontmatter (`id`, `type`, `parents`, `sources`) and a Markdown body. The *manifesto* is the root and holds intentions only. A *requirement* states what the product should do or respect and names the parents it is concluded from. An *implementation* node is a leaf under requirements: it explains how actual artifacts, such as code, chapters or slides, realize them and links them in `sources`.
 
 ```text
 manifesto: Help a small team agree on a plan
@@ -110,7 +110,7 @@ This phase starts when the owner asks you to create or change the graph ("draw t
 
 ### Implementation
 
-This phase starts when the owner asks you to build or change the product, and it includes agent planning: first plan what you are asked to build and commit that planning. Then keep graph and product in sync as you build: record each conclusion the graph still leaves to you as a requirement under the intention it serves, describe what you built in implementation nodes, and keep existing explanations and `sources` current. Commit every change to requirement nodes on its own as `Agent specspec changes: <description>`, also one you record in the middle of building; code and implementation nodes go into the project's ordinary commits. Removing nodes is for the owner to decide. When nodes contradict each other, implement a simple, broad subset of the graph that is free of the contradiction, and report the conflict, the subset you chose and its consequences. When you see a way to improve the product, report the idea. You can offer to work either out as a graph on a separate branch.
+This phase starts when the owner asks you to build or change the product, and it includes agent planning: first plan what you are asked to build and commit that planning. Then keep graph and product in sync as you build: record each conclusion the graph still leaves to you as a requirement under the intention it serves, describe what you built in implementation nodes, and keep existing explanations and `sources` current. Commit every change to requirement nodes on its own as `Agent specspec changes: <description>`, also one you record in the middle of building; artifacts and implementation nodes go into the project's ordinary commits. Removing nodes is for the owner to decide. When nodes contradict each other, implement a simple, broad subset of the graph that is free of the contradiction, and report the conflict, the subset you chose and its consequences. When you see a way to improve the product, report the idea. You can offer to work either out as a graph on a separate branch.
 
 ## Commands
 
@@ -127,4 +127,4 @@ specspec delete CONCLUSION_ID IMPL_ID add --parent INTENTION_ID -m '# New conclu
 
 A bare `specspec query` prints the whole graph, so bound reads with `--max-distance`. Steps can form one invocation; `--as name` names a new node and `--parent '$name'` links to it. Deletion removes exactly the selected files: descendants keep their now-missing parent references, so reconnect, rewrite or delete them deliberately.
 
-A whole-file source link is a `- path: FILE` line under `sources:` in the node's frontmatter. When `check --sources` reports a link whose code changed, align the explanation and the code, stage the code, then run `specspec sources reanchor IMPL_ID --source N --staged`. After an interrupted write, keep `.specspec/local/` and run `specspec recover`. Every command explains itself with `--help`.
+A whole-file source link is a `- path: FILE` line under `sources:` in the node's frontmatter. When `check --sources` reports a link whose lines changed, align the explanation and the file, stage the file, then run `specspec sources reanchor IMPL_ID --source N --staged`. After an interrupted write, keep `.specspec/local/` and run `specspec recover`. Every command explains itself with `--help`.
