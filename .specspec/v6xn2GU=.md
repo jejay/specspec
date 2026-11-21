@@ -13,4 +13,4 @@ Preserve separate selected regions and expose unavailable or ambiguous mappings.
 
 Supply deliberate capture/reanchor operations, readable source previews and an
 optional Git check. Source links give implementation context; review determines
-whether the code still fulfills its intention.
+whether the linked artifacts still fulfill their intention.
