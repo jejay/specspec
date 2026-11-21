@@ -1,7 +1,9 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-dark.png">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-light.png" alt="specspec — Engineering is on the spectrum now" width="640">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-dark.png">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-light.png" alt="specspec" width="640">
 </picture>
+
+# The Missing Why in Your Specification
 
 specspec organizes a **specification** as a **spectrum** from intentions to conclusions for human-agentic co-work. A specspec graph starts with the core idea, the manifesto, and connects it all the way to the artifacts (lines of code, paragraphs in a book, graphics in a presentation, etc.) that realizes it. For each part of the specification you can decide at which level of abstraction you want to delegate.
 
@@ -130,7 +132,7 @@ proposals work is still the agent's part: a JSON file in the repository, pull re
 and a schema check. You have never read that branch closely, and it is there whenever
 you want to.
 
-The tagline, *Engineering is on the spectrum now*, refers to this range. At one end is
+The depths you can choose form one range. At one end is
 hands-on engineering, where you make every decision yourself. At the other is vibe
 coding, where the agent makes them for you. With specspec you pick a point on it for
 each part of a project and move it as the project goes on: go deep where something
