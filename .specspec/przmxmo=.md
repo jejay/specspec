@@ -33,8 +33,6 @@ sources:
 - path: branding/specspec-logo-dark.svg
 - path: branding/specspec-logo-light.png
 - path: branding/specspec-logo-dark.png
-- path: branding/specspec-logo-tagline-light.png
-- path: branding/specspec-logo-tagline-dark.png
 - path: branding/app-icon.ico
 - path: .github/workflows/ci.yml
 - path: .github/workflows/release-build.yml
