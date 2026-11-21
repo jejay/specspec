@@ -3,9 +3,16 @@
   <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-light.png" alt="specspec" width="640">
 </picture>
 
-# The Missing Why in Your Specification
+# The Missing *Why* in Your Specification
 
-specspec organizes a **specification** as a **spectrum** from intentions to conclusions for human-agentic co-work. A specspec graph starts with the core idea, the manifesto, and connects it all the way to the artifacts (lines of code, paragraphs in a book, graphics in a presentation, etc.) that realizes it. For each part of the specification you can decide at which level of abstraction you want to delegate.
+specspec organizes a **specification** as a **spectrum** from intentions to conclusions for human-agentic co-work. A specspec graph starts with the core idea, the manifesto, and connects it all the way to the artifacts (lines of code, paragraphs in a book, graphics in a presentation, etc.) realizing it. 
+
+This enables you to
+  * decide at which level of abstraction and depth you want to delegate for any part of the specification,
+  * break out of *local specification optima* or *specification monkey patching* and instead zoom to the correct abstraction level,
+  * estimate the consequences of changing the specification quickly,
+  * save tokens by having your agent easily understand the consequences of changing the specification.
+
 
 <a href="#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app"><img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-vscode-small.png" alt="The specspec graph in VS Code, seen from far above." height="190"></a>
 <a href="#what-you-work-with-the-graph-in-vs-code-and-in-a-desktop-app"><img src="https://raw.githubusercontent.com/jejay/specspec/main/docs/images/editor-desktop-small.png" alt="The specspec desktop app comparing two revisions of a graph." height="190"></a>
