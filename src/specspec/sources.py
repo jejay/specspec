@@ -494,7 +494,7 @@ def resolve_nodes(
 def link_explanation(result: dict) -> str:
     """Say what a bad source outcome means and what brings the link back in line."""
     reanchor = (
-        f"Align node {result['id']}'s explanation with {result['path']}, stage the code, "
+        f"Align node {result['id']}'s explanation with {result['path']}, stage the file, "
         f"then run specspec sources reanchor {result['id']} --source {result['source']} "
         "--staged."
     )

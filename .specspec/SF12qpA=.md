@@ -9,6 +9,7 @@ parents:
 - 4ZvnSGw=
 - aILBxDs=
 - ivvUgP4=
+- bAxm6Zk=
 sources:
 - path: src/specspec/cli.py
 - path: src/specspec/output.py
@@ -44,7 +45,7 @@ sources:
 
 Click presents seven everyday verbs with focused advanced tools and a bounded hidden
 application adapter. Query owns parsed and raw specification inspection, while
-cli_help.py supplies concise task guides and a scoped ASCII-safe help formatter.
+cli_help.py supplies concise task guides and a scoped ASCII-safe help formatter; help and option texts call linked artifacts files.
 Host managed preflights use the saved API read. Ordinary authoring uses
 literal message paragraphs and
 combinable add/update/delete steps; absent messages select stdin, and managed UIs send complete text without body flags.

@@ -176,7 +176,7 @@ HELP = {
     Otherwise invalid intermediate relationships can be saved with diagnostics;
     schema, path and transaction safeguards remain. Receipts group generated IDs
     under Added, or Would add for previews. Node files stay within 1 MiB; invocation
-    body material is bounded separately. No staging, commits or linked-code edits.
+    body material is bounded separately. No staging, commits or linked-file edits.
     """,
     "update": """Change an existing node's body, parents or source references.
 
@@ -214,7 +214,7 @@ HELP = {
 
     Supply full NODE_IDS, including '='. Descendants are NOT selected automatically:
     their files and parent declarations remain, including missing-parent references.
-    The manifesto is protected. Linked implementation code stays untouched.
+    The manifesto is protected. Linked implementation files stay untouched.
 
     \b
     Workflow:
@@ -256,7 +256,7 @@ HELP = {
     Default input is saved workspace files. --staged checks exact index blobs,
     including partial staging; working-tree checks cannot substitute before commit.
     --ref selects an immutable commit. Do not combine it with --staged. --sources
-    resolves code ranges and blob retention in the same selected version.
+    resolves linked ranges and blob retention in the same selected version.
 
     Completed graphs have one root, legal parents, no cycles and no redundant
     direct parent already implied indirectly. Identity, schema and safe-path checks
@@ -268,7 +268,7 @@ HELP = {
 
     BASE defaults to fresh HEAD. Omit TARGET for saved workspace files; supply it
     for two commits/branches without checkout. Linked-source impact is separate;
-    ordinary git diff supplies implementation-code patches.
+    ordinary git diff supplies patches of the linked files.
 
     \b
     Examples:
@@ -282,7 +282,7 @@ HELP = {
     metadata, comments, whitespace, EOF and added/deleted nodes. LF/CRLF/CR encoding
     alone is equivalent. Patches use LF; query --raw retains physical evidence.
     --summary explicitly abridges output. Relationship changes identify both ends;
-    linked-code effects stay distinct from directly modified specifications.
+    linked-file effects stay distinct from directly modified specifications.
 
     --with-context adds deduplicated old/current justifications, ancestors, broken
     references and potential cause paths. Repeated --node focuses that context and
@@ -290,7 +290,7 @@ HELP = {
 
     Invalid/unavailable revisions stay explicit. Incomplete comparisons can retain
     useful evidence with nonzero status. Output budgets fail rather than truncate.
-    No changes to files, checkout, index, refs or linked code; no missing-object fetch.
+    No changes to files, checkout, index, refs or linked files; no missing-object fetch.
     """,
     "guide": """Bring AGENTS.md to the agent guide of the installed specspec release.
 
@@ -325,9 +325,9 @@ HELP = {
     --force-lock clears a stale lock only after you confirm no writer is running;
     it never authorizes overwriting unknown text. Successful writes retain no Undo
     journal. Initialization rollback restores amended instructions but keeps Git
-    metadata. No staging, commits or linked-code deletion.
+    metadata. No staging, commits or linked-file deletion.
     """,
-    "sources": """Inspect and maintain implementation-to-code links.
+    "sources": """Inspect and maintain links from implementations to files.
 
     Links cite whole files or Git-anchored inclusive ranges. Source numbers are
     1-based; links provide context, not proof.
@@ -339,7 +339,7 @@ HELP = {
       specspec sources reanchor IMPLEMENTATION_ID --source 1 --dry-run
 
     show is read-only. capture/reanchor deliberately update CURRENT implementation
-    metadata, never linked code. Preview with --dry-run. These commands stay
+    metadata, never linked files. Preview with --dry-run. These commands stay
     standalone; only add/update/delete can chain. Use SUBCOMMAND --help for details.
     """,
     "sources show": """Resolve source links or preview a linked region's actual text.
@@ -354,15 +354,15 @@ HELP = {
       specspec sources show IMPLEMENTATION_ID --ref main~1
       specspec sources show --staged
 
-    Defaults read saved declarations and code. --staged selects the index; --ref a
+    Defaults read saved declarations and files. --staged selects the index; --ref a
     commit, for both. Uncertain mapping can preview original anchored text and says
     so, rather than inventing a current location. Missing objects, ambiguity,
     binary/LFS data and limits stay explicit. Read-only. Use capture for new anchors
     and reanchor for deliberate moves.
     """,
-    "sources capture": """Record an implementation's link to committed or staged code.
+    "sources capture": """Record an implementation's link to a committed or staged file.
 
-    NODE_ID selects a CURRENT implementation; PATH is project-relative code, not
+    NODE_ID selects a CURRENT implementation; PATH is a project-relative file, not
     binding text. Supply inclusive 1-based START:END ranges; repeat --range for
     separate regions in one file/reference.
 
@@ -376,15 +376,15 @@ HELP = {
     additions/contained replacements, excluding outer-boundary insertions and gaps.
     Modes describe permitted evolution, not confidence or approval.
 
-    Code defaults to committed HEAD; --ref chooses another commit and --staged exact
-    index code. Unstaged code is not an immutable anchor. Unless --dry-run, metadata
-    changes through the managed writer; code and Git staging/commits stay untouched.
+    Files default to committed HEAD; --ref chooses another commit and --staged exact
+    index bytes. Unstaged files are not an immutable anchor. Unless --dry-run, metadata
+    changes through the managed writer; files and Git staging/commits stay untouched.
     Retain blobs through Git and check --staged --sources before committing.
     """,
     "sources reanchor": """Replace an existing region anchor with a deliberate new Git anchor.
 
     Select a CURRENT implementation and --source N (1-based). Captures trustworthy
-    ranges mapped into HEAD. For uncertain/conflicting code, inspect and supply
+    ranges mapped into HEAD. For uncertain/conflicting ranges, inspect and supply
     explicit --range START:END replacements; this does not certify fulfillment.
 
     \b
@@ -396,7 +396,7 @@ HELP = {
     --ref selects a commit, --staged the index; otherwise HEAD. Retains mode and
     descriptive symbol. Whole-file references need capture to acquire an anchor.
     --dry-run previews; execution updates only the selected node's sources through
-    the managed writer. Linked code, staging and commits stay untouched. Deliberate
+    the managed writer. Linked files, staging and commits stay untouched. Deliberate
     blob retention, graph validity and physical transaction safeguards still apply.
     """,
     "spotlight": """Attach checkout-local messages to nodes and comparison context.
@@ -429,7 +429,7 @@ HELP = {
 
     Defaults follow live HEAD/workspace. Explicit refs pin commits; target workspace
     stays live. Sparse uncommitted-state hints support drift warnings without copied
-    node bodies. Writes local metadata only, not buffers, specifications, code or
+    node bodies. Writes local metadata only, not buffers, specifications, files or
     Git state. Records remain until explicit flush; corrections use new messages.
     """,
     "spotlight show": """Read spotlight messages and resolve their comparison members.
@@ -449,7 +449,7 @@ HELP = {
     """,
     "spotlight flush": """Clear every retained spotlight in this checkout.
 
-    Removes messages for both UIs, keeping specifications, code, history and recovery.
+    Removes messages for both UIs, keeping specifications, files, history and recovery.
 
     \b
     Examples (review first):

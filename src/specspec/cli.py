@@ -780,12 +780,12 @@ def query(
 @click.option(
     "--staged",
     is_flag=True,
-    help="Validate exact Git-index graph/code bytes, including partial staging; not working files.",
+    help="Validate exact Git-index graph/file bytes, including partial staging; not working files.",
 )
 @click.option(
     "--sources", "check_sources", is_flag=True, help="Also check source mappings and Git retention."
 )
-@click.option("--ref", help="Validate an immutable graph/code revision.")
+@click.option("--ref", help="Validate an immutable graph/file revision.")
 @click.option("--graph-ref", hidden=True)
 @click.option(
     "--warnings-as-errors",

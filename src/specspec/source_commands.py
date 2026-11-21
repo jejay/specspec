@@ -103,7 +103,7 @@ def register(main, root_path, emit, guarded, json_option):
     @main.group(
         name="sources",
         help=HELP["sources"],
-        short_help="Inspect and maintain implementation-to-code links.",
+        short_help="Inspect and maintain links from implementations to files.",
     )
     def group():
         """Advanced: inspect, capture and deliberately reanchor source regions."""
@@ -111,12 +111,12 @@ def register(main, root_path, emit, guarded, json_option):
     def target_options(function):
         for decorator in [
             click.option(
-                "--ref", help="Committed code and declaration revision; default: saved workspace."
+                "--ref", help="Committed file and declaration revision; default: saved workspace."
             ),
             click.option(
                 "--staged",
                 is_flag=True,
-                help="Read declarations and code from the exact Git index, not working files.",
+                help="Read declarations and files from the exact Git index, not the working tree.",
             ),
             click.option("--graph-ref", hidden=True),
         ]:
@@ -182,7 +182,7 @@ def register(main, root_path, emit, guarded, json_option):
     @click.option(
         "--staged",
         is_flag=True,
-        help="Capture immutable code bytes from the Git index instead of HEAD/--ref.",
+        help="Capture immutable file bytes from the Git index instead of HEAD/--ref.",
     )
     @click.option("--replace", "replace_number", type=click.IntRange(min=1), hidden=True)
     @click.option("--dry-run", is_flag=True, help="Preview metadata without writing the node.")
@@ -230,7 +230,7 @@ def register(main, root_path, emit, guarded, json_option):
     @click.option(
         "--staged",
         is_flag=True,
-        help="Use exact Git-index code instead of HEAD/--ref; the node edited remains current.",
+        help="Use exact Git-index files instead of HEAD/--ref; the node edited remains current.",
     )
     @click.option(
         "--dry-run",

@@ -140,7 +140,7 @@ def test_help_explains_the_actual_choices_not_only_option_names():
         "strict",
         "expanding",
         "CURRENT",
-        "Code defaults",
+        "Files default",
         "Git staging",
     ]:
         assert phrase in capture, phrase
