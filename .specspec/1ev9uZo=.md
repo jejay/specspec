@@ -10,9 +10,9 @@ parents:
 ---
 # Package the selected identity with a concise product introduction
 
-Keep locally imported final Spectrum flow light/dark primary logos for introductions, the optical symbol in application chrome and the supplied
+Keep locally imported final Spectrum flow light/dark primary logos and light/dark lockups of the logo with the tagline Specification is on the spectrum now, composed in the brand builder's lockup geometry, for introductions, the optical symbol in application chrome and the supplied
 launcher for packages. Preserve selected artwork and record import digests/provenance.
-The README opens with the light/dark primary logo at 640 px, above the brand guide's 480 px minimum, and the headline The Missing Why in Your Specification, followed by a short product description. Small versions of the two editor screenshots, a table of contents and a quick start come next: install, initialize, then tell the agent what you want.
+The README opens with the light/dark tagline lockup at the brand guide's 640 px minimum and the headline The Missing Why in Your Specification, followed by a short product description. Small versions of the two editor screenshots, a table of contents and a quick start come next: install, initialize, then tell the agent what you want.
 
 The README then explains the core idea: intent merging with agent suggestions and the lack of a place to stop reading in a mixed plan, the specification spectrum as one relation, in which every node is a conclusion from its parents and an intention for its children, on a small planning example with an actual node file, the owner's chosen depth of writing and understanding in each region and its change over time, a replaced conclusion beneath its unchanged intention and what a replaced intention puts up for review, screenshots of both graph editors, and the owner/agent working phases. Section headings say what their sections contain. The README presents the graph editors as the owner's way to read and change the graph and the command line as the agent's tool. Editor downloads and build commands, the agent's commands, the Gantt example, a candid status section
 and links to the agent guide, the editor guide, contributor notes and release notes
