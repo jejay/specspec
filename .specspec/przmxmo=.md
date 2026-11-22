@@ -34,6 +34,8 @@ sources:
 - path: branding/specspec-logo-dark.svg
 - path: branding/specspec-logo-light.png
 - path: branding/specspec-logo-dark.png
+- path: branding/specspec-logo-tagline-light.png
+- path: branding/specspec-logo-tagline-dark.png
 - path: branding/app-icon.ico
 - path: .github/workflows/ci.yml
 - path: .github/workflows/release-build.yml
@@ -49,10 +51,10 @@ and creates a current-platform portable archive. The standard-library release
 inspector checks versions, resources, runtime membership, asset/license presence
 and archive semantics, then writes artifact digests and a manifest.
 
-README.md opens with the primary logo, a headline, small editor screenshots, a table of contents and a quick start, then explains both spectra with figures and screenshots in terms of the product and its artifacts, with the planning app as one example;
+README.md opens with the tagline lockup, a headline, small editor screenshots, a table of contents and a quick start, then explains both spectra with figures and screenshots in terms of the product and its artifacts, with the planning app as one example;
 the editor guide in vscode/README.md, CONTRIBUTING.md and CHANGELOG.md cover editor
 use, development and releases, and release notes.
-The original supplied artwork and local experiments are preserved.
+The original supplied artwork and local experiments are preserved. The two tagline lockups are the final light/dark logo SVGs with the tagline drawn by the brand builder's outlined-text helper at its lockup position and rendered by resvg at 2x; identity.sha256.json records their digests and how they were made.
 
 Fresh isolated uv-tool installs from both wheel and source distribution exercise
 Unicode, physical EOL replacement, raw versus logical readings, generated instructions

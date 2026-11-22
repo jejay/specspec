@@ -22,5 +22,13 @@
   "specspec-logo-dark.png": {
     "source": "final/png/specspec-logo-dark@2x.png",
     "sha256": "7ae42992c46e66fdd8fb6f8260b85fc490f92874f1d5eb675ff82f857b888950"
+  },
+  "specspec-logo-tagline-light.png": {
+    "source": "final/logos/specspec-logo-light.svg with the tagline 'Specification is on the spectrum now' in the lockup geometry of tools/build_final_brand.py, rendered by resvg --skip-system-fonts -z 2",
+    "sha256": "7f2e479f1f96d4a181ba70d58a14b09ace7188bf8dd0b332bb3478d75ec648e5"
+  },
+  "specspec-logo-tagline-dark.png": {
+    "source": "final/logos/specspec-logo-dark.svg with the tagline 'Specification is on the spectrum now' in the lockup geometry of tools/build_final_brand.py, rendered by resvg --skip-system-fonts -z 2",
+    "sha256": "c32f4a05d44162c6c65cf8351e11d2cd47e4a842d0422799f85c4bb18ea2cf3f"
   }
 }

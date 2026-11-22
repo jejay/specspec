@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-dark.png">
-  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-light.png" alt="specspec" width="640">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-dark.png">
+  <img src="https://raw.githubusercontent.com/jejay/specspec/main/branding/specspec-logo-tagline-light.png" alt="specspec — Specification is on the spectrum now" width="640">
 </picture>
 
 # The Missing *Why* in Your Specification

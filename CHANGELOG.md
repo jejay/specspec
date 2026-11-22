@@ -23,9 +23,10 @@ the guide and which file imports it.
 **Products of every kind.** The README, the agent guide and the CLI speak of the product
 and its artifacts rather than code: a graph can specify a book, a report, slides or a
 video as well as software. Help texts and the source-link conflict message say "files"
-where they said "code". The README opens with the headline "The Missing *Why* in Your
-Specification" and a plain logo, and says what `check --sources` reports: changed linked
-lines and missing linked files.
+where they said "code". The README opens with the tagline "Specification is on the
+spectrum now" beneath the logo and the headline "The Missing *Why* in Your
+Specification", and says what `check --sources` reports: changed linked lines and
+missing linked files.
 
 ## 0.1.0 — first public release
 
