@@ -101,6 +101,15 @@ def test_version_tags_attach_the_editor_packages_to_their_github_release():
     checks = "\n".join(step.get("run", "") for step in build["steps"])
     assert 'test "$GITHUB_REF_NAME" = "v$VERSION"' in checks
     assert "git merge-base --is-ancestor HEAD origin/main" in checks
+    # The editors of a version are released only when PyPI serves its CLI, and that
+    # check runs before anything is installed or built.
+    names = [step.get("name", step.get("run", step.get("uses", ""))) for step in build["steps"]]
+    pypi = names.index("Check that PyPI serves the CLI of this version")
+    assert "https://pypi.org/pypi/specspec/$VERSION/json" in build["steps"][pypi]["run"]
+    assert build["steps"][pypi]["if"] == "startsWith(github.ref, 'refs/tags/')"
+    assert pypi < min(
+        names.index(step) for step in ['python -m pip install -e ".[dev]"', "npm ci"]
+    )
     for required in ["python -m pytest", "npm test", "npm run package:all"]:
         assert required in checks
     release = workflow["jobs"]["github-release"]

@@ -89,9 +89,11 @@ default of `pipy_publish.yaml` and the `VERSION` of `tests/test_release.py`.
    builds and smoke-tests the wheel and source distribution; only the separate
    `publish` job receives the short-lived OIDC identity for PyPI's trusted publisher
    (repository `jejay/specspec`, workflow `pipy_publish.yaml`, environment `pypi`).
-6. Push the tag `vX.Y.Z` on that revision. **Build release artifacts** checks that the
-   tag names the version and is on `main`, builds the editors on Windows and Linux and
-   creates the GitHub release with the VSIX, both desktop archives and `SHA256SUMS`.
+6. Once step 5 has published the CLI, push the tag `vX.Y.Z` on that revision.
+   **Build release artifacts** checks that the tag names the version and is on `main`
+   and that PyPI serves that version; without it the run stops at once, and you re-run
+   it after step 5. It then builds the editors on Windows and Linux and creates the
+   GitHub release with the VSIX, both desktop archives and `SHA256SUMS`.
 7. Confirm the files on [PyPI](https://pypi.org/project/specspec/) and the GitHub
    release, and test a fresh `uv tool install specspec`.
 
