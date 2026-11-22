@@ -107,9 +107,7 @@ def test_version_tags_attach_the_editor_packages_to_their_github_release():
     pypi = names.index("Check that PyPI serves the CLI of this version")
     assert "https://pypi.org/pypi/specspec/$VERSION/json" in build["steps"][pypi]["run"]
     assert build["steps"][pypi]["if"] == "startsWith(github.ref, 'refs/tags/')"
-    assert pypi < min(
-        names.index(step) for step in ['python -m pip install -e ".[dev]"', "npm ci"]
-    )
+    assert pypi < min(names.index(step) for step in ['python -m pip install -e ".[dev]"', "npm ci"])
     for required in ["python -m pytest", "npm test", "npm run package:all"]:
         assert required in checks
     release = workflow["jobs"]["github-release"]
