@@ -11,6 +11,7 @@ sources:
 - path: src/specspec/cli_help.py
 - path: src/specspec/guide.py
 - path: src/specspec/templates/earlier/0.0.1.md
+- path: src/specspec/templates/earlier/0.1.0.md
 - path: tests/test_guide_refresh.py
 - path: tests/test_release.py
 - path: tools/pypi_release.py
@@ -19,4 +20,4 @@ sources:
 
 guide.place_guide searches the file that guide.guide_file chooses for the packaged guide and for each file in templates/earlier, both in LF and in CRLF form, and replaces an earlier guide once, in the line endings it was found in. A file whose lines include the first line of a shipped guide, compared without case, but none of the exact texts counts as edited. refresh_guide writes the guide file and the CLAUDE.md import that guide.claude_import asks for, each through an fsynced temporary file next to it and os.replace after checking that the file did not change meanwhile. specspec guide reports created, appended, replaced or current for the guide file with the release version, names the file that received the import, fails with a GUIDE diagnostic for an edited guide, and --print writes the packaged guide bytes.
 
-templates/earlier/0.0.1.md holds the guide of the 0.0.1 wheel on PyPI. tools/pypi_release.py guides downloads the wheel of the newest release on PyPI, checks it against its published digest and fails when its guide is neither the current one nor carried; the build job of pipy_publish.yaml runs it. Tests cover replacement between owner text, CRLF files, a hand-edited guide, creation, appending, a single CLAUDE.md import, a guide that stays in CLAUDE.md beside a new AGENTS.md, --print, every carried guide and the release check.
+templates/earlier/0.0.1.md holds the guide of the 0.0.1 wheel on PyPI, and 0.1.0.md the guide of the v0.1.0 tag, whose CLI reached PyPI in no release. tools/pypi_release.py guides downloads the wheel of the newest release on PyPI, checks it against its published digest and fails when its guide is neither the current one nor carried; the build job of pipy_publish.yaml runs it. Tests cover replacement between owner text, CRLF files, a hand-edited guide, creation, appending, a single CLAUDE.md import, a guide that stays in CLAUDE.md beside a new AGENTS.md, --print, every carried guide and the release check.

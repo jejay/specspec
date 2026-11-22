@@ -13,7 +13,7 @@ def test_pypi_publisher_matches_owner_configuration_and_is_explicit():
     workflow = YAML(typ="safe").load(WORKFLOW.read_text())
     assert set(workflow["on"]) == {"workflow_dispatch"}
     version = workflow["on"]["workflow_dispatch"]["inputs"]["version"]
-    assert version["required"] is True and version["default"] == "0.1.0"
+    assert version["required"] is True and version["default"] == "0.1.1"
     assert workflow["permissions"] == {"contents": "read"}
     assert workflow["concurrency"]["cancel-in-progress"] is False
     assert set(workflow["jobs"]) == {"build", "publish"}

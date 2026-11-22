@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.1
+
+The CLI on PyPI and the editors on the GitHub release have the same version again. The
+0.1.0 editors went out on GitHub while PyPI still had only 0.0.1, because the CLI was
+never published; 0.1.0 stays a GitHub-only release. A tag build now stops at once when
+PyPI does not yet serve its version, so the CLI is always published first.
+
+**Upgrading.** Run `uv tool upgrade specspec` (or `pipx upgrade specspec`), then
+`specspec guide` in each project. It recognizes the guides of 0.0.1 and 0.1.0.
+
+**CLAUDE.md.** Claude Code reads AGENTS.md only in projects without a CLAUDE.md, so the
+guide now goes where it is read. `init` and `specspec guide` keep the guide in the file
+that already holds it; otherwise they use AGENTS.md, then CLAUDE.md, then
+.claude/CLAUDE.md, whichever exists first, and create AGENTS.md only when none of them
+exists. When the guide is in AGENTS.md and the project has a CLAUDE.md,
+.claude/CLAUDE.md or CLAUDE.local.md, the first of these gets an `@AGENTS.md` import
+(`@../AGENTS.md` in .claude/CLAUDE.md). A symlinked instructions file is written where it
+points, if that is a regular file inside the project. Both commands say which file holds
+the guide and which file imports it.
+
+**Products of every kind.** The README, the agent guide and the CLI speak of the product
+and its artifacts rather than code: a graph can specify a book, a report, slides or a
+video as well as software. Help texts and the source-link conflict message say "files"
+where they said "code". The README opens with the headline "The Missing *Why* in Your
+Specification" and a plain logo, and says what `check --sources` reports: changed linked
+lines and missing linked files.
+
 ## 0.1.0 — first public release
 
 The first release announced for feedback. The CLI is on PyPI

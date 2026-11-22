@@ -11,7 +11,7 @@ import pytest
 
 from tools import pypi_release, release
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 
 def put(root, path, content=b""):

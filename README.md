@@ -237,8 +237,8 @@ Both editors are downloads on the
 [latest release](https://github.com/jejay/specspec/releases/latest), and both run the
 `specspec` command you installed.
 
-- **VS Code:** download `specspec-vscode-0.1.0.vsix` and run
-  `code --install-extension specspec-vscode-0.1.0.vsix`, or use **Extensions → … →
+- **VS Code:** download `specspec-vscode-0.1.1.vsix` and run
+  `code --install-extension specspec-vscode-0.1.1.vsix`, or use **Extensions → … →
   Install from VSIX…**. Then run **specspec: Open Graph** from the Command Palette.
 - **Desktop app** for Windows and Linux: download the archive for your system, unpack
   it and start `specspec-desktop`. The Windows build is unsigned, so Windows may ask
@@ -250,7 +250,7 @@ To build both editors from this repository instead, you need Node 22.12+ and npm
 git clone https://github.com/jejay/specspec.git
 cd specspec
 npm ci
-npm run package:vscode    # then: code --install-extension dist/specspec-vscode-0.1.0.vsix
+npm run package:vscode    # then: code --install-extension dist/specspec-vscode-0.1.1.vsix
 npm run desktop           # or start the desktop app from source
 ```
 
@@ -297,8 +297,9 @@ run `specspec diff stage/01-code stage/02-spec` inside it.
 
 ## Status and limits
 
-specspec 0.1.0 is the first public release. The CLI is on PyPI, and the editors are
-downloads on the GitHub release. Expect rough edges and changing commands.
+specspec 0.1.1 is an early public release. The CLI is on PyPI, and the editors are
+downloads on the GitHub release of the same version. Expect rough edges and changing
+commands.
 
 Everything runs on your machine. The graph is Markdown in your repository, and you
 stage and commit it like any other file. `specspec check` confirms that the graph is
