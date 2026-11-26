@@ -17,7 +17,7 @@ implementation nodes and their `sources` current with the code. Coding agents fo
 | `package.json`, `package-lock.json` | One private npm workspace with root scripts and the only lockfile |
 | `.specspec/` | This product's own specification graph |
 | `example/gantt/` | Runnable example and tracked snapshot of its independent Git history |
-| `branding/`, `docs/images/` | Imported brand assets and README figures |
+| `branding/`, `docs/images/` | Imported brand assets, the social preview and README figures |
 | `tools/` | Release, icon, figure and palette tools, and the agent-guide quiz |
 
 ## Development setup
@@ -117,9 +117,12 @@ history, so edit them through a bundle update.
 `branding/` holds byte-identical imports from the final brand kit, with sources and
 digests in `branding/identity.sha256.json`; `python tools/build_icon.py` regenerates
 the Windows launcher icon. `python tools/readme_figures.py` redraws the README
-figures in `docs/images/` (it needs `fonttools` and the brand kit's Manrope font). The
-palette playground is `tools/rainbow-playground/index.html`; open it directly in a
-browser to explore and export node palettes.
+figures in `docs/images/` (it needs `fonttools` and the brand kit's Manrope font).
+`python tools/social_preview.py` draws the GitHub social preview the same way, as
+`branding/social-preview.svg`, and renders `branding/social-preview.png` with resvg;
+upload the PNG under Settings › General › Social preview. The palette playground is
+`tools/rainbow-playground/index.html`; open it directly in a browser to explore and
+export node palettes.
 
 ## Quizzing models on the agent guide
 
